@@ -15,11 +15,14 @@ from pyscash.model_common import connect_to_gnucash_book, gnclock, GnucashExcept
 from pyscash.model_core import Account, Transaction, Commodity, Slot, Version
 
 
-file_for_test = "empty_book_for_test.gnucash"
+test_folder = os.path.dirname(os.path.realpath(__file__))
+file_template = os.path.join(test_folder,"empty_book.gnucash")
+file_for_test = os.path.join(test_folder,"empty_book_for_test.gnucash")
+
 
 @pytest.fixture
 def session(request):
-    shutil.copyfile("empty_book.gnucash", file_for_test)
+    shutil.copyfile(file_template,file_for_test)
 
     s = connect_to_gnucash_book(file_for_test, readonly=False)
 
@@ -28,7 +31,7 @@ def session(request):
 
 @pytest.fixture
 def session_readonly(request):
-    shutil.copyfile("empty_book.gnucash", file_for_test)
+    shutil.copyfile(file_template,file_for_test)
 
     # default session is readonly
     s = connect_to_gnucash_book(file_for_test)
@@ -75,7 +78,7 @@ class TestModelCore_EmptyBook(object):
         }
 
     def test_readonly_true(self, session_readonly):
-        s = connect_to_gnucash_book(sqlite_file="empty_book_for_test.gnucash", readonly=True)
+        s = connect_to_gnucash_book(sqlite_file=file_for_test, readonly=True)
 
         # control exception when adding object to readonly gnucash db
         v = Version(table_name="sample", table_version="other sample")
