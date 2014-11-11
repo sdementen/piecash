@@ -2,6 +2,7 @@
 """Python GnuCash SQL interface"""
 
 # import metadata
+
 # from .model_core import (
 #     Book, Account,
 #     Commodity,
@@ -14,3 +15,8 @@
 # __copyright__ = metadata.copyright
 #
 # __all__ = [Book, Account, Commodity, Transaction, Split]
+from .model_core import (connect_to_gnucash_book,
+                         Book, Account, Transaction, Lot, Slot, Split,
+                         Commodity, Price,
+)
+

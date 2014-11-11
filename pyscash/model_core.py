@@ -1,10 +1,15 @@
 from decimal import Decimal
+import os
 
-from sqlalchemy import Column, INTEGER, BIGINT, TEXT, REAL, ForeignKey
-from sqlalchemy.orm import relation, backref
+from sqlalchemy import Column, INTEGER, BIGINT, TEXT, REAL, ForeignKey, create_engine
+from sqlalchemy.orm import relation, backref, sessionmaker
 from enum import Enum
 
-from .model_common import DeclarativeBaseGuid, _DateTime, _Date, DeclarativeBase
+from .model_common import (DeclarativeBaseGuid, DeclarativeBase,
+                           _DateTime, _Date,
+                           GnucashException,
+                           gnclock
+)
 
 
 class Account(DeclarativeBaseGuid):
@@ -240,6 +245,8 @@ class Split(DeclarativeBaseGuid):
     account = relation('Account', backref=backref('splits', cascade='all, delete-orphan'))
     lot = relation('Lot', backref="splits")
 
+    def __repr__(self):
+        return "<Split {} {}>".format(self.account, self.value_num/self.value_denom)
 
 
 class Transaction(DeclarativeBaseGuid):
@@ -372,3 +379,46 @@ class Version(DeclarativeBase):
     table_version = Column('table_version', INTEGER(), nullable=False)
 
     # relation definitions
+
+
+def connect_to_gnucash_book(sqlite_file=None, postgres_conn=None, readonly=True, open_if_lock=False):
+    """
+    Open a GnuCash book and return the related SQLAlchemy session
+
+    :param sqlite_file: a path to a sqlite3 file
+    :param postgres_conn: a connection string to a postgres database
+    :param readonly: open the file as readonly (useful to play with and avoid any unwanted save
+    :param open_if_lock: open the file even if it is locked by another user
+    (using open_if_lock=True with readonly=False is not recommended)
+    :return: a SQLAlchemy session
+    """
+    engine = None
+    if sqlite_file:
+        if not os.path.exists(sqlite_file):
+            raise GnucashException, "'{}' file does not exist (pyscash cannot be used to create" \
+                                    "GnuCash books from scratch)".format(sqlite_file)
+        engine = create_engine("sqlite:///{}".format(sqlite_file))
+    elif postgres_conn:
+        engine = create_engine(postgres_conn)
+    else:
+        raise GnucashException, "Please specify either a sqlite file or a postgres connection"
+
+    locks = list(engine.execute(gnclock.select()))
+
+    # ensure the file is not locked by GnuCash itself
+    if locks and not open_if_lock:
+        raise GnucashException, "Lock on the file"
+    # else:
+    # engine.execute(gnclock.insert(), Hostname=socket.gethostname(), PID=os.getpid())
+
+    s = sessionmaker(bind=engine)()
+    # flush is a "no op" if readonly
+    if readonly:
+        def new_flush(*args, **kwargs):
+            if s.dirty or s.new or s.deleted:
+                s.rollback()
+                raise GnucashException, "You cannot change the DB, it is locked !"
+
+        s.flush = new_flush
+
+    return s
