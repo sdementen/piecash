@@ -8,7 +8,7 @@ Information describing the project.
 package = 'pyscash'
 project = "Python GnuCash SQL interface"
 project_no_spaces = project.replace(' ', '')
-version = '0.1'
+version = '0.1.1'
 description = 'SQLAlchemy model for GnuCash underlying SQL store'
 authors = ['sdementen']
 authors_string = ', '.join(authors)
