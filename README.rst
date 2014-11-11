@@ -21,7 +21,7 @@ Usage
 =====
 
 Here is a simple example of an interaction with an existing GnuCash Book created from scratch in GnuCash
-(the ipython notebook `Link session https://github.com/sdementen/pyscash/blob/master/tests/ipython/pyscash_session.html`
+(the ipython notebook `session <http://htmlpreview.github.io/?https://github.com/sdementen/pyscash/blob/master/tests/ipython/pyscash_session.html>`_
 is available in the tests/ipython subfolder).
 
 .. code:: python
