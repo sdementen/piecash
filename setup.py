@@ -157,24 +157,6 @@ def read(filename):
         return f.read()
 
 
-def _lint():
-    """Run lint and return an exit code."""
-    # Flake8 doesn't have an easy way to run checks using a Python function, so
-    # just fork off another process to do it.
-
-    # Python 3 compat:
-    # - The result of subprocess call outputs are byte strings, meaning we need
-    # to pass a byte string to endswith.
-    project_python_files = [filename for filename in get_project_files()
-                            if filename.endswith(b'.py')]
-    retcode = subprocess.call(
-        ['flake8', '--ignore=E126,E121', '--max-line-length=99', '--max-complexity=10']
-        + project_python_files)
-    if retcode == 0:
-        print_success_message('No style errors')
-    return retcode
-
-
 def _test():
     """Run the unit tests.
 
@@ -186,14 +168,6 @@ def _test():
     # This runs the unit tests.
     # It also runs doctest, but only on the modules in TESTS_DIRECTORY.
     return pytest.main(PYTEST_FLAGS + [TESTS_DIRECTORY])
-
-
-def _test_all():
-    """Run lint and tests.
-
-    :return: exit code
-    """
-    return _lint() + _test()
 
 
 # The following code is to allow tests to be run with `python setup.py test'.
@@ -210,7 +184,7 @@ class TestAllCommand(TestCommand):
         self.test_args = []
 
     def run_tests(self):
-        raise SystemExit(_test_all())
+        raise SystemExit(_test())
 
 
 # define install_requires for specific Python versions
@@ -224,6 +198,7 @@ if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 3):
 
 # See here for more options:
 # <http://pythonhosted.org/setuptools/setuptools.html>
+
 setup_dict = dict(
     name=metadata.package,
     version=metadata.version,
@@ -255,25 +230,18 @@ setup_dict = dict(
     ],
     packages=find_packages(exclude=(TESTS_DIRECTORY,)),
     install_requires=[
-                         # your module dependencies
+                         'SQLAlchemy>=0.9.7',
+                         'enum34>=1.0',
                      ] + python_version_specific_requires,
     # Allow tests to be run with `python setup.py test'.
     tests_require=[
-        'pytest==2.5.1',
-        'mock==1.0.1',
-        'flake8==2.1.0',
-    ],
+        'pytest',
+        'mock',
+        'py',
+    ]
+    ,
     cmdclass={'test': TestAllCommand},
     zip_safe=False,  # don't use eggs
-    entry_points={
-        'console_scripts': [
-            'pyscash_cli = pyscash.main:entry_point'
-        ],
-        # if you have a gui, use this
-        # 'gui_scripts': [
-        # 'pyscash_gui = pyscash.gui:entry_point'
-        # ]
-    }
 )
 
 
