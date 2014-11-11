@@ -1,0 +1,5 @@
+Run `sphinx-apidoc -o . ../../pyscash' in this directory.
+
+This will generate `modules.rst' and `pyscash.rst'.
+
+Then include `modules.rst' in your `index.rst' file.
