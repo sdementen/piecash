@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""SQLAlchemy model for GnuCash underlying SQL store"""
+"""Python GnuCash SQL interface"""
 
 # import metadata
 # from .model_core import (
