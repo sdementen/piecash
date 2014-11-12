@@ -20,105 +20,72 @@ From pip::
 Usage
 =====
 
-Here is a simple example of an interaction with an existing GnuCash Book created from scratch in GnuCash
-(the ipython notebook `session <http://htmlpreview.github.io/?https://github.com/sdementen/pyscash/blob/master/tests/ipython/pyscash_session.html>`_
-is available in the tests/ipython subfolder).
+The simplest workflow to use pyscash is first to open a SQLAlchemy session to a GnuCash Book
 
-.. code:: python
+.. code-block:: python
 
     import pyscash
-    import datetime
-.. code:: python
 
-    # open a SQLAlchemy session linked to the test.gnucash file (as sqlite3 saved Book)
-    s = pyscash.connect_to_gnucash_book("test.gnucash", readonly=False)
-.. code:: python
-
-    # retrieve the single Book object from the session (this is a sqlalchemy standard call)
-    book = s.query(pyscash.Book).one()
-    # retrieve the EUR currency
-    EUR = s.query(pyscash.Commodity).one()
-.. code:: python
-
-    # from the book, retrieve the root account and display its children accounts
-    book.root_account.children
+    # open a GnuCash Book
+    session = pyscash.connect_to_gnucash_book("test.gnucash", readonly=True)
 
 
+Use the SQLAlchemy session to query the Book, for example to query the stock prices
 
-.. parsed-literal::
+.. code-block:: python
 
-    [Account<Assets>,
-     Account<Liabilities>,
-     Account<Income>,
-     Account<Expenses>,
-     Account<Equity>]
-
-
-
-.. code:: python
-
-    # retrieve the standard 3 default assets accounts (checking account, saving account, cash in wallet)
-    curacc, savacc, cash = book.root_account.children[0].children[0].children
-.. code:: python
-
-    # check splits (they should be empty if the GnuCash book was an empty Book)
-    savacc.splits, curacc.splits
-
-
+    # example 1, print all stock prices in the Book
+    # display all prices
+    for price in session.query(pyscash.Price).all():
+        print "{}/{} on {} = {} {}".format(price.commodity.namespace,
+                                           price.commodity.mnemonic,
+                                           price.date,
+                                           float(price.value_num) / price.value_denom,
+                                           price.currency.mnemonic,
+                                           )
 
 .. parsed-literal::
 
-    ([], [])
+    NASDAQ/CZR on 2014-11-12 14:27:00 = 13.65 USD
+    ...
 
+or to query the accounts:
 
+.. code-block:: python
 
-.. code:: python
-
-    # create a transaction of 45 € from the saving  account to the checking account
-    tr = pyscash.Transaction.single_transaction(datetime.date.today(),datetime.date.today(), "transfer of money", 45, EUR, savacc, curacc)
-.. code:: python
-
-    # check some attributes of the transaction
-    tr.description, tr.splits
-
-
+    for account in session.query(pyscash.Account).all():
+        print account
 
 .. parsed-literal::
 
-    ('transfer of money',
-     [<Split Account<Assets:Current Assets:Savings Account> -45>,
-      <Split Account<Assets:Current Assets:Checking Account> 45>])
+    Account<>
+    Account<Assets>
+    Account<Assets:Current Assets>
+    Account<Assets:Current Assets:Checking Account>
+    Account<Assets:Current Assets:Savings Account>
+    Account<Assets:Current Assets:Cash in Wallet>
+    Account<Liabilities>
+    Account<Liabilities:Credit Card>
+    Account<Income>
+    Account<Income:Bonus>
+    Account<Income:Gifts Received>
+    ...
 
+Most basic objects used for personal finance are supported (Account, Split, Transaction, Price, ...).
 
+A more complete example showing interactions with an existing GnuCash Book created from scratch in GnuCash
+is available in the tests/ipython subfolder as ipython notebook (`ipython session <http://htmlpreview.github.io/?https://github.com/sdementen/pyscash/blob/master/tests/ipython/pyscash_session.html>`_)
 
-.. code:: python
+To do:
+======
 
-    # check the splits from the accounts point of view
-    savacc.splits, curacc.splits
-
-
-
-.. parsed-literal::
-
-    ([<Split Account<Assets:Current Assets:Savings Account> -45>],
-     [<Split Account<Assets:Current Assets:Checking Account> 45>])
-
-
-
-.. code:: python
-
-    # rollback the session (i.e. undo all changes)
-    s.rollback()
-.. code:: python
-
-    # check splits after the rollback (they should be unchanged)
-    savacc.splits, curacc.splits
-
-
-
-.. parsed-literal::
-
-    ([], [])
+- write more tests
+- implement higher function to offer a higher level API than the SQLAlchemy layer
+(for instance return a Book instead of SA session, be able to do Book.currencies to
+return session.query(pyscash.Commodity).filter(Commodity.namespace == "CURRENCY").all())
+- review non core objects (model_budget, model_business)
+- write example scripts
+- improve KVP support
 
 
 Authors
