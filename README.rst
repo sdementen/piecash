@@ -15,7 +15,7 @@ Installation
 
 From pip::
 
-    $ pip install --upgrade rstcheck
+    $ pip install pyscash
 
 Usage
 =====
