@@ -81,8 +81,8 @@ To do:
 
 - write more tests
 - implement higher function to offer a higher level API than the SQLAlchemy layer
-(for instance return a Book instead of SA session, be able to do Book.currencies to
-return session.query(pyscash.Commodity).filter(Commodity.namespace == "CURRENCY").all())
+  (for instance return a Book instead of SA session, be able to do Book.currencies to
+  return session.query(pyscash.Commodity).filter(Commodity.namespace == "CURRENCY").all())
 - review non core objects (model_budget, model_business)
 - write example scripts
 - improve KVP support
