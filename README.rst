@@ -5,10 +5,15 @@ Python GnuCash SQL interface (piecash)
 Project
 =======
 
-This project provides a simple interface to a GnuCash Book stored in SQL (sqlite3 or Postgres).
-It is basically a SQLAlchemy layer augmented with methods to ease the manipulation of core GnuCash objects.
+This project provides a simple and pythonic CRUD interface to a GnuCash Book stored in SQL (sqlite3 or Postgres).
+It is a pure python package relying on SQL Alchemy. It can be used as an alternative to:
+ - the official python bindings (if no advanced engine calculations are needed)
+ - XLST transformations of the XML GnuCash document
 
-Project is in early development. Knowledge of SQLAlchemy is a probably required...
+It is basically a SQLAlchemy layer augmented with methods to ease the manipulation of the GnuCash objects.
+
+Project is in early development. Knowledge of SQLAlchemy is at this stage a probably required to use it and/or
+to contribute to it.
 
 Installation
 ============
@@ -70,6 +75,23 @@ or to query the accounts:
     Account<Income:Bonus>
     Account<Income:Gifts Received>
     ...
+
+or to create a new account below some existing account:
+
+.. code-block:: python
+
+    # build map between account fullname (e.g. "Assets:Current Assets" and account)
+    map_fullname_account = {account.fullname():account for account in session.query(piecash.Account).all()}
+
+    # use it to retrieve the current assets account
+    acc_cur = map_fullname_account["Assets:Current Assets"]
+
+    # add a new subaccount to this account of type ASSET with currency EUR
+    piecash.Account(name="new savings account", account_type="ASSET", parent=acc_cur, commodity=EUR)
+
+    # save changes
+    session.commit()
+
 
 Most basic objects used for personal finance are supported (Account, Split, Transaction, Price, ...).
 
