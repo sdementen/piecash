@@ -41,7 +41,7 @@ class Account(DeclarativeBaseGuid):
                      primaryjoin='Account.guid==foreign(Slot.obj_guid)',
                      cascade='all, delete-orphan')
 
-    def full_name(self):
+    def fullname(self):
         acc = self
         l = []
         while acc:
@@ -56,7 +56,7 @@ class Account(DeclarativeBaseGuid):
 
 
     def __repr__(self):
-        return "Account<{}>".format(self.full_name())
+        return "Account<{}>".format(self.fullname())
 
 
 class Book(DeclarativeBaseGuid):
