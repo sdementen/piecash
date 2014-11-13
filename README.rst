@@ -1,5 +1,5 @@
 ======================================
-Python GnuCash SQL interface (pyscash)
+Python GnuCash SQL interface (piecash)
 ======================================
 
 Project
@@ -15,19 +15,19 @@ Installation
 
 From pip::
 
-    $ pip install pyscash
+    $ pip install piecash
 
 Usage
 =====
 
-The simplest workflow to use pyscash is first to open a SQLAlchemy session to a GnuCash Book
+The simplest workflow to use piecash is first to open a SQLAlchemy session to a GnuCash Book
 
 .. code-block:: python
 
-    import pyscash
+    import piecash
 
     # open a GnuCash Book
-    session = pyscash.connect_to_gnucash_book("test.gnucash", readonly=True)
+    session = piecash.connect_to_gnucash_book("test.gnucash", readonly=True)
 
 
 Use the SQLAlchemy session to query the Book, for example to query the stock prices
@@ -36,7 +36,7 @@ Use the SQLAlchemy session to query the Book, for example to query the stock pri
 
     # example 1, print all stock prices in the Book
     # display all prices
-    for price in session.query(pyscash.Price).all():
+    for price in session.query(piecash.Price).all():
         print "{}/{} on {} = {} {}".format(price.commodity.namespace,
                                            price.commodity.mnemonic,
                                            price.date,
@@ -53,7 +53,7 @@ or to query the accounts:
 
 .. code-block:: python
 
-    for account in session.query(pyscash.Account).all():
+    for account in session.query(piecash.Account).all():
         print account
 
 .. parsed-literal::
@@ -74,7 +74,7 @@ or to query the accounts:
 Most basic objects used for personal finance are supported (Account, Split, Transaction, Price, ...).
 
 A more complete example showing interactions with an existing GnuCash Book created from scratch in GnuCash
-is available in the tests/ipython subfolder as ipython notebook (`ipython session <http://htmlpreview.github.io/?https://github.com/sdementen/pyscash/blob/master/tests/ipython/pyscash_session.html>`_)
+is available in the tests/ipython subfolder as ipython notebook (`ipython session <http://htmlpreview.github.io/?https://github.com/sdementen/piecash/blob/master/tests/ipython/pyscash_session.html>`_)
 
 To do:
 ======
@@ -82,7 +82,7 @@ To do:
 - write more tests
 - implement higher function to offer a higher level API than the SQLAlchemy layer
   (for instance return a Book instead of SA session, be able to do Book.currencies to
-  return session.query(pyscash.Commodity).filter(Commodity.namespace == "CURRENCY").all())
+  return session.query(piecash.Commodity).filter(Commodity.namespace == "CURRENCY").all())
 - review non core objects (model_budget, model_business)
 - write example scripts
 - improve KVP support

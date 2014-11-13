@@ -1,5 +1,5 @@
-Run `sphinx-apidoc -o . ../../pyscash' in this directory.
+Run `sphinx-apidoc -o . ../../piecash' in this directory.
 
-This will generate `modules.rst' and `pyscash.rst'.
+This will generate `modules.rst' and `piecash.rst'.
 
 Then include `modules.rst' in your `index.rst' file.

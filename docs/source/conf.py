@@ -22,7 +22,7 @@ import sys
 sys.path.insert(0, os.path.abspath('../..'))
 
 # Import project metadata
-from pyscash import metadata
+from piecash import metadata
 
 # -- General configuration ----------------------------------------------------
 

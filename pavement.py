@@ -126,7 +126,7 @@ def test_all():
 #     # executable. So we just pass the package name in as the executable name,
 #     # since it's close enough. This should never be seen by an end user
 #     # installing through Setuptools anyway.
-#     from pyscash.main_notused import main
+#     from piecash.main_notused import main
 #     raise SystemExit(main([CODE_DIRECTORY] + args))
 
 

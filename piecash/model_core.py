@@ -395,7 +395,7 @@ def connect_to_gnucash_book(sqlite_file=None, postgres_conn=None, readonly=True,
     engine = None
     if sqlite_file:
         if not os.path.exists(sqlite_file):
-            raise GnucashException, "'{}' file does not exist (pyscash cannot be used to create" \
+            raise GnucashException, "'{}' file does not exist (piecash cannot be used to create" \
                                     "GnuCash books from scratch)".format(sqlite_file)
         engine = create_engine("sqlite:///{}".format(sqlite_file))
     elif postgres_conn:

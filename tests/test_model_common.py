@@ -9,7 +9,7 @@ import datetime
 from sqlalchemy import create_engine, Column, TEXT
 from sqlalchemy.orm import sessionmaker, composite
 
-import pyscash.model_common as mc
+import piecash.model_common as mc
 
 # parametrize = pytest.mark.parametrize
 

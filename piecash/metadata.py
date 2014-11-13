@@ -5,7 +5,7 @@ Information describing the project.
 """
 
 # The package name, which is also the "UNIX name" for the project.
-package = 'pyscash'
+package = 'piecash'
 project = "Python GnuCash SQL interface"
 project_no_spaces = project.replace(' ', '')
 version = '0.1.1'
@@ -15,4 +15,4 @@ authors_string = ', '.join(authors)
 emails = ['sdementen@gmail.com']
 license = 'MIT'
 copyright = '2014 ' + authors_string
-url = 'https://github.com/sdementen/pyscash'
+url = 'https://github.com/sdementen/piecash'

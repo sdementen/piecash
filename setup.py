@@ -36,16 +36,16 @@ except ImportError:
 sys.path.append('.')
 
 # # Constants
-CODE_DIRECTORY = 'pyscash'
+CODE_DIRECTORY = 'piecash'
 DOCS_DIRECTORY = 'docs'
 TESTS_DIRECTORY = 'tests'
 PYTEST_FLAGS = ['--doctest-modules']
 
 # Import metadata. Normally this would just be:
 #
-# from pyscash import metadata
+# from piecash import metadata
 #
-# However, when we do this, we also import `pyscash/__init__.py'. If this
+# However, when we do this, we also import `piecash/__init__.py'. If this
 # imports names from some other modules and these modules have third-party
 # dependencies that need installing (which happens after this file is run), the
 # script will crash. What we do instead is to load the metadata module by path

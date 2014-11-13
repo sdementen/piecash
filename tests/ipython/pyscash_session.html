@@ -1682,7 +1682,7 @@ In&nbsp;[1]:
 </div>
 <div class="inner_cell">
     <div class="input_area">
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">pyscash</span>
+<div class="highlight"><pre><span class="kn">import</span> <span class="nn">piecash</span>
 <span class="kn">import</span> <span class="nn">datetime</span>
 </pre></div>
 
@@ -1699,7 +1699,7 @@ In&nbsp;[2]:
 <div class="inner_cell">
     <div class="input_area">
 <div class="highlight"><pre><span class="c"># open a SQLAlchemy session linked to the test.gnucash file (as sqlite3 saved Book)</span>
-<span class="n">s</span> <span class="o">=</span> <span class="n">pyscash</span><span class="o">.</span><span class="n">connect_to_gnucash_book</span><span class="p">(</span><span class="s">&quot;test.gnucash&quot;</span><span class="p">,</span> <span class="n">readonly</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">piecash</span><span class="o">.</span><span class="n">connect_to_gnucash_book</span><span class="p">(</span><span class="s">&quot;test.gnucash&quot;</span><span class="p">,</span> <span class="n">readonly</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -1715,9 +1715,9 @@ In&nbsp;[3]:
 <div class="inner_cell">
     <div class="input_area">
 <div class="highlight"><pre><span class="c"># retrieve the single Book object from the session (this is a sqlalchemy standard call)</span>
-<span class="n">book</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">pyscash</span><span class="o">.</span><span class="n">Book</span><span class="p">)</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
+<span class="n">book</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">piecash</span><span class="o">.</span><span class="n">Book</span><span class="p">)</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
 <span class="c"># retrieve the EUR currency</span>
-<span class="n">EUR</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">pyscash</span><span class="o">.</span><span class="n">Commodity</span><span class="p">)</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
+<span class="n">EUR</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">piecash</span><span class="o">.</span><span class="n">Commodity</span><span class="p">)</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
 </pre></div>
 
 </div>
@@ -1823,7 +1823,7 @@ In&nbsp;[7]:
 <div class="inner_cell">
     <div class="input_area">
 <div class="highlight"><pre><span class="c"># create a transaction of 45 € from the saving  account to the checking account</span>
-<span class="n">tr</span> <span class="o">=</span> <span class="n">pyscash</span><span class="o">.</span><span class="n">Transaction</span><span class="o">.</span><span class="n">single_transaction</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">(),</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">(),</span> <span class="s">&quot;transfer of money&quot;</span><span class="p">,</span> <span class="mi">45</span><span class="p">,</span> <span class="n">EUR</span><span class="p">,</span> <span class="n">savacc</span><span class="p">,</span> <span class="n">curacc</span><span class="p">)</span>
+<span class="n">tr</span> <span class="o">=</span> <span class="n">piecash</span><span class="o">.</span><span class="n">Transaction</span><span class="o">.</span><span class="n">single_transaction</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">(),</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">(),</span> <span class="s">&quot;transfer of money&quot;</span><span class="p">,</span> <span class="mi">45</span><span class="p">,</span> <span class="n">EUR</span><span class="p">,</span> <span class="n">savacc</span><span class="p">,</span> <span class="n">curacc</span><span class="p">)</span>
 </pre></div>
 
 </div>
