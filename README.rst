@@ -86,6 +86,9 @@ or to create a new account below some existing account:
     # use it to retrieve the current assets account
     acc_cur = map_fullname_account["Assets:Current Assets"]
 
+    # retrieve EUR currency
+    EUR = session.query(piecash.Commodity).filter_by(mnemonic='EUR')
+
     # add a new subaccount to this account of type ASSET with currency EUR
     piecash.Account(name="new savings account", account_type="ASSET", parent=acc_cur, commodity=EUR)
 
