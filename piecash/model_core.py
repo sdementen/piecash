@@ -8,8 +8,8 @@ from enum import Enum
 from .model_common import (DeclarativeBaseGuid, DeclarativeBase,
                            _DateTime, _Date,
                            GnucashException,
-                           gnclock
-)
+                           gnclock,
+                           _default_session)
 from piecash.model_common import dict_decimal
 
 
@@ -79,21 +79,11 @@ class Book(DeclarativeBaseGuid):
 
     # ------------ context manager ----------------------------------------------
     # class variable to be used with the context manager "with book:"
-    # this variable can then be used in the code to retrieve the "active" session
-    _default_session = []
-
     def __enter__(self):
-        self._default_session.append(self.get_session())
+        _default_session.append(self.get_session())
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self._default_session.pop()
-
-    @classmethod
-    def get_active_session(self):
-        if self._default_session:
-            return self._default_session[-1]
-        else:
-            return None
+        _default_session.pop()
 
 
 class Budget(DeclarativeBaseGuid):
@@ -147,6 +137,7 @@ class Commodity(DeclarativeBaseGuid):
 
     # relation definitions
 
+    lookup_key = mnemonic
 
 
 class Price(DeclarativeBaseGuid):
