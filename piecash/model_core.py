@@ -10,6 +10,7 @@ from .model_common import (DeclarativeBaseGuid, DeclarativeBase,
                            GnucashException,
                            gnclock
 )
+from piecash.model_common import dict_decimal
 
 
 class Account(DeclarativeBaseGuid):
@@ -50,6 +51,7 @@ class Account(DeclarativeBaseGuid):
         return ":".join(l[-2::-1])
 
     def __init__(self, **kwargs):
+        # set description field to name field for convenience (if not defined)
         kwargs.setdefault('description', kwargs['name'])
 
         super(Account, self).__init__(**kwargs)
@@ -75,6 +77,24 @@ class Book(DeclarativeBaseGuid):
                             backref=backref('book', cascade='all, delete-orphan'))
     root_template = relation('Account', foreign_keys=[root_template_guid])
 
+    # ------------ context manager ----------------------------------------------
+    # class variable to be used with the context manager "with book:"
+    # this variable can then be used in the code to retrieve the "active" session
+    _default_session = []
+
+    def __enter__(self):
+        self._default_session.append(self.get_session())
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._default_session.pop()
+
+    @classmethod
+    def get_active_session(self):
+        if self._default_session:
+            return self._default_session[-1]
+        else:
+            return None
+
 
 class Budget(DeclarativeBaseGuid):
     __tablename__ = 'budgets'
@@ -97,8 +117,9 @@ class BudgetAmount(DeclarativeBase):
     # column definitions
     account_guid = Column('account_guid', TEXT(length=32),
                           ForeignKey('accounts.guid'), nullable=False)
-    amount_denom = Column('amount_denom', BIGINT(), nullable=False)
-    amount_num = Column('amount_num', BIGINT(), nullable=False)
+    locals().update(dict_decimal('amount'))
+    # amount_denom = Column('amount_denom', BIGINT(), nullable=False)
+    # amount_num = Column('amount_num', BIGINT(), nullable=False)
     budget_guid = Column('budget_guid', TEXT(length=32),
                          ForeignKey('budgets.guid'), nullable=False)
     id = Column('id', INTEGER(), primary_key=True, nullable=False)
@@ -127,6 +148,7 @@ class Commodity(DeclarativeBaseGuid):
     # relation definitions
 
 
+
 class Price(DeclarativeBaseGuid):
     __tablename__ = 'prices'
 
@@ -138,10 +160,11 @@ class Price(DeclarativeBaseGuid):
     date = Column('date', _DateTime, nullable=False)
     source = Column('source', TEXT(length=2048))
     type = Column('type', TEXT(length=2048))
-    value_denom = Column('value_denom', BIGINT(), nullable=False)
-    value_num = Column('value_num', BIGINT(), nullable=False)
+
+    locals().update(dict_decimal('value'))
 
     # relation definitions
+
     commodity = relation('Commodity', foreign_keys=[commodity_guid])
     currency = relation('Commodity', foreign_keys=[currency_guid])
 
@@ -213,8 +236,10 @@ class Slot(DeclarativeBase):
     int64_val = Column('int64_val', BIGINT())
     string_val = Column('string_val', TEXT(length=4096))
     timespec_val = Column('timespec_val', _DateTime())
-    numeric_val_denom = Column('numeric_val_denom', BIGINT())
-    numeric_val_num = Column('numeric_val_num', BIGINT())
+
+    locals().update(dict_decimal('numeric_val'))
+    # numeric_val_denom = Column('numeric_val_denom', BIGINT())
+    # numeric_val_num = Column('numeric_val_num', BIGINT())
 
     # relation definitions
 
@@ -233,20 +258,22 @@ class Split(DeclarativeBaseGuid):
     # guid = Column('guid', TEXT(length=32), primary_key=True, nullable=False)
     lot_guid = Column('lot_guid', TEXT(length=32), ForeignKey('lots.guid'))
     memo = Column('memo', TEXT(length=2048), nullable=False)
-    quantity_denom = Column('quantity_denom', BIGINT(), nullable=False)
-    quantity_num = Column('quantity_num', BIGINT(), nullable=False)
+    locals().update(dict_decimal('quantity'))
+    # quantity_denom = Column('quantity_denom', BIGINT(), nullable=False)
+    # quantity_num = Column('quantity_num', BIGINT(), nullable=False)
     reconcile_date = Column('reconcile_date', _DateTime())
     reconcile_state = Column('reconcile_state', TEXT(length=1), nullable=False)
     tx_guid = Column('tx_guid', TEXT(length=32), ForeignKey('transactions.guid'), nullable=False)
-    value_denom = Column('value_denom', BIGINT(), nullable=False)
-    value_num = Column('value_num', BIGINT(), nullable=False)
+    locals().update(dict_decimal('value'))
+    # value_denom = Column('value_denom', BIGINT(), nullable=False)
+    # value_num = Column('value_num', BIGINT(), nullable=False)
 
     # relation definitions
     account = relation('Account', backref=backref('splits', cascade='all, delete-orphan'))
     lot = relation('Lot', backref="splits")
 
     def __repr__(self):
-        return "<Split {} {}>".format(self.account, self.value_num/self.value_denom)
+        return "<Split {} {}>".format(self.account, self.value)
 
 
 class Transaction(DeclarativeBaseGuid):
@@ -421,4 +448,4 @@ def connect_to_gnucash_book(sqlite_file=None, postgres_conn=None, readonly=True,
 
         s.flush = new_flush
 
-    return s
+    return s.query(Book).one()
