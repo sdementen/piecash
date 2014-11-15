@@ -11,8 +11,8 @@ import pytest
 
 
 # parametrize = pytest.mark.parametrize
-from piecash.model_common import connect_to_gnucash_book, gnclock, GnucashException
-from piecash.model_core import Account, Transaction, Commodity, Slot, Version
+from piecash.model_common import gnclock, GnucashException
+from piecash.model_core import connect_to_gnucash_book, Account, Transaction, Commodity, Slot, Version
 
 
 test_folder = os.path.dirname(os.path.realpath(__file__))
@@ -24,7 +24,7 @@ file_for_test = os.path.join(test_folder,"empty_book_for_test.gnucash")
 def session(request):
     shutil.copyfile(file_template,file_for_test)
 
-    s = connect_to_gnucash_book(file_for_test, readonly=False)
+    s = connect_to_gnucash_book(file_for_test, readonly=False).get_session()
 
     request.addfinalizer(lambda: os.remove(file_for_test))
     return s
@@ -34,7 +34,7 @@ def session_readonly(request):
     shutil.copyfile(file_template,file_for_test)
 
     # default session is readonly
-    s = connect_to_gnucash_book(file_for_test)
+    s = connect_to_gnucash_book(file_for_test).get_session()
 
     request.addfinalizer(lambda: os.remove(file_for_test))
     return s
@@ -78,26 +78,24 @@ class TestModelCore_EmptyBook(object):
         }
 
     def test_readonly_true(self, session_readonly):
-        s = connect_to_gnucash_book(sqlite_file=file_for_test, readonly=True)
-
         # control exception when adding object to readonly gnucash db
         v = Version(table_name="sample", table_version="other sample")
-        s.add(v)
+        session_readonly.add(v)
         with pytest.raises(GnucashException):
-            s.flush()
+            session_readonly.flush()
 
         # control exception when deleting object to readonly gnucash db
-        s.delete(s.query(Account).first())
+        session_readonly.delete(session_readonly.query(Account).first())
         with pytest.raises(GnucashException):
-            s.flush()
+            session_readonly.flush()
 
         # control exception when modifying object to readonly gnucash db
-        s.query(Account).first().name = "foo"
+        session_readonly.query(Account).first().name = "foo"
         with pytest.raises(GnucashException):
-            s.flush()
+            session_readonly.flush()
 
         # control no exception when not changing the db
-        assert s.flush() is None
+        assert session_readonly.flush() is None
 
     def test_readonly_false(self, session):
         v = Version(table_name="fo", table_version="ok")
