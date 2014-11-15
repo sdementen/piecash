@@ -1,7 +1,9 @@
 from decimal import Decimal
 import os
+import decimal
 
-from sqlalchemy import Column, INTEGER, BIGINT, TEXT, REAL, ForeignKey, create_engine
+from sqlalchemy import Column, INTEGER, BIGINT, TEXT, REAL, ForeignKey, create_engine, cast, Float
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relation, backref, sessionmaker
 from enum import Enum
 
@@ -124,12 +126,23 @@ class Price(DeclarativeBaseGuid):
     source = Column('source', TEXT(length=2048))
     type = Column('type', TEXT(length=2048))
 
-    locals().update(dict_decimal('value'))
+    value_denom = Column('value_denom', BIGINT(), nullable=False)
+    value_num = Column('value_num', BIGINT(), nullable=False)
+    def fset(self, d):
+        _, _, exp = d.as_tuple()
+        self.value_denom = denom = int(d.radix() ** (-exp))
+        self.value_num = int(d * denom)
+    value = hybrid_property(
+        fget=lambda self: decimal.Decimal(self.value_num) / decimal.Decimal(self.value_denom),
+        fset=fset,
+        expr=lambda cls: cast(cls.value_num, Float) / cls.value_denom,
+    )
 
     # relation definitions
 
     commodity = relation('Commodity', foreign_keys=[commodity_guid])
     currency = relation('Commodity', foreign_keys=[currency_guid])
+
 
 
 class Lot(DeclarativeBaseGuid):
@@ -200,10 +213,18 @@ class Slot(DeclarativeBase):
     string_val = Column('string_val', TEXT(length=4096))
     timespec_val = Column('timespec_val', _DateTime())
 
-    locals().update(dict_decimal('numeric_val'))
-    # numeric_val_denom = Column('numeric_val_denom', BIGINT())
-    # numeric_val_num = Column('numeric_val_num', BIGINT())
 
+    numeric_val_denom = Column('numeric_val_denom', BIGINT(), nullable=False)
+    numeric_val_num = Column('numeric_val_num', BIGINT(), nullable=False)
+    def fset(self, d):
+        _, _, exp = d.as_tuple()
+        self.numeric_val_denom = denom = int(d.radix() ** (-exp))
+        self.numeric_val_num = int(d * denom)
+    numeric_val = hybrid_property(
+        fget=lambda self: decimal.Decimal(self.numeric_val_num) / decimal.Decimal(self.numeric_val_denom),
+        fset=fset,
+        expr=lambda cls: cast(cls.numeric_val_num, Float) / cls.numeric_val_denom,
+    )
     # relation definitions
 
     def __str__(self):
@@ -221,15 +242,33 @@ class Split(DeclarativeBaseGuid):
     # guid = Column('guid', TEXT(length=32), primary_key=True, nullable=False)
     lot_guid = Column('lot_guid', TEXT(length=32), ForeignKey('lots.guid'))
     memo = Column('memo', TEXT(length=2048), nullable=False)
-    locals().update(dict_decimal('quantity'))
-    # quantity_denom = Column('quantity_denom', BIGINT(), nullable=False)
-    # quantity_num = Column('quantity_num', BIGINT(), nullable=False)
+
+    quantity_denom = Column('quantity_denom', BIGINT(), nullable=False)
+    quantity_num = Column('quantity_num', BIGINT(), nullable=False)
+    def fset(self, d):
+        _, _, exp = d.as_tuple()
+        self.quantity_denom = denom = int(d.radix() ** (-exp))
+        self.quantity_num = int(d * denom)
+    quantity = hybrid_property(
+        fget=lambda self: decimal.Decimal(self.quantity_num) / decimal.Decimal(self.quantity_denom),
+        fset=fset,
+        expr=lambda cls: cast(cls.quantity_num, Float) / cls.quantity_denom,
+    )
     reconcile_date = Column('reconcile_date', _DateTime())
     reconcile_state = Column('reconcile_state', TEXT(length=1), nullable=False)
     tx_guid = Column('tx_guid', TEXT(length=32), ForeignKey('transactions.guid'), nullable=False)
-    locals().update(dict_decimal('value'))
-    # value_denom = Column('value_denom', BIGINT(), nullable=False)
-    # value_num = Column('value_num', BIGINT(), nullable=False)
+
+    value_denom = Column('value_denom', BIGINT(), nullable=False)
+    value_num = Column('value_num', BIGINT(), nullable=False)
+    def fset(self, d):
+        _, _, exp = d.as_tuple()
+        self.value_denom = denom = int(d.radix() ** (-exp))
+        self.value_num = int(d * denom)
+    value = hybrid_property(
+        fget=lambda self: decimal.Decimal(self.value_num) / decimal.Decimal(self.value_denom),
+        fset=fset,
+        expr=lambda cls: cast(cls.value_num, Float) / cls.value_denom,
+    )
 
     # relation definitions
     account = relation('Account', backref=backref('splits', cascade='all, delete-orphan'))
@@ -378,8 +417,7 @@ def connect_to_gnucash_book(sqlite_file=None, postgres_conn=None, readonly=True,
     :param sqlite_file: a path to a sqlite3 file
     :param postgres_conn: a connection string to a postgres database
     :param readonly: open the file as readonly (useful to play with and avoid any unwanted save
-    :param open_if_lock: open the file even if it is locked by another user
-    (using open_if_lock=True with readonly=False is not recommended)
+    :param open_if_lock: open the file even if it is locked by another user (using open_if_lock=True with readonly=False is not recommended)
     :return: a SQLAlchemy session
     """
     engine = None

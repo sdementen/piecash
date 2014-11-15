@@ -15,6 +15,7 @@
 # __copyright__ = metadata.copyright
 #
 # __all__ = [Book, Account, Commodity, Transaction, Split]
+from .model_common import get_active_session
 from .model_core import (connect_to_gnucash_book,
                          Book, Account, Transaction, Lot, Slot, Split,
                          Commodity, Price,

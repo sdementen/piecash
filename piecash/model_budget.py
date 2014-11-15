@@ -1,4 +1,6 @@
-from sqlalchemy import Column, TEXT, INTEGER, BIGINT, ForeignKey
+import decimal
+from sqlalchemy import Column, TEXT, INTEGER, BIGINT, ForeignKey, cast, Float
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relation, backref
 
 from .model_common import DeclarativeBaseGuid, _Date, dict_decimal
@@ -25,9 +27,17 @@ class BudgetAmount(DeclarativeBaseGuid):
     # column definitions
     account_guid = Column('account_guid', TEXT(length=32),
                           ForeignKey('accounts.guid'), nullable=False)
-    locals().update(dict_decimal('amount'))
-    # amount_denom = Column('amount_denom', BIGINT(), nullable=False)
-    # amount_num = Column('amount_num', BIGINT(), nullable=False)
+    amount_denom = Column('amount_denom', BIGINT(), nullable=False)
+    amount_num = Column('amount_num', BIGINT(), nullable=False)
+    def fset(self, d):
+        _, _, exp = d.as_tuple()
+        self.amount_denom = denom = int(d.radix() ** (-exp))
+        self.amount_num = int(d * denom)
+    amount = hybrid_property(
+        fget=lambda self: decimal.Decimal(self.amount_num) / decimal.Decimal(self.amount_denom),
+        fset=fset,
+        expr=lambda cls: cast(cls.amount_num, Float) / cls.amount_denom,
+    )
     budget_guid = Column('budget_guid', TEXT(length=32),
                          ForeignKey('budgets.guid'), nullable=False)
     id = Column('id', INTEGER(), primary_key=True, nullable=False)

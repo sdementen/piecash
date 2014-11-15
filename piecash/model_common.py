@@ -132,7 +132,7 @@ def dict_decimal(field):
         self.value_denom = denom = int(d.radix() ** (-exp))
         self.value_num = int(d * denom)
 
-    return {
+    dct = {
         field + '_denom': Column(field + '_denom', BIGINT(), nullable=False),
         field + '_num': Column(field + '_num', BIGINT(), nullable=False),
         field: hybrid_property(
@@ -141,6 +141,25 @@ def dict_decimal(field):
             expr=lambda cls: cast(cls.value_num, Float) / cls.value_denom,
         )
     }
+
+
+    print """
+
+
+    {field}_denom = Column('{field}_denom', BIGINT(), nullable=False)
+    {field}_num = Column('{field}_num', BIGINT(), nullable=False)
+    def fset(self, d):
+        _, _, exp = d.as_tuple()
+        self.{field}_denom = denom = int(d.radix() ** (-exp))
+        self.{field}_num = int(d * denom)
+    {field} = hybrid_property(
+        fget=lambda self: decimal.Decimal(self.{field}_num) / decimal.Decimal(self.{field}_denom),
+        fset=fset,
+        expr=lambda cls: cast(cls.{field}_num, Float) / cls.{field}_denom,
+    )
+    """.format(field=field)
+    return dct
+
 
 # module variable to be used with the context manager "with book:"
 # this variable can then be used in the code to retrieve the "active" session
