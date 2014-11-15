@@ -1,6 +1,9 @@
 from sqlalchemy import Column, INTEGER, BIGINT, TEXT
 from sqlalchemy.orm import composite
 
+# change of the __doc__ string as getting error in sphinx ==> should be reported to SA project
+composite.__doc__ = composite.__doc__.replace(":ref:`mapper_composite`", "")
+
 from .model_common import DeclarativeBaseGuid, _DateTime, Address
 
 

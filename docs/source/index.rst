@@ -1,11 +1,12 @@
-Python GnuCash SQL interface
-============================
+.. include:: ../../README.rst
 
-Contents:
+Developer documentation
+========================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
+   object_model.rst
 
 .. only:: html
 

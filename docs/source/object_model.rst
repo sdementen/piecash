@@ -1,3 +1,4 @@
+===================================
 GnuCash SQL Object model and schema
 ===================================
 
@@ -7,16 +8,24 @@ be always satisfied, logic to apply in ambiguous/corner cases) is critical for p
  a) ensure data integrity
  b) ensure compatibility in semantic with the official GnuCash application
 
-This document explains what the author understands in these domains.
+.. warning::
+
+    This document explains what the author understands in these domains. It is not the reference documentation, please refer
+    to the official GnuCash documentation for this.
 
 Core objects
 ============
 
-There are 6 core objects in GnuCash  : `Book`_, `Commodity`_, `Account`_, `Transaction`_, `Split`_, `Price`_
+There are 5 core objects in GnuCash  : `Book`_, `Commodity`_, `Account`_, `Transaction`_, `Split`_.
+An additional object, the `Price`_, is used in reports and for display (for instance, to convert all accounts balance
+in the default currency). While not as core as the others, it is an essential piece of functionality for anyone using
+GnuCash to track a stock portfolio value.
 
-A priori, all these objects are all "create once, never change" objects. Changing some fields of an object may lead to
-complex renormalisation procedures. Deleting some objects may lead to complex cascade changes/renormalisation procedures.
-In this respect, it is important to either avoid changes/deletions or to have clear invariants that should stay true at any time.
+.. note::
+
+    A priori, all these objects are all "create once, never change" objects. Changing some fields of an object may lead to
+    complex renormalisation procedures. Deleting some objects may lead to complex cascade changes/renormalisation procedures.
+    In this respect, it is important to either avoid changes/deletions or to have clear invariants that should stay true at any time.
 
 
 Book
@@ -206,7 +215,9 @@ lot
 Invariant
 ~~~~~~~~~
 
- - the sum of the value on all splits in a transaction should =0 (transaction is balanced)
+ - the sum of the value on all splits in a transaction should = 0 (transaction is balanced). If it is not the case, the
+   GnuCash application create automatically an extra Split entry towards the Account Imbalance-XXX (with XXX the currency
+   of the transaction)
  - the value and quantity fields are expressed as numerator / denominator. The denominator of the value should be
    the same as the fraction of the currency. The denominator of the quantity should be the same as the commodity_scu of
    the account.
@@ -252,4 +263,9 @@ Invariant
 Questions
 ~~~~~~~~~
 
+None
+
+
+Secondary Objects
+=================
 
