@@ -13,7 +13,8 @@ It is a pure python package relying on SQL Alchemy. It can be used as an alterna
 It is basically a SQLAlchemy layer augmented with methods to ease the manipulation of the GnuCash objects.
 
 Project is in early development. Knowledge of SQLAlchemy is at this stage a probably required to use it and/or
-to contribute to it.
+to contribute to it. Some documentation for developers on the object model of GnuCash as understood by the author is
+available `here <https://github.com/sdementen/piecash/blob/master/docs/source/object_model.rst>`_.
 
 Installation
 ============
