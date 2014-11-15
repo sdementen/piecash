@@ -1,7 +1,7 @@
 from sqlalchemy import Column, TEXT, INTEGER, BIGINT, ForeignKey
 from sqlalchemy.orm import relation, backref
 
-from .model_common import DeclarativeBaseGuid, _Date
+from .model_common import DeclarativeBaseGuid, _Date, dict_decimal
 
 
 class Budget(DeclarativeBaseGuid):
@@ -25,8 +25,9 @@ class BudgetAmount(DeclarativeBaseGuid):
     # column definitions
     account_guid = Column('account_guid', TEXT(length=32),
                           ForeignKey('accounts.guid'), nullable=False)
-    amount_denom = Column('amount_denom', BIGINT(), nullable=False)
-    amount_num = Column('amount_num', BIGINT(), nullable=False)
+    locals().update(dict_decimal('amount'))
+    # amount_denom = Column('amount_denom', BIGINT(), nullable=False)
+    # amount_num = Column('amount_num', BIGINT(), nullable=False)
     budget_guid = Column('budget_guid', TEXT(length=32),
                          ForeignKey('budgets.guid'), nullable=False)
     id = Column('id', INTEGER(), primary_key=True, nullable=False)

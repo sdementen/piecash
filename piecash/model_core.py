@@ -85,39 +85,11 @@ class Book(DeclarativeBaseGuid):
     def __exit__(self, exc_type, exc_val, exc_tb):
         _default_session.pop()
 
+    def save(self):
+        self.get_session().commit()
 
-class Budget(DeclarativeBaseGuid):
-    __tablename__ = 'budgets'
-
-    __table_args__ = {}
-
-    # column definitions
-    description = Column('description', TEXT(length=2048))
-    name = Column('name', TEXT(length=2048), nullable=False)
-    num_periods = Column('num_periods', INTEGER(), nullable=False)
-
-    # relation definitions
-
-
-class BudgetAmount(DeclarativeBase):
-    __tablename__ = 'budget_amounts'
-
-    __table_args__ = {}
-
-    # column definitions
-    account_guid = Column('account_guid', TEXT(length=32),
-                          ForeignKey('accounts.guid'), nullable=False)
-    locals().update(dict_decimal('amount'))
-    # amount_denom = Column('amount_denom', BIGINT(), nullable=False)
-    # amount_num = Column('amount_num', BIGINT(), nullable=False)
-    budget_guid = Column('budget_guid', TEXT(length=32),
-                         ForeignKey('budgets.guid'), nullable=False)
-    id = Column('id', INTEGER(), primary_key=True, nullable=False)
-    period_num = Column('period_num', INTEGER(), nullable=False)
-
-    # relation definitions
-    account = relation('Account', backref=backref('budget_amounts', cascade='all, delete-orphan'))
-    budget = relation('Budget', backref=backref('amounts', cascade='all, delete-orphan'))
+    def cancel(self):
+        self.get_session().rollback()
 
 
 class Commodity(DeclarativeBaseGuid):
