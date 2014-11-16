@@ -351,7 +351,7 @@ version_supported = {u'Gnucash-Resave': 19920, u'invoices': 3, u'books': 1, u'ac
                      u'employees': 2, u'commodities': 1, u'budgets': 1}
 
 
-def connect_to_gnucash_book(sqlite_file=None, postgres_conn=None, readonly=True, open_if_lock=False):
+def open_book_session(sqlite_file=None, postgres_conn=None, readonly=True, open_if_lock=False):
     """
     Open a GnuCash book and return the related SQLAlchemy session
 
@@ -397,4 +397,10 @@ def connect_to_gnucash_book(sqlite_file=None, postgres_conn=None, readonly=True,
 
         s.flush = new_flush
 
+    return s
+
+def connect_to_gnucash_book(sqlite_file=None, postgres_conn=None, readonly=True, open_if_lock=False):
+    s = open_book_session(sqlite_file, postgres_conn, readonly, open_if_lock)
     return s.query(Book).one()
+
+open_book = connect_to_gnucash_book
