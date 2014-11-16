@@ -1,10 +1,11 @@
-from sqlalchemy import Column, INTEGER, BIGINT, TEXT
-from sqlalchemy.orm import composite
+from sqlalchemy import Column, INTEGER, BIGINT, TEXT, ForeignKey
+from sqlalchemy.orm import composite, relation
 
 # change of the __doc__ string as getting error in sphinx ==> should be reported to SA project
 composite.__doc__ = composite.__doc__.replace(":ref:`mapper_composite`", "")
 
-from .model_common import DeclarativeBaseGuid, _DateTime, Address
+from .sa_extra import _Date, _DateTime
+from .model_common import DeclarativeBaseGuid, Address
 
 
 class Billterm(DeclarativeBaseGuid):
@@ -269,3 +270,39 @@ class TaxtableEntry(DeclarativeBaseGuid):
     type = Column('type', INTEGER(), nullable=False)
 
     #relation definitions
+
+
+class Schedxaction(DeclarativeBaseGuid):
+    __tablename__ = 'schedxactions'
+
+    __table_args__ = {}
+
+    # column definitions
+    adv_creation = Column('adv_creation', INTEGER(), nullable=False)
+    adv_notify = Column('adv_notify', INTEGER(), nullable=False)
+    auto_create = Column('auto_create', INTEGER(), nullable=False)
+    auto_notify = Column('auto_notify', INTEGER(), nullable=False)
+    enabled = Column('enabled', INTEGER(), nullable=False)
+    end_date = Column('end_date', _Date())
+    instance_count = Column('instance_count', INTEGER(), nullable=False)
+    last_occur = Column('last_occur', _Date())
+    name = Column('name', TEXT(length=2048))
+    num_occur = Column('num_occur', INTEGER(), nullable=False)
+    rem_occur = Column('rem_occur', INTEGER(), nullable=False)
+    start_date = Column('start_date', _Date())
+    template_act_guid = Column('template_act_guid', TEXT(length=32), ForeignKey('accounts.guid'), nullable=False)
+
+    # relation definitions
+
+
+class Lot(DeclarativeBaseGuid):
+    __tablename__ = 'lots'
+
+    __table_args__ = {}
+
+    # column definitions
+    account_guid = Column('account_guid', TEXT(length=32), ForeignKey('accounts.guid'))
+    is_closed = Column('is_closed', INTEGER(), nullable=False)
+
+    # relation definitions
+    account = relation('Account', backref="lots")

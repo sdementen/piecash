@@ -2,17 +2,13 @@ from decimal import Decimal
 import os
 import decimal
 
-from sqlalchemy import Column, INTEGER, BIGINT, TEXT, REAL, ForeignKey, create_engine, cast, Float
+from sqlalchemy import Column, INTEGER, BIGINT, TEXT, ForeignKey, create_engine, cast, Float
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relation, backref, sessionmaker
-from enum import Enum
 
-from .model_common import (DeclarativeBaseGuid, DeclarativeBase,
-                           _DateTime, _Date,
-                           GnucashException,
-                           gnclock,
-                           _default_session)
-from piecash.model_common import dict_decimal
+from .model_common import DeclarativeBaseGuid, gnclock, GnucashException, _default_session
+from .sa_extra import _DateTime, DeclarativeBase
+from kvp import KVP_Type
 
 
 class Account(DeclarativeBaseGuid):
@@ -39,10 +35,12 @@ class Account(DeclarativeBaseGuid):
                         backref=backref('parent', remote_side=guid),
                         cascade='all, delete-orphan',
     )
-    slots = relation('Slot',
-                     # remote_side='Slot.obj_guid',
-                     primaryjoin='Account.guid==foreign(Slot.obj_guid)',
-                     cascade='all, delete-orphan')
+
+    # definition of fields accessible through the kvp system
+    _kvp_slots = {
+        "notes": KVP_Type.KVP_TYPE_STRING,
+    }
+
 
     def fullname(self):
         acc = self
@@ -78,6 +76,13 @@ class Book(DeclarativeBaseGuid):
     root_account = relation('Account', foreign_keys=[root_account_guid],
                             backref=backref('book', cascade='all, delete-orphan'))
     root_template = relation('Account', foreign_keys=[root_template_guid])
+
+    # definition of fields accessible through the kvp system
+    _kvp_slots = {
+        "options": KVP_Type.KVP_TYPE_FRAME,
+    }
+
+
 
     # ------------ context manager ----------------------------------------------
     # class variable to be used with the context manager "with book:"
@@ -128,10 +133,12 @@ class Price(DeclarativeBaseGuid):
 
     value_denom = Column('value_denom', BIGINT(), nullable=False)
     value_num = Column('value_num', BIGINT(), nullable=False)
+
     def fset(self, d):
         _, _, exp = d.as_tuple()
         self.value_denom = denom = int(d.radix() ** (-exp))
         self.value_num = int(d * denom)
+
     value = hybrid_property(
         fget=lambda self: decimal.Decimal(self.value_num) / decimal.Decimal(self.value_denom),
         fset=fset,
@@ -142,93 +149,6 @@ class Price(DeclarativeBaseGuid):
 
     commodity = relation('Commodity', foreign_keys=[commodity_guid])
     currency = relation('Commodity', foreign_keys=[currency_guid])
-
-
-
-class Lot(DeclarativeBaseGuid):
-    __tablename__ = 'lots'
-
-    __table_args__ = {}
-
-    # column definitions
-    account_guid = Column('account_guid', TEXT(length=32), ForeignKey('accounts.guid'))
-    is_closed = Column('is_closed', INTEGER(), nullable=False)
-
-    # relation definitions
-    account = relation('Account', backref="lots")
-
-
-class Schedxaction(DeclarativeBaseGuid):
-    __tablename__ = 'schedxactions'
-
-    __table_args__ = {}
-
-    # column definitions
-    adv_creation = Column('adv_creation', INTEGER(), nullable=False)
-    adv_notify = Column('adv_notify', INTEGER(), nullable=False)
-    auto_create = Column('auto_create', INTEGER(), nullable=False)
-    auto_notify = Column('auto_notify', INTEGER(), nullable=False)
-    enabled = Column('enabled', INTEGER(), nullable=False)
-    end_date = Column('end_date', _Date())
-    instance_count = Column('instance_count', INTEGER(), nullable=False)
-    last_occur = Column('last_occur', _Date())
-    name = Column('name', TEXT(length=2048))
-    num_occur = Column('num_occur', INTEGER(), nullable=False)
-    rem_occur = Column('rem_occur', INTEGER(), nullable=False)
-    start_date = Column('start_date', _Date())
-    template_act_guid = Column('template_act_guid', TEXT(length=32), ForeignKey('accounts.guid'), nullable=False)
-
-    # relation definitions
-
-
-class KVP_Type(Enum):
-    KVP_TYPE_INVALID = -1
-    KVP_TYPE_GINT64 = 1
-    KVP_TYPE_DOUBLE = 2
-    KVP_TYPE_NUMERIC = 3
-    KVP_TYPE_STRING = 4
-    KVP_TYPE_GUID = 5
-    KVP_TYPE_TIMESPEC = 6
-    KVP_TYPE_BINARY = 7
-    KVP_TYPE_GLIST = 8
-    KVP_TYPE_FRAME = 9
-    KVP_TYPE_GDATE = 10
-
-
-class Slot(DeclarativeBase):
-    __tablename__ = 'slots'
-
-    __table_args__ = {}
-
-    # column definitions
-    name = Column('name', TEXT(length=4096), nullable=False)
-    id = Column('id', INTEGER(), primary_key=True, nullable=False)
-    obj_guid = Column('obj_guid', TEXT(length=32), nullable=False)
-    slot_type = Column('slot_type', INTEGER(), nullable=False)
-
-    double_val = Column('double_val', REAL())
-    gdate_val = Column('gdate_val', _Date())
-    guid_val = Column('guid_val', TEXT(length=32))
-    int64_val = Column('int64_val', BIGINT())
-    string_val = Column('string_val', TEXT(length=4096))
-    timespec_val = Column('timespec_val', _DateTime())
-
-
-    numeric_val_denom = Column('numeric_val_denom', BIGINT(), nullable=False)
-    numeric_val_num = Column('numeric_val_num', BIGINT(), nullable=False)
-    def fset(self, d):
-        _, _, exp = d.as_tuple()
-        self.numeric_val_denom = denom = int(d.radix() ** (-exp))
-        self.numeric_val_num = int(d * denom)
-    numeric_val = hybrid_property(
-        fget=lambda self: decimal.Decimal(self.numeric_val_num) / decimal.Decimal(self.numeric_val_denom),
-        fset=fset,
-        expr=lambda cls: cast(cls.numeric_val_num, Float) / cls.numeric_val_denom,
-    )
-    # relation definitions
-
-    def __str__(self):
-        return "<slot {}:{}>".format(self.name, self.string_val if self.slot_type == 4 else self.slot_type)
 
 
 class Split(DeclarativeBaseGuid):
@@ -245,10 +165,12 @@ class Split(DeclarativeBaseGuid):
 
     quantity_denom = Column('quantity_denom', BIGINT(), nullable=False)
     quantity_num = Column('quantity_num', BIGINT(), nullable=False)
+
     def fset(self, d):
         _, _, exp = d.as_tuple()
         self.quantity_denom = denom = int(d.radix() ** (-exp))
         self.quantity_num = int(d * denom)
+
     quantity = hybrid_property(
         fget=lambda self: decimal.Decimal(self.quantity_num) / decimal.Decimal(self.quantity_denom),
         fset=fset,
@@ -260,10 +182,12 @@ class Split(DeclarativeBaseGuid):
 
     value_denom = Column('value_denom', BIGINT(), nullable=False)
     value_num = Column('value_num', BIGINT(), nullable=False)
+
     def fset(self, d):
         _, _, exp = d.as_tuple()
         self.value_denom = denom = int(d.radix() ** (-exp))
         self.value_num = int(d * denom)
+
     value = hybrid_property(
         fget=lambda self: decimal.Decimal(self.value_num) / decimal.Decimal(self.value_denom),
         fset=fset,
@@ -295,6 +219,12 @@ class Transaction(DeclarativeBaseGuid):
 
     # relation definitions
     currency = relation('Commodity', backref=backref('transactions', cascade='all, delete-orphan'))
+
+    # definition of fields accessible through the kvp system
+    _kvp_slots = {
+        "notes": KVP_Type.KVP_TYPE_STRING,
+    }
+
 
     @classmethod
     def single_transaction(cls,
@@ -408,6 +338,17 @@ class Version(DeclarativeBase):
     table_version = Column('table_version', INTEGER(), nullable=False)
 
     # relation definitions
+    # none
+
+    def __repr__(self):
+        return "Version<{}={}>".format(self.table_name, self.table_version)
+
+
+version_supported = {u'Gnucash-Resave': 19920, u'invoices': 3, u'books': 1, u'accounts': 1, u'slots': 3,
+                     u'taxtables': 2, u'lots': 2, u'orders': 1, u'vendors': 1, u'customers': 2, u'jobs': 1,
+                     u'transactions': 3, u'Gnucash': 2060400, u'budget_amounts': 1, u'billterms': 2, u'recurrences': 2,
+                     u'entries': 3, u'prices': 2, u'schedxactions': 1, u'splits': 4, u'taxtable_entries': 3,
+                     u'employees': 2, u'commodities': 1, u'budgets': 1}
 
 
 def connect_to_gnucash_book(sqlite_file=None, postgres_conn=None, readonly=True, open_if_lock=False):
@@ -440,6 +381,13 @@ def connect_to_gnucash_book(sqlite_file=None, postgres_conn=None, readonly=True,
     # engine.execute(gnclock.insert(), Hostname=socket.gethostname(), PID=os.getpid())
 
     s = sessionmaker(bind=engine)()
+
+    # check the versions in the table versions is consistent with the API
+    # TODO: improve this in the future to allow more than 1 version
+    assert {v.table_name: v.table_version for v in
+            s.query(Version).all()} == version_supported, "Version of document not supported"
+
+
     # flush is a "no op" if readonly
     if readonly:
         def new_flush(*args, **kwargs):
