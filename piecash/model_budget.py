@@ -3,7 +3,8 @@ from sqlalchemy import Column, TEXT, INTEGER, BIGINT, ForeignKey, cast, Float
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relation, backref
 
-from .model_common import DeclarativeBaseGuid, _Date, dict_decimal
+from .sa_extra import _Date
+from .model_common import DeclarativeBaseGuid
 
 
 class Budget(DeclarativeBaseGuid):

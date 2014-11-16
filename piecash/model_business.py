@@ -2,10 +2,12 @@ from sqlalchemy import Column, INTEGER, BIGINT, TEXT, ForeignKey
 from sqlalchemy.orm import composite, relation
 
 # change of the __doc__ string as getting error in sphinx ==> should be reported to SA project
+from piecash.sa_extra import Address
+
 composite.__doc__ = composite.__doc__.replace(":ref:`mapper_composite`", "")
 
 from .sa_extra import _Date, _DateTime
-from .model_common import DeclarativeBaseGuid, Address
+from .model_common import DeclarativeBaseGuid
 
 
 class Billterm(DeclarativeBaseGuid):

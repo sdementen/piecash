@@ -51,18 +51,6 @@ class Slot(DeclarativeBase):
     numeric_val_denom = Column('numeric_val_denom', BIGINT(), nullable=False)
     numeric_val_num = Column('numeric_val_num', BIGINT(), nullable=False)
 
-    def fset(self, d):
-        _, _, exp = d.as_tuple()
-        self.numeric_val_denom = denom = int(d.radix() ** (-exp))
-        self.numeric_val_num = int(d * denom)
-
-    numeric_val = hybrid_property(
-        fget=lambda self: decimal.Decimal(self.numeric_val_num) / decimal.Decimal(self.numeric_val_denom),
-        fset=fset,
-        expr=lambda cls: cast(cls.numeric_val_num, Float) / cls.numeric_val_denom,
-    )
-    # relation definitions
-
     def __str__(self):
         return "<slot {}:{}>".format(self.name, self.string_val if self.slot_type == 4 else self.slot_type)
 
@@ -110,6 +98,8 @@ class KVPManager(object):
 
         if fld_type in self._kvp_simple_slots:
             return getattr(slot, KVP_info[fld_type])
+        elif fld_type==KVP_Type.KVP_TYPE_NUMERIC:
+            return getattr(slot, KVP_info[fld_type][0]), getattr(slot, KVP_info[fld_type][1])
         else:
             assert False, "type {} not yet supported".format(fld_type)
 
@@ -126,7 +116,10 @@ class KVPManager(object):
             self.slots.append(slot)
 
         if fld_type in self._kvp_simple_slots:
-            return setattr(slot, KVP_info[fld_type], value)
+            setattr(slot, KVP_info[fld_type], value)
+        elif fld_type==KVP_Type.KVP_TYPE_NUMERIC:
+            setattr(slot, KVP_info[fld_type][0], value[0])
+            setattr(slot, KVP_info[fld_type][1], value[1])
         else:
             assert False, "type {} not yet supported".format(fld_type)
 

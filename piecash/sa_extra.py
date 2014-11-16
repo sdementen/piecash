@@ -36,3 +36,21 @@ class _Date(types.TypeDecorator):
             )
         else:
             return types.Date()
+
+
+_address_fields = "addr1 addr2 addr3 addr4 email fax name phone".split()
+
+
+class Address(object):
+    def __init__(self, *args):
+        for fld, val in zip(_address_fields, args):
+            setattr(self, fld, val)
+
+    def __composite_values__(self):
+        return tuple(self)
+
+    def __eq__(self, other):
+        return isinstance(other, Address) and all(getattr(other, fld) == getattr(self, fld) for fld in _address_fields)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)

@@ -20,4 +20,4 @@ from .model_core import (connect_to_gnucash_book,
                          Book, Account, Transaction, Split,
                          Commodity, Price,
 )
-
+from .model_business import Lot # must import as Transaction has a relation to it

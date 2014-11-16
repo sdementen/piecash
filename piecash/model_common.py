@@ -1,12 +1,11 @@
 import uuid
 import decimal
 
-from sqlalchemy import Column, TEXT, types, Table, VARCHAR, INTEGER, BIGINT, cast, Float, inspect
-from sqlalchemy.dialects import sqlite
-from sqlalchemy.ext.declarative import as_declarative, declared_attr
+from sqlalchemy import Column, TEXT, Table, VARCHAR, INTEGER, BIGINT, cast, Float, inspect
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import object_session, relation, foreign
-from .kvp import Slot, KVP_Type, KVP_info, KVPManager
+from sqlalchemy.orm import object_session
+
+from .kvp import KVPManager
 from .sa_extra import DeclarativeBase
 
 
@@ -16,64 +15,6 @@ class DeclarativeBaseGuid(KVPManager, DeclarativeBase):
     guid = Column('guid', TEXT(length=32), primary_key=True, nullable=False, default=lambda: uuid.uuid4().hex)
 
     _kvp_slots = {}
-
-    # # set the relation to the slots table (KVP)
-    # @classmethod
-    # def __declare_last__(cls):
-    #     cls.slots = relation(Slot, primaryjoin=foreign(Slot.obj_guid)==cls.guid)
-    #
-    # def get_kvp_type(self, key):
-    #     fld_type = self._kvp_slots.get(key, None)
-    #     if fld_type is None:
-    #         raise ValueError, "key {} cannot be assigned to {}".format(key, self)
-    #     return fld_type
-    #
-    # def get_kvp_slot(self, key):
-    #     for slot in self.slots:
-    #         if slot.name==key:
-    #             return slot
-    #     else:
-    #         # key not found
-    #         raise KeyError, "no {} in kvp of {}".format(key, self)
-    #
-    #
-    # _kvp_simple_slots = (
-    #             KVP_Type.KVP_TYPE_DOUBLE,
-    #             KVP_Type.KVP_TYPE_GDATE,
-    #             KVP_Type.KVP_TYPE_GINT64,
-    #             KVP_Type.KVP_TYPE_GUID,
-    #             KVP_Type.KVP_TYPE_TIMESPEC,
-    #             KVP_Type.KVP_TYPE_STRING,
-    #     )
-    # def get_kvp(self, key):
-    #     fld_type = self.get_kvp_type(key)
-    #     slot = self.get_kvp_slot(key)
-    #
-    #     if fld_type in self._kvp_simple_slots:
-    #         return getattr(slot, KVP_info[fld_type])
-    #     else:
-    #         assert False
-    #
-    # def set_kvp(self, key, value):
-    #     fld_type = self.get_kvp_type(key)
-    #
-    #     try:
-    #         # retrieve slot if it exist
-    #         slot = self.get_kvp_slot(key)
-    #     except KeyError:
-    #         # or create new if it does not exist
-    #         slot = Slot(name=key,
-    #                     slot_type=fld_type.value)
-    #         self.slots.append(slot)
-    #
-    #     if fld_type in self._kvp_simple_slots:
-    #         return setattr(slot, KVP_info[fld_type], value)
-    #     else:
-    #         assert False
-    #
-    # def del_kvp(self, key):
-    #     slot = self.get_kvp_slot(key)
-    #     slot.delete()
 
     def __init__(self, **kwargs):
         """A simple constructor that allows initialization from kwargs.
@@ -115,22 +56,13 @@ class DeclarativeBaseGuid(KVPManager, DeclarativeBase):
         return object_session(self)
 
 
-_address_fields = "addr1 addr2 addr3 addr4 email fax name phone".split()
 
-
-class Address(object):
-    def __init__(self, *args):
-        for fld, val in zip(_address_fields, args):
-            setattr(self, fld, val)
-
-    def __composite_values__(self):
-        return tuple(self)
-
-    def __eq__(self, other):
-        return isinstance(other, Address) and all(getattr(other, fld) == getattr(self, fld) for fld in _address_fields)
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
+    # @validates('readonly1', 'readonly2')
+    # def _write_once(self, key, value):
+    #     existing = getattr(self, key)
+    #     if existing is not None:
+    #         raise ValueError("Field '%s' is write-once" % key)
+    #     return value
 
 
 class GnucashException(Exception):
