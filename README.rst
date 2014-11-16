@@ -33,7 +33,8 @@ The simplest workflow to use piecash is first to open a SQLAlchemy session to a 
     import piecash
 
     # open a GnuCash Book
-    session = piecash.connect_to_gnucash_book("test.gnucash", readonly=True)
+    book = piecash.connect_to_gnucash_book("test.gnucash", readonly=True)
+    session = book.get_session()
 
 
 Use the SQLAlchemy session to query the Book, for example to query the stock prices

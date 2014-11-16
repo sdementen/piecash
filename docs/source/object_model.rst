@@ -104,13 +104,14 @@ Invariant
 ~~~~~~~~~
 
  - a currency commodity has namespace=='CURRENCY'
- - currencies can not be created (could not find a way to do it in the GUI)
+ - only currencies referenced by accounts or commodities are stored in the table 'commodities' (the complete list of
+   currencies is available within the GnuCash application)
  - a stock commodity has namespace!='CURRENCY'
 
 
 Questions
 ~~~~~~~~~
-None
+ - is the guid of a currency hardcoded in GnuCash (as is the full list of currencies) or can it be assigned freely ?
 
 
 Account
