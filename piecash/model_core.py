@@ -384,8 +384,14 @@ def open_book_session(sqlite_file=None, postgres_conn=None, readonly=True, open_
 
     # check the versions in the table versions is consistent with the API
     # TODO: improve this in the future to allow more than 1 version
-    assert {v.table_name: v.table_version for v in
-            s.query(Version).all()} == version_supported, "Version of document not supported"
+    version_book = {v.table_name: v.table_version for v in s.query(Version).all()}
+    for k, v in version_book.iteritems():
+        # skip GnuCash
+        if k in ("Gnucash"):
+            continue
+        if version_supported[k] != v:
+            print k, v, version_supported[k]
+            assert False, "{} {} {}".format(k, v, version_supported[k])
 
 
     # flush is a "no op" if readonly
