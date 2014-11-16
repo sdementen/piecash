@@ -10,8 +10,11 @@ from sqlalchemy import create_engine, Column, TEXT
 from sqlalchemy.orm import sessionmaker, composite
 
 import piecash.model_common as mc
+from piecash.sa_extra import _Date, _DateTime
 
 # parametrize = pytest.mark.parametrize
+from piecash.sa_extra import Address
+
 
 def session():
     engine = create_engine("sqlite://")
@@ -48,7 +51,7 @@ class TestModelCommon(object):
             col = Column(fld, TEXT())
             setattr(B, fld, col)
             l.append(col)
-        B.addr = composite(mc.Address, *l)
+        B.addr = composite(Address, *l)
 
         s = session()
         a = B(addr1="foo")
@@ -65,7 +68,7 @@ class TestModelCommon(object):
     def test_date(self):
         class C(mc.DeclarativeBaseGuid):
             __tablename__ = "c_table"
-            day = Column(mc._Date)
+            day = Column(_Date)
 
 
         s = session()
@@ -79,7 +82,7 @@ class TestModelCommon(object):
     def test_datetime(self):
         class C(mc.DeclarativeBaseGuid):
             __tablename__ = "d_table"
-            time = Column(mc._DateTime)
+            time = Column(_DateTime)
 
         s = session()
         a = C(time=datetime.datetime(2010, 4, 12,3,4,5))
