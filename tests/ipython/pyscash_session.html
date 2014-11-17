@@ -1593,6 +1593,7 @@ span#checkpoint_status,span#autosave_status{font-size:small}
 .highlight .nv { color: #19177C } /* Name.Variable */
 .highlight .ow { color: #AA22FF; font-weight: bold } /* Operator.Word */
 .highlight .w { color: #bbbbbb } /* Text.Whitespace */
+.highlight .mb { color: #666666 } /* Literal.Number.Bin */
 .highlight .mf { color: #666666 } /* Literal.Number.Float */
 .highlight .mh { color: #666666 } /* Literal.Number.Hex */
 .highlight .mi { color: #666666 } /* Literal.Number.Integer */
@@ -1699,7 +1700,7 @@ In&nbsp;[2]:
 <div class="inner_cell">
     <div class="input_area">
 <div class="highlight"><pre><span class="c"># open a SQLAlchemy session linked to the test.gnucash file (as sqlite3 saved Book)</span>
-<span class="n">s</span> <span class="o">=</span> <span class="n">piecash</span><span class="o">.</span><span class="n">connect_to_gnucash_book</span><span class="p">(</span><span class="s">&quot;test.gnucash&quot;</span><span class="p">,</span> <span class="n">readonly</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">piecash</span><span class="o">.</span><span class="n">connect_to_gnucash_book</span><span class="p">(</span><span class="s">&quot;test.gnucash&quot;</span><span class="p">,</span> <span class="n">readonly</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span>
 </pre></div>
 
 </div>
