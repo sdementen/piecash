@@ -1691,6 +1691,23 @@ In&nbsp;[1]:
 </div>
 </div>
 
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt"></div>
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>
+/home/sdementen/.virtualenvs/pyscash-user/local/lib/python2.7/site-packages/SQLAlchemy-0.9.8-py2.7-linux-i686.egg/sqlalchemy/ext/declarative/api.py:55: SAWarning: On class &apos;Commodity&apos;, Column object &apos;mnemonic&apos; named directly multiple times, only one will be used: lookup_key, mnemonic
+  _as_declarative(cls, classname, cls.__dict__)
+
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
@@ -1700,7 +1717,7 @@ In&nbsp;[2]:
 <div class="inner_cell">
     <div class="input_area">
 <div class="highlight"><pre><span class="c"># open a SQLAlchemy session linked to the test.gnucash file (as sqlite3 saved Book)</span>
-<span class="n">s</span> <span class="o">=</span> <span class="n">piecash</span><span class="o">.</span><span class="n">connect_to_gnucash_book</span><span class="p">(</span><span class="s">&quot;test.gnucash&quot;</span><span class="p">,</span> <span class="n">readonly</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">piecash</span><span class="o">.</span><span class="n">connect_to_gnucash_book</span><span class="p">(</span><span class="s">&quot;test.gnucash&quot;</span><span class="p">,</span> <span class="n">readonly</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -1952,6 +1969,21 @@ In&nbsp;[11]:
 
 </div>
 
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">
+In&nbsp;[]:
+</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class="highlight"><pre> 
+</pre></div>
+
+</div>
 </div>
 </div>
 
