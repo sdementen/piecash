@@ -1,8 +1,6 @@
 from decimal import Decimal
 
-from sqlalchemy.orm import Session, object_session
-
-from piecash import connect_to_gnucash_book, Account, Commodity, Price, get_active_session, create_book
+from piecash import connect_to_gnucash_book, Commodity, Price, get_active_session, create_book, Account
 
 
 # b = create_book(postgres_conn="postgres://postgres:postgres@localhost/gnucash_fooffffff", overwrite=True)
@@ -52,8 +50,6 @@ with b1:
     with b2:
         print get_active_session()
     print get_active_session()
-
-assert isinstance(s1, Session)
 
 with b1:
     acc = Account(name="foo")

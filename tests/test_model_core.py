@@ -10,10 +10,13 @@ import os
 import pytest
 
 
+
 # parametrize = pytest.mark.parametrize
+from piecash import connect_to_gnucash_book
+from piecash.model_core.account import Account
 from piecash.kvp import Slot
 from piecash.model_common import GnucashException
-from piecash.model_core import connect_to_gnucash_book, Account, Transaction, Commodity, Version, gnclock
+from piecash.model_core import Transaction, Commodity, Version, gnclock
 
 
 test_folder = os.path.dirname(os.path.realpath(__file__))
@@ -25,7 +28,7 @@ file_for_test = os.path.join(test_folder,"empty_book_for_test.gnucash")
 def session(request):
     shutil.copyfile(file_template,file_for_test)
 
-    s = connect_to_gnucash_book(file_for_test, readonly=False).get_session()
+    s = connect_to_gnucash_book(file_for_test, readonly=False)
 
     request.addfinalizer(lambda: os.remove(file_for_test))
     return s
@@ -35,7 +38,7 @@ def session_readonly(request):
     shutil.copyfile(file_template,file_for_test)
 
     # default session is readonly
-    s = connect_to_gnucash_book(file_for_test).get_session()
+    s = connect_to_gnucash_book(file_for_test)
 
     request.addfinalizer(lambda: os.remove(file_for_test))
     return s

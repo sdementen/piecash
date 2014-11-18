@@ -1,109 +1,19 @@
 from decimal import Decimal
-import os
 import decimal
 
-from sqlalchemy import Column, INTEGER, BIGINT, VARCHAR, ForeignKey, create_engine, cast, Float, Table
+from sqlalchemy import Column, INTEGER, BIGINT, VARCHAR, ForeignKey, cast, Float, Table
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relation, backref, sessionmaker
-from sqlalchemy.sql.ddl import DropConstraint
+from sqlalchemy.orm import relation, backref
 
-from .model_common import DeclarativeBaseGuid, GnucashException, _default_session
-from .sa_extra import _DateTime, DeclarativeBase, get_foreign_keys
-from kvp import KVP_Type
+from ..model_common import DeclarativeBaseGuid
+from ..sa_extra import _DateTime, DeclarativeBase
+from ..kvp import KVP_Type
 
 
 gnclock = Table(u'gnclock', DeclarativeBase.metadata,
                 Column('Hostname', VARCHAR(length=255)),
                 Column('PID', INTEGER()),
 )
-
-
-class Account(DeclarativeBaseGuid):
-    __tablename__ = 'accounts'
-
-    __table_args__ = {}
-
-    # column definitions
-    account_type = Column('account_type', VARCHAR(length=2048), nullable=False)
-    code = Column('code', VARCHAR(length=2048))
-    commodity_guid = Column('commodity_guid', VARCHAR(length=32), ForeignKey('commodities.guid'))
-    commodity_scu = Column('commodity_scu', INTEGER(), nullable=False, default=0)
-    description = Column('description', VARCHAR(length=2048))
-    guid = DeclarativeBaseGuid.guid
-    hidden = Column('hidden', INTEGER(), default=0)
-    name = Column('name', VARCHAR(length=2048), nullable=False)
-    non_std_scu = Column('non_std_scu', INTEGER(), nullable=False, default=0)
-    parent_guid = Column('parent_guid', VARCHAR(length=32), ForeignKey('accounts.guid'))
-    placeholder = Column('placeholder', INTEGER(), default=0)
-
-    # relation definitions
-    commodity = relation('Commodity', backref=backref('accounts', cascade='all, delete-orphan'))
-    children = relation('Account',
-                        backref=backref('parent', remote_side=guid),
-                        cascade='all, delete-orphan',
-    )
-
-    # definition of fields accessible through the kvp system
-    _kvp_slots = {
-        "notes": KVP_Type.KVP_TYPE_STRING,
-    }
-
-
-    def fullname(self):
-        acc = self
-        l = []
-        while acc:
-            l.append(acc.name)
-            acc = acc.parent
-        return ":".join(l[-2::-1])
-
-    def __init__(self, **kwargs):
-        # set description field to name field for convenience (if not defined)
-        # kwargs.setdefault('description', kwargs['name'])
-
-        super(Account, self).__init__(**kwargs)
-
-
-    def __repr__(self):
-        return "Account<{}>".format(self.fullname())
-
-
-class Book(DeclarativeBaseGuid):
-    __tablename__ = 'books'
-
-    __table_args__ = {}
-
-    # column definitions
-    root_account_guid = Column('root_account_guid', VARCHAR(length=32),
-                               ForeignKey('accounts.guid'), nullable=False)
-    root_template_guid = Column('root_template_guid', VARCHAR(length=32),
-                                ForeignKey('accounts.guid'), nullable=False)
-
-    # relation definitions
-    root_account = relation('Account', foreign_keys=[root_account_guid],
-                            backref=backref('book', cascade='all, delete-orphan'))
-    root_template = relation('Account', foreign_keys=[root_template_guid])
-
-    # definition of fields accessible through the kvp system
-    _kvp_slots = {
-        "options": KVP_Type.KVP_TYPE_FRAME,
-    }
-
-
-
-    # ------------ context manager ----------------------------------------------
-    # class variable to be used with the context manager "with book:"
-    def __enter__(self):
-        _default_session.append(self.get_session())
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        _default_session.pop()
-
-    def save(self):
-        self.get_session().commit()
-
-    def cancel(self):
-        self.get_session().rollback()
 
 
 class Commodity(DeclarativeBaseGuid):
@@ -351,120 +261,14 @@ class Version(DeclarativeBase):
         return "Version<{}={}>".format(self.table_name, self.table_version)
 
 
-version_supported = {u'Gnucash-Resave': 19920, u'invoices': 3, u'books': 1, u'accounts': 1, u'slots': 3,
-                     u'taxtables': 2, u'lots': 2, u'orders': 1, u'vendors': 1, u'customers': 2, u'jobs': 1,
-                     u'transactions': 3, u'Gnucash': 2060400, u'budget_amounts': 1, u'billterms': 2, u'recurrences': 2,
-                     u'entries': 3, u'prices': 2, u'schedxactions': 1, u'splits': 4, u'taxtable_entries': 3,
-                     u'employees': 2, u'commodities': 1, u'budgets': 1}
 
 
-def open_book_session(sqlite_file=None, postgres_conn=None, readonly=True, open_if_lock=False):
-    """
-    Open a GnuCash book and return the related SQLAlchemy session
-
-    :param sqlite_file: a path to a sqlite3 file
-    :param postgres_conn: a connection string to a postgres database
-    :param readonly: open the file as readonly (useful to play with and avoid any unwanted save
-    :param open_if_lock: open the file even if it is locked by another user (using open_if_lock=True with readonly=False is not recommended)
-    :return: a SQLAlchemy session
-    """
-    engine = None
-    if sqlite_file:
-        if not os.path.exists(sqlite_file):
-            raise GnucashException, "'{}' file does not exist (piecash cannot be used to create" \
-                                    "GnuCash books from scratch)".format(sqlite_file)
-        engine = create_engine("sqlite:///{}".format(sqlite_file))
-    elif postgres_conn:
-        engine = create_engine(postgres_conn)
-    else:
-        raise GnucashException, "Please specify either a sqlite file or a postgres connection"
-
-    locks = list(engine.execute(gnclock.select()))
-
-    # ensure the file is not locked by GnuCash itself
-    if locks and not open_if_lock:
-        raise GnucashException, "Lock on the file"
-    # else:
-    # engine.execute(gnclock.insert(), Hostname=socket.gethostname(), PID=os.getpid())
-
-    s = sessionmaker(bind=engine)()
-
-    # check the versions in the table versions is consistent with the API
-    # TODO: improve this in the future to allow more than 1 version
-    version_book = {v.table_name: v.table_version for v in s.query(Version).all()}
-    for k, v in version_book.iteritems():
-        # skip GnuCash
-        if k in ("Gnucash"):
-            continue
-        if version_supported[k] != v:
-            print k, v, version_supported[k]
-            assert False, "{} {} {}".format(k, v, version_supported[k])
 
 
-    # flush is a "no op" if readonly
-    if readonly:
-        def new_flush(*args, **kwargs):
-            if s.dirty or s.new or s.deleted:
-                s.rollback()
-                raise GnucashException, "You cannot change the DB, it is locked !"
-
-        s.flush = new_flush
-
-    return s
 
 
-def connect_to_gnucash_book(sqlite_file=None, postgres_conn=None, readonly=True, open_if_lock=False):
-    s = open_book_session(sqlite_file, postgres_conn, readonly, open_if_lock)
-    return wrap_session(s)
 
 
-open_book = connect_to_gnucash_book
-
-def wrap_session(s):
-    s.book = s.query(Book).one()
-    s.save = s.book.save
-    s.cancel = s.book.cancel
-    return s
 
 
-def create_book(sqlite_file=None, uri_conn=None, overwrite=False):
-    from sqlalchemy_utils.functions import database_exists, create_database, drop_database
 
-    if uri_conn is None:
-        if sqlite_file:
-            uri_conn = "sqlite:///{}".format(sqlite_file)
-        else:
-            uri_conn = "sqlite:///:memory:"
-
-    # create database (if not sqlite in memory
-    if uri_conn != "sqlite:///:memory:":
-        if database_exists(uri_conn):
-            if overwrite:
-                drop_database(uri_conn)
-            else:
-                raise GnucashException, "'{}' db already exists".format(uri_conn)
-        create_database(uri_conn)
-    engine = create_engine(uri_conn)
-
-    # create all (tables, fk, ...)
-    DeclarativeBase.metadata.create_all(engine)
-
-    # remove all foreign keys
-    for fk in get_foreign_keys(DeclarativeBase.metadata, engine):
-        if fk.name:
-            engine.execute(DropConstraint(fk))
-
-    # start session to create initial objects
-    s = sessionmaker(bind=engine)()
-
-    # create all rows in version table
-    for table_name, table_version in version_supported.iteritems():
-        s.add(Version(table_name=table_name, table_version=table_version))
-
-    # create Book and initial accounts
-    b = Book(root_account=Account(name="Root Account", account_type="ROOT"),
-             root_template=Account(name="Template Root", account_type="ROOT"),
-    )
-    s.add(b)
-    s.commit()
-    return wrap_session(s)

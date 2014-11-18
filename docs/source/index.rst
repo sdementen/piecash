@@ -7,8 +7,12 @@ Developer documentation
    :maxdepth: 3
 
    object_model.rst
+   modules.rst
 
 .. only:: html
+
+
+
 
    Indices and tables
    ==================
