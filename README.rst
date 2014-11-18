@@ -101,7 +101,7 @@ or to create a new account below some existing account:
 Most basic objects used for personal finance are supported (Account, Split, Transaction, Price, ...).
 
 A more complete example showing interactions with an existing GnuCash Book created from scratch in GnuCash
-is available in the tests/ipython subfolder as ipython notebook (`ipython session <http://htmlpreview.github.io/?https://github.com/sdementen/piecash/blob/master/tests/ipython/pyscash_session.html>`_)
+is available in the tests/ipython subfolder as ipython notebook (`ipython session <http://htmlpreview.github.io/?https://github.com/sdementen/piecash/blob/master/examples/ipython/pyscash_session.html>`_)
 
 To do:
 ======
