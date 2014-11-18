@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, object_session
 
 from piecash import connect_to_gnucash_book, Account, Commodity, Price, get_active_session, create_book
 
@@ -8,21 +8,23 @@ from piecash import connect_to_gnucash_book, Account, Commodity, Price, get_acti
 # b = create_book(postgres_conn="postgres://postgres:postgres@localhost/gnucash_fooffffff", overwrite=True)
 # b = create_book(postgres_conn="postgresql+pg8000://postgres:postgres@localhost/gnucash_fooffffff", overwrite=True)
 # b = create_book("foo5.gnucash",overwrite=True)
-b = create_book()
-Account(name="foo", parent=b.root_account, account_type="ASSET")
-b.cancel()
+s = create_book()
+Account(name="foo", parent=s.book.root_account, account_type="ASSET")
+s.cancel()
 
-print b.root_account.children
+print s.book.root_account.children
 
-fdfdsfsd
 
-b1 = connect_to_gnucash_book("sample1.gnucash", readonly=False)
-b2 = connect_to_gnucash_book("sample2.gnucash")
-s1 = b1.get_session()
-s2 = b2.get_session()
+s1 = connect_to_gnucash_book("sample1.gnucash", readonly=False)
+b1 = s1.book
+s2 = connect_to_gnucash_book("sample2.gnucash")
+b2 = s2.book
+
+# print b1, object_session(b1)
 
 with b1:
     # print Commodity.lookup("EUR").get_kvp("ba")
+    print s1.query(Commodity).all()
     eur = Commodity.lookup("EUR")
 
 # b1.set_kvp("num", (2554,100))

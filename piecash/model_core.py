@@ -415,10 +415,16 @@ def open_book_session(sqlite_file=None, postgres_conn=None, readonly=True, open_
 
 def connect_to_gnucash_book(sqlite_file=None, postgres_conn=None, readonly=True, open_if_lock=False):
     s = open_book_session(sqlite_file, postgres_conn, readonly, open_if_lock)
-    return s.query(Book).one()
+    return wrap_session(s)
 
 
 open_book = connect_to_gnucash_book
+
+def wrap_session(s):
+    s.book = s.query(Book).one()
+    s.save = s.book.save
+    s.cancel = s.book.cancel
+    return s
 
 
 def create_book(sqlite_file=None, uri_conn=None, overwrite=False):
@@ -461,4 +467,4 @@ def create_book(sqlite_file=None, uri_conn=None, overwrite=False):
     )
     s.add(b)
     s.commit()
-    return b
+    return wrap_session(s)
