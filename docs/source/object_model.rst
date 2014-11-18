@@ -5,13 +5,19 @@ GnuCash SQL Object model and schema
 A clear documentation of the SQL schema (tables, columns, relationships) and the implicit semantic (invariants that should
 be always satisfied, logic to apply in ambiguous/corner cases) is critical for piecash to
 
- a) ensure data integrity
+ a) ensure data integrity (when creating new objects and/or modifying/deleting existing objects)
  b) ensure compatibility in semantic with the official GnuCash application
 
 .. warning::
 
     This document explains what the author understands in these domains. It is not the reference documentation, please refer
     to the official GnuCash documentation for this.
+
+.. warning::
+
+    Disclaimer : piecash primary focus is on reading GnuCash books and creating new `Core objects`_.
+    Creating other objects than the core objects, modifying existing objects attributes or relationships and deleting
+    objects can be done through piecash but at the user's own risk (backup your books before doing any of such modifications)
 
 Core objects
 ============
