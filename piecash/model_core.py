@@ -2,13 +2,20 @@ from decimal import Decimal
 import os
 import decimal
 
-from sqlalchemy import Column, INTEGER, BIGINT, TEXT, ForeignKey, create_engine, cast, Float
+from sqlalchemy import Column, INTEGER, BIGINT, VARCHAR, ForeignKey, create_engine, cast, Float, Table
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relation, backref, sessionmaker
+from sqlalchemy.sql.ddl import DropConstraint
 
-from .model_common import DeclarativeBaseGuid, gnclock, GnucashException, _default_session
-from .sa_extra import _DateTime, DeclarativeBase
+from .model_common import DeclarativeBaseGuid, GnucashException, _default_session
+from .sa_extra import _DateTime, DeclarativeBase, get_foreign_keys
 from kvp import KVP_Type
+
+
+gnclock = Table(u'gnclock', DeclarativeBase.metadata,
+                Column('Hostname', VARCHAR(length=255)),
+                Column('PID', INTEGER()),
+)
 
 
 class Account(DeclarativeBaseGuid):
@@ -17,17 +24,17 @@ class Account(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
-    account_type = Column('account_type', TEXT(length=2048), nullable=False)
-    code = Column('code', TEXT(length=2048))
-    commodity_guid = Column('commodity_guid', TEXT(length=32), ForeignKey('commodities.guid'))
-    commodity_scu = Column('commodity_scu', INTEGER(), nullable=False, default=100)
-    description = Column('description', TEXT(length=2048))
+    account_type = Column('account_type', VARCHAR(length=2048), nullable=False)
+    code = Column('code', VARCHAR(length=2048))
+    commodity_guid = Column('commodity_guid', VARCHAR(length=32), ForeignKey('commodities.guid'))
+    commodity_scu = Column('commodity_scu', INTEGER(), nullable=False, default=0)
+    description = Column('description', VARCHAR(length=2048))
     guid = DeclarativeBaseGuid.guid
-    hidden = Column('hidden', INTEGER(), default=False)
-    name = Column('name', TEXT(length=2048), nullable=False)
+    hidden = Column('hidden', INTEGER(), default=0)
+    name = Column('name', VARCHAR(length=2048), nullable=False)
     non_std_scu = Column('non_std_scu', INTEGER(), nullable=False, default=0)
-    parent_guid = Column('parent_guid', TEXT(length=32), ForeignKey('accounts.guid'))
-    placeholder = Column('placeholder', INTEGER())
+    parent_guid = Column('parent_guid', VARCHAR(length=32), ForeignKey('accounts.guid'))
+    placeholder = Column('placeholder', INTEGER(), default=0)
 
     # relation definitions
     commodity = relation('Commodity', backref=backref('accounts', cascade='all, delete-orphan'))
@@ -52,7 +59,7 @@ class Account(DeclarativeBaseGuid):
 
     def __init__(self, **kwargs):
         # set description field to name field for convenience (if not defined)
-        kwargs.setdefault('description', kwargs['name'])
+        # kwargs.setdefault('description', kwargs['name'])
 
         super(Account, self).__init__(**kwargs)
 
@@ -67,9 +74,9 @@ class Book(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
-    root_account_guid = Column('root_account_guid', TEXT(length=32),
+    root_account_guid = Column('root_account_guid', VARCHAR(length=32),
                                ForeignKey('accounts.guid'), nullable=False)
-    root_template_guid = Column('root_template_guid', TEXT(length=32),
+    root_template_guid = Column('root_template_guid', VARCHAR(length=32),
                                 ForeignKey('accounts.guid'), nullable=False)
 
     # relation definitions
@@ -105,14 +112,14 @@ class Commodity(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
-    cusip = Column('cusip', TEXT(length=2048))
+    cusip = Column('cusip', VARCHAR(length=2048))
     fraction = Column('fraction', INTEGER(), nullable=False)
-    fullname = Column('fullname', TEXT(length=2048))
-    mnemonic = Column('mnemonic', TEXT(length=2048), nullable=False)
-    namespace = Column('namespace', TEXT(length=2048), nullable=False)
+    fullname = Column('fullname', VARCHAR(length=2048))
+    mnemonic = Column('mnemonic', VARCHAR(length=2048), nullable=False)
+    namespace = Column('namespace', VARCHAR(length=2048), nullable=False)
     quote_flag = Column('quote_flag', INTEGER(), nullable=False)
-    quote_source = Column('quote_source', TEXT(length=2048))
-    quote_tz = Column('quote_tz', TEXT(length=2048))
+    quote_source = Column('quote_source', VARCHAR(length=2048))
+    quote_tz = Column('quote_tz', VARCHAR(length=2048))
 
     # relation definitions
 
@@ -125,11 +132,11 @@ class Price(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
-    commodity_guid = Column('commodity_guid', TEXT(length=32), ForeignKey('commodities.guid'), nullable=False)
-    currency_guid = Column('currency_guid', TEXT(length=32), ForeignKey('commodities.guid'), nullable=False)
+    commodity_guid = Column('commodity_guid', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
+    currency_guid = Column('currency_guid', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
     date = Column('date', _DateTime, nullable=False)
-    source = Column('source', TEXT(length=2048))
-    type = Column('type', TEXT(length=2048))
+    source = Column('source', VARCHAR(length=2048))
+    type = Column('type', VARCHAR(length=2048))
 
     value_denom = Column('value_denom', BIGINT(), nullable=False)
     value_num = Column('value_num', BIGINT(), nullable=False)
@@ -157,11 +164,11 @@ class Split(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
-    account_guid = Column('account_guid', TEXT(length=32), ForeignKey('accounts.guid'), nullable=False, )
-    action = Column('action', TEXT(length=2048), nullable=False)
-    # guid = Column('guid', TEXT(length=32), primary_key=True, nullable=False)
-    lot_guid = Column('lot_guid', TEXT(length=32), ForeignKey('lots.guid'))
-    memo = Column('memo', TEXT(length=2048), nullable=False)
+    account_guid = Column('account_guid', VARCHAR(length=32), ForeignKey('accounts.guid'), nullable=False, index=True)
+    action = Column('action', VARCHAR(length=2048), nullable=False)
+    # guid = Column('guid', VARCHAR(length=32), primary_key=True, nullable=False)
+    lot_guid = Column('lot_guid', VARCHAR(length=32), ForeignKey('lots.guid'))
+    memo = Column('memo', VARCHAR(length=2048), nullable=False)
 
     quantity_denom = Column('quantity_denom', BIGINT(), nullable=False)
     quantity_num = Column('quantity_num', BIGINT(), nullable=False)
@@ -177,8 +184,8 @@ class Split(DeclarativeBaseGuid):
         expr=lambda cls: cast(cls.quantity_num, Float) / cls.quantity_denom,
     )
     reconcile_date = Column('reconcile_date', _DateTime())
-    reconcile_state = Column('reconcile_state', TEXT(length=1), nullable=False)
-    tx_guid = Column('tx_guid', TEXT(length=32), ForeignKey('transactions.guid'), nullable=False)
+    reconcile_state = Column('reconcile_state', VARCHAR(length=1), nullable=False)
+    tx_guid = Column('tx_guid', VARCHAR(length=32), ForeignKey('transactions.guid'), nullable=False, index=True)
 
     value_denom = Column('value_denom', BIGINT(), nullable=False)
     value_num = Column('value_num', BIGINT(), nullable=False)
@@ -208,11 +215,11 @@ class Transaction(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
-    currency_guid = Column('currency_guid', TEXT(length=32), ForeignKey('commodities.guid'), nullable=False)
-    description = Column('description', TEXT(length=2048))
+    currency_guid = Column('currency_guid', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
+    description = Column('description', VARCHAR(length=2048))
     enter_date = Column('enter_date', _DateTime)
-    num = Column('num', TEXT(length=2048), nullable=False)
-    post_date = Column('post_date', _DateTime)
+    num = Column('num', VARCHAR(length=2048), nullable=False)
+    post_date = Column('post_date', _DateTime, index=True)
     splits = relation(Split, backref='transaction',
                       cascade='all, delete-orphan')
 
@@ -334,7 +341,7 @@ class Version(DeclarativeBase):
     __table_args__ = {}
 
     # column definitions
-    table_name = Column('table_name', TEXT(length=50), primary_key=True, nullable=False)
+    table_name = Column('table_name', VARCHAR(length=50), primary_key=True, nullable=False)
     table_version = Column('table_version', INTEGER(), nullable=False)
 
     # relation definitions
@@ -405,8 +412,53 @@ def open_book_session(sqlite_file=None, postgres_conn=None, readonly=True, open_
 
     return s
 
+
 def connect_to_gnucash_book(sqlite_file=None, postgres_conn=None, readonly=True, open_if_lock=False):
     s = open_book_session(sqlite_file, postgres_conn, readonly, open_if_lock)
     return s.query(Book).one()
 
+
 open_book = connect_to_gnucash_book
+
+
+def create_book(sqlite_file=None, uri_conn=None, overwrite=False):
+    from sqlalchemy_utils.functions import database_exists, create_database, drop_database
+
+    if uri_conn is None:
+        if sqlite_file:
+            uri_conn = "sqlite:///{}".format(sqlite_file)
+        else:
+            uri_conn = "sqlite:///:memory:"
+
+    # create database (if not sqlite in memory
+    if uri_conn != "sqlite:///:memory:":
+        if database_exists(uri_conn):
+            if overwrite:
+                drop_database(uri_conn)
+            else:
+                raise GnucashException, "'{}' db already exists".format(uri_conn)
+        create_database(uri_conn)
+    engine = create_engine(uri_conn)
+
+    # create all (tables, fk, ...)
+    DeclarativeBase.metadata.create_all(engine)
+
+    # remove all foreign keys
+    for fk in get_foreign_keys(DeclarativeBase.metadata, engine):
+        if fk.name:
+            engine.execute(DropConstraint(fk))
+
+    # start session to create initial objects
+    s = sessionmaker(bind=engine)()
+
+    # create all rows in version table
+    for table_name, table_version in version_supported.iteritems():
+        s.add(Version(table_name=table_name, table_version=table_version))
+
+    # create Book and initial accounts
+    b = Book(root_account=Account(name="Root Account", account_type="ROOT"),
+             root_template=Account(name="Template Root", account_type="ROOT"),
+    )
+    s.add(b)
+    s.commit()
+    return b

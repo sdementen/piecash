@@ -1,4 +1,4 @@
-from sqlalchemy import types
+from sqlalchemy import types, Table, MetaData, ForeignKeyConstraint
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.ext.declarative import as_declarative
 
@@ -54,3 +54,23 @@ class Address(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+def get_foreign_keys(metadata, engine):
+    """ Retrieve all foreign keys from metadata bound to an engine
+    :param metadata:
+    :param engine:
+    :return:
+    """
+    reflected_metadata = MetaData()
+    for table_name in metadata.tables.keys():
+        table = Table(
+            table_name,
+            reflected_metadata,
+            autoload=True,
+            autoload_with=engine
+        )
+
+        for constraint in table.constraints:
+            if not isinstance(constraint, ForeignKeyConstraint):
+                continue
+            yield constraint

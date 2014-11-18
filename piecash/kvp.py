@@ -1,6 +1,6 @@
 import decimal
 from enum import Enum
-from sqlalchemy import Column, TEXT, INTEGER, REAL, BIGINT, cast, Float
+from sqlalchemy import Column, VARCHAR, INTEGER, REAL, BIGINT, cast, Float
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relation, foreign
 from .sa_extra import _Date, _DateTime, DeclarativeBase
@@ -36,16 +36,16 @@ class Slot(DeclarativeBase):
     __table_args__ = {}
 
     # column definitions
-    name = Column('name', TEXT(length=4096), nullable=False)
+    name = Column('name', VARCHAR(length=4096), nullable=False)
     id = Column('id', INTEGER(), primary_key=True, nullable=False)
-    obj_guid = Column('obj_guid', TEXT(length=32),nullable=False)
+    obj_guid = Column('obj_guid', VARCHAR(length=32),nullable=False,index=True)
     slot_type = Column('slot_type', INTEGER(), nullable=False)
 
     double_val = Column('double_val', REAL())
     gdate_val = Column('gdate_val', _Date())
-    guid_val = Column('guid_val', TEXT(length=32))
+    guid_val = Column('guid_val', VARCHAR(length=32))
     int64_val = Column('int64_val', BIGINT())
-    string_val = Column('string_val', TEXT(length=4096))
+    string_val = Column('string_val', VARCHAR(length=4096))
     timespec_val = Column('timespec_val', _DateTime())
 
     numeric_val_denom = Column('numeric_val_denom', BIGINT(), nullable=False)

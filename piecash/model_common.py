@@ -1,7 +1,7 @@
 import uuid
 import decimal
 
-from sqlalchemy import Column, TEXT, Table, VARCHAR, INTEGER, BIGINT, cast, Float, inspect
+from sqlalchemy import Column, VARCHAR, Table, INTEGER, BIGINT, cast, Float, inspect
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import object_session
 
@@ -12,9 +12,10 @@ from .sa_extra import DeclarativeBase
 class DeclarativeBaseGuid(KVPManager, DeclarativeBase):
     __abstract__ = True
 
-    guid = Column('guid', TEXT(length=32), primary_key=True, nullable=False, default=lambda: uuid.uuid4().hex)
-
     _kvp_slots = {}
+
+    guid = Column('guid', VARCHAR(length=32), primary_key=True, nullable=False, default=lambda: uuid.uuid4().hex)
+
 
     def __init__(self, **kwargs):
         """A simple constructor that allows initialization from kwargs.
@@ -70,12 +71,6 @@ class GnucashException(Exception):
 
 class GncNoActiveSession(GnucashException):
     pass
-
-
-gnclock = Table(u'gnclock', DeclarativeBase.metadata,
-                Column('Hostname', VARCHAR(length=255)),
-                Column('PID', INTEGER()),
-)
 
 
 def dict_decimal(field):

@@ -258,6 +258,7 @@ setup_dict = dict(
     install_requires=[
                          'SQLAlchemy>=0.9.7',
                          'enum34>=1.0',
+                         'SQLAlchemy-Utils',
                      ] + python_version_specific_requires,
     # Allow tests to be run with `python setup.py test'.
     tests_require=[

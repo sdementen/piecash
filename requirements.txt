@@ -2,3 +2,5 @@
 # argparse==1.2.1
 enum34==1.0
 SQLAlchemy==0.9.7
+SQLAlchemy-Utils==0.27.8
+

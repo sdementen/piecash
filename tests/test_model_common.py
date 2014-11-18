@@ -8,6 +8,7 @@ import datetime
 
 from sqlalchemy import create_engine, Column, TEXT
 from sqlalchemy.orm import sessionmaker, composite
+from piecash import create_book
 
 import piecash.model_common as mc
 from piecash.sa_extra import _Date, _DateTime
@@ -19,7 +20,7 @@ from piecash.sa_extra import Address
 def session():
     engine = create_engine("sqlite://")
 
-    metadata = mc.DeclarativeBaseGuid.metadata
+    metadata = mc.DeclarativeBase.metadata
     metadata.bind = engine
     metadata.create_all()
 
