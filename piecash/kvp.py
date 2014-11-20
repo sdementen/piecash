@@ -48,8 +48,8 @@ class Slot(DeclarativeBase):
     string_val = Column('string_val', VARCHAR(length=4096))
     timespec_val = Column('timespec_val', _DateTime())
 
-    numeric_val_denom = Column('numeric_val_denom', BIGINT(), nullable=False)
-    numeric_val_num = Column('numeric_val_num', BIGINT(), nullable=False)
+    numeric_val_denom = Column('numeric_val_denom', BIGINT(), nullable=False, default=1)
+    numeric_val_num = Column('numeric_val_num', BIGINT(), nullable=False, default=0)
 
     def __str__(self):
         return "<slot {}:{}>".format(self.name, self.string_val if self.slot_type == 4 else self.slot_type)
@@ -112,7 +112,8 @@ class KVPManager(object):
         except KeyError:
             # or create new if it does not exist
             slot = Slot(name=key,
-                        slot_type=fld_type.value)
+                        slot_type=fld_type.value,
+                        obj_guid=self.guid)
             self.slots.append(slot)
 
         if fld_type in self._kvp_simple_slots:
@@ -123,11 +124,12 @@ class KVPManager(object):
         else:
             assert False, "type {} not yet supported".format(fld_type)
 
-    def del_kvp(self, key):
+    def del_kvp(self, key, exception_if_not_exist=True):
         #TODO: use a query to get directly the slot instead of doing this in python (improve efficiency)
         for i, slot in enumerate(self.slots):
             if slot.name==key:
+                del self.slots[i]
                 break
         else:
-            raise ValueError, "key '{}' does not exist in {}".format(key, self)
-        del self.slots[i]
+            if exception_if_not_exist:
+                raise ValueError, "key '{}' does not exist in {}".format(key, self)
