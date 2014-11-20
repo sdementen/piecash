@@ -1,46 +1,43 @@
 from decimal import Decimal
+import datetime
 
-from piecash import connect_to_gnucash_book, Commodity, Price, get_active_session, create_book, Account
+from piecash import connect_to_gnucash_book, Commodity, Price, get_active_session, create_book, Account, Transaction
 
 
-# b = create_book(postgres_conn="postgres://postgres:postgres@localhost/gnucash_fooffffff", overwrite=True)
-# b = create_book(postgres_conn="postgresql+pg8000://postgres:postgres@localhost/gnucash_fooffffff", overwrite=True)
-# b = create_book("foo5.gnucash",overwrite=True)
+
+# s = create_book(postgres_conn="postgres://user:passwd@localhost/gnucash_book1", overwrite=True)
+# s = create_book("test.gnucash",overwrite=True)
 s = create_book()
-Account(name="foo", parent=s.book.root_account, account_type="ASSET")
-s.cancel()
+acc1 = Account(name="foo", parent=s.book.root_account, account_type="ASSET", placeholder=True)
+acc2 = Account(name="baz", parent=s.book.root_account, account_type="ASSET", placeholder=False)
+EUR = Commodity.create_from_ISO("EUR")
+Transaction.single_transaction(datetime.datetime.now(),
+                               datetime.datetime.now(),
+                               "first transaction",
+                               100,
+                               EUR,
+                               acc1,
+                               acc2)
+s.save()
+
+# end_of_example
 
 print s.book.root_account.children
-
 
 s1 = connect_to_gnucash_book("sample1.gnucash", readonly=False)
 b1 = s1.book
 s2 = connect_to_gnucash_book("sample2.gnucash")
 b2 = s2.book
 
-# print b1, object_session(b1)
+eur = s1.get(Commodity, mnemonic="EUR")
 
-with b1:
-    # print Commodity.lookup("EUR").get_kvp("ba")
-    print s1.query(Commodity).all()
-    eur = Commodity.lookup("EUR")
-
-# b1.set_kvp("num", (2554,100))
-# print b1.get_kvp("num")
-assert isinstance(b1.root_account, Account)
 b1.root_account.set_kvp("notes", "Hello world!")
-print b1.root_account.get_kvp("notes")
-# b1.root_account.del_kvp("notes")
-# b1.save()
-# print b1.root_account.get_kvp("notes")
-# fdsfd
 
-with b1:
-    p = Price(currency="EUR",
-              commodity='EUR',
-              value=Decimal("4234.342"),
-    )
-s1.add(p)
+p = Price(currency=eur,
+          commodity=eur,
+          value=Decimal("4234.342"),
+)
+s1.sa_session.add(p)
 print p.value
 print p.value_denom
 print p.value_num

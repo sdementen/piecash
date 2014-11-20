@@ -25,15 +25,21 @@ for tr in transactions:
                                                                  memo=spl.memo)
 
 # same with jinja2 templates
-import jinja2
-env = jinja2.Environment(trim_blocks=True, lstrip_blocks=True)
-print env.from_string("""
-Here are the transactions for the search criteria '{{regex.pattern}}':
-{% for tr in transactions %}
-- {{ tr.post_date.strftime("%Y/%m/%d") }} : {{ tr.description }}
-  {% for spl in tr.splits %}
-    {{ spl.value.__abs__() }} {% if spl.value < 0 %} --> {% else %} <-- {% endif %} {{ spl.account.fullname() }} : {{ spl.memo }}
-  {% endfor %}
-{% endfor %}
-""").render(transactions=transactions,
-            regex=regex)
+try:
+    import jinja2
+except ImportError:
+    print "\n\t*** Install jinja2 ('pip install jinja2') to test the jinja2 template version ***\n"
+    jinja2 = None
+
+if jinja2:
+    env = jinja2.Environment(trim_blocks=True, lstrip_blocks=True)
+    print env.from_string("""
+    Here are the transactions for the search criteria '{{regex.pattern}}':
+    {% for tr in transactions %}
+    - {{ tr.post_date.strftime("%Y/%m/%d") }} : {{ tr.description }}
+      {% for spl in tr.splits %}
+        {{ spl.value.__abs__() }} {% if spl.value < 0 %} --> {% else %} <-- {% endif %} {{ spl.account.fullname() }} : {{ spl.memo }}
+      {% endfor %}
+    {% endfor %}
+    """).render(transactions=transactions,
+                regex=regex)

@@ -30,6 +30,8 @@ class _DateTime(types.TypeDecorator):
 
     def process_bind_param(self, value, engine):
         if value is not None:
+            if value.tzinfo is None:
+                value = value.replace(tzinfo=tz)
             return value.astimezone(utc)
 
     def process_result_value(self, value, engine):

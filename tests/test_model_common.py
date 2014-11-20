@@ -5,10 +5,11 @@
 # from pytest.mark import parametrize
 #
 import datetime
+import pytz
 
 from sqlalchemy import create_engine, Column, TEXT
 from sqlalchemy.orm import sessionmaker, composite
-from piecash import create_book
+import tzlocal
 
 import piecash.model_common as mc
 from piecash.sa_extra import _Date, _DateTime
@@ -86,7 +87,7 @@ class TestModelCommon(object):
             time = Column(_DateTime)
 
         s = session()
-        a = C(time=datetime.datetime(2010, 4, 12,3,4,5))
+        a = C(time=datetime.datetime(2010, 4, 12, 3, 4, 5, tzinfo=pytz.utc))
         s.add(a)
         s.flush()
         assert a.time

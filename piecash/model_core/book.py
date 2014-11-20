@@ -181,6 +181,16 @@ class GncSession(object):
     def transactions(self):
         return self.sa_session.query(Transaction).all()
 
+    @property
+    def query(self):
+        return self.sa_session.query
+
+    @property
+    def add(self):
+        return self.sa_session.add
+
+    def get(self, cls, **kwargs):
+        return self.sa_session.query(cls).filter_by(**kwargs).one()
 
 
 open_book_session = open_book
