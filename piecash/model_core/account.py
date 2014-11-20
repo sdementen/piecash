@@ -1,5 +1,5 @@
 from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER
-from sqlalchemy.orm import relation, backref
+from sqlalchemy.orm import relation, backref, validates
 from piecash.kvp import KVP_Type
 from piecash.model_common import DeclarativeBaseGuid
 
@@ -32,7 +32,18 @@ class Account(DeclarativeBaseGuid):
     # definition of fields accessible through the kvp system
     _kvp_slots = {
         "notes": KVP_Type.KVP_TYPE_STRING,
+        "placeholder": KVP_Type.KVP_TYPE_STRING,
     }
+
+    @validates('placeholder')
+    def validate_placeholder(self, key, placeholder):
+        print "validating", key, placeholder
+        if placeholder:
+            self.set_kvp("placeholder", "true")
+            return 1
+        else:
+            self.del_kvp("placeholder", exception_if_not_exist=False)
+            return 0
 
 
     def fullname(self):
