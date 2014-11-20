@@ -1,5 +1,3 @@
-import os
-
 from sqlalchemy import Column, VARCHAR, ForeignKey, create_engine
 from sqlalchemy.orm import relation, backref, sessionmaker
 from sqlalchemy.sql.ddl import DropConstraint
@@ -8,7 +6,8 @@ from sqlalchemy_utils import database_exists
 from .account import Account
 from ..kvp import KVP_Type
 from ..model_common import DeclarativeBaseGuid, _default_session, GnucashException
-from ..model_core.model_core import Version, gnclock
+from .transaction import Transaction
+from .model_core import gnclock, Version
 from ..sa_extra import DeclarativeBase, get_foreign_keys
 
 
@@ -105,7 +104,7 @@ def create_book(sqlite_file=None, uri_conn=None, overwrite=False):
     )
     s.add(b)
     s.commit()
-    return _wrap_session(s)
+    return GncSession(s)
 
 
 def open_book(sqlite_file=None, uri_conn=None, readonly=True, open_if_lock=False):
@@ -127,7 +126,7 @@ def open_book(sqlite_file=None, uri_conn=None, readonly=True, open_if_lock=False
     # create database (if not sqlite in memory
     if not database_exists(uri_conn):
         raise GnucashException, "Database '{}' does not exist (please use create_book to create " \
-                                    "GnuCash books from scratch)".format(uri_conn)
+                                "GnuCash books from scratch)".format(uri_conn)
     engine = create_engine(uri_conn)
 
     locks = list(engine.execute(gnclock.select()))
@@ -161,23 +160,27 @@ def open_book(sqlite_file=None, uri_conn=None, readonly=True, open_if_lock=False
 
         s.flush = new_flush
 
-    return _wrap_session(s)
+    return GncSession(s)
 
 
+class GncSession(object):
+    def __init__(self, session):
+        self.sa_session = session
 
-def _wrap_session(s):
-    """'Wrap' an SA session to add :
-    - the book field (pointing to the unique Book object within the GnuCash book
-    - the save method (= session.commit)
-    - the cancel method (= session.rollback)
+    def save(self):
+        self.sa_session.commit()
 
-    :param s: a SA session
-    :return: a SA session
-    """
-    s.book = s.query(Book).one()
-    s.save = s.book.save
-    s.cancel = s.book.cancel
-    return s
+    def cancel(self):
+        self.sa_session.rollback()
+
+    @property
+    def book(self):
+        return self.sa_session.query(Book).one()
+
+    @property
+    def transactions(self):
+        return self.sa_session.query(Transaction).all()
+
 
 
 open_book_session = open_book

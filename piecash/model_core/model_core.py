@@ -4,8 +4,8 @@ from ..sa_extra import DeclarativeBase
 
 
 gnclock = Table(u'gnclock', DeclarativeBase.metadata,
-                Column('Hostname', VARCHAR(length=255)),
-                Column('PID', INTEGER()),
+                Column('hostname', VARCHAR(length=255)),
+                Column('pid', INTEGER()),
 )
 
 

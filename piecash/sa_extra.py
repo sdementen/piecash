@@ -1,11 +1,17 @@
 from sqlalchemy import types, Table, MetaData, ForeignKeyConstraint
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.ext.declarative import as_declarative
+import tzlocal
+import pytz
 
 
 @as_declarative()
 class DeclarativeBase(object):
     pass
+
+
+tz = tzlocal.get_localzone()
+utc = pytz.utc
 
 
 class _DateTime(types.TypeDecorator):
@@ -21,6 +27,14 @@ class _DateTime(types.TypeDecorator):
             )
         else:
             return types.DateTime()
+
+    def process_bind_param(self, value, engine):
+        if value is not None:
+            return value.astimezone(utc)
+
+    def process_result_value(self, value, engine):
+        if value is not None:
+            return value.replace(tzinfo=utc).astimezone(tz)
 
 
 class _Date(types.TypeDecorator):
@@ -54,6 +68,7 @@ class Address(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
 
 def get_foreign_keys(metadata, engine):
     """ Retrieve all foreign keys from metadata bound to an engine
