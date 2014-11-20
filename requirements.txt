@@ -1,5 +1,6 @@
 pytz
 tzlocal
+requests
 # Python 2.6 compatibility
 # argparse==1.2.1
 enum34==1.0

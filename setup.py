@@ -261,6 +261,7 @@ setup_dict = dict(
                          'SQLAlchemy-Utils',
                          'pytz',
                          'tzlocal',
+                         'requests'
                      ] + python_version_specific_requires,
     # Allow tests to be run with `python setup.py test'.
     tests_require=[
