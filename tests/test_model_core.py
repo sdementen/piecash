@@ -12,11 +12,11 @@ import pytest
 
 
 # parametrize = pytest.mark.parametrize
-from piecash import connect_to_gnucash_book
+from piecash import connect_to_gnucash_book, Transaction, Commodity
 from piecash.model_core.account import Account
 from piecash.kvp import Slot
 from piecash.model_common import GnucashException
-from piecash.model_core import Transaction, Commodity, Version, gnclock
+from piecash.model_core import Version, gnclock
 
 
 test_folder = os.path.dirname(os.path.realpath(__file__))

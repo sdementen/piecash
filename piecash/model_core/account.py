@@ -1,7 +1,8 @@
 from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER
 from sqlalchemy.orm import relation, backref, validates
-from piecash.kvp import KVP_Type
-from piecash.model_common import DeclarativeBaseGuid
+
+from ..kvp import KVP_Type
+from ..model_common import DeclarativeBaseGuid
 
 
 class Account(DeclarativeBaseGuid):
@@ -37,7 +38,8 @@ class Account(DeclarativeBaseGuid):
 
     @validates('placeholder')
     def validate_placeholder(self, key, placeholder):
-        print "validating", key, placeholder
+        """Add placeholder as slot and convert to 1/0
+        """
         if placeholder:
             self.set_kvp("placeholder", "true")
             return 1

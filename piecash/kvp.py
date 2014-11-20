@@ -41,10 +41,10 @@ class Slot(DeclarativeBase):
     obj_guid = Column('obj_guid', VARCHAR(length=32),nullable=False,index=True)
     slot_type = Column('slot_type', INTEGER(), nullable=False)
 
-    double_val = Column('double_val', REAL())
+    double_val = Column('double_val', REAL(), default=0)
     gdate_val = Column('gdate_val', _Date())
     guid_val = Column('guid_val', VARCHAR(length=32))
-    int64_val = Column('int64_val', BIGINT())
+    int64_val = Column('int64_val', BIGINT(), default=0)
     string_val = Column('string_val', VARCHAR(length=4096))
     timespec_val = Column('timespec_val', _DateTime())
 
