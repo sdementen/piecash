@@ -23,9 +23,9 @@ Core objects
 ============
 
 There are 5 core objects in GnuCash  : `Book`_, `Commodity`_, `Account`_, `Transaction`_, `Split`_.
-An additional object, the `Price`_, is used in reports and for display (for instance, to convert all accounts balance
+An additional object, the `Price`_, is strongly linked to the Commodity and is used in reports and for display (for instance, to convert all accounts balance
 in the default currency). While not as core as the others, it is an essential piece of functionality for anyone using
-GnuCash to track a stock portfolio value.
+GnuCash to track a stock portfolio value or multi-currency book.
 
 .. note::
 
@@ -118,6 +118,7 @@ Invariant
 Questions
 ~~~~~~~~~
  - is the guid of a currency hardcoded in GnuCash (as is the full list of currencies) or can it be assigned freely ?
+   the guid of the currency can be assigned freely
 
 
 Account
@@ -151,7 +152,8 @@ description
 
 placeholder
   if True/1, the account cannot be involved in transactions through splits (ie it can only be the parent of other accounts).
-  if False/0, the account can have Splits referring to it (as well as be the parent of other accounts)
+  if False/0, the account can have Splits referring to it (as well as be the parent of other accounts).
+  This field, if True, is also stored as a Slot under the key "placeholder" as a string "true".
 
 hidden
   to be investigated
@@ -160,7 +162,7 @@ hidden
 Invariant
 ~~~~~~~~~
  - if placeholder, no Splits can refer to account
- - only one account can have account_type ROOT
+ - only two accounts can have account_type ROOT (the root_account and the root_template of the book)
 
 
 Questions
@@ -191,7 +193,7 @@ num (optional)
   A transaction number (only used for information ?)
 
 post_date (mandatory)
-  self-explanatory
+  self-explanatory. This field is also stored as a slot under the date-posted key (as a date instead of a time)
 
 enter_date (mandatory)
   self-explanatory
@@ -232,8 +234,9 @@ Invariant
 Questions
 ~~~~~~~~~
 
- - how is the currency of the transaction defined ? is the default currency (in gnucash preferences) ? is it the
-   currency (if any) of the account into which the transaction is initiated in the gui ? can this be changed through the GUI ?
+ - how is the currency of the transaction defined ? is the default currency (in gnucash preferences) ? No.
+   Is it the currency (if any) of the account into which the transaction is initiated in the gui ? Yes.
+   Can this be changed through the GUI ? No (AFAIK)
  - what happens to the splits of an account that is removed ? in GUI, splits are either moved to other account or deleted
    with a corresponding entry created in the Imbalance-XXX account.
  - what happens to the splits when the currency of a transaction is changed ? the quantity and value do not change
@@ -271,8 +274,3 @@ Questions
 ~~~~~~~~~
 
 None
-
-
-Secondary Objects
-=================
-
