@@ -22,3 +22,4 @@ from .model_core import (Book, create_book, connect_to_gnucash_book, Account,
 )
 from .model_business import Lot  # must import as Transaction has a relation to it
 from .model_budget import Budget, BudgetAmount
+from .kvp import slot

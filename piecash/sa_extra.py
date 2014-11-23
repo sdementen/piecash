@@ -59,9 +59,11 @@ class _Date(types.TypeDecorator):
     """Used to customise the DateTime type for sqlite (ie without the separators as in gnucash
     """
     impl = types.TypeEngine
+    is_sqlite = False
 
     def load_dialect_impl(self, dialect):
         if dialect.name == "sqlite":
+            self.is_sqlite = True
             return sqlite.DATE(
                 storage_format="%(year)04d%(month)02d%(day)02d",
                 regexp=r"(\d{4})(\d{2})(\d{2})"

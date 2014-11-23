@@ -5,10 +5,12 @@ Python GnuCash SQL interface (piecash)
 Project
 =======
 
-This project provides a simple and pythonic interface to a GnuCash Book stored in SQL (sqlite3 or Postgres).
-It is a pure python package relying on SQL Alchemy. It can be used as an alternative to:
-- the official python bindings (if no advanced book modifications and/or engine calculations are needed)
-- XLST transformations of the XML GnuCash document
+This project provides a simple and pythonic interface to a GnuCash files stored in SQL (sqlite3 and Postgres, not tested in MySQL).
+
+It is a pure python package that can be used as an alternative to:
+- the official python bindings (as long as no advanced book modifications and/or engine calculations are needed). This
+  is specially useful on Windows there the official python bindings may be tricky to install.
+- XML parsing/reading of XML GnuCash files if you prefer python over XML/XLST manipulations.
 
 It is basically a SQLAlchemy layer augmented with methods to ease the reading, creation and (limited) manipulation of
 the GnuCash objects.
@@ -27,7 +29,7 @@ From pip::
 Usage
 =====
 
-The simplest workflow to use piecash is first to open a SQLAlchemy session to a GnuCash Book
+The simplest workflow to use piecash is first to open a GnuCash file
 
 .. code-block:: python
 
