@@ -18,7 +18,6 @@ class Split(DeclarativeBaseGuid):
     # column definitions
     account_guid = Column('account_guid', VARCHAR(length=32), ForeignKey('accounts.guid'), nullable=False, index=True)
     action = Column('action', VARCHAR(length=2048), nullable=False)
-    # guid = Column('guid', VARCHAR(length=32), primary_key=True, nullable=False)
     lot_guid = Column('lot_guid', VARCHAR(length=32), ForeignKey('lots.guid'))
     memo = Column('memo', VARCHAR(length=2048), nullable=False)
 
@@ -70,7 +69,7 @@ class Transaction(DeclarativeBaseGuid):
     currency_guid = Column('currency_guid', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
     description = Column('description', VARCHAR(length=2048))
     enter_date = Column('enter_date', _DateTime)
-    num = Column('num', VARCHAR(length=2048), nullable=False)
+    num = Column('num', VARCHAR(length=2048), nullable=False, default="")
     post_date = Column('post_date', _DateTime, index=True)
     splits = relation(Split, backref='transaction',
                       cascade='all, delete-orphan')
@@ -80,16 +79,16 @@ class Transaction(DeclarativeBaseGuid):
     currency = relation('Commodity', backref=backref('transactions', cascade='all, delete-orphan'))
 
     # definition of fields accessible through the kvp system
-    _kvp_slots = {
-        "notes": KVP_Type.KVP_TYPE_STRING,
-        "date-posted": KVP_Type.KVP_TYPE_GDATE,
-    }
+    # _kvp_slots = {
+    #     "notes": KVP_Type.KVP_TYPE_STRING,
+    #     "date-posted": KVP_Type.KVP_TYPE_GDATE,
+    # }
 
     @validates('post_date')
     def validate_post_date(self, key, post_date):
         """Add date-posted as slot
         """
-        self.set_kvp("date-posted", post_date)
+        self["date-posted"] = post_date
         return post_date
 
 

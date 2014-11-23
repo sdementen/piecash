@@ -31,20 +31,21 @@ class Account(DeclarativeBaseGuid):
     )
 
     # definition of fields accessible through the kvp system
-    _kvp_slots = {
-        "notes": KVP_Type.KVP_TYPE_STRING,
-        "placeholder": KVP_Type.KVP_TYPE_STRING,
-    }
+    # _kvp_slots = {
+    #     "notes": KVP_Type.KVP_TYPE_STRING,
+    #     "placeholder": KVP_Type.KVP_TYPE_STRING,
+    # }
 
     @validates('placeholder')
     def validate_placeholder(self, key, placeholder):
         """Add placeholder as slot and convert to 1/0
         """
         if placeholder:
-            self.set_kvp("placeholder", "true")
+            self["placeholder"] = "true"
             return 1
         else:
-            self.del_kvp("placeholder", exception_if_not_exist=False)
+            if "placeholder" in self:
+                del self["placeholder"]
             return 0
 
 

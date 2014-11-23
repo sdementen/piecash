@@ -1,21 +1,38 @@
 import uuid
 import decimal
 
-from sqlalchemy import Column, VARCHAR, Table, INTEGER, BIGINT, cast, Float, inspect
+from sqlalchemy import Column, VARCHAR, BIGINT, cast, Float, inspect, event
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import object_session
+from sqlalchemy.orm import object_session, relation, foreign
 
-from .kvp import KVPManager
+from .kvp import DictWrapper, Slot
 from .sa_extra import DeclarativeBase
 
-
-class DeclarativeBaseGuid(KVPManager, DeclarativeBase):
+class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):
     __abstract__ = True
 
-    _kvp_slots = {}
+    # set the relation to the slots table (KVP)
+    @classmethod
+    def __declare_last__(cls):
+        # do not do it on the DeclarativeBaseGuid as it is an abstract class
+        if cls ==DeclarativeBaseGuid:
+            return
+
+        cls.slots = relation('Slot',
+                             primaryjoin=foreign(Slot.obj_guid) == cls.guid, cascade='all, delete-orphan',
+        )
+
+        # assign id of slot when associating to object
+        @event.listens_for(cls.slots, "remove")
+        def my_append_listener_slots(target, value, initiator):
+            s = object_session(value)
+            if value in s.new:
+                s.expunge(value)
+            else:
+                s.delete(value)
+
 
     guid = Column('guid', VARCHAR(length=32), primary_key=True, nullable=False, default=lambda: uuid.uuid4().hex)
-
 
     def __init__(self, **kwargs):
         """A simple constructor that allows initialization from kwargs.
@@ -48,7 +65,8 @@ class DeclarativeBaseGuid(KVPManager, DeclarativeBase):
         try:
             s = get_active_session()
         except GncNoActiveSession:
-            raise GncNoActiveSession, "No active session is available to lookup a {} = '{}'. Please use a 'with book:' block to set an active session".format(cls.__name__, name)
+            raise GncNoActiveSession, "No active session is available to lookup a {} = '{}'. Please use a 'with book:' block to set an active session".format(
+                cls.__name__, name)
 
         return s.query(cls).filter(cls.lookup_key == name).one()
 
@@ -56,18 +74,24 @@ class DeclarativeBaseGuid(KVPManager, DeclarativeBase):
         # return the sa session of the object
         return object_session(self)
 
+    @property
+    def slot_collection(self):
+        return self.slots
 
 
-    # @validates('readonly1', 'readonly2')
-    # def _write_once(self, key, value):
-    #     existing = getattr(self, key)
-    #     if existing is not None:
-    #         raise ValueError("Field '%s' is write-once" % key)
-    #     return value
+        # @validates('readonly1', 'readonly2')
+        # def _write_once(self, key, value):
+        # existing = getattr(self, key)
+        #     if existing is not None:
+        #         raise ValueError("Field '%s' is write-once" % key)
+        #     return value
+
+
 
 
 class GnucashException(Exception):
     pass
+
 
 class GncNoActiveSession(GnucashException):
     pass
@@ -97,7 +121,6 @@ def dict_decimal(field):
         )
     }
 
-
     print """
 
 
@@ -120,8 +143,9 @@ def dict_decimal(field):
 # this variable can then be used in the code to retrieve the "active" session
 _default_session = []
 
+
 def is_active_session():
-    return len(_default_session)!=0
+    return len(_default_session) != 0
 
 
 def get_active_session():

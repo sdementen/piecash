@@ -1,4 +1,4 @@
-from sqlalchemy import types, Table, MetaData, ForeignKeyConstraint
+from sqlalchemy import types, Table, MetaData, ForeignKeyConstraint, cast, String
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.ext.declarative import as_declarative
 import tzlocal
@@ -13,20 +13,36 @@ class DeclarativeBase(object):
 tz = tzlocal.get_localzone()
 utc = pytz.utc
 
-
 class _DateTime(types.TypeDecorator):
     """Used to customise the DateTime type for sqlite (ie without the separators as in gnucash
     """
     impl = types.TypeEngine
+    is_sqlite = False
 
     def load_dialect_impl(self, dialect):
         if dialect.name == "sqlite":
+            self.is_sqlite = True
             return sqlite.DATETIME(
                 storage_format="%(year)04d%(month)02d%(day)02d%(hour)02d%(minute)02d%(second)02d",
-                regexp=r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})"
+                regexp=r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})",
             )
         else:
             return types.DateTime()
+
+    # def column_expression(self, colexpr):
+    #     if self.is_sqlite:
+    #         # need to cast otherwise may store a string date as long integer as sqlite sees a number
+    #         return cast(colexpr, String)
+    #     else:
+    #         return colexpr
+    #
+    def bind_expression(self, colexpr):
+        # can be also used in
+        if self.is_sqlite:
+            # need to cast otherwise may store a string date as long integer as sqlite sees a number
+            return cast(colexpr, String)
+        else:
+            return colexpr
 
     def process_bind_param(self, value, engine):
         if value is not None:
@@ -53,6 +69,13 @@ class _Date(types.TypeDecorator):
         else:
             return types.Date()
 
+    def bind_expression(self, colexpr):
+        # can be also used in
+        if self.is_sqlite:
+            # need to cast otherwise may store a string date as long integer as sqlite sees a number
+            return cast(colexpr, String)
+        else:
+            return colexpr
 
 _address_fields = "addr1 addr2 addr3 addr4 email fax name phone".split()
 

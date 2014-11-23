@@ -1,9 +1,12 @@
 import decimal
+import datetime
+import uuid
+
 from enum import Enum
-from sqlalchemy import Column, VARCHAR, INTEGER, REAL, BIGINT, cast, Float
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relation, foreign
-from .sa_extra import _Date, _DateTime, DeclarativeBase
+from sqlalchemy import Column, VARCHAR, INTEGER, REAL, BIGINT, types, event
+from sqlalchemy.orm import relation, foreign, object_session, backref
+
+from .sa_extra import _DateTime, DeclarativeBase, _Date
 
 
 class KVP_Type(Enum):
@@ -19,7 +22,16 @@ class KVP_Type(Enum):
     KVP_TYPE_FRAME = 9
     KVP_TYPE_GDATE = 10
 
-KVP_info = {
+
+pytype_KVPtype = {
+    int: KVP_Type.KVP_TYPE_GINT64,
+    float: KVP_Type.KVP_TYPE_DOUBLE,
+    decimal.Decimal: KVP_Type.KVP_TYPE_NUMERIC,
+    dict: KVP_Type.KVP_TYPE_FRAME,
+    # to fill
+}
+
+KVPtype_fields = {
     KVP_Type.KVP_TYPE_GINT64: 'int64_val',
     KVP_Type.KVP_TYPE_DOUBLE: 'double_val',
     KVP_Type.KVP_TYPE_STRING: 'string_val',
@@ -27,109 +39,211 @@ KVP_info = {
     KVP_Type.KVP_TYPE_TIMESPEC: 'timespec_val',
     KVP_Type.KVP_TYPE_GDATE: 'gdate_val',
     KVP_Type.KVP_TYPE_NUMERIC: ('numeric_val_num', 'numeric_val_denom'),
+    KVP_Type.KVP_TYPE_FRAME: 'guid',
 }
+
+
+
+class SlotType(types.TypeDecorator):
+    """Used to customise the DateTime type for sqlite (ie without the separators as in gnucash
+    """
+    impl = INTEGER
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            return value.value
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            return KVP_Type(value)
+
+class DictWrapper(object):
+    def __contains__(self, key):
+        for sl in self.slot_collection:
+            if sl.name == key:
+                return True
+        else:
+            return False
+
+
+    def __getitem__(self, key):
+        for sl in self.slot_collection:
+            if sl.name == key:
+                break
+        else:
+            raise KeyError, "No slot exists with name '{}'".format(key)
+        return sl.value
+
+    def __setitem__(self, key, value):
+        for sl in self.slot_collection:
+            if sl.name == key:
+                break
+        else:
+            self.slot_collection.append(slot(name=key, value=value))
+            return
+        # assign if type is correct
+        if isinstance(value, sl._pytype):
+            sl.value = value
+        else:
+            raise TypeError, "Type of '{}' is not one of {}".format(value, sl._pytype)
+
+    def __delitem__(self, key):
+        for i, sl in enumerate(self.slot_collection):
+            if sl.name == key:
+                break
+        else:
+            raise KeyError, "No slot exists with name '{}'".format(key)
+        del self.slot_collection[i]
 
 
 class Slot(DeclarativeBase):
     __tablename__ = 'slots'
 
-    __table_args__ = {}
-
     # column definitions
     name = Column('name', VARCHAR(length=4096), nullable=False)
     id = Column('id', INTEGER(), primary_key=True, nullable=False)
-    obj_guid = Column('obj_guid', VARCHAR(length=32),nullable=False,index=True)
-    slot_type = Column('slot_type', INTEGER(), nullable=False)
+    obj_guid = Column('obj_guid', VARCHAR(length=32), nullable=False, index=True)
+    slot_type = Column('slot_type', SlotType(), nullable=False)
 
-    double_val = Column('double_val', REAL(), default=0)
-    gdate_val = Column('gdate_val', _Date())
-    guid_val = Column('guid_val', VARCHAR(length=32))
-    int64_val = Column('int64_val', BIGINT(), default=0)
-    string_val = Column('string_val', VARCHAR(length=4096))
-    timespec_val = Column('timespec_val', _DateTime())
+    __mapper_args__ = {
+        'polymorphic_on': slot_type,
+    }
+
+    def __repr__(self):
+        return "<slot {}={}>".format(self.name, self.value)
+        return "<slot {}={} ({}) -> {}>".format(self.name, self.value, self.slot_type, self.obj_guid)
+
+
+class SlotSimple(Slot):
+    _pytype = ()
+
+    @property
+    def value(self):
+        return getattr(self, self._field)
+
+    @value.setter
+    def value(self, value):
+        setattr(self, self._field, value)
+
+
+def define_simpleslot(pytype, KVPtype, field, col_type, col_default):
+    cls = type(
+        'Slot{}'.format(pytype),
+        (SlotSimple,),
+        {
+            "__mapper_args__": {'polymorphic_identity': KVPtype},
+            field: Column(field, col_type, default=col_default),
+            "_field": field,
+            "_pytype": pytype,
+        }
+    )
+    return cls
+
+
+SlotInt = define_simpleslot(pytype=(int,),
+                            KVPtype=KVP_Type.KVP_TYPE_GINT64,
+                            field="int64_val",
+                            col_type=BIGINT(),
+                            col_default=0,
+)
+SlotDouble = define_simpleslot(pytype=(float,),
+                               KVPtype=KVP_Type.KVP_TYPE_DOUBLE,
+                               field="double_val",
+                               col_type=REAL(),
+                               col_default=0,
+)
+SlotTime = define_simpleslot(pytype=(datetime.time,),
+                             KVPtype=KVP_Type.KVP_TYPE_TIMESPEC,
+                             field="timespec_val",
+                             col_type=_DateTime(),
+                             col_default=None,
+)
+SlotDate = define_simpleslot(pytype=(datetime.date,),
+                             KVPtype=KVP_Type.KVP_TYPE_GDATE,
+                             field="gdate_val",
+                             col_type=_Date(),
+                             col_default=None,
+)
+SlotString = define_simpleslot(pytype=(str, unicode),
+                               KVPtype=KVP_Type.KVP_TYPE_STRING,
+                               field="string_val",
+                               col_type=VARCHAR(length=4096),
+                               col_default=None,
+)
+
+
+class SlotNumeric(Slot):
+    __mapper_args__ = {
+        'polymorphic_identity': KVP_Type.KVP_TYPE_NUMERIC
+    }
+    _pytype = (tuple,)
 
     numeric_val_denom = Column('numeric_val_denom', BIGINT(), nullable=False, default=1)
     numeric_val_num = Column('numeric_val_num', BIGINT(), nullable=False, default=0)
 
-    def __str__(self):
-        return "<slot {}:{}>".format(self.name, self.string_val if self.slot_type == 4 else self.slot_type)
+    @property
+    def value(self):
+        return self.numeric_val_num, self.numeric_val_denom
 
-class KVPManager(object):
-    """
-    Implement logic to access KVP store
+    @value.setter
+    def value(self, (num, denom)):
+        self.numeric_val_num, self.numeric_val_denom = num, denom
 
-    TODO: handle frame and lists
-    """
-    # set the relation to the slots table (KVP)
-    @classmethod
-    def __declare_last__(cls):
-        cls.slots = relation(Slot, primaryjoin=foreign(Slot.obj_guid)==cls.guid, cascade='all, delete-orphan')
 
-    def get_kvp_type(self, key):
-        fld_type = self._kvp_slots.get(key, None)
-        if fld_type is None:
-            raise ValueError, "key '{}' cannot be assigned to {}".format(key, self)
-        return fld_type
+class SlotFrame(DictWrapper, Slot):
+    __mapper_args__ = {
+        'polymorphic_identity': KVP_Type.KVP_TYPE_FRAME
+    }
+    _pytype = (list,)
 
-    def get_kvp_slot(self, key):
-        #TODO: use a query to get directly the slot instead of doing this in python (improve efficiency)
-        for slot in self.slots:
-            if slot.name==key:
-                return slot
-        else:
-            # key not found
-            raise KeyError, "no {} in kvp of {}".format(key, self)
+    guid_val = Column('guid_val', VARCHAR(length=32))
 
-    def iter_kvp(self):
-        for slot in self.slots:
-            yield slot.name, self.get_kvp(slot.name) #TODO: not effecient but avoid copy/paste of code
+    value = relation('Slot',
+                     primaryjoin=foreign(Slot.obj_guid) == guid_val,
+                     cascade='all, delete-orphan',
+                     backref=backref("parent", remote_side=guid_val),
+    )
 
-    _kvp_simple_slots = (
-                KVP_Type.KVP_TYPE_DOUBLE,
-                KVP_Type.KVP_TYPE_GDATE,
-                KVP_Type.KVP_TYPE_GINT64,
-                KVP_Type.KVP_TYPE_GUID,
-                KVP_Type.KVP_TYPE_TIMESPEC,
-                KVP_Type.KVP_TYPE_STRING,
-        )
-    def get_kvp(self, key):
-        fld_type = self.get_kvp_type(key)
-        slot = self.get_kvp_slot(key)
+    @property
+    def slot_collection(self):
+        return self.value
 
-        if fld_type in self._kvp_simple_slots:
-            return getattr(slot, KVP_info[fld_type])
-        elif fld_type==KVP_Type.KVP_TYPE_NUMERIC:
-            return getattr(slot, KVP_info[fld_type][0]), getattr(slot, KVP_info[fld_type][1])
-        else:
-            assert False, "type {} not yet supported".format(fld_type)
 
-    def set_kvp(self, key, value):
-        fld_type = self.get_kvp_type(key)
 
-        try:
-            # retrieve slot if it exist
-            slot = self.get_kvp_slot(key)
-        except KeyError:
-            # or create new if it does not exist
-            slot = Slot(name=key,
-                        slot_type=fld_type.value,
-                        obj_guid=self.guid)
-            self.slots.append(slot)
+    def __init__(self, **kwargs):
+        self.guid_val = uuid.uuid4().hex
+        super(SlotFrame, self).__init__(**kwargs)
 
-        if fld_type in self._kvp_simple_slots:
-            setattr(slot, KVP_info[fld_type], value)
-        elif fld_type==KVP_Type.KVP_TYPE_NUMERIC:
-            setattr(slot, KVP_info[fld_type][0], value[0])
-            setattr(slot, KVP_info[fld_type][1], value[1])
-        else:
-            assert False, "type {} not yet supported".format(fld_type)
+@event.listens_for(SlotFrame.value, 'remove')
+def remove_slot(target, value, initiator):
+    s = object_session(value)
+    if value in s.new:
+        s.expunge(value)
+    else:
+        s.delete(value)
 
-    def del_kvp(self, key, exception_if_not_exist=True):
-        #TODO: use a query to get directly the slot instead of doing this in python (improve efficiency)
-        for i, slot in enumerate(self.slots):
-            if slot.name==key:
-                del self.slots[i]
-                break
-        else:
-            if exception_if_not_exist:
-                raise ValueError, "key '{}' does not exist in {}".format(key, self)
+def get_all_subclasses(cls):
+    all_subclasses = []
+
+    direct_subclasses = cls.__subclasses__()
+
+    all_subclasses.extend(direct_subclasses)
+
+    for subclass in direct_subclasses:
+        all_subclasses.extend(get_all_subclasses(subclass))
+
+    return all_subclasses
+
+
+def slot(name, value):
+    for cls in get_all_subclasses(Slot):
+        if isinstance(value, cls._pytype):
+            return cls(name=name, value=value)
+
+    if isinstance(value, dict):
+        # transform a dict to Frame/Slots
+        def dict2list_of_slots(dct):
+            return [slot(name=k, value=v) for k, v in dct.iteritems()]
+        return slot(name=name, value=dict2list_of_slots(value))
+
+    raise ValueError, "Cannot handle type of '{}'".format(value)

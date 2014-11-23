@@ -35,9 +35,9 @@ class Book(DeclarativeBaseGuid):
     root_template = relation('Account', foreign_keys=[root_template_guid])
 
     # definition of fields accessible through the kvp system
-    _kvp_slots = {
-        "options": KVP_Type.KVP_TYPE_FRAME,
-    }
+    # _kvp_slots = {
+    #     "options": KVP_Type.KVP_TYPE_FRAME,
+    # }
 
 
 
@@ -56,7 +56,7 @@ class Book(DeclarativeBaseGuid):
         self.get_session().rollback()
 
 
-def create_book(sqlite_file=None, uri_conn=None, overwrite=False):
+def create_book(sqlite_file=None, uri_conn=None, overwrite=False, **kwargs):
     """
     Create a new empty GnuCash book. If both sqlite_file and uri_conn are None, then an "in memory" sqlite book is created.
 
@@ -81,7 +81,7 @@ def create_book(sqlite_file=None, uri_conn=None, overwrite=False):
             else:
                 raise GnucashException, "'{}' db already exists".format(uri_conn)
         create_database(uri_conn)
-    engine = create_engine(uri_conn)
+    engine = create_engine(uri_conn, **kwargs)
 
     # create all (tables, fk, ...)
     DeclarativeBase.metadata.create_all(engine)
@@ -107,7 +107,7 @@ def create_book(sqlite_file=None, uri_conn=None, overwrite=False):
     return GncSession(s)
 
 
-def open_book(sqlite_file=None, uri_conn=None, readonly=True, open_if_lock=False):
+def open_book(sqlite_file=None, uri_conn=None, readonly=True, open_if_lock=False, **kwargs):
     """
     Open a GnuCash book and return the related SQLAlchemy session
 
@@ -127,7 +127,7 @@ def open_book(sqlite_file=None, uri_conn=None, readonly=True, open_if_lock=False
     if not database_exists(uri_conn):
         raise GnucashException, "Database '{}' does not exist (please use create_book to create " \
                                 "GnuCash books from scratch)".format(uri_conn)
-    engine = create_engine(uri_conn)
+    engine = create_engine(uri_conn, **kwargs)
 
     locks = list(engine.execute(gnclock.select()))
 
