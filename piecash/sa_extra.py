@@ -40,7 +40,7 @@ class _DateTime(types.TypeDecorator):
             # storage_format="%(year)04d%(month)02d%(day)02d%(hour)02d%(minute)02d%(second)02d",
             #     regexp=r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})",
             # )
-            return types.TEXT()
+            return types.TEXT(14)
         else:
             return types.DateTime()
 
@@ -75,7 +75,7 @@ class _Date(types.TypeDecorator):
             #     storage_format="%(year)04d%(month)02d%(day)02d",
             #     regexp=r"(\d{4})(\d{2})(\d{2})"
             # )
-            return types.TEXT()
+            return types.TEXT(8)
         else:
             return types.Date()
 

@@ -5,6 +5,21 @@ from ..kvp import KVP_Type
 from ..model_common import DeclarativeBaseGuid
 
 
+ACCOUNT_TYPES="""ASSET
+BANK
+CASH
+CREDIT
+EQUITY
+EXPENSE
+INCOME
+LIABILITY
+MUTUAL
+ROOT
+STOCK
+RECEIVABLE
+PAYABLE
+""".split()
+
 class Account(DeclarativeBaseGuid):
     __tablename__ = 'accounts'
 
