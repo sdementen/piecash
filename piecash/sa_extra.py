@@ -29,13 +29,13 @@ class _DateTime(types.TypeDecorator):
         else:
             return types.DateTime()
 
-    # def column_expression(self, colexpr):
-    #     if self.is_sqlite:
-    #         # need to cast otherwise may store a string date as long integer as sqlite sees a number
-    #         return cast(colexpr, String)
-    #     else:
-    #         return colexpr
-    #
+    def column_expression(self, colexpr):
+        if self.is_sqlite:
+            # need to cast otherwise may store a string date as long integer as sqlite sees a number
+            return cast(colexpr, String)
+        else:
+            return colexpr
+
     def bind_expression(self, colexpr):
         # can be also used in
         if self.is_sqlite:
@@ -70,6 +70,13 @@ class _Date(types.TypeDecorator):
             )
         else:
             return types.Date()
+
+    def column_expression(self, colexpr):
+        if self.is_sqlite:
+            # need to cast otherwise may store a string date as long integer as sqlite sees a number
+            return cast(colexpr, String)
+        else:
+            return colexpr
 
     def bind_expression(self, colexpr):
         # can be also used in
