@@ -1,4 +1,7 @@
-from sqlalchemy import types, Table, MetaData, ForeignKeyConstraint, cast, String
+import re
+import datetime
+
+from sqlalchemy import types, Table, MetaData, ForeignKeyConstraint
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.ext.declarative import as_declarative
 import tzlocal
@@ -13,46 +16,50 @@ class DeclarativeBase(object):
 tz = tzlocal.get_localzone()
 utc = pytz.utc
 
+sqltypes = (
+    sqlite.DATETIME(
+        storage_format="%(year)04d%(month)02d%(day)02d%(hour)02d%(minute)02d%(second)02d",
+        regexp=r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})",
+    ),
+    sqlite.DATE(
+        storage_format="%(year)04d%(month)02d%(day)02d",
+        regexp=r"(\d{4})(\d{2})(\d{2})",
+    ),
+)
+
+
 class _DateTime(types.TypeDecorator):
     """Used to customise the DateTime type for sqlite (ie without the separators as in gnucash
     """
     impl = types.TypeEngine
-    is_sqlite = False
 
     def load_dialect_impl(self, dialect):
         if dialect.name == "sqlite":
-            self.is_sqlite = True
-            return sqlite.DATETIME(
-                storage_format="%(year)04d%(month)02d%(day)02d%(hour)02d%(minute)02d%(second)02d",
-                regexp=r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})",
-            )
+            # self.is_sqlite = True
+            # return sqlite.DATETIME(
+            # storage_format="%(year)04d%(month)02d%(day)02d%(hour)02d%(minute)02d%(second)02d",
+            #     regexp=r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})",
+            # )
+            return types.TEXT()
         else:
             return types.DateTime()
-
-    def column_expression(self, colexpr):
-        if self.is_sqlite:
-            # need to cast otherwise may store a string date as long integer as sqlite sees a number
-            return cast(colexpr, String)
-        else:
-            return colexpr
-
-    def bind_expression(self, colexpr):
-        # can be also used in
-        if self.is_sqlite:
-            # need to cast otherwise may store a string date as long integer as sqlite sees a number
-            return cast(colexpr, String)
-        else:
-            return colexpr
 
     def process_bind_param(self, value, engine):
         if value is not None:
             if value.tzinfo is None:
-                value = value.replace(tzinfo=tz)
-            return value.astimezone(utc)
+                value = tz.localize(value)
+            value = value.astimezone(utc)
+            if engine.name == "sqlite":
+                return sqltypes[0].bind_processor(engine)(value)
+            else:
+                return value
 
     def process_result_value(self, value, engine):
         if value is not None:
-            return value.replace(tzinfo=utc).astimezone(tz)
+            if engine.name == "sqlite":
+                value = sqltypes[0].result_processor(engine, sqlite.TEXT)(value)
+
+            return utc.localize(value).astimezone(tz)
 
 
 class _Date(types.TypeDecorator):
@@ -63,28 +70,29 @@ class _Date(types.TypeDecorator):
 
     def load_dialect_impl(self, dialect):
         if dialect.name == "sqlite":
-            self.is_sqlite = True
-            return sqlite.DATE(
-                storage_format="%(year)04d%(month)02d%(day)02d",
-                regexp=r"(\d{4})(\d{2})(\d{2})"
-            )
+            # self.is_sqlite = True
+            # return sqlite.DATE(
+            #     storage_format="%(year)04d%(month)02d%(day)02d",
+            #     regexp=r"(\d{4})(\d{2})(\d{2})"
+            # )
+            return types.TEXT()
         else:
             return types.Date()
 
-    def column_expression(self, colexpr):
-        if self.is_sqlite:
-            # need to cast otherwise may store a string date as long integer as sqlite sees a number
-            return cast(colexpr, String)
-        else:
-            return colexpr
+    def process_bind_param(self, value, engine):
+        if value is not None:
+            if engine.name == "sqlite":
+                return sqltypes[1].bind_processor(engine)(value)
+            else:
+                return value
 
-    def bind_expression(self, colexpr):
-        # can be also used in
-        if self.is_sqlite:
-            # need to cast otherwise may store a string date as long integer as sqlite sees a number
-            return cast(colexpr, String)
-        else:
-            return colexpr
+    def process_result_value(self, value, engine):
+        if value is not None:
+            if engine.name == "sqlite":
+                value = sqltypes[1].result_processor(engine, sqlite.TEXT)(value)
+
+            return value
+
 
 _address_fields = "addr1 addr2 addr3 addr4 email fax name phone".split()
 

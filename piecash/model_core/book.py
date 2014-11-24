@@ -182,6 +182,10 @@ class GncSession(object):
         return self.sa_session.query(Transaction).all()
 
     @property
+    def accounts(self):
+        return self.sa_session.query(Account).all()
+
+    @property
     def query(self):
         return self.sa_session.query
 

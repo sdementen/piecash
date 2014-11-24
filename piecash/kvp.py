@@ -43,7 +43,6 @@ KVPtype_fields = {
 }
 
 
-
 class SlotType(types.TypeDecorator):
     """Used to customise the DateTime type for sqlite (ie without the separators as in gnucash
     """
@@ -56,6 +55,7 @@ class SlotType(types.TypeDecorator):
     def process_result_value(self, value, dialect):
         if value is not None:
             return KVP_Type(value)
+
 
 class DictWrapper(object):
     def __contains__(self, key):
@@ -82,10 +82,10 @@ class DictWrapper(object):
             self.slot_collection.append(slot(name=key, value=value))
             return
         # assign if type is correct
-        if isinstance(value, sl._pytype):
+        if isinstance(value, sl._python_type):
             sl.value = value
         else:
-            raise TypeError, "Type of '{}' is not one of {}".format(value, sl._pytype)
+            raise TypeError, "Type of '{}' is not one of {}".format(value, sl._python_type)
 
     def __delitem__(self, key):
         for i, sl in enumerate(self.slot_collection):
@@ -110,12 +110,16 @@ class Slot(DeclarativeBase):
     }
 
     def __repr__(self):
-        return "<slot {}={}>".format(self.name, self.value)
+        return "<{} {}={} as {}>".format(self.__class__.__name__, self.name, self.value, self._python_type)
         return "<slot {}={} ({}) -> {}>".format(self.name, self.value, self.slot_type, self.obj_guid)
 
 
 class SlotSimple(Slot):
-    _pytype = ()
+    __mapper_args__ = {
+        'polymorphic_identity': -1,
+    }
+
+    _python_type = ()
 
     @property
     def value(self):
@@ -126,45 +130,68 @@ class SlotSimple(Slot):
         setattr(self, self._field, value)
 
 
-def define_simpleslot(pytype, KVPtype, field, col_type, col_default):
+def define_simpleslot(postfix, pytype, KVPtype, field, col_type, col_default):
     cls = type(
-        'Slot{}'.format(pytype),
+        'Slot{}'.format(postfix),
         (SlotSimple,),
         {
             "__mapper_args__": {'polymorphic_identity': KVPtype},
             field: Column(field, col_type, default=col_default),
             "_field": field,
-            "_pytype": pytype,
+            "_python_type": pytype,
         }
     )
     return cls
 
 
-SlotInt = define_simpleslot(pytype=(int,),
+SlotInt = define_simpleslot(postfix="Int",
+                            pytype=(int,),
                             KVPtype=KVP_Type.KVP_TYPE_GINT64,
                             field="int64_val",
                             col_type=BIGINT(),
                             col_default=0,
 )
-SlotDouble = define_simpleslot(pytype=(float,),
+SlotDouble = define_simpleslot(postfix="Double",
+                               pytype=(float,),
                                KVPtype=KVP_Type.KVP_TYPE_DOUBLE,
                                field="double_val",
                                col_type=REAL(),
                                col_default=0,
 )
-SlotTime = define_simpleslot(pytype=(datetime.time,),
+SlotTime = define_simpleslot(postfix="Time",
+                             pytype=(datetime.time,),
                              KVPtype=KVP_Type.KVP_TYPE_TIMESPEC,
                              field="timespec_val",
                              col_type=_DateTime(),
                              col_default=None,
 )
-SlotDate = define_simpleslot(pytype=(datetime.date,),
+
+
+#
+# class SlotTime(SlotSimple):
+# __mapper_args__ = {
+#         'polymorphic_identity': KVP_Type.KVP_TYPE_TIMESPEC,
+#     }
+#     _python_type = (datetime.datetime,)
+#     _field = "timespec_val"
+#     timespec_val = Column(_DateTime())
+
+# class SlotDate(SlotSimple):
+#     __mapper_args__ = {
+#         'polymorphic_identity': KVP_Type.KVP_TYPE_GDATE,
+#     }
+#     _python_type = (datetime.date,)
+#     _field = "gdate_val"
+#     gdate_val = Column(_Date())
+SlotDate = define_simpleslot(postfix="Date",
+                             pytype=(datetime.date,),
                              KVPtype=KVP_Type.KVP_TYPE_GDATE,
                              field="gdate_val",
                              col_type=_Date(),
                              col_default=None,
 )
-SlotString = define_simpleslot(pytype=(str, unicode),
+SlotString = define_simpleslot(postfix="String",
+                               pytype=(str, unicode),
                                KVPtype=KVP_Type.KVP_TYPE_STRING,
                                field="string_val",
                                col_type=VARCHAR(length=4096),
@@ -176,7 +203,7 @@ class SlotNumeric(Slot):
     __mapper_args__ = {
         'polymorphic_identity': KVP_Type.KVP_TYPE_NUMERIC
     }
-    _pytype = (tuple,)
+    _python_type = (tuple,)
 
     numeric_val_denom = Column('numeric_val_denom', BIGINT(), nullable=False, default=1)
     numeric_val_num = Column('numeric_val_num', BIGINT(), nullable=False, default=0)
@@ -194,33 +221,39 @@ class SlotFrame(DictWrapper, Slot):
     __mapper_args__ = {
         'polymorphic_identity': KVP_Type.KVP_TYPE_FRAME
     }
-    _pytype = (list,)
+    _python_type = (dict,)
 
     guid_val = Column('guid_val', VARCHAR(length=32))
 
-    value = relation('Slot',
+    slot_collection = relation('Slot',
                      primaryjoin=foreign(Slot.obj_guid) == guid_val,
                      cascade='all, delete-orphan',
                      backref=backref("parent", remote_side=guid_val),
     )
 
     @property
-    def slot_collection(self):
-        return self.value
+    def value(self):
+        # convert to dict
+        return { sl.name:sl.value for sl in self.slot_collection}
 
+    @value.setter
+    def value(self, value):
+        self.slot_collection = [slot(name=k, value=v) for k, v in value.iteritems()]
 
 
     def __init__(self, **kwargs):
         self.guid_val = uuid.uuid4().hex
         super(SlotFrame, self).__init__(**kwargs)
 
-@event.listens_for(SlotFrame.value, 'remove')
+
+@event.listens_for(SlotFrame.slot_collection, 'remove')
 def remove_slot(target, value, initiator):
     s = object_session(value)
     if value in s.new:
         s.expunge(value)
     else:
         s.delete(value)
+
 
 def get_all_subclasses(cls):
     all_subclasses = []
@@ -236,14 +269,19 @@ def get_all_subclasses(cls):
 
 
 def slot(name, value):
+    # handle datetime before others (as otherwise can be mixed with date
+    if isinstance(value, datetime.datetime):
+        return SlotTime(name=name, value=value)
+
     for cls in get_all_subclasses(Slot):
-        if isinstance(value, cls._pytype):
+        if isinstance(value, cls._python_type):
             return cls(name=name, value=value)
 
     if isinstance(value, dict):
         # transform a dict to Frame/Slots
         def dict2list_of_slots(dct):
             return [slot(name=k, value=v) for k, v in dct.iteritems()]
+
         return slot(name=name, value=dict2list_of_slots(value))
 
     raise ValueError, "Cannot handle type of '{}'".format(value)
