@@ -78,7 +78,6 @@ class TestIntegration_EmptyBook(object):
 
         session = piecash.open_book(file_template, readonly=True)
         book = session.book
-        session=session.sa_session
 
         # example 1, print all stock prices in the Book
         # display all prices
@@ -107,4 +106,4 @@ class TestIntegration_EmptyBook(object):
 
         # save changes
         with pytest.raises(GnucashException) as excinfo:
-            session.commit()
+            session.save()
