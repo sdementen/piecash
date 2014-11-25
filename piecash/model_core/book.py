@@ -31,7 +31,7 @@ class Book(DeclarativeBaseGuid):
 
     # relation definitions
     root_account = relation('Account', foreign_keys=[root_account_guid],
-                            backref=backref('book', cascade='all, delete-orphan'))
+                            backref=backref('book', cascade='all, delete-orphan', uselist=False))
     root_template = relation('Account', foreign_keys=[root_template_guid])
 
     # definition of fields accessible through the kvp system
@@ -92,7 +92,7 @@ def create_book(sqlite_file=None, uri_conn=None, overwrite=False, **kwargs):
             engine.execute(DropConstraint(fk))
 
     # start session to create initial objects
-    s = sessionmaker(bind=engine)()
+    s = sessionmaker(bind=engine, autoflush=False)()
 
     # create all rows in version table
     for table_name, table_version in version_supported.iteritems():
@@ -137,7 +137,7 @@ def open_book(sqlite_file=None, uri_conn=None, readonly=True, open_if_lock=False
     # else:
     # engine.execute(gnclock.insert(), Hostname=socket.gethostname(), PID=os.getpid())
 
-    s = sessionmaker(bind=engine)()
+    s = sessionmaker(bind=engine, autoflush=False)()
 
     # check the versions in the table versions is consistent with the API
     # TODO: improve this in the future to allow more than 1 version

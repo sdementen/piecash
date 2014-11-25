@@ -50,6 +50,19 @@ class Account(DeclarativeBaseGuid):
                         cascade='all, delete-orphan',
     )
 
+    @validates('parent_guid', 'name')
+    def validate_account_name(self, key, value):
+        name = value if key == 'name' else self.name
+
+        if self.parent:
+            for acc in self.parent.children:
+                if acc.name == name and acc != self:
+                    print name, self.parent
+                    print acc.name, acc.parent
+                    raise ValueError, "{} has two children with the same name {} : {} and {}".format(self.parent, name,
+                                                                                                     acc, self)
+        return value
+
 
     @validates('account_type', 'parent')
     def validate_account_type(self, key, value):
@@ -85,12 +98,13 @@ class Account(DeclarativeBaseGuid):
 
 
     def fullname(self):
-        acc = self
-        l = []
-        while acc:
-            l.append(acc.name)
-            acc = acc.parent
-        return ":".join(l[-2::-1])
+        if self.name:
+            acc = self
+            l = []
+            while acc:
+                l.append(acc.name)
+                acc = acc.parent
+            return ":".join(l[-2::-1])
 
     def __init__(self, **kwargs):
         # set description field to name field for convenience (if not defined)
@@ -100,4 +114,4 @@ class Account(DeclarativeBaseGuid):
 
 
     def __repr__(self):
-        return "Account<{}>".format(self.fullname())
+        return "Account<{}:{}>".format(self.fullname(), self.guid)

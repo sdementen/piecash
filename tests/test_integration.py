@@ -88,20 +88,39 @@ class TestIntegration_EmptyBook(object):
         for p,c in combi_not_OK:
             assert not is_parent_child_account_types_consistent(p, c)
 
-    def test_add_account(self, session):
+    def test_add_account_compatibility(self, session):
         # test compatibility between child account and parent account
         for acc_type1 in ACCOUNT_TYPES - root_types:
-            acc1 = Account(name="Foo", account_type=acc_type1, parent=session.book.root_account)
+            acc1 = Account(name=acc_type1, account_type=acc_type1, parent=session.book.root_account)
+
             for acc_type2 in ACCOUNT_TYPES:
+
                 if not is_parent_child_account_types_consistent(acc_type1, acc_type2):
                     with pytest.raises(ValueError):
-                        acc2 = Account(name="Foo", account_type=acc_type2, parent=acc1)
+                        acc2 = Account(name=acc_type2, account_type=acc_type2, parent=acc1)
                 else:
-                   acc2 = Account(name="Foo", account_type=acc_type2, parent=acc1)
+                   acc2 = Account(name=acc_type2, account_type=acc_type2, parent=acc1)
 
         session.save()
 
         assert len(session.accounts)==100
+
+    def test_add_account_names(self, session):
+        # raise ValueError as acc1 and acc2 shares same parents with same name
+        acc1 = Account(name="Foo", account_type="MUTUAL", parent=session.book.root_account)
+        acc2 = Account(name="Foo", account_type="BANK", parent=session.book.root_account)
+        with pytest.raises(ValueError):
+            session.save()
+        session.sa_session.rollback()
+        # ok as same name but different parents
+        acc3 = Account(name="Fooz", account_type="BANK", parent=session.book.root_account)
+        acc4 = Account(name="Fooz", account_type="BANK", parent=acc3)
+        session.save()
+        # raise ValueError as now acc4 and acc3 shares same parents with same name
+        acc4.parent = acc3.parent
+        with pytest.raises(ValueError):
+            session.save()
+
 
     def test_example(self):
         import piecash

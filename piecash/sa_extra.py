@@ -1,3 +1,4 @@
+from copy import deepcopy
 import re
 import datetime
 
@@ -5,13 +6,31 @@ from sqlalchemy import types, Table, MetaData, ForeignKeyConstraint, DATE, DATET
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import as_declarative
+from sqlalchemy.orm import class_mapper
 import tzlocal
 import pytz
 
 
 @as_declarative()
 class DeclarativeBase(object):
-    pass
+    def __deepcopy__(self, memo):
+        print "memo",memo
+        pk_keys = set([c.key for c in class_mapper(self.__class__).primary_key])
+
+        dct = {}
+        for p in class_mapper(self.__class__).iterate_properties:
+            if p.key in pk_keys:
+                continue
+            if p.key.endswith("guid"):
+                continue
+            attr = getattr(self, p.key)
+            if isinstance(attr, list):
+                attr = [ deepcopy(sattr, memo) for sattr in attr]
+            dct[p.key] = attr
+
+        obj = self.__class__(**dct)
+        return obj
+
 
 
 tz = tzlocal.get_localzone()

@@ -96,6 +96,11 @@ class DictWrapper(object):
         del self.slot_collection[i]
 
 
+    def iteritems(self):
+        for sl in self.slot_collection:
+            yield sl.name, sl.value
+
+
 class Slot(DeclarativeBase):
     __tablename__ = 'slots'
 
@@ -170,7 +175,7 @@ SlotTime = define_simpleslot(postfix="Time",
 #
 # class SlotTime(SlotSimple):
 # __mapper_args__ = {
-#         'polymorphic_identity': KVP_Type.KVP_TYPE_TIMESPEC,
+# 'polymorphic_identity': KVP_Type.KVP_TYPE_TIMESPEC,
 #     }
 #     _python_type = (datetime.datetime,)
 #     _field = "timespec_val"
@@ -226,15 +231,15 @@ class SlotFrame(DictWrapper, Slot):
     guid_val = Column('guid_val', VARCHAR(length=32))
 
     slot_collection = relation('Slot',
-                     primaryjoin=foreign(Slot.obj_guid) == guid_val,
-                     cascade='all, delete-orphan',
-                     backref=backref("parent", remote_side=guid_val),
+                               primaryjoin=foreign(Slot.obj_guid) == guid_val,
+                               cascade='all, delete-orphan',
+                               backref=backref("parent", remote_side=guid_val),
     )
 
     @property
     def value(self):
         # convert to dict
-        return { sl.name:sl.value for sl in self.slot_collection}
+        return {sl.name: sl.value for sl in self.slot_collection}
 
     @value.setter
     def value(self, value):
