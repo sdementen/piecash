@@ -1,8 +1,9 @@
 import re
 import datetime
 
-from sqlalchemy import types, Table, MetaData, ForeignKeyConstraint
+from sqlalchemy import types, Table, MetaData, ForeignKeyConstraint, DATE, DATETIME, TIME
 from sqlalchemy.dialects import sqlite
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import as_declarative
 import tzlocal
 import pytz
@@ -16,16 +17,13 @@ class DeclarativeBase(object):
 tz = tzlocal.get_localzone()
 utc = pytz.utc
 
-sqltypes = (
-    sqlite.DATETIME(
-        storage_format="%(year)04d%(month)02d%(day)02d%(hour)02d%(minute)02d%(second)02d",
-        regexp=r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})",
-    ),
-    sqlite.DATE(
-        storage_format="%(year)04d%(month)02d%(day)02d",
-        regexp=r"(\d{4})(\d{2})(\d{2})",
-    ),
-)
+@compiles(sqlite.DATE, 'sqlite')
+def compile_date(element, compiler, **kw):
+    return "TEXT(8)" #% element.__class__.__name__
+
+@compiles(sqlite.DATETIME, 'sqlite')
+def compile_date(element, compiler, **kw):
+    return "TEXT(14)" #% element.__class__.__name__
 
 
 class _DateTime(types.TypeDecorator):
@@ -35,12 +33,10 @@ class _DateTime(types.TypeDecorator):
 
     def load_dialect_impl(self, dialect):
         if dialect.name == "sqlite":
-            # self.is_sqlite = True
-            # return sqlite.DATETIME(
-            # storage_format="%(year)04d%(month)02d%(day)02d%(hour)02d%(minute)02d%(second)02d",
-            #     regexp=r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})",
-            # )
-            return types.TEXT(14)
+            return sqlite.DATETIME(
+            storage_format="%(year)04d%(month)02d%(day)02d%(hour)02d%(minute)02d%(second)02d",
+                regexp=r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})",
+            )
         else:
             return types.DateTime()
 
@@ -48,17 +44,10 @@ class _DateTime(types.TypeDecorator):
         if value is not None:
             if value.tzinfo is None:
                 value = tz.localize(value)
-            value = value.astimezone(utc)
-            if engine.name == "sqlite":
-                return sqltypes[0].bind_processor(engine)(value)
-            else:
-                return value
+            return value.astimezone(utc)
 
     def process_result_value(self, value, engine):
         if value is not None:
-            if engine.name == "sqlite":
-                value = sqltypes[0].result_processor(engine, sqlite.TEXT)(value)
-
             return utc.localize(value).astimezone(tz)
 
 
@@ -70,28 +59,12 @@ class _Date(types.TypeDecorator):
 
     def load_dialect_impl(self, dialect):
         if dialect.name == "sqlite":
-            # self.is_sqlite = True
-            # return sqlite.DATE(
-            #     storage_format="%(year)04d%(month)02d%(day)02d",
-            #     regexp=r"(\d{4})(\d{2})(\d{2})"
-            # )
-            return types.TEXT(8)
+            return sqlite.DATE(
+                storage_format="%(year)04d%(month)02d%(day)02d",
+                regexp=r"(\d{4})(\d{2})(\d{2})"
+            )
         else:
             return types.Date()
-
-    def process_bind_param(self, value, engine):
-        if value is not None:
-            if engine.name == "sqlite":
-                return sqltypes[1].bind_processor(engine)(value)
-            else:
-                return value
-
-    def process_result_value(self, value, engine):
-        if value is not None:
-            if engine.name == "sqlite":
-                value = sqltypes[1].result_processor(engine, sqlite.TEXT)(value)
-
-            return value
 
 
 _address_fields = "addr1 addr2 addr3 addr4 email fax name phone".split()
