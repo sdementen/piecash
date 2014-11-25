@@ -16,8 +16,9 @@
 #
 # __all__ = [Book, Account, Commodity, Transaction, Split]
 from .model_common import get_active_session
-from .model_core import (Book, create_book, connect_to_gnucash_book, Account,
-                         open_book, Transaction, Split,
+from .model_core import (Book, open_book, create_book,
+                         Account, ACCOUNT_TYPES,
+                         Transaction, Split,
                          Commodity, Price,
 )
 from .model_business import Lot  # must import as Transaction has a relation to it

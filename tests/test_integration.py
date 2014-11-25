@@ -13,8 +13,9 @@ import pytest
 
 
 # parametrize = pytest.mark.parametrize
-from piecash import create_book, Account
+from piecash import create_book, Account, ACCOUNT_TYPES
 from piecash.model_common import GnucashException
+from piecash.model_core.account import is_parent_child_account_types_consistent, root_types
 
 
 @pytest.fixture
@@ -62,12 +63,45 @@ class TestIntegration_EmptyBook(object):
         assert all(acc.parent is None for acc in accs)
         assert all(acc.account_type=="ROOT" for acc in accs)
 
+    def test_is_parent_child_account_types_consistent(self):
+        combi_OK = [
+            ("ROOT", "BANK"),
+            (None, "ROOT"),
+            ("ROOT", "EQUITY"),
+            ("ROOT", "ASSET"),
+            ("ROOT", "EXPENSE"),
+        ]
+
+        combi_not_OK = [
+            ("ROOT", "ROOT"),
+            ("ROOT", None),
+            (None, "ASSET"),
+            ("ASSET", "EQUITY"),
+            ("EQUITY", "ASSET"),
+            ("ASSET", "INCOME"),
+            ("EXPENSE", "ASSET"),
+        ]
+
+        for p,c in combi_OK:
+            assert is_parent_child_account_types_consistent(p, c)
+
+        for p,c in combi_not_OK:
+            assert not is_parent_child_account_types_consistent(p, c)
+
     def test_add_account(self, session):
-        Account(name="Foo",
-                account_type="Bank",
-                parent=session.book.root_account)
+        # test compatibility between child account and parent account
+        for acc_type1 in ACCOUNT_TYPES - root_types:
+            acc1 = Account(name="Foo", account_type=acc_type1, parent=session.book.root_account)
+            for acc_type2 in ACCOUNT_TYPES:
+                if not is_parent_child_account_types_consistent(acc_type1, acc_type2):
+                    with pytest.raises(ValueError):
+                        acc2 = Account(name="Foo", account_type=acc_type2, parent=acc1)
+                else:
+                   acc2 = Account(name="Foo", account_type=acc_type2, parent=acc1)
+
         session.save()
-        assert len(session.accounts)==3
+
+        assert len(session.accounts)==100
 
     def test_example(self):
         import piecash

@@ -1,24 +1,29 @@
 from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER
 from sqlalchemy.orm import relation, backref, validates
 
-from ..kvp import KVP_Type
 from ..model_common import DeclarativeBaseGuid
 
 
-ACCOUNT_TYPES="""ASSET
-BANK
-CASH
-CREDIT
-EQUITY
-EXPENSE
-INCOME
-LIABILITY
-MUTUAL
-ROOT
-STOCK
-RECEIVABLE
-PAYABLE
-""".split()
+equity_types = {"EQUITY"}
+incexp_types = {"INCOME", "EXPENSE"}
+asset_types = {'RECEIVABLE', 'MUTUAL', 'CREDIT', 'CASH', 'LIABILITY', 'PAYABLE', 'ASSET', 'BANK', 'STOCK'}
+root_types = {"ROOT"}
+ACCOUNT_TYPES = equity_types | incexp_types | asset_types | root_types
+
+
+def is_parent_child_account_types_consistent(account_type_parent, account_type_child):
+    if account_type_parent in root_types:
+        return account_type_child in (ACCOUNT_TYPES - root_types)
+
+    if account_type_child in root_types:
+        return account_type_parent is None
+
+    for acc_types in (asset_types, equity_types, incexp_types):
+        if (account_type_child in acc_types) and (account_type_parent in acc_types):
+            return True
+    else:
+        return False
+
 
 class Account(DeclarativeBaseGuid):
     __tablename__ = 'accounts'
@@ -45,11 +50,26 @@ class Account(DeclarativeBaseGuid):
                         cascade='all, delete-orphan',
     )
 
-    # definition of fields accessible through the kvp system
-    # _kvp_slots = {
-    #     "notes": KVP_Type.KVP_TYPE_STRING,
-    #     "placeholder": KVP_Type.KVP_TYPE_STRING,
-    # }
+
+    @validates('account_type', 'parent')
+    def validate_account_type(self, key, value):
+        """Ensure account type is in list
+        """
+        if key == "account_type":
+            if value not in ACCOUNT_TYPES:
+                raise ValueError, "Account_type '{}' is not in {}".format(value, ACCOUNT_TYPES)
+
+            if self.parent:
+                if not is_parent_child_account_types_consistent(self.parent.account_type, value):
+                    raise ValueError, "Child account_type '{}' is not consistent with parent account_type {}".format(
+                        value, self.parent.account_type)
+
+        if (key == "parent") and self.account_type:
+            if not is_parent_child_account_types_consistent(value.account_type, self.account_type):
+                raise ValueError, "Child account_type '{}' is not consistent with parent account_type {}".format(
+                    self.account_type, value.account_type)
+
+        return value
 
     @validates('placeholder')
     def validate_placeholder(self, key, placeholder):
