@@ -63,7 +63,7 @@ or to query the accounts:
 
 .. code-block:: python
 
-    for account in session.query(piecash.Account).all():
+    for account in session.accounts:
         print account
 
 .. parsed-literal::
@@ -86,19 +86,24 @@ or to create a new account below some existing account:
 .. code-block:: python
 
     # build map between account fullname (e.g. "Assets:Current Assets" and account)
-    map_fullname_account = {account.fullname():account for account in session.query(piecash.Account).all()}
+    map_fullname_account = {account.fullname():account for account in session.accounts }
 
     # use it to retrieve the current assets account
     acc_cur = map_fullname_account["Assets:Current Assets"]
 
+    # or
+    acc_cur = session.accounts.get(name="Current Assets")
+
     # retrieve EUR currency
-    EUR = session.query(piecash.Commodity).filter_by(mnemonic='EUR').one()
+    EUR = session.commodities.get(mnemonic='EUR')
 
     # add a new subaccount to this account of type ASSET with currency EUR
     piecash.Account(name="new savings account", account_type="ASSET", parent=acc_cur, commodity=EUR)
 
-    # save changes (it should raise an exception as we opened the book as readonly
-    session.commit()
+    # save changes (it should raise an exception as we opened the book as readonly)
+    session.save()
+
+    session.close()
 
 
 Most basic objects used for personal finance are supported (Account, Split, Transaction, Price, ...).

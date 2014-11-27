@@ -152,7 +152,7 @@ class TestIntegration_EmptyBook(object):
                                                price.currency.mnemonic,
                                                )
 
-        for account in session.query(Account).all():
+        for account in session.accounts:
             print account
 
         # build map between account fullname (e.g. "Assets:Current Assets" and account)
@@ -162,7 +162,7 @@ class TestIntegration_EmptyBook(object):
         acc_cur = map_fullname_account["Assets:Current Assets"]
 
         # retrieve EUR currency
-        EUR = session.query(Commodity).filter_by(mnemonic='EUR').one()
+        EUR = session.commodities.get(mnemonic='EUR')
 
         # add a new subaccount to this account of type ASSET with currency EUR
         Account(name="new savings account", account_type="ASSET", parent=acc_cur, commodity=EUR)
