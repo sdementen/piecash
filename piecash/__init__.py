@@ -24,3 +24,4 @@ from .model_core import (Book, open_book, create_book,
 from .model_business import Lot  # must import as Transaction has a relation to it
 from .model_budget import Budget, BudgetAmount
 from .kvp import slot
+from .metadata import version as __version__

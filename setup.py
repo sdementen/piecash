@@ -238,7 +238,7 @@ setup_dict = dict(
     # Find a list of classifiers here:
     # <http://pypi.python.org/pypi?%3Aaction=list_classifiers>
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'Intended Audience :: Financial and Insurance Industry',
@@ -256,8 +256,8 @@ setup_dict = dict(
     ],
     packages=find_packages(exclude=(TESTS_DIRECTORY,)),
     install_requires=[
-                         'SQLAlchemy>=0.9.7',
-                         'enum34>=1.0',
+                         'SQLAlchemy',
+                         'enum34',
                          'SQLAlchemy-Utils',
                          'pytz',
                          'tzlocal',
