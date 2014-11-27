@@ -1685,6 +1685,7 @@ In&nbsp;[1]:
     <div class="input_area">
 <div class="highlight"><pre><span class="kn">import</span> <span class="nn">piecash</span>
 <span class="kn">import</span> <span class="nn">datetime</span>
+<span class="n">piecash</span><span class="o">.</span><span class="n">__version__</span>
 </pre></div>
 
 </div>
@@ -1695,14 +1696,16 @@ In&nbsp;[1]:
 <div class="output">
 
 
-<div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>
-/home/sdementen/.virtualenvs/pyscash-user/local/lib/python2.7/site-packages/SQLAlchemy-0.9.8-py2.7-linux-i686.egg/sqlalchemy/ext/declarative/api.py:55: SAWarning: On class &apos;Commodity&apos;, Column object &apos;mnemonic&apos; named directly multiple times, only one will be used: lookup_key, mnemonic
-  _as_declarative(cls, classname, cls.__dict__)
+<div class="output_area"><div class="prompt output_prompt">
+    Out[1]:</div>
 
+
+<div class="output_text output_subarea output_pyout">
+<pre>
+&apos;0.2.0&apos;
 </pre>
 </div>
+
 </div>
 
 </div>
@@ -1717,7 +1720,7 @@ In&nbsp;[2]:
 <div class="inner_cell">
     <div class="input_area">
 <div class="highlight"><pre><span class="c"># open a SQLAlchemy session linked to the test.gnucash file (as sqlite3 saved Book)</span>
-<span class="n">s</span> <span class="o">=</span> <span class="n">piecash</span><span class="o">.</span><span class="n">connect_to_gnucash_book</span><span class="p">(</span><span class="s">&quot;test.gnucash&quot;</span><span class="p">,</span> <span class="n">readonly</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">piecash</span><span class="o">.</span><span class="n">open_book</span><span class="p">(</span><span class="s">&quot;test.gnucash&quot;</span><span class="p">,</span> <span class="n">readonly</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -1733,9 +1736,9 @@ In&nbsp;[3]:
 <div class="inner_cell">
     <div class="input_area">
 <div class="highlight"><pre><span class="c"># retrieve the single Book object from the session (this is a sqlalchemy standard call)</span>
-<span class="n">book</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">piecash</span><span class="o">.</span><span class="n">Book</span><span class="p">)</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
+<span class="n">book</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">book</span>
 <span class="c"># retrieve the EUR currency</span>
-<span class="n">EUR</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">piecash</span><span class="o">.</span><span class="n">Commodity</span><span class="p">)</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
+<span class="n">EUR</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">commodities</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">mnemonic</span><span class="o">=</span><span class="s">&quot;EUR&quot;</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -1768,11 +1771,11 @@ In&nbsp;[4]:
 
 <div class="output_text output_subarea output_pyout">
 <pre>
-[Account&lt;Assets&gt;,
- Account&lt;Liabilities&gt;,
- Account&lt;Income&gt;,
- Account&lt;Expenses&gt;,
- Account&lt;Equity&gt;]
+[Account&lt;Assets:26ab040a72d456510120febc05a7d87f&gt;,
+ Account&lt;Liabilities:f5623bdde4e03aa70510410a4922ed3a&gt;,
+ Account&lt;Income:895bcd982eadf2a3fee50f5f5ea41d9c&gt;,
+ Account&lt;Expenses:e4d8981db8f523bc12554234a5ce27b1&gt;,
+ Account&lt;Equity:e1163f4f905fa301e960e149544e53cc&gt;]
 </pre>
 </div>
 
@@ -1841,7 +1844,7 @@ In&nbsp;[7]:
 <div class="inner_cell">
     <div class="input_area">
 <div class="highlight"><pre><span class="c"># create a transaction of 45 € from the saving  account to the checking account</span>
-<span class="n">tr</span> <span class="o">=</span> <span class="n">piecash</span><span class="o">.</span><span class="n">Transaction</span><span class="o">.</span><span class="n">single_transaction</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">(),</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">(),</span> <span class="s">&quot;transfer of money&quot;</span><span class="p">,</span> <span class="mi">45</span><span class="p">,</span> <span class="n">EUR</span><span class="p">,</span> <span class="n">savacc</span><span class="p">,</span> <span class="n">curacc</span><span class="p">)</span>
+<span class="n">tr</span> <span class="o">=</span> <span class="n">piecash</span><span class="o">.</span><span class="n">Transaction</span><span class="o">.</span><span class="n">single_transaction</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">(),</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">(),</span> <span class="s">&quot;transfer of money&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mi">4500</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">savacc</span><span class="p">,</span> <span class="n">curacc</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -1875,8 +1878,8 @@ In&nbsp;[8]:
 <div class="output_text output_subarea output_pyout">
 <pre>
 (&apos;transfer of money&apos;,
- [&lt;Split Account&lt;Assets:Current Assets:Savings Account&gt; -45&gt;,
-  &lt;Split Account&lt;Assets:Current Assets:Checking Account&gt; 45&gt;])
+ [&lt;Split Account&lt;Assets:Current Assets:Savings Account:3f06315df9f4d0da91dc543adb6925d0&gt; (-4500, 100)&gt;,
+  &lt;Split Account&lt;Assets:Current Assets:Checking Account:98243de35cad3f868f3408336b9c3378&gt; (4500, 100)&gt;])
 </pre>
 </div>
 
@@ -1911,8 +1914,8 @@ In&nbsp;[9]:
 
 <div class="output_text output_subarea output_pyout">
 <pre>
-([&lt;Split Account&lt;Assets:Current Assets:Savings Account&gt; -45&gt;],
- [&lt;Split Account&lt;Assets:Current Assets:Checking Account&gt; 45&gt;])
+([&lt;Split Account&lt;Assets:Current Assets:Savings Account:3f06315df9f4d0da91dc543adb6925d0&gt; (-4500, 100)&gt;],
+ [&lt;Split Account&lt;Assets:Current Assets:Checking Account:98243de35cad3f868f3408336b9c3378&gt; (4500, 100)&gt;])
 </pre>
 </div>
 
@@ -1929,8 +1932,8 @@ In&nbsp;[10]:
 </div>
 <div class="inner_cell">
     <div class="input_area">
-<div class="highlight"><pre><span class="c"># rollback the session (i.e. undo all changes)</span>
-<span class="n">s</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+<div class="highlight"><pre><span class="c"># cancel all changes in the session (i.e. undo all changes)</span>
+<span class="n">s</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
 </pre></div>
 
 </div>
@@ -1969,21 +1972,6 @@ In&nbsp;[11]:
 
 </div>
 
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">
-In&nbsp;[]:
-</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class="highlight"><pre> 
-</pre></div>
-
-</div>
 </div>
 </div>
 
