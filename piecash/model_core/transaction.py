@@ -1,11 +1,9 @@
 from decimal import Decimal
-import decimal
 
 from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, cast, Float
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relation, backref, validates
 
-from ..kvp import KVP_Type
 from ..model_common import DeclarativeBaseGuid
 from ..sa_extra import _DateTime
 
@@ -17,37 +15,50 @@ class Split(DeclarativeBaseGuid):
 
     # column definitions
     account_guid = Column('account_guid', VARCHAR(length=32), ForeignKey('accounts.guid'), nullable=False, index=True)
-    action = Column('action', VARCHAR(length=2048), nullable=False)
+    action = Column('action', VARCHAR(length=2048), nullable=False, default="")
     lot_guid = Column('lot_guid', VARCHAR(length=32), ForeignKey('lots.guid'))
-    memo = Column('memo', VARCHAR(length=2048), nullable=False)
+    memo = Column('memo', VARCHAR(length=2048), nullable=False, default="")
 
     quantity_denom = Column('quantity_denom', BIGINT(), nullable=False)
     quantity_num = Column('quantity_num', BIGINT(), nullable=False)
 
     def fset(self, d):
-        _, _, exp = d.as_tuple()
-        self.quantity_denom = denom = int(d.radix() ** (-exp))
-        self.quantity_num = int(d * denom)
+        if isinstance(d, Decimal):
+            _, _, exp = d.as_tuple()
+            denom = int(d.radix() ** (-exp))
+            d = int(d * denom), denom
+
+        self.quantity_num, self.quantity_denom = d
+        if self.transaction and self.account:
+            if self.transaction.currency == self.account.commodity and self.value != d:
+                self.value = d
 
     quantity = hybrid_property(
-        fget=lambda self: decimal.Decimal(self.quantity_num) / decimal.Decimal(self.quantity_denom),
+        fget=lambda self: (self.quantity_num, self.quantity_denom),
         fset=fset,
         expr=lambda cls: cast(cls.quantity_num, Float) / cls.quantity_denom,
     )
     reconcile_date = Column('reconcile_date', _DateTime())
-    reconcile_state = Column('reconcile_state', VARCHAR(length=1), nullable=False)
+    reconcile_state = Column('reconcile_state', VARCHAR(length=1), nullable=False, default="n")
     tx_guid = Column('tx_guid', VARCHAR(length=32), ForeignKey('transactions.guid'), nullable=False, index=True)
 
     value_denom = Column('value_denom', BIGINT(), nullable=False)
     value_num = Column('value_num', BIGINT(), nullable=False)
 
     def fset(self, d):
-        _, _, exp = d.as_tuple()
-        self.value_denom = denom = int(d.radix() ** (-exp))
-        self.value_num = int(d * denom)
+        if isinstance(d, Decimal):
+            _, _, exp = d.as_tuple()
+            denom = int(d.radix() ** (-exp))
+            d = int(d * denom), denom
+
+        self.value_num, self.value_denom = d
+
+        if self.transaction and self.account:
+            if self.transaction.currency == self.account.commodity and self.quantity != d:
+                self.quantity = d
 
     value = hybrid_property(
-        fget=lambda self: decimal.Decimal(self.value_num) / decimal.Decimal(self.value_denom),
+        fget=lambda self: (self.value_num, self.value_denom),
         fset=fset,
         expr=lambda cls: cast(cls.value_num, Float) / cls.value_denom,
     )
@@ -58,6 +69,25 @@ class Split(DeclarativeBaseGuid):
 
     def __repr__(self):
         return "<Split {} {}>".format(self.account, self.value)
+
+
+    @validates("transaction", "account")
+    def sync_value_amount(self, key, value):
+        acc = self.account
+        trx = self.transaction
+        if "transaction" == key:
+            trx = value
+        if "account" == key:
+            acc = value
+
+        if acc and trx:
+            if trx.currency == acc.commodity:
+                if self.value:
+                    self.quantity = self.value
+                elif self.quantity:
+                    self.value = self.quantity
+
+        return value
 
 
 class Transaction(DeclarativeBaseGuid):
@@ -80,15 +110,16 @@ class Transaction(DeclarativeBaseGuid):
 
     # definition of fields accessible through the kvp system
     # _kvp_slots = {
-    #     "notes": KVP_Type.KVP_TYPE_STRING,
-    #     "date-posted": KVP_Type.KVP_TYPE_GDATE,
+    # "notes": KVP_Type.KVP_TYPE_STRING,
+    # "date-posted": KVP_Type.KVP_TYPE_GDATE,
     # }
 
     @validates('post_date')
     def validate_post_date(self, key, post_date):
         """Add date-posted as slot
         """
-        self["date-posted"] = post_date
+        if post_date:
+            self["date-posted"] = post_date
         return post_date
 
 
@@ -98,45 +129,23 @@ class Transaction(DeclarativeBaseGuid):
                            enter_date,
                            description,
                            value,
-                           currency,
                            from_account,
                            to_account):
-        amount100 = int(Decimal(value) * 100)
-
+        num, denom = value
+        # currency is derived from "from_account" (as in GUI)
+        currency = from_account.commodity
+        # currency of other destination account should be identical (as only one value given)
+        assert currency == to_account.commodity, "Commodities of accounts should be the same"
         tx = Transaction(
             currency=currency,
             post_date=post_date,
             enter_date=enter_date,
             description=description,
-            num="",
             splits=[
-                Split(
-                    account=from_account,
-                    reconcile_state='n',
-                    value_num=-amount100,
-                    value_denom=100,
-                    quantity_num=-amount100,
-                    quantity_denom=100,
-                    memo="",
-                    action="",
-                ), Split(
-                    account=to_account,
-                    reconcile_state='n',
-                    value_num=amount100,
-                    value_denom=100,
-                    quantity_num=amount100,
-                    quantity_denom=100,
-                    memo="",
-                    action="",
-                )])
+                Split(account=from_account,value=(-num, denom)),
+                Split(account=to_account,value=(num,denom)),
+                ])
         return tx
-
-    # > I'm looking at the XML of my gnucash file and was wondering about the
-    # > <split:value> and <split:quantity> fields.
-    # > I'm taking a guess but it seems that <split:value> is in the currency
-    # > of of the transaction <trn:currency> and
-    # > that <split:quantity> is in the currency of the account associated to
-    # > the split (<split:account>)
 
     @classmethod
     def stock_transaction(cls,

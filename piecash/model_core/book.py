@@ -1,14 +1,17 @@
-from sqlalchemy import Column, VARCHAR, ForeignKey, create_engine
+import os
+import socket
+
+from sqlalchemy import Column, VARCHAR, ForeignKey, create_engine, event
 from sqlalchemy.orm import relation, backref, sessionmaker
 from sqlalchemy.sql.ddl import DropConstraint
 from sqlalchemy_utils import database_exists
 
 from .account import Account
-from ..kvp import KVP_Type
 from ..model_common import DeclarativeBaseGuid, _default_session, GnucashException
 from .transaction import Transaction
 from .model_core import gnclock, Version
 from ..sa_extra import DeclarativeBase, get_foreign_keys
+from .commodity import Commodity
 
 
 version_supported = {u'Gnucash-Resave': 19920, u'invoices': 3, u'books': 1, u'accounts': 1, u'slots': 3,
@@ -36,7 +39,7 @@ class Book(DeclarativeBaseGuid):
 
     # definition of fields accessible through the kvp system
     # _kvp_slots = {
-    #     "options": KVP_Type.KVP_TYPE_FRAME,
+    # "options": KVP_Type.KVP_TYPE_FRAME,
     # }
 
 
@@ -81,6 +84,7 @@ def create_book(sqlite_file=None, uri_conn=None, overwrite=False, **kwargs):
             else:
                 raise GnucashException, "'{}' db already exists".format(uri_conn)
         create_database(uri_conn)
+
     engine = create_engine(uri_conn, **kwargs)
 
     # create all (tables, fk, ...)
@@ -127,6 +131,7 @@ def open_book(sqlite_file=None, uri_conn=None, readonly=True, open_if_lock=False
     if not database_exists(uri_conn):
         raise GnucashException, "Database '{}' does not exist (please use create_book to create " \
                                 "GnuCash books from scratch)".format(uri_conn)
+
     engine = create_engine(uri_conn, **kwargs)
 
     locks = list(engine.execute(gnclock.select()))
@@ -134,8 +139,6 @@ def open_book(sqlite_file=None, uri_conn=None, readonly=True, open_if_lock=False
     # ensure the file is not locked by GnuCash itself
     if locks and not open_if_lock:
         raise GnucashException, "Lock on the file"
-    # else:
-    # engine.execute(gnclock.insert(), Hostname=socket.gethostname(), PID=os.getpid())
 
     s = sessionmaker(bind=engine, autoflush=False)()
 
@@ -167,11 +170,45 @@ class GncSession(object):
     def __init__(self, session):
         self.sa_session = session
 
+        # set a lock
+        session.execute(gnclock.insert(values=dict(hostname=socket.gethostname(), pid=os.getpid())))
+        session.commit()
+        # setup tracking of session changes (see https://www.mail-archive.com/sqlalchemy@googlegroups.com/msg34201.html)
+        self._is_modified = False
+
+        @event.listens_for(session, 'after_flush')
+        def receive_after_flush(session, flush_context):
+            self._is_modified = not self.is_saved
+
+        @event.listens_for(session, 'after_commit')
+        @event.listens_for(session, 'after_begin')
+        @event.listens_for(session, 'after_rollback')
+        def init_session_status(session, *args, **kwargs):
+            self._is_modified = False
+
+
     def save(self):
         self.sa_session.commit()
 
     def cancel(self):
         self.sa_session.rollback()
+
+    def close(self):
+        session = self.sa_session
+        # cancel pending changes
+        session.rollback()
+
+        # remove the lock
+        session.execute(gnclock.delete(whereclause=(gnclock.c.hostname == socket.gethostname())
+                                                   and (gnclock.c.pid == os.getpid())))
+        session.commit()
+
+        session.close()
+
+
+    @property
+    def is_saved(self):
+        return not (self._is_modified or self.sa_session.dirty or self.sa_session.deleted or self.sa_session.new)
 
     @property
     def book(self):
@@ -179,11 +216,15 @@ class GncSession(object):
 
     @property
     def transactions(self):
-        return self.sa_session.query(Transaction).all()
+        return CallableList(self.sa_session.query(Transaction).all())
 
     @property
     def accounts(self):
-        return self.sa_session.query(Account).all()
+        return CallableList(self.sa_session.query(Account).all())
+
+    @property
+    def commodities(self):
+        return CallableList(self.sa_session.query(Commodity).all())
 
     @property
     def query(self):
@@ -195,6 +236,24 @@ class GncSession(object):
 
     def get(self, cls, **kwargs):
         return self.sa_session.query(cls).filter_by(**kwargs).one()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+
+class CallableList(list):
+    def get(self, **kwargs):
+        for obj in self:
+            for k, v in kwargs.iteritems():
+                if getattr(obj, k) != v:
+                    break
+            else:
+                return obj
+        else:
+            raise KeyError, "Could not find object with {} in {}".format(kwargs, self)
 
 
 open_book_session = open_book

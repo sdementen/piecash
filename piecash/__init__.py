@@ -15,11 +15,11 @@
 # __copyright__ = metadata.copyright
 #
 # __all__ = [Book, Account, Commodity, Transaction, Split]
-from .model_common import get_active_session
+from .model_common import get_active_session, GncNoActiveSession, GnucashException
 from .model_core import (Book, open_book, create_book,
                          Account, ACCOUNT_TYPES,
                          Transaction, Split,
-                         Commodity, Price,
+                         Commodity, Price
 )
 from .model_business import Lot  # must import as Transaction has a relation to it
 from .model_budget import Budget, BudgetAmount

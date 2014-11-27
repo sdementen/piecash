@@ -9,9 +9,6 @@ from piecash.model_common import DeclarativeBaseGuid
 from piecash.sa_extra import _DateTime
 
 
-__author__ = 'sdementen'
-
-
 class Commodity(DeclarativeBaseGuid):
     __tablename__ = 'commodities'
 
@@ -29,7 +26,9 @@ class Commodity(DeclarativeBaseGuid):
 
     # relation definitions
 
-    # lookup_key = mnemonic
+    def __repr__(self):
+        return "Commodity<{}:{}>".format(self.namespace, self.mnemonic)
+
     @classmethod
     def create_from_ISO(cls, mnemonic):
         # retrieve XML table with currency information

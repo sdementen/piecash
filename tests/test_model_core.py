@@ -13,7 +13,7 @@ import pytest
 
 
 # parametrize = pytest.mark.parametrize
-from piecash import Transaction, Commodity, open_book
+from piecash import Transaction, Commodity, open_book, create_book
 from piecash.model_core.account import Account
 from piecash.kvp import Slot
 from piecash.model_common import GnucashException
@@ -27,12 +27,13 @@ file_for_test = os.path.join(test_folder, "empty_book_for_test.gnucash")
 
 @pytest.fixture
 def session(request):
-    shutil.copyfile(file_template, file_for_test)
-
-    s = open_book(file_for_test, readonly=False).sa_session
-
-    request.addfinalizer(lambda: os.remove(file_for_test))
+    s = create_book()
     return s
+
+@pytest.fixture
+def sa_session(request):
+    s = create_book()
+    return s.sa_session
 
 
 @pytest.fixture
@@ -40,7 +41,7 @@ def session_readonly(request):
     shutil.copyfile(file_template, file_for_test)
 
     # default session is readonly
-    s = open_book(file_for_test).sa_session
+    s = open_book(file_for_test)
 
     request.addfinalizer(lambda: os.remove(file_for_test))
     return s
@@ -74,7 +75,7 @@ class TestModelCore_EmptyBook(object):
         # confirm versions of tables
         versions = session.query(Version.table_name,
                                  Version.table_version).all()
-        assert set(versions) == {(u'Gnucash', 2060300), (u'Gnucash-Resave', 19920),
+        assert set(versions) == {(u'Gnucash', 2060400), (u'Gnucash-Resave', 19920),
                                  (u'accounts', 1), (u'books', 1),
                                  (u'budgets', 1), (u'budget_amounts', 1), ('jobs', 1), (u'orders', 1),
                                  (u'taxtables', 2), (u'taxtable_entries', 3), (u'vendors', 1), (u'recurrences', 2),
@@ -86,31 +87,30 @@ class TestModelCore_EmptyBook(object):
     def test_readonly_true(self, session_readonly):
         # control exception when adding object to readonly gnucash db
         v = Version(table_name="sample", table_version="other sample")
-        session_readonly.add(v)
+        sa_session_readonly = session_readonly.sa_session
+        sa_session_readonly.add(v)
         with pytest.raises(GnucashException):
-            session_readonly.flush()
+            sa_session_readonly.flush()
 
         # control exception when deleting object to readonly gnucash db
-        session_readonly.delete(session_readonly.query(Account).first())
+        sa_session_readonly.delete(session_readonly.query(Account).first())
         with pytest.raises(GnucashException):
-            session_readonly.flush()
+            sa_session_readonly.flush()
 
         # control exception when modifying object to readonly gnucash db
-        session_readonly.query(Account).first().name = "foo"
+        sa_session_readonly.query(Account).first().name = "foo"
         with pytest.raises(GnucashException):
-            session_readonly.flush()
+            sa_session_readonly.flush()
 
-        # control no exception when not changing the db
-        assert session_readonly.flush() is None
 
-    def test_readonly_false(self, session):
+    def test_readonly_false(self, sa_session):
         v = Version(table_name="fo", table_version="ok")
-        session.add(v)
-        assert session.flush() is None
+        sa_session.add(v)
+        assert sa_session.flush() is None
 
     def test_lock(self, session):
-        locks = list(session.bind.execute(gnclock.select()))
-        assert len(locks) == 0
+        locks = list(session.sa_session.execute(gnclock.select()))
+        assert len(locks) == 1
 
 
 class TestModelCore_CreateObjects(object):
@@ -142,7 +142,7 @@ class TestModelCore_CreateObjects(object):
         # confirm versions of tables
         versions = session.query(Version.table_name,
                                  Version.table_version).all()
-        assert set(versions) == {(u'Gnucash', 2060300), (u'Gnucash-Resave', 19920),
+        assert set(versions) == {(u'Gnucash', 2060400), (u'Gnucash-Resave', 19920),
                                  (u'accounts', 1), (u'books', 1),
                                  (u'budgets', 1), (u'budget_amounts', 1), ('jobs', 1), (u'orders', 1),
                                  (u'taxtables', 2), (u'taxtable_entries', 3), (u'vendors', 1), (u'recurrences', 2),

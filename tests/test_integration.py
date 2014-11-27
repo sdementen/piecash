@@ -10,18 +10,34 @@ import os
 import pytest
 
 
-
-
 # parametrize = pytest.mark.parametrize
-from piecash import create_book, Account, ACCOUNT_TYPES
+import shutil
+from piecash import create_book, Account, ACCOUNT_TYPES, open_book, Price, Commodity
 from piecash.model_common import GnucashException
 from piecash.model_core.account import is_parent_child_account_types_consistent, root_types
+
+test_folder = os.path.dirname(os.path.realpath(__file__))
+file_template = os.path.join(test_folder, "empty_book.gnucash")
+file_for_test = os.path.join(test_folder, "empty_book_for_test.gnucash")
+file_template_full = os.path.join(test_folder, "test_book.gnucash")
+file_for_test_full = os.path.join(test_folder, "test_book_for_test.gnucash")
 
 
 @pytest.fixture
 def session(request):
     s = create_book()
     return s
+
+@pytest.fixture
+def realbook_session(request):
+    shutil.copyfile(file_template_full, file_for_test_full)
+
+    # default session is readonly
+    s = open_book(file_for_test_full)
+
+    request.addfinalizer(lambda: os.remove(file_for_test_full))
+    return s
+
 
 
 class TestIntegration_EmptyBook(object):
@@ -122,19 +138,13 @@ class TestIntegration_EmptyBook(object):
             session.save()
 
 
-    def test_example(self):
-        import piecash
-
-        # open a GnuCash Book
-        test_folder = os.path.dirname(os.path.realpath(__file__))
-        file_template = os.path.join(test_folder, "test_book.gnucash")
-
-        session = piecash.open_book(file_template, readonly=True)
+    def test_example(self, realbook_session):
+        session = realbook_session
         book = session.book
 
         # example 1, print all stock prices in the Book
         # display all prices
-        for price in session.query(piecash.Price).all():
+        for price in session.query(Price).all():
             print "{}/{} on {} = {} {}".format(price.commodity.namespace,
                                                price.commodity.mnemonic,
                                                price.date,
@@ -142,20 +152,20 @@ class TestIntegration_EmptyBook(object):
                                                price.currency.mnemonic,
                                                )
 
-        for account in session.query(piecash.Account).all():
+        for account in session.query(Account).all():
             print account
 
         # build map between account fullname (e.g. "Assets:Current Assets" and account)
-        map_fullname_account = {account.fullname():account for account in session.query(piecash.Account).all()}
+        map_fullname_account = {account.fullname():account for account in session.query(Account).all()}
 
         # use it to retrieve the current assets account
         acc_cur = map_fullname_account["Assets:Current Assets"]
 
         # retrieve EUR currency
-        EUR = session.query(piecash.Commodity).filter_by(mnemonic='EUR').one()
+        EUR = session.query(Commodity).filter_by(mnemonic='EUR').one()
 
         # add a new subaccount to this account of type ASSET with currency EUR
-        piecash.Account(name="new savings account", account_type="ASSET", parent=acc_cur, commodity=EUR)
+        Account(name="new savings account", account_type="ASSET", parent=acc_cur, commodity=EUR)
 
         # save changes
         with pytest.raises(GnucashException) as excinfo:
