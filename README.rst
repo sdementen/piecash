@@ -8,8 +8,7 @@ Project
 This project provides a simple and pythonic interface to a GnuCash files stored in SQL (sqlite3 and Postgres, not tested in MySQL).
 
 It is a pure python package that can be used as an alternative to:
-- the official python bindings (as long as no advanced book modifications and/or engine calculations are needed). This
-  is specially useful on Windows there the official python bindings may be tricky to install.
+- the official python bindings (as long as no advanced book modifications and/or engine calculations are needed). This is specially useful on Windows there the official python bindings may be tricky to install.
 - XML parsing/reading of XML GnuCash files if you prefer python over XML/XLST manipulations.
 
 It is basically a SQLAlchemy layer augmented with methods to ease the reading, creation and (limited) manipulation of
