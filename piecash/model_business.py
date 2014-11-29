@@ -1,12 +1,12 @@
 from sqlalchemy import Column, INTEGER, BIGINT, VARCHAR, ForeignKey
-from sqlalchemy.orm import composite, relation
+from sqlalchemy.orm import composite, relation, backref
 
 # change of the __doc__ string as getting error in sphinx ==> should be reported to SA project
 from piecash.sa_extra import Address
 
 composite.__doc__ = composite.__doc__.replace(":ref:`mapper_composite`", "")
 
-from .sa_extra import _Date, _DateTime, DeclarativeBase
+from .sa_extra import _Date, _DateTime, DeclarativeBase, CallableList
 from .model_common import DeclarativeBaseGuid
 
 
@@ -271,7 +271,7 @@ class TaxtableEntry(DeclarativeBase):
     taxtable = Column('taxtable', VARCHAR(length=32), nullable=False)
     type = Column('type', INTEGER(), nullable=False)
 
-    #relation definitions
+    # relation definitions
 
 
 class Schedxaction(DeclarativeBaseGuid):
@@ -307,4 +307,7 @@ class Lot(DeclarativeBaseGuid):
     is_closed = Column('is_closed', INTEGER(), nullable=False)
 
     # relation definitions
-    account = relation('Account', backref="lots")
+    account = relation('Account',
+                       backref=backref("lots",
+                                       cascade='all, delete-orphan',
+                                       collection_class=CallableList, ))

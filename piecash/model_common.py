@@ -6,7 +6,8 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import object_session, relation, foreign
 
 from .kvp import DictWrapper, Slot
-from .sa_extra import DeclarativeBase
+from .sa_extra import DeclarativeBase, CallableList
+
 
 class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):
     __abstract__ = True
@@ -19,7 +20,9 @@ class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):
             return
 
         cls.slots = relation('Slot',
-                             primaryjoin=foreign(Slot.obj_guid) == cls.guid, cascade='all, delete-orphan',
+                             primaryjoin=foreign(Slot.obj_guid) == cls.guid,
+                             cascade='all, delete-orphan',
+                             collection_class=CallableList,
         )
 
         # assign id of slot when associating to object

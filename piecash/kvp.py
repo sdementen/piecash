@@ -6,7 +6,7 @@ from enum import Enum
 from sqlalchemy import Column, VARCHAR, INTEGER, REAL, BIGINT, types, event
 from sqlalchemy.orm import relation, foreign, object_session, backref
 
-from .sa_extra import _DateTime, DeclarativeBase, _Date
+from .sa_extra import _DateTime, DeclarativeBase, _Date, CallableList
 
 
 class KVP_Type(Enum):
@@ -233,6 +233,7 @@ class SlotFrame(DictWrapper, Slot):
     slot_collection = relation('Slot',
                                primaryjoin=foreign(Slot.obj_guid) == guid_val,
                                cascade='all, delete-orphan',
+                               collection_class=CallableList,
                                backref=backref("parent", remote_side=guid_val),
     )
 

@@ -123,3 +123,15 @@ def get_foreign_keys(metadata, engine):
             if not isinstance(constraint, ForeignKeyConstraint):
                 continue
             yield constraint
+
+
+class CallableList(list):
+    def get(self, **kwargs):
+        for obj in self:
+            for k, v in kwargs.iteritems():
+                if getattr(obj, k) != v:
+                    break
+            else:
+                return obj
+        else:
+            raise KeyError, "Could not find object with {} in {}".format(kwargs, self)

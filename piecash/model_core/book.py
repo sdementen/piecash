@@ -8,6 +8,7 @@ from sqlalchemy_utils import database_exists
 
 from .account import Account
 from ..model_common import DeclarativeBaseGuid, _default_session, GnucashException
+from piecash.sa_extra import CallableList
 from .transaction import Transaction
 from .model_core import gnclock, Version
 from ..sa_extra import DeclarativeBase, get_foreign_keys
@@ -111,7 +112,7 @@ def create_book(sqlite_file=None, uri_conn=None, overwrite=False, **kwargs):
     return GncSession(s)
 
 
-def open_book(sqlite_file=None, uri_conn=None, readonly=True, open_if_lock=False, **kwargs):
+def open_book(sqlite_file=None, uri_conn=None, acquire_lock=False, readonly=True, open_if_lock=False, **kwargs):
     """
     Open a GnuCash book and return the related SQLAlchemy session
 
@@ -163,28 +164,30 @@ def open_book(sqlite_file=None, uri_conn=None, readonly=True, open_if_lock=False
 
         s.flush = new_flush
 
-    return GncSession(s)
+    return GncSession(s, acquire_lock)
 
 
 class GncSession(object):
-    def __init__(self, session):
+    def __init__(self, session, acquire_lock=False):
         self.sa_session = session
+        self._acquire_lock = acquire_lock
 
-        # set a lock
-        session.execute(gnclock.insert(values=dict(hostname=socket.gethostname(), pid=os.getpid())))
-        session.commit()
-        # setup tracking of session changes (see https://www.mail-archive.com/sqlalchemy@googlegroups.com/msg34201.html)
-        self._is_modified = False
-
-        @event.listens_for(session, 'after_flush')
-        def receive_after_flush(session, flush_context):
-            self._is_modified = not self.is_saved
-
-        @event.listens_for(session, 'after_commit')
-        @event.listens_for(session, 'after_begin')
-        @event.listens_for(session, 'after_rollback')
-        def init_session_status(session, *args, **kwargs):
+        if acquire_lock:
+            # set a lock
+            session.execute(gnclock.insert(values=dict(hostname=socket.gethostname(), pid=os.getpid())))
+            session.commit()
+            # setup tracking of session changes (see https://www.mail-archive.com/sqlalchemy@googlegroups.com/msg34201.html)
             self._is_modified = False
+
+            @event.listens_for(session, 'after_flush')
+            def receive_after_flush(session, flush_context):
+                self._is_modified = not self.is_saved
+
+            @event.listens_for(session, 'after_commit')
+            @event.listens_for(session, 'after_begin')
+            @event.listens_for(session, 'after_rollback')
+            def init_session_status(session, *args, **kwargs):
+                self._is_modified = False
 
 
     def save(self):
@@ -198,10 +201,11 @@ class GncSession(object):
         # cancel pending changes
         session.rollback()
 
-        # remove the lock
-        session.execute(gnclock.delete(whereclause=(gnclock.c.hostname == socket.gethostname())
-                                                   and (gnclock.c.pid == os.getpid())))
-        session.commit()
+        if self._acquire_lock:
+            # remove the lock
+            session.execute(gnclock.delete(whereclause=(gnclock.c.hostname == socket.gethostname())
+                                                       and (gnclock.c.pid == os.getpid())))
+            session.commit()
 
         session.close()
 
@@ -216,15 +220,15 @@ class GncSession(object):
 
     @property
     def transactions(self):
-        return CallableList(self.sa_session.query(Transaction).all())
+        return CallableList(self.sa_session.query(Transaction))
 
     @property
     def accounts(self):
-        return CallableList(self.sa_session.query(Account).all())
+        return CallableList(self.sa_session.query(Account))
 
     @property
     def commodities(self):
-        return CallableList(self.sa_session.query(Commodity).all())
+        return CallableList(self.sa_session.query(Commodity))
 
     @property
     def query(self):
@@ -242,18 +246,6 @@ class GncSession(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
-
-
-class CallableList(list):
-    def get(self, **kwargs):
-        for obj in self:
-            for k, v in kwargs.iteritems():
-                if getattr(obj, k) != v:
-                    break
-            else:
-                return obj
-        else:
-            raise KeyError, "Could not find object with {} in {}".format(kwargs, self)
 
 
 open_book_session = open_book

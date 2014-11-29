@@ -2,6 +2,7 @@ from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER
 from sqlalchemy.orm import relation, backref, validates
 
 from ..model_common import DeclarativeBaseGuid
+from piecash.sa_extra import CallableList
 
 
 equity_types = {"EQUITY"}
@@ -44,10 +45,13 @@ class Account(DeclarativeBaseGuid):
     placeholder = Column('placeholder', INTEGER(), default=0)
 
     # relation definitions
-    commodity = relation('Commodity', backref=backref('accounts', cascade='all, delete-orphan'))
+    commodity = relation('Commodity', backref=backref('accounts',
+                                                      cascade='all, delete-orphan',
+                                                      collection_class=CallableList))
     children = relation('Account',
                         backref=backref('parent', remote_side=guid),
                         cascade='all, delete-orphan',
+                        collection_class=CallableList,
     )
 
     @validates('parent_guid', 'name')

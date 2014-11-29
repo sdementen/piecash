@@ -3,7 +3,7 @@ from sqlalchemy import Column, VARCHAR, INTEGER, BIGINT, ForeignKey, cast, Float
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relation, backref
 
-from .sa_extra import _Date, DeclarativeBase
+from .sa_extra import _Date, DeclarativeBase, CallableList
 from .model_common import DeclarativeBaseGuid
 
 
@@ -45,8 +45,12 @@ class BudgetAmount(DeclarativeBase):
     period_num = Column('period_num', INTEGER(), nullable=False)
 
     # relation definitions
-    account = relation('Account', backref=backref('budget_amounts', cascade='all, delete-orphan'))
-    budget = relation('Budget', backref=backref('amounts', cascade='all, delete-orphan'))
+    account = relation('Account', backref=backref('budget_amounts',
+                                                  cascade='all, delete-orphan',
+                                                  collection_class=CallableList,))
+    budget = relation('Budget', backref=backref('amounts',
+                                                cascade='all, delete-orphan',
+                                                collection_class=CallableList,))
 
 
 class Recurrence(DeclarativeBase):
