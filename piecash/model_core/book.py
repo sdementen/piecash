@@ -247,6 +247,3 @@ class GncSession(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
-
-open_book_session = open_book
-connect_to_gnucash_book = open_book

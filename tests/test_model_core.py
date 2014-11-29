@@ -46,6 +46,19 @@ def session_readonly(request):
     request.addfinalizer(lambda: os.remove(file_for_test))
     return s
 
+@pytest.fixture
+def session_readonly_lock(request):
+    shutil.copyfile(file_template, file_for_test)
+
+    # default session is readonly
+    s = open_book(file_for_test, acquire_lock=True)
+
+    def close_s():
+        s.close()
+        os.remove(file_for_test)
+    request.addfinalizer(close_s)
+    return s
+
 
 class TestModelCore_EmptyBook(object):
     def test_accounts(self, session):
@@ -108,8 +121,8 @@ class TestModelCore_EmptyBook(object):
         sa_session.add(v)
         assert sa_session.flush() is None
 
-    def test_lock(self, session):
-        locks = list(session.sa_session.execute(gnclock.select()))
+    def test_lock(self, session_readonly_lock):
+        locks = list(session_readonly_lock.sa_session.execute(gnclock.select()))
         assert len(locks) == 1
 
 

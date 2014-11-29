@@ -5,7 +5,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relation, backref, validates
 
 from ..model_common import DeclarativeBaseGuid
-from ..sa_extra import _DateTime
+from ..sa_extra import _DateTime, CallableList
 
 
 class Split(DeclarativeBaseGuid):
@@ -64,8 +64,14 @@ class Split(DeclarativeBaseGuid):
     )
 
     # relation definitions
-    account = relation('Account', backref=backref('splits', cascade='all, delete-orphan'))
-    lot = relation('Lot', backref="splits")
+    account = relation('Account', backref=backref('splits',
+                                                  cascade='all, delete-orphan',
+                                                  collection_class=CallableList,
+    ))
+    lot = relation('Lot', backref=backref('splits',
+                                          cascade='all, delete-orphan',
+                                          collection_class=CallableList,
+    ))
 
     def __repr__(self):
         return "<Split {} {}>".format(self.account, self.value)
@@ -101,18 +107,18 @@ class Transaction(DeclarativeBaseGuid):
     enter_date = Column('enter_date', _DateTime)
     num = Column('num', VARCHAR(length=2048), nullable=False, default="")
     post_date = Column('post_date', _DateTime, index=True)
-    splits = relation(Split, backref='transaction',
-                      cascade='all, delete-orphan')
+    splits = relation(Split,
+                      backref='transaction',
+                      cascade='all, delete-orphan',
+                      collection_class=CallableList,
+    )
 
 
     # relation definitions
-    currency = relation('Commodity', backref=backref('transactions', cascade='all, delete-orphan'))
-
-    # definition of fields accessible through the kvp system
-    # _kvp_slots = {
-    # "notes": KVP_Type.KVP_TYPE_STRING,
-    # "date-posted": KVP_Type.KVP_TYPE_GDATE,
-    # }
+    currency = relation('Commodity', backref=backref('transactions',
+                                                     cascade='all, delete-orphan',
+                                                     collection_class=CallableList,
+    ))
 
     @validates('post_date')
     def validate_post_date(self, key, post_date):
@@ -142,9 +148,9 @@ class Transaction(DeclarativeBaseGuid):
             enter_date=enter_date,
             description=description,
             splits=[
-                Split(account=from_account,value=(-num, denom)),
-                Split(account=to_account,value=(num,denom)),
-                ])
+                Split(account=from_account, value=(-num, denom)),
+                Split(account=to_account, value=(num, denom)),
+            ])
         return tx
 
     @classmethod
