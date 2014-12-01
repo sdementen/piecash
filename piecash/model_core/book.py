@@ -6,13 +6,10 @@ from sqlalchemy.orm import relation, backref, sessionmaker
 from sqlalchemy.sql.ddl import DropConstraint
 from sqlalchemy_utils import database_exists
 
-from .account import Account
 from ..model_common import DeclarativeBaseGuid, _default_session, GnucashException
 from piecash.sa_extra import CallableList
-from .transaction import Transaction
 from .model_core import gnclock, Version
-from ..sa_extra import DeclarativeBase, get_foreign_keys
-from .commodity import Commodity
+from ..sa_extra import DeclarativeBase, get_foreign_keys, Session
 
 
 version_supported = {u'Gnucash-Resave': 19920, u'invoices': 3, u'books': 1, u'accounts': 1, u'slots': 3,
@@ -97,13 +94,14 @@ def create_book(sqlite_file=None, uri_conn=None, overwrite=False, **kwargs):
             engine.execute(DropConstraint(fk))
 
     # start session to create initial objects
-    s = sessionmaker(bind=engine, autoflush=False)()
+    s = Session(bind=engine)
 
     # create all rows in version table
     for table_name, table_version in version_supported.iteritems():
         s.add(Version(table_name=table_name, table_version=table_version))
 
     # create Book and initial accounts
+    from .account import Account
     b = Book(root_account=Account(name="Root Account", account_type="ROOT"),
              root_template=Account(name="Template Root", account_type="ROOT"),
     )
@@ -141,7 +139,7 @@ def open_book(sqlite_file=None, uri_conn=None, acquire_lock=False, readonly=True
     if locks and not open_if_lock:
         raise GnucashException, "Lock on the file"
 
-    s = sessionmaker(bind=engine, autoflush=False)()
+    s = Session(bind=engine)
 
     # check the versions in the table versions is consistent with the API
     # TODO: improve this in the future to allow more than 1 version
@@ -220,14 +218,17 @@ class GncSession(object):
 
     @property
     def transactions(self):
+        from .transaction import Transaction
         return CallableList(self.sa_session.query(Transaction))
 
     @property
     def accounts(self):
+        from .account import Account
         return CallableList(self.sa_session.query(Account))
 
     @property
     def commodities(self):
+        from .commodity import Commodity
         return CallableList(self.sa_session.query(Commodity))
 
     @property

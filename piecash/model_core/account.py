@@ -8,8 +8,9 @@ from piecash.sa_extra import CallableList
 equity_types = {"EQUITY"}
 incexp_types = {"INCOME", "EXPENSE"}
 asset_types = {'RECEIVABLE', 'MUTUAL', 'CREDIT', 'CASH', 'LIABILITY', 'PAYABLE', 'ASSET', 'BANK', 'STOCK'}
+trading_types = {'TRADING'}
 root_types = {"ROOT"}
-ACCOUNT_TYPES = equity_types | incexp_types | asset_types | root_types
+ACCOUNT_TYPES = equity_types | incexp_types | asset_types | root_types | trading_types
 
 
 def is_parent_child_account_types_consistent(account_type_parent, account_type_child):
@@ -19,7 +20,7 @@ def is_parent_child_account_types_consistent(account_type_parent, account_type_c
     if account_type_child in root_types:
         return account_type_parent is None
 
-    for acc_types in (asset_types, equity_types, incexp_types):
+    for acc_types in (asset_types, equity_types, incexp_types, trading_types):
         if (account_type_child in acc_types) and (account_type_parent in acc_types):
             return True
     else:
@@ -35,12 +36,21 @@ class Account(DeclarativeBaseGuid):
     account_type = Column('account_type', VARCHAR(length=2048), nullable=False)
     code = Column('code', VARCHAR(length=2048))
     commodity_guid = Column('commodity_guid', VARCHAR(length=32), ForeignKey('commodities.guid'))
-    commodity_scu = Column('commodity_scu', INTEGER(), nullable=False, default=0)
+    _commodity_scu = Column('commodity_scu', INTEGER(), nullable=False)
+    @property
+    def commodity_scu(self):
+        return self._commodity_scu
+    @commodity_scu.setter
+    def commodity_scu(self, value):
+        self._commodity_scu  = value
+        self.non_std_scu = (self.commodity is not None) and (self.commodity.fraction != value)
+
     description = Column('description', VARCHAR(length=2048))
     guid = DeclarativeBaseGuid.guid
     hidden = Column('hidden', INTEGER(), default=0)
     name = Column('name', VARCHAR(length=2048), nullable=False)
-    non_std_scu = Column('non_std_scu', INTEGER(), nullable=False, default=0)
+    non_std_scu = Column('non_std_scu', INTEGER(), nullable=False)
+
     parent_guid = Column('parent_guid', VARCHAR(length=32), ForeignKey('accounts.guid'))
     placeholder = Column('placeholder', INTEGER(), default=0)
 
@@ -53,6 +63,14 @@ class Account(DeclarativeBaseGuid):
                         cascade='all, delete-orphan',
                         collection_class=CallableList,
     )
+
+
+    def __init__(self, *args, **kwargs):
+        for k, v in kwargs.iteritems():
+            setattr(self, k, v)
+
+        if "commodity_scu" not in kwargs:
+            self.commodity_scu = 100
 
     @validates('parent_guid', 'name')
     def validate_account_name(self, key, value):
@@ -101,6 +119,18 @@ class Account(DeclarativeBaseGuid):
             return 0
 
 
+    @validates('commodity')
+    def validate_commodity(self, key, value):
+        """Set commodity_scu
+        """
+        if value is None:
+            return
+        if self.commodity_scu is None or self.non_std_scu==0:
+            self.commodity_scu = value.fraction
+
+        return value
+
+
     def fullname(self):
         if self.name:
             acc = self
@@ -110,12 +140,6 @@ class Account(DeclarativeBaseGuid):
                 acc = acc.parent
             return ":".join(l[-2::-1])
 
-    def __init__(self, **kwargs):
-        # set description field to name field for convenience (if not defined)
-        # kwargs.setdefault('description', kwargs['name'])
-
-        super(Account, self).__init__(**kwargs)
-
 
     def __repr__(self):
-        return "Account<{}:{}>".format(self.fullname(), self.guid)
+        return "Account<{}>".format(self.fullname())

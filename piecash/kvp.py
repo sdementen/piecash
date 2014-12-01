@@ -6,7 +6,7 @@ from enum import Enum
 from sqlalchemy import Column, VARCHAR, INTEGER, REAL, BIGINT, types, event
 from sqlalchemy.orm import relation, foreign, object_session, backref
 
-from .sa_extra import _DateTime, DeclarativeBase, _Date, CallableList
+from .sa_extra import _DateTime, DeclarativeBase, _Date, CallableList, hybrid_property_gncnumeric
 
 
 class KVP_Type(Enum):
@@ -208,18 +208,19 @@ class SlotNumeric(Slot):
     __mapper_args__ = {
         'polymorphic_identity': KVP_Type.KVP_TYPE_NUMERIC
     }
-    _python_type = (tuple,)
+    _python_type = (tuple, decimal.Decimal)
 
     numeric_val_denom = Column('numeric_val_denom', BIGINT(), nullable=False, default=1)
     numeric_val_num = Column('numeric_val_num', BIGINT(), nullable=False, default=0)
+    value = hybrid_property_gncnumeric(numeric_val_num, numeric_val_denom)
 
-    @property
-    def value(self):
-        return self.numeric_val_num, self.numeric_val_denom
-
-    @value.setter
-    def value(self, (num, denom)):
-        self.numeric_val_num, self.numeric_val_denom = num, denom
+    # @property
+    # def value(self):
+    #     return self.numeric_val_num, self.numeric_val_denom
+    #
+    # @value.setter
+    # def value(self, (num, denom)):
+    #     self.numeric_val_num, self.numeric_val_denom = num, denom
 
 
 class SlotFrame(DictWrapper, Slot):

@@ -6,6 +6,7 @@
 #
 import datetime
 import os
+from decimal import Decimal
 
 import pytest
 
@@ -48,7 +49,7 @@ class TestIntegration_EmptyBook(object):
             "vstr": "hello",
             "vdate": datetime.datetime.now().date(),
             "vtime": datetime.datetime.now(),
-            "vnum": (453, 100),
+            "vnum": Decimal('4.53'),
             "vdct": {
                 "spl": 2.3,
                 "vfr": {
@@ -56,7 +57,7 @@ class TestIntegration_EmptyBook(object):
                         "foo": 33,
                         "baz": "hello"
                     },
-                    "coo": (23, 23)
+                    "coo": Decimal('4.53')
                 },
             }
         }

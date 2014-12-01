@@ -1,12 +1,12 @@
 from copy import deepcopy
-import re
-import datetime
+from decimal import Decimal
 
-from sqlalchemy import types, Table, MetaData, ForeignKeyConstraint, DATE, DATETIME, TIME
+from sqlalchemy import types, Table, MetaData, ForeignKeyConstraint, Float, cast
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import as_declarative
-from sqlalchemy.orm import class_mapper
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import class_mapper, sessionmaker
 import tzlocal
 import pytz
 
@@ -14,7 +14,7 @@ import pytz
 @as_declarative()
 class DeclarativeBase(object):
     def __deepcopy__(self, memo):
-        print "memo",memo
+        print "memo", memo
         pk_keys = set([c.key for c in class_mapper(self.__class__).primary_key])
 
         dct = {}
@@ -25,24 +25,25 @@ class DeclarativeBase(object):
                 continue
             attr = getattr(self, p.key)
             if isinstance(attr, list):
-                attr = [ deepcopy(sattr, memo) for sattr in attr]
+                attr = [deepcopy(sattr, memo) for sattr in attr]
             dct[p.key] = attr
 
         obj = self.__class__(**dct)
         return obj
 
 
-
 tz = tzlocal.get_localzone()
 utc = pytz.utc
 
+
 @compiles(sqlite.DATE, 'sqlite')
 def compile_date(element, compiler, **kw):
-    return "TEXT(8)" #% element.__class__.__name__
+    return "TEXT(8)"  # % element.__class__.__name__
+
 
 @compiles(sqlite.DATETIME, 'sqlite')
 def compile_date(element, compiler, **kw):
-    return "TEXT(14)" #% element.__class__.__name__
+    return "TEXT(14)"  # % element.__class__.__name__
 
 
 class _DateTime(types.TypeDecorator):
@@ -53,7 +54,7 @@ class _DateTime(types.TypeDecorator):
     def load_dialect_impl(self, dialect):
         if dialect.name == "sqlite":
             return sqlite.DATETIME(
-            storage_format="%(year)04d%(month)02d%(day)02d%(hour)02d%(minute)02d%(second)02d",
+                storage_format="%(year)04d%(month)02d%(day)02d%(hour)02d%(minute)02d%(second)02d",
                 regexp=r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})",
             )
         else:
@@ -104,6 +105,68 @@ class Address(object):
         return not self.__eq__(other)
 
 
+def hybrid_property_gncnumeric(num_col, denom_col):
+    # denom basis should return a function that returns the proper denom to use
+    num_name, denom_name = "_{}".format(num_col.name), "_{}".format(denom_col.name)
+
+    def fset(self, d):
+        if d is None:
+            num, denom = None, None
+        else:
+            if isinstance(d, tuple):
+                d = Decimal(d[0]) / d[1]
+            elif isinstance(d, (float, int, long, str)):
+                d = Decimal(d)
+            assert isinstance(d, Decimal)
+
+            denom = 10 ** max(-d._exp, 1)
+
+            # print num_name, denom,
+            denom_basis = getattr(self, "{}_basis".format(denom_name), None)
+            if denom_basis is not None:
+                # print "got a basis for ", self, denom_basis
+                denom = denom_basis
+            # print denom
+            num = int(d * denom)
+
+        setattr(self, num_name, num)
+        setattr(self, denom_name, denom)
+
+
+    def fget(self):
+        num, denom = getattr(self, num_name), getattr(self, denom_name)
+        if num:
+            return Decimal(num) / denom
+
+
+    def expr(cls):
+        return cast(num_col, Float) / denom_col
+
+    value = hybrid_property(
+        fget=fget,
+        fset=fset,
+        expr=expr,
+    )
+    return value
+
+
+# class GncNumeric(Decimal):
+# def __new__(cls, num, denom):
+#         self = Decimal.__new__(cls, value=Decimal(num) / denom)
+#         self.__class__ = GncNumeric
+#         return self
+#
+#     def __composite_values__(self):
+#         denom = 10**max(-self._exp, 1)
+#         return int(self*denom), denom
+#
+#     # def __eq__(self, other):
+#     return isinstance(other, GncNumeric) and (self.num == other.num) and (self.denom == other.denom)
+#
+# def __ne__(self, other):
+#     return not self.__eq__(other)
+
+
 def get_foreign_keys(metadata, engine):
     """ Retrieve all foreign keys from metadata bound to an engine
     :param metadata:
@@ -135,3 +198,6 @@ class CallableList(list):
                 return obj
         else:
             raise KeyError, "Could not find object with {} in {}".format(kwargs, self)
+
+
+Session = sessionmaker(autoflush=False)

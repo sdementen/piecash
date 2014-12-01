@@ -37,7 +37,7 @@ class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):
 
     guid = Column('guid', VARCHAR(length=32), primary_key=True, nullable=False, default=lambda: uuid.uuid4().hex)
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """A simple constructor that allows initialization from kwargs.
 
         Sets attributes on the constructed instance using the names and
