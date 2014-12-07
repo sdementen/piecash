@@ -120,7 +120,7 @@ class TestIntegration_EmptyBook(object):
 
         session.save()
 
-        assert len(session.accounts)==100
+        assert len(session.accounts)==102
 
     def test_add_account_names(self, session):
         # raise ValueError as acc1 and acc2 shares same parents with same name
