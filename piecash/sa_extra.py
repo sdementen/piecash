@@ -106,8 +106,8 @@ class Address(object):
 
 
 def hybrid_property_gncnumeric(num_col, denom_col):
-    # denom basis should return a function that returns the proper denom to use
     num_name, denom_name = "_{}".format(num_col.name), "_{}".format(denom_col.name)
+    # num_name, denom_name = num_col.name, denom_col.name
 
     def fset(self, d):
         if d is None:
@@ -142,30 +142,36 @@ def hybrid_property_gncnumeric(num_col, denom_col):
     def expr(cls):
         return cast(num_col, Float) / denom_col
 
-    value = hybrid_property(
+    return hybrid_property(
         fget=fget,
         fset=fset,
         expr=expr,
     )
-    return value
 
+def mapped_to_slot_property(col, slot_name, slot_transform=lambda x:x):
+    """Assume the attribute in the class as the same name as the table column with "_" prepended"""
+    col_name = "_{}".format(col.name)
+    def fget(self):
+        return getattr(self, col_name)
 
-# class GncNumeric(Decimal):
-# def __new__(cls, num, denom):
-#         self = Decimal.__new__(cls, value=Decimal(num) / denom)
-#         self.__class__ = GncNumeric
-#         return self
-#
-#     def __composite_values__(self):
-#         denom = 10**max(-self._exp, 1)
-#         return int(self*denom), denom
-#
-#     # def __eq__(self, other):
-#     return isinstance(other, GncNumeric) and (self.num == other.num) and (self.denom == other.denom)
-#
-# def __ne__(self, other):
-#     return not self.__eq__(other)
+    def fset(self, value):
+        v = slot_transform(value)
+        if v is None:
+            if slot_name in self:
+                del self[slot_name]
+        else:
+            self[slot_name] = v
 
+        setattr(self, col_name, value)
+
+    def expr(cls):
+        return col
+
+    return hybrid_property(
+        fget=fget,
+        fset=fset,
+        expr=expr,
+    )
 
 def get_foreign_keys(metadata, engine):
     """ Retrieve all foreign keys from metadata bound to an engine
@@ -179,7 +185,7 @@ def get_foreign_keys(metadata, engine):
             table_name,
             reflected_metadata,
             autoload=True,
-            autoload_with=engine
+            autoload_with=engine,
         )
 
         for constraint in table.constraints:

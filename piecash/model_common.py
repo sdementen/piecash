@@ -29,10 +29,11 @@ class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):
         @event.listens_for(cls.slots, "remove")
         def my_append_listener_slots(target, value, initiator):
             s = object_session(value)
-            if value in s.new:
-                s.expunge(value)
-            else:
-                s.delete(value)
+            if s:
+                if value in s.new:
+                    s.expunge(value)
+                else:
+                    s.delete(value)
 
 
     guid = Column('guid', VARCHAR(length=32), primary_key=True, nullable=False, default=lambda: uuid.uuid4().hex)
@@ -99,47 +100,8 @@ class GnucashException(Exception):
 class GncNoActiveSession(GnucashException):
     pass
 
-
-def dict_decimal(field):
-    """Create a dictionnary that can be added to the locals() of a declarative base that models
-    - two BIGINT() fields with name field_denom and field_num
-    - a Decimal field linked to the two previous fields and that is the one to use in python
-
-    :param field:
-    :return:
-    """
-
-    def fset(self, d):
-        _, _, exp = d.as_tuple()
-        self.value_denom = denom = int(d.radix() ** (-exp))
-        self.value_num = int(d * denom)
-
-    dct = {
-        field + '_denom': Column(field + '_denom', BIGINT(), nullable=False),
-        field + '_num': Column(field + '_num', BIGINT(), nullable=False),
-        field: hybrid_property(
-            fget=lambda self: decimal.Decimal(self.value_num) / decimal.Decimal(self.value_denom),
-            fset=fset,
-            expr=lambda cls: cast(cls.value_num, Float) / cls.value_denom,
-        )
-    }
-
-    print """
-
-
-    {field}_denom = Column('{field}_denom', BIGINT(), nullable=False)
-    {field}_num = Column('{field}_num', BIGINT(), nullable=False)
-    def fset(self, d):
-        _, _, exp = d.as_tuple()
-        self.{field}_denom = denom = int(d.radix() ** (-exp))
-        self.{field}_num = int(d * denom)
-    {field} = hybrid_property(
-        fget=lambda self: decimal.Decimal(self.{field}_num) / decimal.Decimal(self.{field}_denom),
-        fset=fset,
-        expr=lambda cls: cast(cls.{field}_num, Float) / cls.{field}_denom,
-    )
-    """.format(field=field)
-    return dct
+class GncValidationError(GnucashException):
+    pass
 
 
 # module variable to be used with the context manager "with book:"

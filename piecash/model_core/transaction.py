@@ -3,49 +3,52 @@ from decimal import Decimal
 
 from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, event
 from sqlalchemy.orm import relation, backref, validates
+from sqlalchemy.orm.base import instance_state
+from sqlalchemy.orm.exc import NoResultFound
 
-from ..model_common import DeclarativeBaseGuid
+from ..model_common import DeclarativeBaseGuid, GncValidationError
 from .book import Book
-from ..sa_extra import _DateTime, CallableList, Session, hybrid_property_gncnumeric
+from .account import Account
+from ..sa_extra import _DateTime, CallableList, Session, hybrid_property_gncnumeric, mapped_to_slot_property
 
 """
 Examples of transaction and splits (with value and quantity) for several transactions,
 some mono-currency (in default or foreign currency), some multi-currency
 
-Commodity<CURRENCY:EUR>	salary
-	[Commodity<CURRENCY:EUR>] -1000 / -1000 for Account<Income>
-	[Commodity<CURRENCY:EUR>] 1000 / 1000 for Account<Assets:Current Assets:Checking Account>
-Commodity<CURRENCY:EUR>	transfert to US account
-	[Commodity<CURRENCY:EUR>] -400 / -400 for Account<Assets:Current Assets:Checking Account>
-	[Commodity<CURRENCY:USD>] 400 / 448.15 for Account<Assets:Current Assets:CheckAcc USD>
-	[Commodity<CURRENCY:USD>] -400 / -448.15 for Account<Trading:CURRENCY:USD>
-	[Commodity<CURRENCY:EUR>] 400 / 400 for Account<Trading:CURRENCY:EUR>
-Commodity<CURRENCY:EUR>	other transfer + expense
-	[Commodity<CURRENCY:EUR>] -210 / -210 for Account<Assets:Current Assets:Checking Account>
-	[Commodity<CURRENCY:USD>] 182.85 / 213.21 for Account<Assets:Current Assets:CheckAcc USD>
-	[Commodity<CURRENCY:USD>] -182.85 / -213.21 for Account<Trading:CURRENCY:USD>
-	[Commodity<CURRENCY:EUR>] 182.85 / 182.85 for Account<Trading:CURRENCY:EUR>
-	[Commodity<CURRENCY:EUR>] 17.15 / 17.15 for Account<Expenses>
-	[Commodity<CURRENCY:EUR>] 10 / 10 for Account<Imbalance-EUR>
-Commodity<CURRENCY:USD>	bonus
-	[Commodity<CURRENCY:USD>] -150 / -150 for Account<Income:income in usd>
-	[Commodity<CURRENCY:USD>] 150 / 150 for Account<Assets:Current Assets:CheckAcc USD>
-Commodity<CURRENCY:USD>	retransfer
-	[Commodity<CURRENCY:USD>] -100 / -100 for Account<Assets:Current Assets:CheckAcc USD>
-	[Commodity<CURRENCY:EUR>] 100 / 90 for Account<Assets:Current Assets:Checking Account>
-	[Commodity<CURRENCY:EUR>] -100 / -90 for Account<Trading:CURRENCY:EUR>
-	[Commodity<CURRENCY:USD>] 100 / 100 for Account<Trading:CURRENCY:USD>
-Commodity<CURRENCY:CAD>	cross CAD to USD transfer
-	[Commodity<CURRENCY:CAD>] 30 / 30 for Account<Assets:Current Assets:CheckAcc CAD>
-	[Commodity<CURRENCY:USD>] -30 / -26.27 for Account<Assets:Current Assets:CheckAcc USD>
-	[Commodity<CURRENCY:USD>] 30 / 26.27 for Account<Trading:CURRENCY:USD>
-	[Commodity<CURRENCY:CAD>] -30 / -30 for Account<Trading:CURRENCY:CAD>
-Commodity<CURRENCY:USD>	cross CAD to USD transfer (initiated from USD account)
-	[Commodity<CURRENCY:USD>] -26.27 / -26.27 for Account<Assets:Current Assets:CheckAcc USD>
-	[Commodity<CURRENCY:CAD>] 26.27 / 30 for Account<Assets:Current Assets:CheckAcc CAD>
-	[Commodity<CURRENCY:CAD>] -26.27 / -30 for Account<Trading:CURRENCY:CAD>
-	[Commodity<CURRENCY:USD>] 26.27 / 26.27 for Account<Trading:CURRENCY:USD>
-	"""
+Commodity<CURRENCY:EUR>    salary
+    [Commodity<CURRENCY:EUR>] -1000 / -1000 for Account<Income>
+    [Commodity<CURRENCY:EUR>] 1000 / 1000 for Account<Assets:Current Assets:Checking Account>
+Commodity<CURRENCY:EUR>    transfert to US account
+    [Commodity<CURRENCY:EUR>] -400 / -400 for Account<Assets:Current Assets:Checking Account>
+    [Commodity<CURRENCY:USD>] 400 / 448.15 for Account<Assets:Current Assets:CheckAcc USD>
+    [Commodity<CURRENCY:USD>] -400 / -448.15 for Account<Trading:CURRENCY:USD>
+    [Commodity<CURRENCY:EUR>] 400 / 400 for Account<Trading:CURRENCY:EUR>
+Commodity<CURRENCY:EUR>    other transfer + expense
+    [Commodity<CURRENCY:EUR>] -210 / -210 for Account<Assets:Current Assets:Checking Account>
+    [Commodity<CURRENCY:USD>] 182.85 / 213.21 for Account<Assets:Current Assets:CheckAcc USD>
+    [Commodity<CURRENCY:USD>] -182.85 / -213.21 for Account<Trading:CURRENCY:USD>
+    [Commodity<CURRENCY:EUR>] 182.85 / 182.85 for Account<Trading:CURRENCY:EUR>
+    [Commodity<CURRENCY:EUR>] 17.15 / 17.15 for Account<Expenses>
+    [Commodity<CURRENCY:EUR>] 10 / 10 for Account<Imbalance-EUR>
+Commodity<CURRENCY:USD>    bonus
+    [Commodity<CURRENCY:USD>] -150 / -150 for Account<Income:income in usd>
+    [Commodity<CURRENCY:USD>] 150 / 150 for Account<Assets:Current Assets:CheckAcc USD>
+Commodity<CURRENCY:USD>    retransfer
+    [Commodity<CURRENCY:USD>] -100 / -100 for Account<Assets:Current Assets:CheckAcc USD>
+    [Commodity<CURRENCY:EUR>] 100 / 90 for Account<Assets:Current Assets:Checking Account>
+    [Commodity<CURRENCY:EUR>] -100 / -90 for Account<Trading:CURRENCY:EUR>
+    [Commodity<CURRENCY:USD>] 100 / 100 for Account<Trading:CURRENCY:USD>
+Commodity<CURRENCY:CAD>    cross CAD to USD transfer
+    [Commodity<CURRENCY:CAD>] 30 / 30 for Account<Assets:Current Assets:CheckAcc CAD>
+    [Commodity<CURRENCY:USD>] -30 / -26.27 for Account<Assets:Current Assets:CheckAcc USD>
+    [Commodity<CURRENCY:USD>] 30 / 26.27 for Account<Trading:CURRENCY:USD>
+    [Commodity<CURRENCY:CAD>] -30 / -30 for Account<Trading:CURRENCY:CAD>
+Commodity<CURRENCY:USD>    cross CAD to USD transfer (initiated from USD account)
+    [Commodity<CURRENCY:USD>] -26.27 / -26.27 for Account<Assets:Current Assets:CheckAcc USD>
+    [Commodity<CURRENCY:CAD>] 26.27 / 30 for Account<Assets:Current Assets:CheckAcc CAD>
+    [Commodity<CURRENCY:CAD>] -26.27 / -30 for Account<Trading:CURRENCY:CAD>
+    [Commodity<CURRENCY:USD>] 26.27 / 26.27 for Account<Trading:CURRENCY:USD>
+    """
 
 
 class Split(DeclarativeBaseGuid):
@@ -60,6 +63,7 @@ class Split(DeclarativeBaseGuid):
     memo = Column('memo', VARCHAR(length=2048), nullable=False, default="")
 
     _quantity_denom = Column('quantity_denom', BIGINT(), nullable=False)
+    _quantity_denom_basis = None
     _quantity_num = Column('quantity_num', BIGINT(), nullable=False)
     quantity = hybrid_property_gncnumeric(_quantity_num, _quantity_denom)
 
@@ -68,6 +72,7 @@ class Split(DeclarativeBaseGuid):
     tx_guid = Column('tx_guid', VARCHAR(length=32), ForeignKey('transactions.guid'), nullable=False, index=True)
 
     _value_denom = Column('value_denom', BIGINT(), nullable=False)
+    _value_denom_basis = None
     _value_num = Column('value_num', BIGINT(), nullable=False)
     value = hybrid_property_gncnumeric(_value_num, _value_denom)
 
@@ -84,30 +89,18 @@ class Split(DeclarativeBaseGuid):
 
     def __repr__(self):
         try:
-            return "<Split {} {} {}~{} {}>".format(self.account,
-                                                   self.value, self.transaction.currency.mnemonic,
-                                                   self.quantity, self.account.commodity.mnemonic)
+            cur = self.transaction.currency.mnemonic
+            acc = self.account
+            com = acc.commodity.mnemonic
+            if cur==com:
+                return "<Split {} {} {}>".format(acc,
+                                                   self.value, cur)
+            else:
+                return "<Split {} {} {} [{} {}]>".format(acc,
+                                                   self.value, cur,
+                                                   self.quantity, com)
         except AttributeError:
             return "<Split {}>".format(self.account)
-
-
-    # @validates("_value_num", "_quantity_num")
-    # def sync_value_amount(self, key, value):
-    # """If value or quantity is changed and that
-    # """
-    # if key == "_value_num":
-    # if self.transaction and self.account:
-    # if self.transaction.currency == self.account.commodity:
-    # if self.quantity != value:
-    # print self.quantity, value
-    # self.quantity = value
-    #     if key == "_quantity_num":
-    #         if self.transaction and self.account:
-    #             if self.transaction.currency == self.account.commodity:
-    #                 if self.value != value:
-    #                     print self.value, value
-    #                     self.value = value
-    #     return value
 
     @validates("transaction", "account")
     def set_denom_basis(self, key, value):
@@ -127,6 +120,9 @@ class Split(DeclarativeBaseGuid):
         if trx and acc:
             if trx.currency == acc.commodity:
                 self.quantity = self.value
+                # if the quantity has different rounding that value, then reassign the quantity to the value
+                if self.quantity != self.value:
+                    self.value = self.quantity
 
         return value
 
@@ -142,21 +138,11 @@ class Transaction(DeclarativeBaseGuid):
     enter_date = Column('enter_date', _DateTime)
     num = Column('num', VARCHAR(length=2048), nullable=False, default="")
     _post_date = Column('post_date', _DateTime, index=True)
-
-    @property
-    def post_date(self):
-        return self._post_date
-
-    @post_date.setter
-    def post_date(self, value):
-        if value:
-            self["date-posted"] = value
-        else:
-            del self["date_posted"]
-        self._post_date = value
+    post_date = mapped_to_slot_property(_post_date, slot_name="date-posted", slot_transform=lambda x:x.date() if x else None)
 
     splits = relation(Split,
-                      backref='transaction',
+                      backref=backref('transaction'),
+                      single_parent=True,
                       cascade='all, delete-orphan',
                       collection_class=CallableList,
     )
@@ -168,95 +154,134 @@ class Transaction(DeclarativeBaseGuid):
                                                      collection_class=CallableList,
     ))
 
+    def validate(self, session):
+        old = instance_state(self).committed_state
 
-    def get_imbalances(self):
+        # check same currency
+        if "currency" in old and old["currency"] is not None:
+            raise GncValidationError, "You cannot change the currency of a transaction once it has been set"
 
-        if not (self.currency):
-            raise ValueError, "Transaction has no currency yet"
+        # validate the splits
+        if "splits" in old:
+            imbalance = Decimal(0)
+            c = self.currency
+            for sp in self.splits:
+                if sp.account.commodity != c:
+                    raise GncValidationError, "Only single currency transactions are supported"
 
-        imbalance_cur = Decimal(0)
-        imbalance_comm = defaultdict(lambda: Decimal(0))
+                sp.quantity = sp.value
+                if sp.quantity != sp.value:
+                    sp.value = sp.quantity
 
-        for sp in self.splits:
-            if not (sp.account) or not (sp.account.commodity):
-                raise ValueError, "Split has no commodity"
+                imbalance += sp.value
 
-            imbalance_comm[sp.account.commodity] += sp.quantity
-            imbalance_cur += sp.value
-
-        imb_splits = []
-        if imbalance_cur:
-            imb_splits.append({"account_name": "Imbalance-{}".format(self.currency.mnemonic),
-                               "commodity": self.currency,
-                               "value": -imbalance_cur})
-        imb_splits.extend([
-            {"account_name": "Trading:{}:{}".format(k.namespace, k.mnemonic),
-             "commodity": k,
-             "value": -v}
-            for k, v in imbalance_comm.iteritems()
-            if v])
-        return imb_splits
-
-    def add_imbalance_splits(self):
-        from .account import Account
-
-        imb = self.get_imbalances()
-
-        session = self.get_session()
-        assert session
-        book = session.query(Book).one()
-        default_cur = book.root_account.commodity
-        for sp in imb:
-            account_name = sp["account_name"]
-            acc = book.root_account
-            if account_name.startswith("Imbalance"):
+            # if there is an imbalance, add an imbalance split to the transaction
+            if imbalance:
+                # retrieve imbalance account
+                imb_acc_name = "Imbalance-{}".format(c.mnemonic)
                 try:
-                    acc = acc.children.get(name=account_name)
-                except KeyError:
-                    acc = Account(parent=acc,
-                                  placeholder=False,
-                                  commodity=default_cur,
-                                  name=account_name,
+                    acc = session.query(Account).filter_by(name=imb_acc_name).one()
+                except NoResultFound:
+                    book = session.query(Book).one()
+                    acc = Account(name=imb_acc_name,
+                                  parent=book.root_account,
+                                  commodity=c,
                                   account_type="BANK")
-                    Split(transaction=self,
-                          value=sp["value"],
-                          quantity=0,
-                          account=acc,
-                    )
 
-            else:
-                trading, namespace, mnemonic = account_name.split(":")
-                try:
-                    acc = acc.children.get(name=trading)
-                except KeyError:
-                    acc = Account(parent=acc,
-                                  placeholder=True,
-                                  commodity=default_cur,
-                                  name=trading,
-                                  account_type="TRADING")
-                try:
-                    acc = acc.children.get(name=namespace)
-                except KeyError:
-                    acc = Account(parent=acc,
-                                  placeholder=True,
-                                  commodity=default_cur,
-                                  name=namespace,
-                                  account_type="TRADING")
-                try:
-                    acc = acc.children.get(name=mnemonic)
-                except KeyError:
-                    acc = Account(parent=acc,
-                                  placeholder=False,
-                                  commodity=sp["commodity"],
-                                  name=mnemonic,
-                                  account_type="TRADING")
-
-                v = sp["value"]
-                Split(transaction=self,
-                      value=v,
-                      quantity=v,
+                Split(value=-imbalance,
+                      quantity=-imbalance,
                       account=acc,
-                )
+                      transaction=self)
+
+
+    # def get_imbalances(self):
+    #
+    #     if not (self.currency):
+    #         raise ValueError, "Transaction has no currency yet"
+    #
+    #     imbalance_cur = Decimal(0)
+    #     imbalance_comm = defaultdict(lambda: Decimal(0))
+    #
+    #     for sp in self.splits:
+    #         if not (sp.account) or not (sp.account.commodity):
+    #             raise ValueError, "Split has no commodity"
+    #
+    #         imbalance_comm[sp.account.commodity] += sp.quantity
+    #         imbalance_cur += sp.value
+    #
+    #     imb_splits = []
+    #     if imbalance_cur:
+    #         imb_splits.append({"account_name": "Imbalance-{}".format(self.currency.mnemonic),
+    #                            "commodity": self.currency,
+    #                            "value": -imbalance_cur})
+    #     imb_splits.extend([
+    #         {"account_name": "Trading:{}:{}".format(k.namespace, k.mnemonic),
+    #          "commodity": k,
+    #          "value": -v}
+    #         for k, v in imbalance_comm.iteritems()
+    #         if v])
+    #     return imb_splits
+    #
+    # def add_imbalance_splits(self):
+    #     from .account import Account
+    #
+    #     imb = self.get_imbalances()
+    #
+    #     session = self.get_session()
+    #     assert session
+    #     book = session.query(Book).one()
+    #     default_cur = book.root_account.commodity
+    #     for sp in imb:
+    #         account_name = sp["account_name"]
+    #         acc = book.root_account
+    #         if account_name.startswith("Imbalance"):
+    #             try:
+    #                 acc = acc.children.get(name=account_name)
+    #             except KeyError:
+    #                 acc = Account(parent=acc,
+    #                               placeholder=False,
+    #                               commodity=default_cur,
+    #                               name=account_name,
+    #                               account_type="BANK")
+    #                 Split(transaction=self,
+    #                       value=sp["value"],
+    #                       quantity=0,
+    #                       account=acc,
+    #                 )
+    #
+    #         else:
+    #             trading, namespace, mnemonic = account_name.split(":")
+    #             try:
+    #                 acc = acc.children.get(name=trading)
+    #             except KeyError:
+    #                 acc = Account(parent=acc,
+    #                               placeholder=True,
+    #                               commodity=default_cur,
+    #                               name=trading,
+    #                               account_type="TRADING")
+    #             try:
+    #                 acc = acc.children.get(name=namespace)
+    #             except KeyError:
+    #                 acc = Account(parent=acc,
+    #                               placeholder=True,
+    #                               commodity=default_cur,
+    #                               name=namespace,
+    #                               account_type="TRADING")
+    #             try:
+    #                 acc = acc.children.get(name=mnemonic)
+    #             except KeyError:
+    #                 acc = Account(parent=acc,
+    #                               placeholder=False,
+    #                               commodity=sp["commodity"],
+    #                               name=mnemonic,
+    #                               account_type="TRADING")
+    #
+    #             v = sp["value"]
+    #             Split(transaction=self,
+    #                   value=v,
+    #                   quantity=v,
+    #                   account=acc,
+    #             )
 
 
     @classmethod
@@ -282,63 +307,71 @@ class Transaction(DeclarativeBaseGuid):
             ])
         return tx
 
-    @classmethod
-    def stock_transaction(cls,
-                          post_date,
-                          enter_date,
-                          description,
-                          order,
-                          amount,
-                          quantity,
-                          unit_price,
-                          currency,
-                          broker_account,
-                          stock_account,
-                          commission_account):
-        amount100 = int(amount * 100)
-        quantity = int(quantity)
-        commission100 = int((amount - quantity * unit_price) * 100)
-        assert (order == "buy" and commission100 >= 0) or (
-            order == "sell" and commission100 <= 0), "{} {} {} {}".format(order, commission100, amount,
-                                                                          quantity * unit_price)
-
-        # print broker_account, stock_account
-        # print amount100, commission100,
-        tx = Transaction(currency=currency,
-                         post_date=post_date,
-                         enter_date=enter_date,
-                         description=description,
-                         num="",
-                         splits=[Split(account=broker_account,
-                                       reconcile_state='n',
-                                       value_num=-amount100 if order == "buy" else amount100 - commission100,
-                                       value_denom=100,
-                                       quantity_num=-amount100 if order == "buy" else amount100 - commission100,
-                                       quantity_denom=100,
-                                       memo="",
-                                       action="",
-                         ),
-                                 Split(account=stock_account,
-                                       reconcile_state='n',
-                                       value_num=(+amount100 - commission100) if order == "buy" else -amount100,
-                                       value_denom=100,
-                                       quantity_num=quantity if order == "buy" else -quantity,
-                                       quantity_denom=1,
-                                       memo="",
-                                       action="",
-                                 )] + ([Split(account=commission_account,
-                                              reconcile_state='n',
-                                              value_num=(commission100),
-                                              value_denom=100,
-                                              quantity_num=(commission100),
-                                              quantity_denom=1,
-                                              memo="",
-                                              action="",
-                         )] if unit_price else []))
-        return tx
+    # @classmethod
+    # def stock_transaction(cls,
+    #                       post_date,
+    #                       enter_date,
+    #                       description,
+    #                       order,
+    #                       amount,
+    #                       quantity,
+    #                       unit_price,
+    #                       currency,
+    #                       broker_account,
+    #                       stock_account,
+    #                       commission_account):
+    #     amount100 = int(amount * 100)
+    #     quantity = int(quantity)
+    #     commission100 = int((amount - quantity * unit_price) * 100)
+    #     assert (order == "buy" and commission100 >= 0) or (
+    #         order == "sell" and commission100 <= 0), "{} {} {} {}".format(order, commission100, amount,
+    #                                                                       quantity * unit_price)
+    #
+    #     tx = Transaction(currency=currency,
+    #                      post_date=post_date,
+    #                      enter_date=enter_date,
+    #                      description=description,
+    #                      num="",
+    #                      splits=[Split(account=broker_account,
+    #                                    reconcile_state='n',
+    #                                    value_num=-amount100 if order == "buy" else amount100 - commission100,
+    #                                    value_denom=100,
+    #                                    quantity_num=-amount100 if order == "buy" else amount100 - commission100,
+    #                                    quantity_denom=100,
+    #                                    memo="",
+    #                                    action="",
+    #                      ),
+    #                              Split(account=stock_account,
+    #                                    reconcile_state='n',
+    #                                    value_num=(+amount100 - commission100) if order == "buy" else -amount100,
+    #                                    value_denom=100,
+    #                                    quantity_num=quantity if order == "buy" else -quantity,
+    #                                    quantity_denom=1,
+    #                                    memo="",
+    #                                    action="",
+    #                              )] + ([Split(account=commission_account,
+    #                                           reconcile_state='n',
+    #                                           value_num=(commission100),
+    #                                           value_denom=100,
+    #                                           quantity_num=(commission100),
+    #                                           quantity_denom=1,
+    #                                           memo="",
+    #                                           action="",
+    #                      )] if unit_price else []))
+    #     return tx
 
 
 @event.listens_for(Session, 'before_flush')
 def set_imbalance_on_transaction(session, flush_context, instances):
-    print "flushing"
-    pass
+    # identify transactions to verify
+    txs = set()
+    for o in session.dirty:
+        if isinstance(o, Transaction):
+            txs.add(o)
+        if isinstance(o, Split):
+            txs.add(o.transaction)
+    txs = txs.union(o for o in session.new if isinstance(o, Transaction))
+
+    # for each transaction, validate the transaction
+    for tx in txs:
+        tx.validate(session)

@@ -2,7 +2,7 @@ from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER
 from sqlalchemy.orm import relation, backref, validates
 
 from ..model_common import DeclarativeBaseGuid
-from piecash.sa_extra import CallableList
+from piecash.sa_extra import CallableList, mapped_to_slot_property
 
 
 equity_types = {"EQUITY"}
@@ -37,27 +37,44 @@ class Account(DeclarativeBaseGuid):
     code = Column('code', VARCHAR(length=2048))
     commodity_guid = Column('commodity_guid', VARCHAR(length=32), ForeignKey('commodities.guid'))
     _commodity_scu = Column('commodity_scu', INTEGER(), nullable=False)
+    _non_std_scu = Column('non_std_scu', INTEGER(), nullable=False)
+
+    @property
+    def non_std_scu(self):
+        return self._non_std_scu
+
     @property
     def commodity_scu(self):
         return self._commodity_scu
+
     @commodity_scu.setter
     def commodity_scu(self, value):
-        self._commodity_scu  = value
-        self.non_std_scu = (self.commodity is not None) and (self.commodity.fraction != value)
+        if value is None:
+            self._non_std_scu = 0
+            if self.commodity:
+                value = self.commodity.fraction
+            else:
+                value = 0
+        else:
+            self._non_std_scu = 1
+
+        self._commodity_scu = value
 
     description = Column('description', VARCHAR(length=2048))
     guid = DeclarativeBaseGuid.guid
-    hidden = Column('hidden', INTEGER(), default=0)
+    hidden = Column('hidden', INTEGER())
     name = Column('name', VARCHAR(length=2048), nullable=False)
-    non_std_scu = Column('non_std_scu', INTEGER(), nullable=False)
 
     parent_guid = Column('parent_guid', VARCHAR(length=32), ForeignKey('accounts.guid'))
-    placeholder = Column('placeholder', INTEGER(), default=0)
+    _placeholder = Column('placeholder', INTEGER())
+    placeholder = mapped_to_slot_property(_placeholder, slot_name="placeholder", slot_transform=lambda v: "true" if v else None)
 
     # relation definitions
-    commodity = relation('Commodity', backref=backref('accounts',
-                                                      cascade='all, delete-orphan',
-                                                      collection_class=CallableList))
+    commodity = relation('Commodity',
+                         # single_parent=True,
+                         backref=backref('accounts',
+                                         cascade='all, delete-orphan',
+                                         collection_class=CallableList))
     children = relation('Account',
                         backref=backref('parent', remote_side=guid),
                         cascade='all, delete-orphan',
@@ -65,12 +82,25 @@ class Account(DeclarativeBaseGuid):
     )
 
 
-    def __init__(self, *args, **kwargs):
-        for k, v in kwargs.iteritems():
-            setattr(self, k, v)
-
-        if "commodity_scu" not in kwargs:
-            self.commodity_scu = 100
+    def __init__(self,
+                 name,
+                 account_type,
+                 commodity,
+                 parent=None,
+                 description=None,
+                 commodity_scu=None,
+                 hidden=0,
+                 placeholder=0,
+                 code=None):
+        self.name=name
+        self.commodity=commodity
+        self.account_type=account_type
+        self.parent=parent
+        self.description=description
+        self.hidden=hidden
+        self.placeholder=placeholder
+        self.code=code
+        self.commodity_scu = commodity_scu
 
     @validates('parent_guid', 'name')
     def validate_account_name(self, key, value):
@@ -79,8 +109,6 @@ class Account(DeclarativeBaseGuid):
         if self.parent:
             for acc in self.parent.children:
                 if acc.name == name and acc != self:
-                    print name, self.parent
-                    print acc.name, acc.parent
                     raise ValueError, "{} has two children with the same name {} : {} and {}".format(self.parent, name,
                                                                                                      acc, self)
         return value
@@ -99,25 +127,12 @@ class Account(DeclarativeBaseGuid):
                     raise ValueError, "Child account_type '{}' is not consistent with parent account_type {}".format(
                         value, self.parent.account_type)
 
-        if (key == "parent") and self.account_type:
+        if (key == "parent") and value and self.account_type:
             if not is_parent_child_account_types_consistent(value.account_type, self.account_type):
                 raise ValueError, "Child account_type '{}' is not consistent with parent account_type {}".format(
                     self.account_type, value.account_type)
 
         return value
-
-    @validates('placeholder')
-    def validate_placeholder(self, key, placeholder):
-        """Add placeholder as slot and convert to 1/0
-        """
-        if placeholder:
-            self["placeholder"] = "true"
-            return 1
-        else:
-            if "placeholder" in self:
-                del self["placeholder"]
-            return 0
-
 
     @validates('commodity')
     def validate_commodity(self, key, value):
@@ -125,7 +140,7 @@ class Account(DeclarativeBaseGuid):
         """
         if value is None:
             return
-        if self.commodity_scu is None or self.non_std_scu==0:
+        if self.commodity_scu is None or self.non_std_scu == 0:
             self.commodity_scu = value.fraction
 
         return value

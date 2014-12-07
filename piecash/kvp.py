@@ -170,24 +170,6 @@ SlotTime = define_simpleslot(postfix="Time",
                              col_type=_DateTime(),
                              col_default=None,
 )
-
-
-#
-# class SlotTime(SlotSimple):
-# __mapper_args__ = {
-# 'polymorphic_identity': KVP_Type.KVP_TYPE_TIMESPEC,
-#     }
-#     _python_type = (datetime.datetime,)
-#     _field = "timespec_val"
-#     timespec_val = Column(_DateTime())
-
-# class SlotDate(SlotSimple):
-#     __mapper_args__ = {
-#         'polymorphic_identity': KVP_Type.KVP_TYPE_GDATE,
-#     }
-#     _python_type = (datetime.date,)
-#     _field = "gdate_val"
-#     gdate_val = Column(_Date())
 SlotDate = define_simpleslot(postfix="Date",
                              pytype=(datetime.date,),
                              KVPtype=KVP_Type.KVP_TYPE_GDATE,
@@ -210,17 +192,9 @@ class SlotNumeric(Slot):
     }
     _python_type = (tuple, decimal.Decimal)
 
-    numeric_val_denom = Column('numeric_val_denom', BIGINT(), nullable=False, default=1)
-    numeric_val_num = Column('numeric_val_num', BIGINT(), nullable=False, default=0)
-    value = hybrid_property_gncnumeric(numeric_val_num, numeric_val_denom)
-
-    # @property
-    # def value(self):
-    #     return self.numeric_val_num, self.numeric_val_denom
-    #
-    # @value.setter
-    # def value(self, (num, denom)):
-    #     self.numeric_val_num, self.numeric_val_denom = num, denom
+    _numeric_val_denom = Column('numeric_val_denom', BIGINT(), nullable=False, default=1)
+    _numeric_val_num = Column('numeric_val_num', BIGINT(), nullable=False, default=0)
+    value = hybrid_property_gncnumeric(_numeric_val_num, _numeric_val_denom)
 
 
 class SlotFrame(DictWrapper, Slot):
@@ -235,7 +209,7 @@ class SlotFrame(DictWrapper, Slot):
                                primaryjoin=foreign(Slot.obj_guid) == guid_val,
                                cascade='all, delete-orphan',
                                collection_class=CallableList,
-                               backref=backref("parent", remote_side=guid_val),
+                               backref=backref("parent", remote_side=guid_val, single_parent=True),
     )
 
     @property

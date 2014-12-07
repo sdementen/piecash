@@ -30,41 +30,60 @@ class Commodity(DeclarativeBaseGuid):
         return "Commodity<{}:{}>".format(self.namespace, self.mnemonic)
 
     @classmethod
-    def create_from_ISO(cls, mnemonic):
-        # retrieve XML table with currency information
-        import requests
-        url = "http://www.currency-iso.org/dam/downloads/table_a1.xml"
-        table = requests.get(url)
+    def create_from_ISO(cls, mnemonic, from_web=False):
+        if not from_web:
+            from .currency_ISO import ISO_currencies
 
-        # parse it with elementree
-        root = ElementTree.fromstring(table.content)
-        # and look for each currency item
-        for i in root.findall(".//CcyNtry"):
-            # if there is no mnemonic, skip it
-            mnemonic_node = i.find("Ccy")
-            if mnemonic_node is None:
-                continue
-            # if the mnemonic is not the one expected, skip it
-            if mnemonic_node.text != mnemonic:
-                continue
-            # retreive currency info from xml
-            cusip = i.find("CcyNbr").text
-            fraction = 10 ** int(i.find("CcyMnrUnts").text)
-            fullname = i.find("CcyNm").text
-            break
+            for cur in ISO_currencies:
+                if cur.mnemonic == mnemonic:
+                    # create the currency
+                    return cls(mnemonic=cur.mnemonic,
+                               fullname=cur.currency,
+                               fraction=10**int(cur.fraction),
+                               cusip=cur.cusip,
+                               namespace="CURRENCY",
+                               quote_flag=1,
+                               quote_source="currency"
+                    )
+            else:
+                raise ValueError, "Could not find the mnemonic '{}' in the ISO table".format(mnemonic)
+
         else:
-            # raise error if mnemonic has not been found
-            raise ValueError, "Could not find the mnemonic '{}' in the table at {}".format(mnemonic, url)
+            # retrieve XML table with currency information
+            import requests
 
-        # create the currency
-        return cls(mnemonic=mnemonic,
-            fullname=fullname,
-            fraction=fraction,
-            cusip=cusip,
-            namespace="CURRENCY",
-            quote_flag=1,
-            quote_source="currency"
-        )
+            url = "http://www.currency-iso.org/dam/downloads/table_a1.xml"
+            table = requests.get(url)
+
+            # parse it with elementree
+            root = ElementTree.fromstring(table.content)
+            # and look for each currency item
+            for i in root.findall(".//CcyNtry"):
+                # if there is no mnemonic, skip it
+                mnemonic_node = i.find("Ccy")
+                if mnemonic_node is None:
+                    continue
+                # if the mnemonic is not the one expected, skip it
+                if mnemonic_node.text != mnemonic:
+                    continue
+                # retreive currency info from xml
+                cusip = i.find("CcyNbr").text
+                fraction = 10 ** int(i.find("CcyMnrUnts").text)
+                fullname = i.find("CcyNm").text
+                break
+            else:
+                # raise error if mnemonic has not been found
+                raise ValueError, "Could not find the mnemonic '{}' in the table at {}".format(mnemonic, url)
+
+            # create the currency
+            return cls(mnemonic=mnemonic,
+                       fullname=fullname,
+                       fraction=fraction,
+                       cusip=cusip,
+                       namespace="CURRENCY",
+                       quote_flag=1,
+                       quote_source="currency"
+            )
 
 
 class Price(DeclarativeBaseGuid):

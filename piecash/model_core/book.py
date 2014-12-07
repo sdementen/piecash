@@ -7,6 +7,7 @@ from sqlalchemy.sql.ddl import DropConstraint
 from sqlalchemy_utils import database_exists
 
 from ..model_common import DeclarativeBaseGuid, _default_session, GnucashException
+from .commodity import Commodity
 from piecash.sa_extra import CallableList
 from .model_core import gnclock, Version
 from ..sa_extra import DeclarativeBase, get_foreign_keys, Session
@@ -57,7 +58,7 @@ class Book(DeclarativeBaseGuid):
         self.get_session().rollback()
 
 
-def create_book(sqlite_file=None, uri_conn=None, overwrite=False, **kwargs):
+def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False, keep_foreign_keys=False, **kwargs):
     """
     Create a new empty GnuCash book. If both sqlite_file and uri_conn are None, then an "in memory" sqlite book is created.
 
@@ -89,9 +90,10 @@ def create_book(sqlite_file=None, uri_conn=None, overwrite=False, **kwargs):
     DeclarativeBase.metadata.create_all(engine)
 
     # remove all foreign keys
-    for fk in get_foreign_keys(DeclarativeBase.metadata, engine):
-        if fk.name:
-            engine.execute(DropConstraint(fk))
+    if not keep_foreign_keys:
+        for fk in get_foreign_keys(DeclarativeBase.metadata, engine):
+            if fk.name:
+                engine.execute(DropConstraint(fk))
 
     # start session to create initial objects
     s = Session(bind=engine)
@@ -102,8 +104,8 @@ def create_book(sqlite_file=None, uri_conn=None, overwrite=False, **kwargs):
 
     # create Book and initial accounts
     from .account import Account
-    b = Book(root_account=Account(name="Root Account", account_type="ROOT"),
-             root_template=Account(name="Template Root", account_type="ROOT"),
+    b = Book(root_account=Account(name="Root Account", account_type="ROOT",commodity=Commodity.create_from_ISO(currency)),
+             root_template=Account(name="Template Root", account_type="ROOT", commodity=None),
     )
     s.add(b)
     s.commit()
@@ -148,9 +150,7 @@ def open_book(sqlite_file=None, uri_conn=None, acquire_lock=False, readonly=True
         # skip GnuCash
         if k in ("Gnucash"):
             continue
-        if version_supported[k] != v:
-            print k, v, version_supported[k]
-            assert False, "{} {} {}".format(k, v, version_supported[k])
+        assert version_supported[k] == v, "Unsupported version for table {} : got {}, supported {}".format(k, v, version_supported[k])
 
 
     # flush is a "no op" if readonly
@@ -174,18 +174,19 @@ class GncSession(object):
             # set a lock
             session.execute(gnclock.insert(values=dict(hostname=socket.gethostname(), pid=os.getpid())))
             session.commit()
-            # setup tracking of session changes (see https://www.mail-archive.com/sqlalchemy@googlegroups.com/msg34201.html)
+
+        # setup tracking of session changes (see https://www.mail-archive.com/sqlalchemy@googlegroups.com/msg34201.html)
+        self._is_modified = False
+
+        @event.listens_for(session, 'after_flush')
+        def receive_after_flush(session, flush_context):
+            self._is_modified = not self.is_saved
+
+        @event.listens_for(session, 'after_commit')
+        @event.listens_for(session, 'after_begin')
+        @event.listens_for(session, 'after_rollback')
+        def init_session_status(session, *args, **kwargs):
             self._is_modified = False
-
-            @event.listens_for(session, 'after_flush')
-            def receive_after_flush(session, flush_context):
-                self._is_modified = not self.is_saved
-
-            @event.listens_for(session, 'after_commit')
-            @event.listens_for(session, 'after_begin')
-            @event.listens_for(session, 'after_rollback')
-            def init_session_status(session, *args, **kwargs):
-                self._is_modified = False
 
 
     def save(self):
@@ -210,7 +211,8 @@ class GncSession(object):
 
     @property
     def is_saved(self):
-        return not (self._is_modified or self.sa_session.dirty or self.sa_session.deleted or self.sa_session.new)
+        s = self.sa_session
+        return not (self._is_modified or s.dirty or s.deleted or s.new)
 
     @property
     def book(self):
