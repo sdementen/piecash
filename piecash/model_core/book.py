@@ -81,7 +81,7 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
             if overwrite:
                 drop_database(uri_conn)
             else:
-                raise GnucashException, "'{}' db already exists".format(uri_conn)
+                raise GnucashException("'{}' db already exists".format(uri_conn))
         create_database(uri_conn)
 
     engine = create_engine(uri_conn, **kwargs)
@@ -126,12 +126,12 @@ def open_book(sqlite_file=None, uri_conn=None, acquire_lock=False, readonly=True
         if sqlite_file:
             uri_conn = "sqlite:///{}".format(sqlite_file)
         else:
-            raise ValueError, "One sqlite_file and uri_conn arguments should be given."
+            raise ValueError("One sqlite_file and uri_conn arguments should be given.")
 
     # create database (if not sqlite in memory
     if not database_exists(uri_conn):
-        raise GnucashException, "Database '{}' does not exist (please use create_book to create " \
-                                "GnuCash books from scratch)".format(uri_conn)
+        raise GnucashException("Database '{}' does not exist (please use create_book to create " \
+                                "GnuCash books from scratch)".format(uri_conn))
 
     engine = create_engine(uri_conn, **kwargs)
 
@@ -139,7 +139,7 @@ def open_book(sqlite_file=None, uri_conn=None, acquire_lock=False, readonly=True
 
     # ensure the file is not locked by GnuCash itself
     if locks and not open_if_lock:
-        raise GnucashException, "Lock on the file"
+        raise GnucashException("Lock on the file")
 
     s = Session(bind=engine)
 
@@ -158,7 +158,7 @@ def open_book(sqlite_file=None, uri_conn=None, acquire_lock=False, readonly=True
         def new_flush(*args, **kwargs):
             if s.dirty or s.new or s.deleted:
                 s.rollback()
-                raise GnucashException, "You cannot change the DB, it is locked !"
+                raise GnucashException("You cannot change the DB, it is locked !")
 
         s.flush = new_flush
 

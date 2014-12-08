@@ -159,7 +159,7 @@ class Transaction(DeclarativeBaseGuid):
 
         # check same currency
         if "currency" in old and old["currency"] is not None:
-            raise GncValidationError, "You cannot change the currency of a transaction once it has been set"
+            raise GncValidationError("You cannot change the currency of a transaction once it has been set")
 
         # validate the splits
         if "splits" in old:
@@ -167,7 +167,7 @@ class Transaction(DeclarativeBaseGuid):
             c = self.currency
             for sp in self.splits:
                 if sp.account.commodity != c:
-                    raise GncValidationError, "Only single currency transactions are supported"
+                    raise GncValidationError("Only single currency transactions are supported")
 
                 sp.quantity = sp.value
                 if sp.quantity != sp.value:

@@ -71,7 +71,7 @@ class DictWrapper(object):
             if sl.name == key:
                 break
         else:
-            raise KeyError, "No slot exists with name '{}'".format(key)
+            raise KeyError("No slot exists with name '{}'".format(key))
         return sl.value
 
     def __setitem__(self, key, value):
@@ -85,14 +85,14 @@ class DictWrapper(object):
         if isinstance(value, sl._python_type):
             sl.value = value
         else:
-            raise TypeError, "Type of '{}' is not one of {}".format(value, sl._python_type)
+            raise TypeError("Type of '{}' is not one of {}".format(value, sl._python_type))
 
     def __delitem__(self, key):
         for i, sl in enumerate(self.slot_collection):
             if sl.name == key:
                 break
         else:
-            raise KeyError, "No slot exists with name '{}'".format(key)
+            raise KeyError("No slot exists with name '{}'".format(key))
         del self.slot_collection[i]
 
 
@@ -265,4 +265,4 @@ def slot(name, value):
 
         return slot(name=name, value=dict2list_of_slots(value))
 
-    raise ValueError, "Cannot handle type of '{}'".format(value)
+    raise ValueError("Cannot handle type of '{}'".format(value))

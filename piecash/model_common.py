@@ -69,8 +69,8 @@ class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):
         try:
             s = get_active_session()
         except GncNoActiveSession:
-            raise GncNoActiveSession, "No active session is available to lookup a {} = '{}'. Please use a 'with book:' block to set an active session".format(
-                cls.__name__, name)
+            raise GncNoActiveSession("No active session is available to lookup a {} = '{}'. Please use a 'with book:' block to set an active session".format(
+                cls.__name__, name))
 
         return s.query(cls).filter(cls.lookup_key == name).one()
 
@@ -119,4 +119,4 @@ def get_active_session():
     try:
         return _default_session[-1]
     except IndexError:
-        raise GncNoActiveSession, "No active session is available. Please use a 'with book:' block to set an active session"
+        raise GncNoActiveSession("No active session is available. Please use a 'with book:' block to set an active session")

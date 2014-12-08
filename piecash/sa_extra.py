@@ -1,3 +1,4 @@
+from __future__ import print_function
 from copy import deepcopy
 from decimal import Decimal
 
@@ -14,7 +15,7 @@ import pytz
 @as_declarative()
 class DeclarativeBase(object):
     def __deepcopy__(self, memo):
-        print "memo", memo
+        print("memo", memo)
         pk_keys = set([c.key for c in class_mapper(self.__class__).primary_key])
 
         dct = {}
@@ -203,7 +204,7 @@ class CallableList(list):
             else:
                 return obj
         else:
-            raise KeyError, "Could not find object with {} in {}".format(kwargs, self)
+            raise KeyError("Could not find object with {} in {}".format(kwargs, self))
 
 
 Session = sessionmaker(autoflush=False)

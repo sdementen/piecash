@@ -109,8 +109,8 @@ class Account(DeclarativeBaseGuid):
         if self.parent:
             for acc in self.parent.children:
                 if acc.name == name and acc != self:
-                    raise ValueError, "{} has two children with the same name {} : {} and {}".format(self.parent, name,
-                                                                                                     acc, self)
+                    raise ValueError("{} has two children with the same name {} : {} and {}".format(self.parent, name,
+                                                                                                     acc, self))
         return value
 
 
@@ -120,17 +120,17 @@ class Account(DeclarativeBaseGuid):
         """
         if key == "account_type":
             if value not in ACCOUNT_TYPES:
-                raise ValueError, "Account_type '{}' is not in {}".format(value, ACCOUNT_TYPES)
+                raise ValueError("Account_type '{}' is not in {}".format(value, ACCOUNT_TYPES))
 
             if self.parent:
                 if not is_parent_child_account_types_consistent(self.parent.account_type, value):
-                    raise ValueError, "Child account_type '{}' is not consistent with parent account_type {}".format(
-                        value, self.parent.account_type)
+                    raise ValueError("Child account_type '{}' is not consistent with parent account_type {}".format(
+                        value, self.parent.account_type))
 
         if (key == "parent") and value and self.account_type:
             if not is_parent_child_account_types_consistent(value.account_type, self.account_type):
-                raise ValueError, "Child account_type '{}' is not consistent with parent account_type {}".format(
-                    self.account_type, value.account_type)
+                raise ValueError("Child account_type '{}' is not consistent with parent account_type {}".format(
+                    self.account_type, value.account_type))
 
         return value
 

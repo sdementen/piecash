@@ -46,7 +46,7 @@ class Commodity(DeclarativeBaseGuid):
                                quote_source="currency"
                     )
             else:
-                raise ValueError, "Could not find the mnemonic '{}' in the ISO table".format(mnemonic)
+                raise ValueError("Could not find the mnemonic '{}' in the ISO table".format(mnemonic))
 
         else:
             # retrieve XML table with currency information
@@ -73,7 +73,7 @@ class Commodity(DeclarativeBaseGuid):
                 break
             else:
                 # raise error if mnemonic has not been found
-                raise ValueError, "Could not find the mnemonic '{}' in the table at {}".format(mnemonic, url)
+                raise ValueError("Could not find the mnemonic '{}' in the table at {}".format(mnemonic, url))
 
             # create the currency
             return cls(mnemonic=mnemonic,
