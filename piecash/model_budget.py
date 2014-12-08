@@ -1,9 +1,9 @@
-import decimal
-from sqlalchemy import Column, VARCHAR, INTEGER, BIGINT, ForeignKey, cast, Float
-from sqlalchemy.ext.hybrid import hybrid_property
+from __future__ import division
+
+from sqlalchemy import Column, VARCHAR, INTEGER, BIGINT, ForeignKey
 from sqlalchemy.orm import relation, backref
 
-from .sa_extra import _Date, DeclarativeBase, CallableList
+from .sa_extra import _Date, DeclarativeBase, CallableList, hybrid_property_gncnumeric
 from .model_common import DeclarativeBaseGuid
 
 
@@ -28,17 +28,11 @@ class BudgetAmount(DeclarativeBase):
     # column definitions
     account_guid = Column('account_guid', VARCHAR(length=32),
                           ForeignKey('accounts.guid'), nullable=False)
-    amount_denom = Column('amount_denom', BIGINT(), nullable=False)
-    amount_num = Column('amount_num', BIGINT(), nullable=False)
-    def fset(self, d):
-        _, _, exp = d.as_tuple()
-        self.amount_denom = denom = int(d.radix() ** (-exp))
-        self.amount_num = int(d * denom)
-    amount = hybrid_property(
-        fget=lambda self: decimal.Decimal(self.amount_num) / decimal.Decimal(self.amount_denom),
-        fset=fset,
-        expr=lambda cls: cast(cls.amount_num, Float) / cls.amount_denom,
-    )
+    _amount_denom = Column('amount_denom', BIGINT(), nullable=False)
+    _amount_num = Column('amount_num', BIGINT(), nullable=False)
+    _amount_denom_basis = None
+    amount = hybrid_property_gncnumeric(_amount_num, _amount_denom)
+
     budget_guid = Column('budget_guid', VARCHAR(length=32),
                          ForeignKey('budgets.guid'), nullable=False)
     id = Column('id', INTEGER(), primary_key=True, nullable=False)
@@ -47,10 +41,10 @@ class BudgetAmount(DeclarativeBase):
     # relation definitions
     account = relation('Account', backref=backref('budget_amounts',
                                                   cascade='all, delete-orphan',
-                                                  collection_class=CallableList,))
+                                                  collection_class=CallableList, ))
     budget = relation('Budget', backref=backref('amounts',
                                                 cascade='all, delete-orphan',
-                                                collection_class=CallableList,))
+                                                collection_class=CallableList, ))
 
 
 class Recurrence(DeclarativeBase):
@@ -66,4 +60,4 @@ class Recurrence(DeclarativeBase):
     recurrence_period_type = Column('recurrence_period_type', VARCHAR(length=2048), nullable=False)
     recurrence_weekend_adjust = Column('recurrence_weekend_adjust', VARCHAR(length=2048), nullable=False)
 
-    #relation definitions
+    # relation definitions

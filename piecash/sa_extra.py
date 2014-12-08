@@ -1,6 +1,10 @@
 from __future__ import print_function
+from __future__ import division
 from copy import deepcopy
 from decimal import Decimal
+from builtins import zip
+from builtins import object
+import sys
 
 from sqlalchemy import types, Table, MetaData, ForeignKeyConstraint, Float, cast
 from sqlalchemy.dialects import sqlite
@@ -12,9 +16,14 @@ import tzlocal
 import pytz
 
 
+if sys.version > '3':
+    long = int
+
+
 @as_declarative()
 class DeclarativeBase(object):
     def __deepcopy__(self, memo):
+        raise Unsafe
         print("memo", memo)
         pk_keys = set([c.key for c in class_mapper(self.__class__).primary_key])
 
@@ -120,7 +129,8 @@ def hybrid_property_gncnumeric(num_col, denom_col):
                 d = Decimal(d)
             assert isinstance(d, Decimal)
 
-            denom = 10 ** max(-d._exp, 1)
+            sign, digits, exp = d.as_tuple()
+            denom = 10 ** max(-exp, 0)
 
             # print num_name, denom,
             denom_basis = getattr(self, "{}_basis".format(denom_name), None)
@@ -149,9 +159,11 @@ def hybrid_property_gncnumeric(num_col, denom_col):
         expr=expr,
     )
 
-def mapped_to_slot_property(col, slot_name, slot_transform=lambda x:x):
+
+def mapped_to_slot_property(col, slot_name, slot_transform=lambda x: x):
     """Assume the attribute in the class as the same name as the table column with "_" prepended"""
     col_name = "_{}".format(col.name)
+
     def fget(self):
         return getattr(self, col_name)
 
@@ -174,6 +186,7 @@ def mapped_to_slot_property(col, slot_name, slot_transform=lambda x:x):
         expr=expr,
     )
 
+
 def get_foreign_keys(metadata, engine):
     """ Retrieve all foreign keys from metadata bound to an engine
     :param metadata:
@@ -181,7 +194,7 @@ def get_foreign_keys(metadata, engine):
     :return:
     """
     reflected_metadata = MetaData()
-    for table_name in metadata.tables.keys():
+    for table_name in list(metadata.tables.keys()):
         table = Table(
             table_name,
             reflected_metadata,
@@ -198,7 +211,7 @@ def get_foreign_keys(metadata, engine):
 class CallableList(list):
     def get(self, **kwargs):
         for obj in self:
-            for k, v in kwargs.iteritems():
+            for k, v in kwargs.items():
                 if getattr(obj, k) != v:
                     break
             else:

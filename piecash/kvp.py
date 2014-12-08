@@ -1,8 +1,10 @@
+from builtins import object
 import decimal
 import datetime
 import uuid
 
 from enum import Enum
+from past.types import basestring
 from sqlalchemy import Column, VARCHAR, INTEGER, REAL, BIGINT, types, event
 from sqlalchemy.orm import relation, foreign, object_session, backref
 
@@ -178,7 +180,7 @@ SlotDate = define_simpleslot(postfix="Date",
                              col_default=None,
 )
 SlotString = define_simpleslot(postfix="String",
-                               pytype=(str, unicode),
+                               pytype=(basestring,),
                                KVPtype=KVP_Type.KVP_TYPE_STRING,
                                field="string_val",
                                col_type=VARCHAR(length=4096),
@@ -219,7 +221,7 @@ class SlotFrame(DictWrapper, Slot):
 
     @value.setter
     def value(self, value):
-        self.slot_collection = [slot(name=k, value=v) for k, v in value.iteritems()]
+        self.slot_collection = [slot(name=k, value=v) for k, v in value.items()]
 
 
     def __init__(self, **kwargs):
@@ -261,7 +263,7 @@ def slot(name, value):
     if isinstance(value, dict):
         # transform a dict to Frame/Slots
         def dict2list_of_slots(dct):
-            return [slot(name=k, value=v) for k, v in dct.iteritems()]
+            return [slot(name=k, value=v) for k, v in dct.items()]
 
         return slot(name=name, value=dict2list_of_slots(value))
 

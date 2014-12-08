@@ -1,12 +1,11 @@
-import decimal
+from __future__ import division
 from xml.etree import ElementTree
 
-from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT, cast, Float
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT
 from sqlalchemy.orm import relation
 
-from piecash.model_common import DeclarativeBaseGuid
-from piecash.sa_extra import _DateTime
+from ..model_common import DeclarativeBaseGuid
+from ..sa_extra import _DateTime, hybrid_property_gncnumeric
 
 
 class Commodity(DeclarativeBaseGuid):
@@ -39,7 +38,7 @@ class Commodity(DeclarativeBaseGuid):
                     # create the currency
                     return cls(mnemonic=cur.mnemonic,
                                fullname=cur.currency,
-                               fraction=10**int(cur.fraction),
+                               fraction=10 ** int(cur.fraction),
                                cusip=cur.cusip,
                                namespace="CURRENCY",
                                quote_flag=1,
@@ -98,19 +97,10 @@ class Price(DeclarativeBaseGuid):
     source = Column('source', VARCHAR(length=2048))
     type = Column('type', VARCHAR(length=2048))
 
-    value_denom = Column('value_denom', BIGINT(), nullable=False)
-    value_num = Column('value_num', BIGINT(), nullable=False)
-
-    def fset(self, d):
-        _, _, exp = d.as_tuple()
-        self.value_denom = denom = int(d.radix() ** (-exp))
-        self.value_num = int(d * denom)
-
-    value = hybrid_property(
-        fget=lambda self: decimal.Decimal(self.value_num) / decimal.Decimal(self.value_denom),
-        fset=fset,
-        expr=lambda cls: cast(cls.value_num, Float) / cls.value_denom,
-    )
+    _value_denom = Column('value_denom', BIGINT(), nullable=False)
+    _value_num = Column('value_num', BIGINT(), nullable=False)
+    _value_denom_basis = None
+    value = hybrid_property_gncnumeric(_value_num, _value_denom)
 
     # relation definitions
 

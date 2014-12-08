@@ -3,6 +3,7 @@
 #   @brief Example Script simple sqlite create
 #   @ingroup python_bindings_examples
 
+from __future__ import print_function
 import os
 from piecash import create_book, Account, Commodity, open_book
 
@@ -17,7 +18,7 @@ with create_book(filename) as s:
     s.save()
 
 with open_book(filename) as s:
-    print s.book.root_account.children
-    print s.commodities.get(mnemonic="CAD")
+    print(s.book.root_account.children)
+    print(s.commodities.get(mnemonic="CAD"))
 
 os.remove(filename)

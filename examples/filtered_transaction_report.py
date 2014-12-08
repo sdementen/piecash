@@ -1,3 +1,4 @@
+from __future__ import print_function
 import datetime
 import re
 from piecash import Transaction, open_book
@@ -15,25 +16,25 @@ transactions = [tr for tr in s.transactions  # query all transactions in the boo
 
 
 # output report with simple 'print'
-print "Here are the transactions for the search criteria '{}':".format(regex.pattern)
+print("Here are the transactions for the search criteria '{}':".format(regex.pattern))
 for tr in transactions:
-    print "- {:%Y/%m/%d} : {}".format(tr.post_date, tr.description)
+    print("- {:%Y/%m/%d} : {}".format(tr.post_date, tr.description))
     for spl in tr.splits:
-        print "\t{amount}  {direction}  {account} : {memo}".format(amount=abs(spl.value),
+        print("\t{amount}  {direction}  {account} : {memo}".format(amount=abs(spl.value),
                                                                  direction="-->" if spl.value > 0 else "<--",
                                                                  account=spl.account.fullname(),
-                                                                 memo=spl.memo)
+                                                                 memo=spl.memo))
 
 # same with jinja2 templates
 try:
     import jinja2
 except ImportError:
-    print "\n\t*** Install jinja2 ('pip install jinja2') to test the jinja2 template version ***\n"
+    print("\n\t*** Install jinja2 ('pip install jinja2') to test the jinja2 template version ***\n")
     jinja2 = None
 
 if jinja2:
     env = jinja2.Environment(trim_blocks=True, lstrip_blocks=True)
-    print env.from_string("""
+    print(env.from_string("""
     Here are the transactions for the search criteria '{{regex.pattern}}':
     {% for tr in transactions %}
     - {{ tr.post_date.strftime("%Y/%m/%d") }} : {{ tr.description }}
@@ -42,4 +43,4 @@ if jinja2:
       {% endfor %}
     {% endfor %}
     """).render(transactions=transactions,
-                regex=regex)
+                regex=regex))

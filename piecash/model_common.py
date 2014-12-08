@@ -51,7 +51,7 @@ class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):
         cls_ = type(self)
         key_rel = {rel.key: rel.mapper.class_ for rel in inspect(cls_).relationships}
 
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             attr = getattr(cls_, k)
             # if the field is a relation and the value is a string, replace the string by the lookup
             if isinstance(v, str) and k in key_rel:

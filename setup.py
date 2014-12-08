@@ -245,10 +245,8 @@ setup_dict = dict(
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
         'Operating System :: OS Independent',
-        # 'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
-        # 'Programming Language :: Python :: 3.3',
-        # 'Programming Language :: Python :: Implementation :: PyPy',
+        'Programming Language :: Python :: 3.4',
         'Topic :: Office/Business',
         'Topic :: Office/Business :: Financial',
         'Topic :: Office/Business :: Financial :: Accounting',
@@ -261,6 +259,7 @@ setup_dict = dict(
                          'SQLAlchemy-Utils',
                          'pytz',
                          'tzlocal',
+                         'future',
                      ] + python_version_specific_requires,
     # Allow tests to be run with `python setup.py test'.
     tests_require=[

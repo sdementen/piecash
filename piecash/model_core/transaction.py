@@ -11,6 +11,7 @@ from .book import Book
 from .account import Account
 from ..sa_extra import _DateTime, CallableList, Session, hybrid_property_gncnumeric, mapped_to_slot_property
 
+
 """
 Examples of transaction and splits (with value and quantity) for several transactions,
 some mono-currency (in default or foreign currency), some multi-currency
@@ -72,8 +73,8 @@ class Split(DeclarativeBaseGuid):
     tx_guid = Column('tx_guid', VARCHAR(length=32), ForeignKey('transactions.guid'), nullable=False, index=True)
 
     _value_denom = Column('value_denom', BIGINT(), nullable=False)
-    _value_denom_basis = None
     _value_num = Column('value_num', BIGINT(), nullable=False)
+    _value_denom_basis = None
     value = hybrid_property_gncnumeric(_value_num, _value_denom)
 
     # relation definitions
@@ -87,18 +88,30 @@ class Split(DeclarativeBaseGuid):
                                           collection_class=CallableList,
     ))
 
+    def __init__(self,
+                 account=None,
+                 transaction=None,
+                 value=0,
+                 quantity=0,
+                 **kwargs
+    ):
+        self.transaction = transaction
+        self.account = account
+        self.value = value
+        self.quantity = quantity
+
     def __repr__(self):
         try:
             cur = self.transaction.currency.mnemonic
             acc = self.account
             com = acc.commodity.mnemonic
-            if cur==com:
+            if cur == com:
                 return "<Split {} {} {}>".format(acc,
-                                                   self.value, cur)
+                                                 self.value, cur)
             else:
                 return "<Split {} {} {} [{} {}]>".format(acc,
-                                                   self.value, cur,
-                                                   self.quantity, com)
+                                                         self.value, cur,
+                                                         self.quantity, com)
         except AttributeError:
             return "<Split {}>".format(self.account)
 
@@ -136,9 +149,10 @@ class Transaction(DeclarativeBaseGuid):
     currency_guid = Column('currency_guid', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
     description = Column('description', VARCHAR(length=2048))
     enter_date = Column('enter_date', _DateTime)
-    num = Column('num', VARCHAR(length=2048), nullable=False, default="")
+    num = Column('num', VARCHAR(length=2048), nullable=False)
     _post_date = Column('post_date', _DateTime, index=True)
-    post_date = mapped_to_slot_property(_post_date, slot_name="date-posted", slot_transform=lambda x:x.date() if x else None)
+    post_date = mapped_to_slot_property(_post_date, slot_name="date-posted",
+                                        slot_transform=lambda x: x.date() if x else None)
 
     splits = relation(Split,
                       backref=backref('transaction'),
@@ -153,6 +167,21 @@ class Transaction(DeclarativeBaseGuid):
                                                      cascade='all, delete-orphan',
                                                      collection_class=CallableList,
     ))
+
+    def __init__(self,
+                 currency,
+                 description=None,
+                 enter_date=None,
+                 post_date=None,
+                 num="",
+                 splits=[],
+    ):
+        self.currency = currency
+        self.description = description
+        self.enter_date = enter_date
+        self.post_date = post_date
+        self.num = num
+        self.splits = splits
 
     def validate(self, session):
         old = instance_state(self).committed_state
@@ -196,7 +225,7 @@ class Transaction(DeclarativeBaseGuid):
 
     # def get_imbalances(self):
     #
-    #     if not (self.currency):
+    # if not (self.currency):
     #         raise ValueError, "Transaction has no currency yet"
     #
     #     imbalance_cur = Decimal(0)
@@ -307,58 +336,58 @@ class Transaction(DeclarativeBaseGuid):
             ])
         return tx
 
-    # @classmethod
-    # def stock_transaction(cls,
-    #                       post_date,
-    #                       enter_date,
-    #                       description,
-    #                       order,
-    #                       amount,
-    #                       quantity,
-    #                       unit_price,
-    #                       currency,
-    #                       broker_account,
-    #                       stock_account,
-    #                       commission_account):
-    #     amount100 = int(amount * 100)
-    #     quantity = int(quantity)
-    #     commission100 = int((amount - quantity * unit_price) * 100)
-    #     assert (order == "buy" and commission100 >= 0) or (
-    #         order == "sell" and commission100 <= 0), "{} {} {} {}".format(order, commission100, amount,
-    #                                                                       quantity * unit_price)
-    #
-    #     tx = Transaction(currency=currency,
-    #                      post_date=post_date,
-    #                      enter_date=enter_date,
-    #                      description=description,
-    #                      num="",
-    #                      splits=[Split(account=broker_account,
-    #                                    reconcile_state='n',
-    #                                    value_num=-amount100 if order == "buy" else amount100 - commission100,
-    #                                    value_denom=100,
-    #                                    quantity_num=-amount100 if order == "buy" else amount100 - commission100,
-    #                                    quantity_denom=100,
-    #                                    memo="",
-    #                                    action="",
-    #                      ),
-    #                              Split(account=stock_account,
-    #                                    reconcile_state='n',
-    #                                    value_num=(+amount100 - commission100) if order == "buy" else -amount100,
-    #                                    value_denom=100,
-    #                                    quantity_num=quantity if order == "buy" else -quantity,
-    #                                    quantity_denom=1,
-    #                                    memo="",
-    #                                    action="",
-    #                              )] + ([Split(account=commission_account,
-    #                                           reconcile_state='n',
-    #                                           value_num=(commission100),
-    #                                           value_denom=100,
-    #                                           quantity_num=(commission100),
-    #                                           quantity_denom=1,
-    #                                           memo="",
-    #                                           action="",
-    #                      )] if unit_price else []))
-    #     return tx
+        # @classmethod
+        # def stock_transaction(cls,
+        #                       post_date,
+        #                       enter_date,
+        #                       description,
+        #                       order,
+        #                       amount,
+        #                       quantity,
+        #                       unit_price,
+        #                       currency,
+        #                       broker_account,
+        #                       stock_account,
+        #                       commission_account):
+        #     amount100 = int(amount * 100)
+        #     quantity = int(quantity)
+        #     commission100 = int((amount - quantity * unit_price) * 100)
+        #     assert (order == "buy" and commission100 >= 0) or (
+        #         order == "sell" and commission100 <= 0), "{} {} {} {}".format(order, commission100, amount,
+        #                                                                       quantity * unit_price)
+        #
+        #     tx = Transaction(currency=currency,
+        #                      post_date=post_date,
+        #                      enter_date=enter_date,
+        #                      description=description,
+        #                      num="",
+        #                      splits=[Split(account=broker_account,
+        #                                    reconcile_state='n',
+        #                                    value_num=-amount100 if order == "buy" else amount100 - commission100,
+        #                                    value_denom=100,
+        #                                    quantity_num=-amount100 if order == "buy" else amount100 - commission100,
+        #                                    quantity_denom=100,
+        #                                    memo="",
+        #                                    action="",
+        #                      ),
+        #                              Split(account=stock_account,
+        #                                    reconcile_state='n',
+        #                                    value_num=(+amount100 - commission100) if order == "buy" else -amount100,
+        #                                    value_denom=100,
+        #                                    quantity_num=quantity if order == "buy" else -quantity,
+        #                                    quantity_denom=1,
+        #                                    memo="",
+        #                                    action="",
+        #                              )] + ([Split(account=commission_account,
+        #                                           reconcile_state='n',
+        #                                           value_num=(commission100),
+        #                                           value_denom=100,
+        #                                           quantity_num=(commission100),
+        #                                           quantity_denom=1,
+        #                                           memo="",
+        #                                           action="",
+        #                      )] if unit_price else []))
+        #     return tx
 
 
 @event.listens_for(Session, 'before_flush')

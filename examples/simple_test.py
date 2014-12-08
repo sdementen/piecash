@@ -2,6 +2,7 @@
 # # @file
 # @brief Creates a basic set of accounts and a couple of transactions
 # @ingroup python_bindings_examples
+from decimal import Decimal
 
 from piecash import create_book, Account, Transaction, Split, Commodity
 
@@ -23,18 +24,16 @@ with create_book(FILE_1, overwrite=True) as session:
                            name="Opening Balance",
                            account_type="EQUITY",
                            commodity=cad)
-    num1 = (4, 1)
-    num2 = (100, 1)
-    negnum1 = (-4, 1)
-    negnum2 = (-100, 1)
-    num3 = (15, 1)
+    num1 = Decimal("4")
+    num2 = Decimal("100")
+    num3 = Decimal("15")
 
     # create transaction with core objects in one step
     trans1 = Transaction(currency=cad,
                          description="Groceries",
                          splits=[
                              Split(value=num1, account=expenses_acct),
-                             Split(value=negnum1, account=savings_acct),
+                             Split(value=-num1, account=savings_acct),
                          ])
 
     # create transaction with core object in multiple steps
@@ -45,7 +44,7 @@ with create_book(FILE_1, overwrite=True) as session:
                    account=savings_acct,
                    transaction=trans2)
 
-    split4 = Split(value=negnum2,
+    split4 = Split(value=-num2,
                    account=opening_acct,
                    transaction=trans2)
 

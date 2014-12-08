@@ -1,3 +1,4 @@
+from builtins import object
 import os
 import socket
 
@@ -99,7 +100,7 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
     s = Session(bind=engine)
 
     # create all rows in version table
-    for table_name, table_version in version_supported.iteritems():
+    for table_name, table_version in version_supported.items():
         s.add(Version(table_name=table_name, table_version=table_version))
 
     # create Book and initial accounts
@@ -112,7 +113,7 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
     return GncSession(s)
 
 
-def open_book(sqlite_file=None, uri_conn=None, acquire_lock=False, readonly=True, open_if_lock=False, **kwargs):
+def open_book(sqlite_file=None, uri_conn=None, acquire_lock=True, readonly=True, open_if_lock=False, **kwargs):
     """
     Open a GnuCash book and return the related SQLAlchemy session
 
@@ -146,7 +147,7 @@ def open_book(sqlite_file=None, uri_conn=None, acquire_lock=False, readonly=True
     # check the versions in the table versions is consistent with the API
     # TODO: improve this in the future to allow more than 1 version
     version_book = {v.table_name: v.table_version for v in s.query(Version).all()}
-    for k, v in version_book.iteritems():
+    for k, v in version_book.items():
         # skip GnuCash
         if k in ("Gnucash"):
             continue

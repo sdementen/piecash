@@ -5,6 +5,9 @@
 # from pytest.mark import parametrize
 #
 from __future__ import print_function
+from __future__ import division
+from builtins import object
+from past.utils import old_div
 import datetime
 import os
 from decimal import Decimal
@@ -62,11 +65,11 @@ class TestIntegration_EmptyBook(object):
                 },
             }
         }
-        for k, v in kv.iteritems():
+        for k, v in kv.items():
             session.book[k] = v
         session.save()
 
-        for k, v in kv.iteritems():
+        for k, v in kv.items():
             assert k in session.book
             if isinstance(v, datetime.datetime):
                 # check string format as the date in piecash is localized
@@ -150,7 +153,7 @@ class TestIntegration_EmptyBook(object):
             print("{}/{} on {} = {} {}".format(price.commodity.namespace,
                                                price.commodity.mnemonic,
                                                price.date,
-                                               float(price.value_num) / price.value_denom,
+                                               float(price.value_num)/price.value_denom,
                                                price.currency.mnemonic,
                                                ))
 
