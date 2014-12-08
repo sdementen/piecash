@@ -4,6 +4,7 @@
 #
 # from pytest.mark import parametrize
 #
+from __future__ import print_function
 import datetime
 import os
 from decimal import Decimal
@@ -108,15 +109,15 @@ class TestIntegration_EmptyBook(object):
     def test_add_account_compatibility(self, session):
         # test compatibility between child account and parent account
         for acc_type1 in ACCOUNT_TYPES - root_types:
-            acc1 = Account(name=acc_type1, account_type=acc_type1, parent=session.book.root_account)
+            acc1 = Account(name=acc_type1, account_type=acc_type1, parent=session.book.root_account, commodity=None)
 
             for acc_type2 in ACCOUNT_TYPES:
 
                 if not is_parent_child_account_types_consistent(acc_type1, acc_type2):
                     with pytest.raises(ValueError):
-                        acc2 = Account(name=acc_type2, account_type=acc_type2, parent=acc1)
+                        acc2 = Account(name=acc_type2, account_type=acc_type2, parent=acc1, commodity=None)
                 else:
-                   acc2 = Account(name=acc_type2, account_type=acc_type2, parent=acc1)
+                   acc2 = Account(name=acc_type2, account_type=acc_type2, parent=acc1, commodity=None)
 
         session.save()
 
@@ -124,14 +125,14 @@ class TestIntegration_EmptyBook(object):
 
     def test_add_account_names(self, session):
         # raise ValueError as acc1 and acc2 shares same parents with same name
-        acc1 = Account(name="Foo", account_type="MUTUAL", parent=session.book.root_account)
-        acc2 = Account(name="Foo", account_type="BANK", parent=session.book.root_account)
+        acc1 = Account(name="Foo", account_type="MUTUAL", parent=session.book.root_account, commodity=None)
+        acc2 = Account(name="Foo", account_type="BANK", parent=session.book.root_account, commodity=None)
         with pytest.raises(ValueError):
             session.save()
         session.sa_session.rollback()
         # ok as same name but different parents
-        acc3 = Account(name="Fooz", account_type="BANK", parent=session.book.root_account)
-        acc4 = Account(name="Fooz", account_type="BANK", parent=acc3)
+        acc3 = Account(name="Fooz", account_type="BANK", parent=session.book.root_account, commodity=None)
+        acc4 = Account(name="Fooz", account_type="BANK", parent=acc3, commodity=None)
         session.save()
         # raise ValueError as now acc4 and acc3 shares same parents with same name
         acc4.parent = acc3.parent
@@ -146,15 +147,15 @@ class TestIntegration_EmptyBook(object):
         # example 1, print all stock prices in the Book
         # display all prices
         for price in session.query(Price).all():
-            print "{}/{} on {} = {} {}".format(price.commodity.namespace,
+            print("{}/{} on {} = {} {}".format(price.commodity.namespace,
                                                price.commodity.mnemonic,
                                                price.date,
                                                float(price.value_num) / price.value_denom,
                                                price.currency.mnemonic,
-                                               )
+                                               ))
 
         for account in session.accounts:
-            print account
+            print(account)
 
         # build map between account fullname (e.g. "Assets:Current Assets" and account)
         map_fullname_account = {account.fullname():account for account in session.query(Account).all()}
