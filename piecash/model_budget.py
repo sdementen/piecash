@@ -1,10 +1,11 @@
 from __future__ import division
+import copy
 
 from sqlalchemy import Column, VARCHAR, INTEGER, BIGINT, ForeignKey
-from sqlalchemy.orm import relation, backref
+from sqlalchemy.orm import relation, backref, foreign
 
-from .sa_extra import _Date, DeclarativeBase, CallableList, hybrid_property_gncnumeric
-from .model_common import DeclarativeBaseGuid
+from .sa_extra import DeclarativeBase, CallableList, hybrid_property_gncnumeric
+from .model_common import DeclarativeBaseGuid, Recurrence
 
 
 class Budget(DeclarativeBaseGuid):
@@ -16,8 +17,16 @@ class Budget(DeclarativeBaseGuid):
     description = Column('description', VARCHAR(length=2048))
     name = Column('name', VARCHAR(length=2048), nullable=False)
     num_periods = Column('num_periods', INTEGER(), nullable=False)
+    guid = copy.copy(DeclarativeBaseGuid.guid)
 
-    # relation definitions
+    # # relation definitions
+    recurrence = relation(Recurrence,
+                          primaryjoin=foreign(Recurrence.obj_guid) == guid,
+                          cascade='all, delete-orphan',
+                          uselist=False)
+
+    def __repr__(self):
+        return "<Budget {}({}) for {} periods following pattern '{}' >".format(self.name, self.description, self.num_periods, self.recurrence)
 
 
 class BudgetAmount(DeclarativeBase):
@@ -46,18 +55,7 @@ class BudgetAmount(DeclarativeBase):
                                                 cascade='all, delete-orphan',
                                                 collection_class=CallableList, ))
 
+    def __repr__(self):
+        return "<BudgetAmount {}={}>".format(self.period_num, self.amount)
 
-class Recurrence(DeclarativeBase):
-    __tablename__ = 'recurrences'
 
-    __table_args__ = {}
-
-    # column definitions
-    id = Column('id', INTEGER(), primary_key=True, nullable=False)
-    obj_guid = Column('obj_guid', VARCHAR(length=32), nullable=False)
-    recurrence_mult = Column('recurrence_mult', INTEGER(), nullable=False)
-    recurrence_period_start = Column('recurrence_period_start', _Date(), nullable=False)
-    recurrence_period_type = Column('recurrence_period_type', VARCHAR(length=2048), nullable=False)
-    recurrence_weekend_adjust = Column('recurrence_weekend_adjust', VARCHAR(length=2048), nullable=False)
-
-    # relation definitions

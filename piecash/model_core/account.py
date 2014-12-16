@@ -1,3 +1,4 @@
+import copy
 from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER
 from sqlalchemy.orm import relation, backref, validates
 
@@ -61,7 +62,7 @@ class Account(DeclarativeBaseGuid):
         self._commodity_scu = value
 
     description = Column('description', VARCHAR(length=2048))
-    guid = DeclarativeBaseGuid.guid
+    guid = copy.copy(DeclarativeBaseGuid.guid)
     hidden = Column('hidden', INTEGER())
     name = Column('name', VARCHAR(length=2048), nullable=False)
 
@@ -75,6 +76,7 @@ class Account(DeclarativeBaseGuid):
                          backref=backref('accounts',
                                          cascade='all, delete-orphan',
                                          collection_class=CallableList))
+
     children = relation('Account',
                         backref=backref('parent', remote_side=guid),
                         cascade='all, delete-orphan',

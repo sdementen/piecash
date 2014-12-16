@@ -1,11 +1,10 @@
 import uuid
-import decimal
 
-from sqlalchemy import Column, VARCHAR, BIGINT, cast, Float, inspect, event
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import Column, VARCHAR, inspect, event, INTEGER
 from sqlalchemy.orm import object_session, relation, foreign
 
 from .kvp import DictWrapper, Slot
+from piecash.sa_extra import _Date
 from .sa_extra import DeclarativeBase, CallableList
 
 
@@ -16,7 +15,7 @@ class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):
     @classmethod
     def __declare_last__(cls):
         # do not do it on the DeclarativeBaseGuid as it is an abstract class
-        if cls ==DeclarativeBaseGuid:
+        if cls == DeclarativeBaseGuid:
             return
 
         cls.slots = relation('Slot',
@@ -34,7 +33,6 @@ class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):
                     s.expunge(value)
                 else:
                     s.delete(value)
-
 
     guid = Column('guid', VARCHAR(length=32), primary_key=True, nullable=False, default=lambda: uuid.uuid4().hex)
 
@@ -69,8 +67,9 @@ class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):
         try:
             s = get_active_session()
         except GncNoActiveSession:
-            raise GncNoActiveSession("No active session is available to lookup a {} = '{}'. Please use a 'with book:' block to set an active session".format(
-                cls.__name__, name))
+            raise GncNoActiveSession(
+                "No active session is available to lookup a {} = '{}'. Please use a 'with book:' block to set an active session".format(
+                    cls.__name__, name))
 
         return s.query(cls).filter(cls.lookup_key == name).one()
 
@@ -86,11 +85,9 @@ class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):
         # @validates('readonly1', 'readonly2')
         # def _write_once(self, key, value):
         # existing = getattr(self, key)
-        #     if existing is not None:
+        # if existing is not None:
         #         raise ValueError("Field '%s' is write-once" % key)
         #     return value
-
-
 
 
 class GnucashException(Exception):
@@ -99,6 +96,7 @@ class GnucashException(Exception):
 
 class GncNoActiveSession(GnucashException):
     pass
+
 
 class GncValidationError(GnucashException):
     pass
@@ -119,4 +117,25 @@ def get_active_session():
     try:
         return _default_session[-1]
     except IndexError:
-        raise GncNoActiveSession("No active session is available. Please use a 'with book:' block to set an active session")
+        raise GncNoActiveSession(
+            "No active session is available. Please use a 'with book:' block to set an active session")
+
+
+class Recurrence(DeclarativeBase):
+    __tablename__ = 'recurrences'
+
+    __table_args__ = {}
+
+    # column definitions
+    id = Column('id', INTEGER(), primary_key=True, nullable=False)
+    obj_guid = Column('obj_guid', VARCHAR(length=32), nullable=False)
+    recurrence_mult = Column('recurrence_mult', INTEGER(), nullable=False)
+    recurrence_period_start = Column('recurrence_period_start', _Date(), nullable=False)
+    recurrence_period_type = Column('recurrence_period_type', VARCHAR(length=2048), nullable=False)
+    recurrence_weekend_adjust = Column('recurrence_weekend_adjust', VARCHAR(length=2048), nullable=False)
+
+    # relation definitions
+    # added from the DeclarativeBaseGUID object (as linked from different objects like the slots
+    def __repr__(self):
+        return "{}/{} from {} [{}]".format(self.recurrence_mult, self.recurrence_period_type,
+                                           self.recurrence_period_start, self.recurrence_weekend_adjust)
