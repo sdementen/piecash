@@ -160,10 +160,13 @@ def open_book(sqlite_file=None, uri_conn=None, acquire_lock=True, readonly=True,
             if s.dirty or s.new or s.deleted:
                 s.rollback()
                 raise GnucashException("You cannot change the DB, it is locked !")
+        def new_commit(*args, **kwargs):
+            s.rollback()
+            raise GnucashException("You cannot change the DB, it is locked !")
+        s.commit = new_commit
+        # s.flush = new_flush
 
-        s.flush = new_flush
-
-    return GncSession(s, acquire_lock)
+    return GncSession(s, acquire_lock and not readonly)
 
 
 class GncSession(object):

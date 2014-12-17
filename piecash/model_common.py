@@ -1,6 +1,7 @@
 import uuid
 
 from sqlalchemy import Column, VARCHAR, inspect, event, INTEGER
+from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import object_session, relation, foreign
 
 from .kvp import DictWrapper, Slot
@@ -10,6 +11,9 @@ from .sa_extra import DeclarativeBase, CallableList
 
 class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):
     __abstract__ = True
+
+
+    guid = Column('guid', VARCHAR(length=32), primary_key=True, nullable=False, default=lambda: uuid.uuid4().hex)
 
     # set the relation to the slots table (KVP)
     @classmethod
@@ -34,7 +38,6 @@ class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):
                 else:
                     s.delete(value)
 
-    guid = Column('guid', VARCHAR(length=32), primary_key=True, nullable=False, default=lambda: uuid.uuid4().hex)
 
     def __init__(self, *args, **kwargs):
         """A simple constructor that allows initialization from kwargs.

@@ -1,7 +1,8 @@
 from __future__ import division
-import copy
+import uuid
 
 from sqlalchemy import Column, VARCHAR, INTEGER, BIGINT, ForeignKey
+
 from sqlalchemy.orm import relation, backref, foreign
 
 from .sa_extra import DeclarativeBase, CallableList, hybrid_property_gncnumeric
@@ -14,10 +15,10 @@ class Budget(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
+    guid = Column('guid', VARCHAR(length=32), primary_key=True, nullable=False, default=lambda: uuid.uuid4().hex)
     description = Column('description', VARCHAR(length=2048))
     name = Column('name', VARCHAR(length=2048), nullable=False)
     num_periods = Column('num_periods', INTEGER(), nullable=False)
-    guid = copy.copy(DeclarativeBaseGuid.guid)
 
     # # relation definitions
     recurrence = relation(Recurrence,
@@ -26,7 +27,8 @@ class Budget(DeclarativeBaseGuid):
                           uselist=False)
 
     def __repr__(self):
-        return "<Budget {}({}) for {} periods following pattern '{}' >".format(self.name, self.description, self.num_periods, self.recurrence)
+        return "<Budget {}({}) for {} periods following pattern '{}' >".format(self.name, self.description,
+                                                                               self.num_periods, self.recurrence)
 
 
 class BudgetAmount(DeclarativeBase):

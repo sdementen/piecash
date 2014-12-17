@@ -1,8 +1,11 @@
-import copy
+import uuid
 from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER
-from sqlalchemy.orm import relation, backref, validates
+from sqlalchemy.ext.declarative import declared_attr
+
+from sqlalchemy.orm import relation, backref, validates, remote, foreign
 
 from ..model_common import DeclarativeBaseGuid
+
 from piecash.sa_extra import CallableList, mapped_to_slot_property
 
 
@@ -34,6 +37,7 @@ class Account(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
+    guid = Column('guid', VARCHAR(length=32), primary_key=True, nullable=False, default=lambda: uuid.uuid4().hex)
     account_type = Column('account_type', VARCHAR(length=2048), nullable=False)
     code = Column('code', VARCHAR(length=2048))
     commodity_guid = Column('commodity_guid', VARCHAR(length=32), ForeignKey('commodities.guid'))
@@ -62,13 +66,13 @@ class Account(DeclarativeBaseGuid):
         self._commodity_scu = value
 
     description = Column('description', VARCHAR(length=2048))
-    guid = copy.copy(DeclarativeBaseGuid.guid)
     hidden = Column('hidden', INTEGER())
     name = Column('name', VARCHAR(length=2048), nullable=False)
 
     parent_guid = Column('parent_guid', VARCHAR(length=32), ForeignKey('accounts.guid'))
     _placeholder = Column('placeholder', INTEGER())
-    placeholder = mapped_to_slot_property(_placeholder, slot_name="placeholder", slot_transform=lambda v: "true" if v else None)
+    placeholder = mapped_to_slot_property(_placeholder, slot_name="placeholder",
+                                          slot_transform=lambda v: "true" if v else None)
 
     # relation definitions
     commodity = relation('Commodity',
@@ -76,7 +80,6 @@ class Account(DeclarativeBaseGuid):
                          backref=backref('accounts',
                                          cascade='all, delete-orphan',
                                          collection_class=CallableList))
-
     children = relation('Account',
                         backref=backref('parent', remote_side=guid),
                         cascade='all, delete-orphan',
@@ -94,14 +97,14 @@ class Account(DeclarativeBaseGuid):
                  hidden=0,
                  placeholder=0,
                  code=None):
-        self.name=name
-        self.commodity=commodity
-        self.account_type=account_type
-        self.parent=parent
-        self.description=description
-        self.hidden=hidden
-        self.placeholder=placeholder
-        self.code=code
+        self.name = name
+        self.commodity = commodity
+        self.account_type = account_type
+        self.parent = parent
+        self.description = description
+        self.hidden = hidden
+        self.placeholder = placeholder
+        self.code = code
         self.commodity_scu = commodity_scu
 
     @validates('parent_guid', 'name')
@@ -112,7 +115,7 @@ class Account(DeclarativeBaseGuid):
             for acc in self.parent.children:
                 if acc.name == name and acc != self:
                     raise ValueError("{} has two children with the same name {} : {} and {}".format(self.parent, name,
-                                                                                                     acc, self))
+                                                                                                    acc, self))
         return value
 
 

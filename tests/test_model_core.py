@@ -104,17 +104,17 @@ class TestModelCore_EmptyBook(object):
         sa_session_readonly = session_readonly.sa_session
         sa_session_readonly.add(v)
         with pytest.raises(GnucashException):
-            sa_session_readonly.flush()
+            sa_session_readonly.commit()
 
         # control exception when deleting object to readonly gnucash db
         sa_session_readonly.delete(session_readonly.query(Account).first())
         with pytest.raises(GnucashException):
-            sa_session_readonly.flush()
+            sa_session_readonly.commit()
 
         # control exception when modifying object to readonly gnucash db
         sa_session_readonly.query(Account).first().name = "foo"
         with pytest.raises(GnucashException):
-            sa_session_readonly.flush()
+            sa_session_readonly.commit()
 
 
     def test_readonly_false(self, sa_session):
@@ -123,8 +123,9 @@ class TestModelCore_EmptyBook(object):
         assert sa_session.flush() is None
 
     def test_lock(self, session_readonly_lock):
+        # test that lock is not taken in readonly session
         locks = list(session_readonly_lock.sa_session.execute(gnclock.select()))
-        assert len(locks) == 1
+        assert len(locks) == 0
 
 
 # class TestModelCore_CreateObjects(object):
