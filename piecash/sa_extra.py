@@ -5,6 +5,7 @@ from decimal import Decimal
 from builtins import zip
 from builtins import object
 import sys
+import datetime
 
 from sqlalchemy import types, Table, MetaData, ForeignKeyConstraint, Float, cast
 from sqlalchemy.dialects import sqlite
@@ -72,6 +73,7 @@ class _DateTime(types.TypeDecorator):
 
     def process_bind_param(self, value, engine):
         if value is not None:
+            assert isinstance(value, datetime.datetime), "value {} is not of type datetime.datetime but type {}".format(value,type(value))
             if value.tzinfo is None:
                 value = tz.localize(value)
             return value.astimezone(utc)

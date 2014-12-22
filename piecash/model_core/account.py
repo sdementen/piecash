@@ -1,8 +1,8 @@
 import uuid
-from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER
-from sqlalchemy.ext.declarative import declared_attr
 
-from sqlalchemy.orm import relation, backref, validates, remote, foreign
+from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER
+
+from sqlalchemy.orm import relation, backref, validates
 
 from ..model_common import DeclarativeBaseGuid
 
@@ -162,4 +162,7 @@ class Account(DeclarativeBaseGuid):
 
 
     def __repr__(self):
-        return "Account<{}>".format(self.fullname())
+        if self.commodity:
+            return "Account<{}[{}]>".format(self.fullname(), self.commodity.mnemonic)
+        else:
+            return "Account<{}>".format(self.fullname())

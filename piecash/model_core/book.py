@@ -105,7 +105,7 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
 
     # create Book and initial accounts
     from .account import Account
-    b = Book(root_account=Account(name="Root Account", account_type="ROOT",commodity=Commodity.create_from_ISO(currency)),
+    b = Book(root_account=Account(name="Root Account", account_type="ROOT",commodity=Commodity.create_currency_from_ISO(currency)),
              root_template=Account(name="Template Root", account_type="ROOT", commodity=None),
     )
     s.add(b)
