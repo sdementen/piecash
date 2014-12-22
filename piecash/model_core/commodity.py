@@ -5,7 +5,7 @@ from xml.etree import ElementTree
 import datetime
 
 from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT
-from sqlalchemy.orm import relation, backref, object_session
+from sqlalchemy.orm import relation, backref
 
 from ..model_common import DeclarativeBaseGuid, GnucashException
 from ..sa_extra import _DateTime, hybrid_property_gncnumeric, CallableList
@@ -241,6 +241,9 @@ class Commodity(DeclarativeBaseGuid):
         :param broker_account: the parent account holding the stock account
         :return: the main account
         """
+        if self.namespace == "CURRENCY":
+            raise GnucashException("{} is a currency ! You can't create stock_accounts for currencies".format(self))
+
         from .account import Account
 
         symbol = self.mnemonic
