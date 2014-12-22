@@ -7,8 +7,9 @@ import datetime
 from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT
 from sqlalchemy.orm import relation, backref
 
-from ..model_common import DeclarativeBaseGuid, GnucashException
-from ..sa_extra import _DateTime, hybrid_property_gncnumeric, CallableList
+from ..model_common import GnucashException,hybrid_property_gncnumeric
+from ..model_declbase import DeclarativeBaseGuid
+from ..sa_extra import _DateTime, CallableList
 
 
 class GncCommodityError(GnucashException):
@@ -136,6 +137,10 @@ class Commodity(DeclarativeBaseGuid):
 
     @classmethod
     def create_stock_from_symbol(cls, symbol):
+
+        # todo: use 'select * from yahoo.finance.sectors' and 'select * from yahoo.finance.industry where id ="sector_id"' to retrieve name of stocks
+        # and allow creation by "stock name" instead of symbol or retrieval of all symbols for the same company
+
         yql = 'select Name, StockExchange, Symbol,Currency from yahoo.finance.quotes where symbol = "{}"'.format(symbol)
         symbol_info = run_yql(yql, scalar=True)
         if symbol_info.StockExchange:

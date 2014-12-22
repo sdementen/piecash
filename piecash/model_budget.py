@@ -2,11 +2,11 @@ from __future__ import division
 import uuid
 
 from sqlalchemy import Column, VARCHAR, INTEGER, BIGINT, ForeignKey
-
 from sqlalchemy.orm import relation, backref, foreign
 
-from .sa_extra import DeclarativeBase, CallableList, hybrid_property_gncnumeric
-from .model_common import DeclarativeBaseGuid, Recurrence
+from .sa_extra import DeclarativeBase, CallableList
+from .model_declbase import DeclarativeBaseGuid
+from .model_common import hybrid_property_gncnumeric, Recurrence
 
 
 class Budget(DeclarativeBaseGuid):

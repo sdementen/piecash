@@ -1,6 +1,6 @@
 
 from .account import Account, ACCOUNT_TYPES
-from .book import Book, create_book, open_book
+from .book import Book
 from .commodity import Commodity, Price
+from .session import create_book, open_book, Version
 from .transaction import Transaction, Split
-from .model_core import Version, gnclock

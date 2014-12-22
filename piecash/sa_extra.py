@@ -1,13 +1,11 @@
 from __future__ import print_function
 from __future__ import division
 from copy import deepcopy
-from decimal import Decimal
-from builtins import zip
 from builtins import object
 import sys
 import datetime
 
-from sqlalchemy import types, Table, MetaData, ForeignKeyConstraint, Float, cast
+from sqlalchemy import types, Table, MetaData, ForeignKeyConstraint
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import as_declarative
@@ -99,67 +97,6 @@ class _Date(types.TypeDecorator):
             return types.Date()
 
 
-_address_fields = "addr1 addr2 addr3 addr4 email fax name phone".split()
-
-
-class Address(object):
-    def __init__(self, *args):
-        for fld, val in zip(_address_fields, args):
-            setattr(self, fld, val)
-
-    def __composite_values__(self):
-        return tuple(self)
-
-    def __eq__(self, other):
-        return isinstance(other, Address) and all(getattr(other, fld) == getattr(self, fld) for fld in _address_fields)
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-
-def hybrid_property_gncnumeric(num_col, denom_col):
-    num_name, denom_name = "_{}".format(num_col.name), "_{}".format(denom_col.name)
-    # num_name, denom_name = num_col.name, denom_col.name
-
-    def fset(self, d):
-        if d is None:
-            num, denom = None, None
-        else:
-            if isinstance(d, tuple):
-                d = Decimal(d[0]) / d[1]
-            elif isinstance(d, (float, int, long, str)):
-                d = Decimal(d)
-            assert isinstance(d, Decimal)
-
-            sign, digits, exp = d.as_tuple()
-            denom = 10 ** max(-exp, 0)
-
-            # print num_name, denom,
-            denom_basis = getattr(self, "{}_basis".format(denom_name), None)
-            if denom_basis is not None:
-                # print "got a basis for ", self, denom_basis
-                denom = denom_basis
-            # print denom
-            num = int(d * denom)
-
-        setattr(self, num_name, num)
-        setattr(self, denom_name, denom)
-
-
-    def fget(self):
-        num, denom = getattr(self, num_name), getattr(self, denom_name)
-        if num:
-            return Decimal(num) / denom
-
-
-    def expr(cls):
-        return cast(num_col, Float) / denom_col
-
-    return hybrid_property(
-        fget=fget,
-        fset=fset,
-        expr=expr,
-    )
 
 
 def mapped_to_slot_property(col, slot_name, slot_transform=lambda x: x):

@@ -1,12 +1,10 @@
 import uuid
 
 from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER
-
 from sqlalchemy.orm import relation, backref, validates
 
-from ..model_common import DeclarativeBaseGuid
-
-from piecash.sa_extra import CallableList, mapped_to_slot_property
+from ..model_declbase import DeclarativeBaseGuid
+from ..sa_extra import CallableList, mapped_to_slot_property
 
 
 equity_types = {"EQUITY"}

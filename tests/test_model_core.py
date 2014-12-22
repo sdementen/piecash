@@ -18,7 +18,8 @@ from piecash import Transaction, Commodity, open_book, create_book
 from piecash.model_core.account import Account
 from piecash.kvp import Slot
 from piecash.model_common import GnucashException
-from piecash.model_core import Version, gnclock
+from piecash.model_core import gnclock
+from piecash.model_core.session import Version
 
 
 test_folder = os.path.dirname(os.path.realpath(__file__))

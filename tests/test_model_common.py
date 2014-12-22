@@ -11,13 +11,13 @@ import pytz
 
 from sqlalchemy import create_engine, Column, TEXT
 from sqlalchemy.orm import sessionmaker, composite
-import tzlocal
+from piecash.model_common import Address
 
 import piecash.model_common as mc
+from piecash.model_declbase import DeclarativeBaseGuid
 from piecash.sa_extra import _Date, _DateTime
 
 # parametrize = pytest.mark.parametrize
-from piecash.sa_extra import Address
 
 
 def session():
@@ -35,7 +35,7 @@ def session():
 class TestModelCommon(object):
     # @parametrize('helparg', ['-h', '--help'])
     def test_guid_on_declarativebase(self):
-        class A(mc.DeclarativeBaseGuid):
+        class A(DeclarativeBaseGuid):
             __tablename__ = "a_table"
 
         s = session()
@@ -47,7 +47,7 @@ class TestModelCommon(object):
 
 
     def test_addr_composite(self):
-        class B(mc.DeclarativeBaseGuid):
+        class B(DeclarativeBaseGuid):
             __tablename__ = "b_table"
 
         l = []
@@ -70,7 +70,7 @@ class TestModelCommon(object):
         # assert a.addr.fax == "baz"
 
     def test_date(self):
-        class C(mc.DeclarativeBaseGuid):
+        class C(DeclarativeBaseGuid):
             __tablename__ = "c_table"
             day = Column(_Date)
 
@@ -84,7 +84,7 @@ class TestModelCommon(object):
         assert str(list(s.bind.execute("select day from c_table"))[0][0]) == "20100412"
 
     def test_datetime(self):
-        class C(mc.DeclarativeBaseGuid):
+        class C(DeclarativeBaseGuid):
             __tablename__ = "d_table"
             time = Column(_DateTime)
 

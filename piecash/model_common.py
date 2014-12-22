@@ -1,96 +1,9 @@
-import uuid
+from decimal import Decimal
 
-from sqlalchemy import Column, VARCHAR, inspect, event, INTEGER
-from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import object_session, relation, foreign
+from sqlalchemy import Column, VARCHAR, INTEGER, cast, Float
+from sqlalchemy.ext.hybrid import hybrid_property
 
-from .kvp import DictWrapper, Slot
-from piecash.sa_extra import _Date
-from .sa_extra import DeclarativeBase, CallableList
-
-
-class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):
-    __abstract__ = True
-
-
-    guid = Column('guid', VARCHAR(length=32), primary_key=True, nullable=False, default=lambda: uuid.uuid4().hex)
-
-    # set the relation to the slots table (KVP)
-    @classmethod
-    def __declare_last__(cls):
-        # do not do it on the DeclarativeBaseGuid as it is an abstract class
-        if cls == DeclarativeBaseGuid:
-            return
-
-        cls.slots = relation('Slot',
-                             primaryjoin=foreign(Slot.obj_guid) == cls.guid,
-                             cascade='all, delete-orphan',
-                             collection_class=CallableList,
-        )
-
-        # assign id of slot when associating to object
-        @event.listens_for(cls.slots, "remove")
-        def my_append_listener_slots(target, value, initiator):
-            s = object_session(value)
-            if s:
-                if value in s.new:
-                    s.expunge(value)
-                else:
-                    s.delete(value)
-
-
-    def __init__(self, *args, **kwargs):
-        """A simple constructor that allows initialization from kwargs.
-
-        Sets attributes on the constructed instance using the names and
-        values in ``kwargs``.
-
-        Only keys that are present as
-        attributes of the instance's class are allowed. These could be,
-        for example, any mapped columns or relationships.
-        """
-        cls_ = type(self)
-        key_rel = {rel.key: rel.mapper.class_ for rel in inspect(cls_).relationships}
-
-        for k, v in kwargs.items():
-            attr = getattr(cls_, k)
-            # if the field is a relation and the value is a string, replace the string by the lookup
-            if isinstance(v, str) and k in key_rel:
-                v = key_rel[k].lookup(v)
-            setattr(self, k, v)
-
-        try:
-            # if there is an active session, add the object to it
-            get_active_session().add(self)
-        except GncNoActiveSession:
-            pass
-
-    @classmethod
-    def lookup(cls, name):
-        try:
-            s = get_active_session()
-        except GncNoActiveSession:
-            raise GncNoActiveSession(
-                "No active session is available to lookup a {} = '{}'. Please use a 'with book:' block to set an active session".format(
-                    cls.__name__, name))
-
-        return s.query(cls).filter(cls.lookup_key == name).one()
-
-    def get_session(self):
-        # return the sa session of the object
-        return object_session(self)
-
-    @property
-    def slot_collection(self):
-        return self.slots
-
-
-        # @validates('readonly1', 'readonly2')
-        # def _write_once(self, key, value):
-        # existing = getattr(self, key)
-        # if existing is not None:
-        #         raise ValueError("Field '%s' is write-once" % key)
-        #     return value
+from .sa_extra import DeclarativeBase, _Date, long
 
 
 class GnucashException(Exception):
@@ -103,25 +16,6 @@ class GncNoActiveSession(GnucashException):
 
 class GncValidationError(GnucashException):
     pass
-
-
-# module variable to be used with the context manager "with book:"
-# this variable can then be used in the code to retrieve the "active" session
-_default_session = []
-
-
-def is_active_session():
-    return len(_default_session) != 0
-
-
-def get_active_session():
-    # return the active session enabled thanks to a 'with book' context manager
-    # throw an exception if no active session
-    try:
-        return _default_session[-1]
-    except IndexError:
-        raise GncNoActiveSession(
-            "No active session is available. Please use a 'with book:' block to set an active session")
 
 
 class Recurrence(DeclarativeBase):
@@ -142,3 +36,66 @@ class Recurrence(DeclarativeBase):
     def __repr__(self):
         return "{}/{} from {} [{}]".format(self.recurrence_mult, self.recurrence_period_type,
                                            self.recurrence_period_start, self.recurrence_weekend_adjust)
+
+
+
+class Address(object):
+    _address_fields = "addr1 addr2 addr3 addr4 email fax name phone".split()
+
+    def __init__(self, *args):
+        for fld, val in zip(Address._address_fields, args):
+            setattr(self, fld, val)
+
+    def __composite_values__(self):
+        return tuple(self)
+
+    def __eq__(self, other):
+        return isinstance(other, Address) and all(getattr(other, fld) == getattr(self, fld) for fld in Address._address_fields)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
+def hybrid_property_gncnumeric(num_col, denom_col):
+    num_name, denom_name = "_{}".format(num_col.name), "_{}".format(denom_col.name)
+    # num_name, denom_name = num_col.name, denom_col.name
+
+    def fset(self, d):
+        if d is None:
+            num, denom = None, None
+        else:
+            if isinstance(d, tuple):
+                d = Decimal(d[0]) / d[1]
+            elif isinstance(d, (float, int, long, str)):
+                d = Decimal(d)
+            assert isinstance(d, Decimal)
+
+            sign, digits, exp = d.as_tuple()
+            denom = 10 ** max(-exp, 0)
+
+            # print num_name, denom,
+            denom_basis = getattr(self, "{}_basis".format(denom_name), None)
+            if denom_basis is not None:
+                # print "got a basis for ", self, denom_basis
+                denom = denom_basis
+            # print denom
+            num = int(d * denom)
+
+        setattr(self, num_name, num)
+        setattr(self, denom_name, denom)
+
+
+    def fget(self):
+        num, denom = getattr(self, num_name), getattr(self, denom_name)
+        if num:
+            return Decimal(num) / denom
+
+
+    def expr(cls):
+        return cast(num_col, Float) / denom_col
+
+    return hybrid_property(
+        fget=fget,
+        fset=fset,
+        expr=expr,
+    )

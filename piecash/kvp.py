@@ -8,7 +8,8 @@ from past.types import basestring
 from sqlalchemy import Column, VARCHAR, INTEGER, REAL, BIGINT, types, event
 from sqlalchemy.orm import relation, foreign, object_session, backref
 
-from .sa_extra import _DateTime, DeclarativeBase, _Date, CallableList, hybrid_property_gncnumeric
+from .model_common import hybrid_property_gncnumeric
+from .sa_extra import _DateTime, DeclarativeBase, _Date, CallableList
 
 
 class KVP_Type(Enum):
