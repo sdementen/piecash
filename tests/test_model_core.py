@@ -14,12 +14,10 @@ import pytest
 
 
 # parametrize = pytest.mark.parametrize
-from piecash import Transaction, Commodity, open_book, create_book
-from piecash.model_core.account import Account
+from piecash import Transaction, Commodity, open_book, create_book, Account
 from piecash.kvp import Slot
 from piecash.model_common import GnucashException
-from piecash.model_core import gnclock
-from piecash.model_core.session import Version
+from piecash.model_core.session import Version, gnclock
 
 
 test_folder = os.path.dirname(os.path.realpath(__file__))

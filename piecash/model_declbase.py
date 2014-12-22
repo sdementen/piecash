@@ -4,7 +4,8 @@ from sqlalchemy import Column, VARCHAR, event, inspect
 from sqlalchemy.orm import relation, foreign, object_session
 
 from .kvp import DictWrapper, Slot
-from .sa_extra import DeclarativeBase, CallableList
+from .model_common import CallableList
+from .sa_extra import DeclarativeBase
 
 
 class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):

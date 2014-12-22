@@ -7,7 +7,8 @@ from sqlalchemy_utils import database_exists
 
 from .book import Book
 from .commodity import Commodity
-from ..sa_extra import DeclarativeBase, get_foreign_keys, Session, CallableList
+from ..model_common import CallableList
+from ..sa_extra import DeclarativeBase, get_foreign_keys, Session
 from ..model_common import GnucashException
 
 
@@ -17,27 +18,38 @@ version_supported = {u'Gnucash-Resave': 19920, u'invoices': 3, u'books': 1, u'ac
                      u'entries': 3, u'prices': 2, u'schedxactions': 1, u'splits': 4, u'taxtable_entries': 3,
                      u'employees': 2, u'commodities': 1, u'budgets': 1}
 
+# this is not a declarative as it is used before binding the session to an engine.
 gnclock = Table(u'gnclock', DeclarativeBase.metadata,
                 Column('hostname', VARCHAR(length=255)),
                 Column('pid', INTEGER()),
 )
 
+
 class Version(DeclarativeBase):
+    """The declarative class for the 'versions' table.
+    """
     __tablename__ = 'versions'
 
     __table_args__ = {}
 
     # column definitions
+    #: The name of the table
     table_name = Column('table_name', VARCHAR(length=50), primary_key=True, nullable=False)
+    #: The version for the table
     table_version = Column('table_version', INTEGER(), nullable=False)
-
-    # relation definitions
-    # none
 
     def __repr__(self):
         return "Version<{}={}>".format(self.table_name, self.table_version)
 
+
 class GncSession(object):
+    """
+    The GncSession represents an open session to a GnuCash document.
+
+    .. attribute:: sa_session
+
+        the underlying sqlalchemy session
+    """
     def __init__(self, session, acquire_lock=False):
         self.sa_session = session
         self._acquire_lock = acquire_lock
@@ -62,12 +74,18 @@ class GncSession(object):
 
 
     def save(self):
+        """Save the changes to the file/DB (=commit transaction)
+        """
         self.sa_session.commit()
 
     def cancel(self):
+        """Cancel all the changes that have not been saved (=rollback transaction)
+        """
         self.sa_session.rollback()
 
     def close(self):
+        """Close a session. Any changes not yet saved are rolled back. Any lock on the file/DB is released.
+        """
         session = self.sa_session
         # cancel pending changes
         session.rollback()
@@ -83,40 +101,74 @@ class GncSession(object):
 
     @property
     def is_saved(self):
+        """
+        True if nothing has yet been changed (False otherwise)
+        """
         s = self.sa_session
         return not (self._is_modified or s.dirty or s.deleted or s.new)
 
     @property
     def book(self):
+        """
+        the single :class:`piecash.model_core.book.Book` within the GnuCash session.
+        """
         return self.sa_session.query(Book).one()
 
     @property
     def transactions(self):
+        """
+        gives easy access to all transactions in the document through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.model_core.transaction.Transaction`
+        """
         from .transaction import Transaction
 
         return CallableList(self.sa_session.query(Transaction))
 
     @property
     def accounts(self):
+        """
+        gives easy access to all accounts in the document through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.model_core.account.Account`
+        """
         from .account import Account
 
         return CallableList(self.sa_session.query(Account))
 
     @property
     def commodities(self):
+        """
+        gives easy access to all commodities in the document through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.model_core.commodity.Commodity`
+        """
         from .commodity import Commodity
 
         return CallableList(self.sa_session.query(Commodity))
 
     @property
     def query(self):
+        """
+        proxy for the query function of the underlying sqlalchemy session
+        """
         return self.sa_session.query
 
     @property
     def add(self):
+        """
+        proxy for the add function of the underlying sqlalchemy session
+        """
         return self.sa_session.add
 
     def get(self, cls, **kwargs):
+        """
+        generic getter for a GnuCash object in the `GncSession` (uses the sqlalchemy session.query(cls).filter_by(\*\*kwargs).one()
+        underneath):
+
+            inc_account = session.get(Account, name="Income")
+
+        :param cls: the class of the object to retrieve (Account, Price, Budget,...)
+        :param kwargs: the attributes to filter on
+        :return: the unique object if it exists, raises exceptions otherwise
+        """
         return self.sa_session.query(cls).filter_by(**kwargs).one()
 
     def __enter__(self):
@@ -127,13 +179,18 @@ class GncSession(object):
 
 
 def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False, keep_foreign_keys=False, **kwargs):
-    """
-    Create a new empty GnuCash book. If both sqlite_file and uri_conn are None, then an "in memory" sqlite book is created.
+    """Create a new empty GnuCash book. If both sqlite_file and uri_conn are None, then an "in memory" sqlite book is created.
 
-    :param sqlite_file: a path to an sqlite file
-    :param uri_conn: a sqlalchemy connection string
-    :param overwrite: True if book should be deleted if it exists already and recreated
-    :return: a sqlalchemy session with a 'book' attribute and 'save' and 'cancel' methods
+    :param str sqlite_file: a path to an sqlite3 file
+    :param str uri_conn: a sqlalchemy connection string
+    :param str currency: the ISO symbol of the default currency of the book
+    :param bool overwrite: True if book should be deleted and recreated if it exists already
+    :param bool keep_foreign_keys: True if the foreign keys should be kept (may not work at all with GnuCash)
+
+    :return: the document as a gnucash session
+    :rtype: :class:`GncSession`
+
+    :raises GnucashException: if document already exists and overwrite is False
     """
     from sqlalchemy_utils.functions import database_exists, create_database, drop_database
 
@@ -143,7 +200,7 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
         else:
             uri_conn = "sqlite:///:memory:"
 
-    # create database (if not sqlite in memory
+    # create database (if DB is not a sqlite in memory)
     if uri_conn != "sqlite:///:memory:":
         if database_exists(uri_conn):
             if overwrite:
@@ -183,14 +240,20 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
 
 
 def open_book(sqlite_file=None, uri_conn=None, acquire_lock=True, readonly=True, open_if_lock=False, **kwargs):
-    """
-    Open a GnuCash book and return the related SQLAlchemy session
+    """Open an existing GnuCash book
 
-    :param sqlite_file: a path to a sqlite3 file
-    :param uri_conn: a SA connection string to a database
-    :param readonly: open the file as readonly (useful to play with and avoid any unwanted save
-    :param open_if_lock: open the file even if it is locked by another user (using open_if_lock=True with readonly=False is not recommended)
-    :return: a wrapped SA session
+    :param str sqlite_file: a path to an sqlite3 file
+    :param str uri_conn: a sqlalchemy connection string
+    :param bool acquire_lock: acquire a lock on the file
+    :param bool readonly: open the file as readonly (useful to play with and avoid any unwanted save)
+    :param bool open_if_lock: open the file even if it is locked by another user
+        (using open_if_lock=True with readonly=False is not recommended)
+
+    :return: the document as a gnucash session
+    :rtype: :class:`GncSession`
+    :raises GnucashException: if the document does not exist
+    :raises GnucashException: if there is a lock on the file and open_if_lock is False
+
     """
     if uri_conn is None:
         if sqlite_file:

@@ -147,16 +147,4 @@ def get_foreign_keys(metadata, engine):
             yield constraint
 
 
-class CallableList(list):
-    def get(self, **kwargs):
-        for obj in self:
-            for k, v in kwargs.items():
-                if getattr(obj, k) != v:
-                    break
-            else:
-                return obj
-        else:
-            raise KeyError("Could not find object with {} in {}".format(kwargs, self))
-
-
 Session = sessionmaker(autoflush=False)

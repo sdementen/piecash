@@ -265,4 +265,6 @@ intersphinx_mapping = {
 # __init__ docstring. See
 # <http://sphinx-doc.org/ext/autodoc.html#confval-autoclass_content> for more
 # information.
-autoclass_content = 'both'
+autoclass_content = 'class'
+
+autodoc_member_order = 'bysource'

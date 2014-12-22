@@ -8,7 +8,8 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from ..model_common import GncValidationError, hybrid_property_gncnumeric
 from ..model_declbase import DeclarativeBaseGuid
-from ..sa_extra import _DateTime, CallableList, Session, mapped_to_slot_property
+from ..model_common import CallableList
+from ..sa_extra import _DateTime, Session, mapped_to_slot_property
 from .book import Book
 from .account import Account
 

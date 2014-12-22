@@ -3,8 +3,9 @@ import uuid
 
 from sqlalchemy import Column, VARCHAR, INTEGER, BIGINT, ForeignKey
 from sqlalchemy.orm import relation, backref, foreign
+from .model_common import CallableList
 
-from .sa_extra import DeclarativeBase, CallableList
+from .sa_extra import DeclarativeBase
 from .model_declbase import DeclarativeBaseGuid
 from .model_common import hybrid_property_gncnumeric, Recurrence
 

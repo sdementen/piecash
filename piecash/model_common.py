@@ -57,8 +57,14 @@ class Address(object):
 
 
 def hybrid_property_gncnumeric(num_col, denom_col):
+    """Return an hybrid_property handling a Decimal represented by a numerator and a denominator column.
+    It assumes the python field related to the sqlcolumn is named as _sqlcolumn.
+
+    :type num_col: sqlalchemy.sql.schema.Column
+    :type denom_col: sqlalchemy.sql.schema.Column
+    :return: sqlalchemy.ext.hybrid.hybrid_property
+    """
     num_name, denom_name = "_{}".format(num_col.name), "_{}".format(denom_col.name)
-    # num_name, denom_name = num_col.name, denom_col.name
 
     def fset(self, d):
         if d is None:
@@ -99,3 +105,27 @@ def hybrid_property_gncnumeric(num_col, denom_col):
         fset=fset,
         expr=expr,
     )
+
+
+class CallableList(list):
+    """
+    A simple class (inherited from list) allowing to retrieve a given list element with a filter on an attribute.
+
+    It can be used as the collection_class of a sqlalchemy relationship or to wrap any list (see examples
+    in :class:`piecash.model_core.session.GncSession`)
+    """
+    def get(self, **kwargs):
+        """
+        Return the first element of the list that has attributes matching the kwargs dict.
+        To be used as::
+
+            l.get(mnemonic="EUR", namespace="CURRENCY")
+        """
+        for obj in self:
+            for k, v in kwargs.items():
+                if getattr(obj, k) != v:
+                    break
+            else:
+                return obj
+        else:
+            raise KeyError("Could not find object with {} in {}".format(kwargs, self))

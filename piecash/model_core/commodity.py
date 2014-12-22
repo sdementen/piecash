@@ -9,7 +9,8 @@ from sqlalchemy.orm import relation, backref
 
 from ..model_common import GnucashException,hybrid_property_gncnumeric
 from ..model_declbase import DeclarativeBaseGuid
-from ..sa_extra import _DateTime, CallableList
+from ..model_common import CallableList
+from ..sa_extra import _DateTime
 
 
 class GncCommodityError(GnucashException):

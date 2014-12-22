@@ -9,7 +9,8 @@ from sqlalchemy import Column, VARCHAR, INTEGER, REAL, BIGINT, types, event
 from sqlalchemy.orm import relation, foreign, object_session, backref
 
 from .model_common import hybrid_property_gncnumeric
-from .sa_extra import _DateTime, DeclarativeBase, _Date, CallableList
+from .model_common import CallableList
+from .sa_extra import _DateTime, DeclarativeBase, _Date
 
 
 class KVP_Type(Enum):
@@ -253,7 +254,7 @@ def get_all_subclasses(cls):
 
 
 def slot(name, value):
-    # handle datetime before others (as otherwise can be mixed with date
+    # handle datetime before others (as otherwise can be mixed with date)
     if isinstance(value, datetime.datetime):
         return SlotTime(name=name, value=value)
 
