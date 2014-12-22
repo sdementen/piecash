@@ -1,5 +1,5 @@
-title
-=====
+GnuCash Session
+===============
 
 .. automodule:: piecash.model_core.session
     :members:

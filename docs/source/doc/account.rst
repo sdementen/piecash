@@ -1,5 +1,5 @@
-title
-=====
+Account
+=======
 
 .. automodule:: piecash.model_core.account
     :members:

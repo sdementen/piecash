@@ -1,5 +1,5 @@
-title
-=====
+Common classes
+==============
 
 .. automodule:: piecash.model_common
     :members:

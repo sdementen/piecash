@@ -1,5 +1,5 @@
-title
-=====
+Book
+====
 
 .. automodule:: piecash.model_core.book
     :members:
