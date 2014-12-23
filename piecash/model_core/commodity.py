@@ -72,13 +72,12 @@ class Commodity(DeclarativeBaseGuid):
         quote_flag (int): 1 if piecash/GnuCash quotes will retrieve online quotes for the commodity
         quote_source (str): the quote source for GnuCash (piecash always use yahoo for stock and quandl for currencies
         quote_tz (str): the timezone to assign on the online quotes
-
         base_currency (:class:`Commodity`): The base_currency for a commodity:
 
           - if the commodity is a currency, returns the "default currency" of the book (ie the one of the root_account)
           - if the commodity is not a currency, returns the currency encoded in the quoted_currency slot
 
-
+        prices (iterator of :class:`Price`): iterator on prices related to the commodity (it is a sqlalchemy query underneath)
 
     """
     __tablename__ = 'commodities'
@@ -336,6 +335,17 @@ class Commodity(DeclarativeBaseGuid):
 
 
 class Price(DeclarativeBaseGuid):
+    """
+    A single Price for a commodity.
+
+    Attributes:
+        commodity (:class:`Commodity`): commodity to which the Price relates
+        currency (:class:`Commodity`): currency in which the Price is expressed
+        date (:class:`datetime.datetime`): datetime object representing the time at which the price is relevant
+        source (str): source of the price
+        type (str): last, ask, bid, unknown, nav
+        value (Decimal): the price itself
+    """
     __tablename__ = 'prices'
 
     __table_args__ = {}
