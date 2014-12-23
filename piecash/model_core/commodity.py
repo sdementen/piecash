@@ -344,7 +344,7 @@ class Price(DeclarativeBaseGuid):
         date (:class:`datetime.datetime`): datetime object representing the time at which the price is relevant
         source (str): source of the price
         type (str): last, ask, bid, unknown, nav
-        value (Decimal): the price itself
+        value (:class:`decimal.Decimal`): the price itself
     """
     __tablename__ = 'prices'
 

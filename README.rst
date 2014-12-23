@@ -3,7 +3,7 @@ piecash
 
 piecash offers a pythonic interface to GnuCash documents stored through the SQL backend (sqlite, postgres).
 
-A simple example::
+A simple example:
 
 .. code:: python
 
