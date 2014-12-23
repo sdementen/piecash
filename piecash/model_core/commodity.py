@@ -64,6 +64,22 @@ class Commodity(DeclarativeBaseGuid):
     """
     A GnuCash Commodity.
 
+    Attributes:
+        cusip (str): cusip code
+        fraction (int): minimal unit of the commodity (e.g. 100 for 1/100)
+        namespace (str): CURRENCY for currencies, otherwise any string to group multiple commodities together
+        mnemonic (str): the ISO symbol for a currency or the stock symbol for stocks (used for online quotes)
+        quote_flag (int): 1 if piecash/GnuCash quotes will retrieve online quotes for the commodity
+        quote_source (str): the quote source for GnuCash (piecash always use yahoo for stock and quandl for currencies
+        quote_tz (str): the timezone to assign on the online quotes
+
+        base_currency (:class:`Commodity`): The base_currency for a commodity:
+
+          - if the commodity is a currency, returns the "default currency" of the book (ie the one of the root_account)
+          - if the commodity is not a currency, returns the currency encoded in the quoted_currency slot
+
+
+
     """
     __tablename__ = 'commodities'
 
@@ -79,18 +95,52 @@ class Commodity(DeclarativeBaseGuid):
     quote_source = Column('quote_source', VARCHAR(length=2048))
     quote_tz = Column('quote_tz', VARCHAR(length=2048))
 
+    @property
+    def base_currency(self):
+        from .book import Book
+
+        s = self.get_session()
+        if s is None:
+            raise GnucashException("The commodity should be link to a session to have a 'base_currency'")
+
+        if self.namespace == "CURRENCY":
+            return s.query(Book).one().root_account.commodity
+        else:
+            # retrieve currency from cusip field or from the web (as fallback)
+            mnemonic = self.get("quoted_currency", None)
+            if mnemonic:
+                currency = s.query(Commodity).filter_by(namespace="CURRENCY", mnemonic=mnemonic).first()
+                if not currency:
+                    currency = Commodity.create_currency_from_ISO(mnemonic)
+                    s.add(currency)
+                return currency
+            else:
+                raise GnucashException("The commodity has no information about its base currency. "
+                                       "Update the cusip field to a string with 'currency=MNEMONIC' to have proper behavior")
+
+
     # relation definitions
 
     def __repr__(self):
         return "Commodity<{}:{}>".format(self.namespace, self.mnemonic)
 
     @classmethod
-    def create_currency_from_ISO(cls, mnemonic, from_web=False):
+    def create_currency_from_ISO(cls, iso_code, from_web=False):
+        """
+        Factory function to create a new currency from its ISO code
+
+        Args:
+            iso_code (str): the ISO code of the currency (e.g. EUR for the euro)
+            from_web (bool): True to get the info from the website, False to get it from the hardcoded currency_ISO module
+
+        Returns:
+            :class:`Commodity`: the currency as a commodity object
+        """
         if not from_web:
             from .currency_ISO import ISO_currencies
 
             for cur in ISO_currencies:
-                if cur.mnemonic == mnemonic:
+                if cur.mnemonic == iso_code:
                     # create the currency
                     return cls(mnemonic=cur.mnemonic,
                                fullname=cur.currency,
@@ -101,7 +151,7 @@ class Commodity(DeclarativeBaseGuid):
                                quote_source="currency"
                     )
             else:
-                raise ValueError("Could not find the mnemonic '{}' in the ISO table".format(mnemonic))
+                raise ValueError("Could not find the ISO code '{}' in the ISO table".format(iso_code))
 
         else:
             # retrieve XML table with currency information
@@ -114,12 +164,12 @@ class Commodity(DeclarativeBaseGuid):
             root = ElementTree.fromstring(table.content)
             # and look for each currency item
             for i in root.findall(".//CcyNtry"):
-                # if there is no mnemonic, skip it
+                # if there is no iso_code, skip it
                 mnemonic_node = i.find("Ccy")
                 if mnemonic_node is None:
                     continue
-                # if the mnemonic is not the one expected, skip it
-                if mnemonic_node.text != mnemonic:
+                # if the iso_code is not the one expected, skip it
+                if mnemonic_node.text != iso_code:
                     continue
                 # retreive currency info from xml
                 cusip = i.find("CcyNbr").text
@@ -127,11 +177,11 @@ class Commodity(DeclarativeBaseGuid):
                 fullname = i.find("CcyNm").text
                 break
             else:
-                # raise error if mnemonic has not been found
-                raise ValueError("Could not find the mnemonic '{}' in the table at {}".format(mnemonic, url))
+                # raise error if iso_code has not been found
+                raise ValueError("Could not find the iso_code '{}' in the table at {}".format(iso_code, url))
 
             # create the currency
-            return cls(mnemonic=mnemonic,
+            return cls(mnemonic=iso_code,
                        fullname=fullname,
                        fraction=fraction,
                        cusip=cusip,
@@ -142,58 +192,58 @@ class Commodity(DeclarativeBaseGuid):
 
     @classmethod
     def create_stock_from_symbol(cls, symbol):
+        """
+        Factory function to create a new stock from its symbol. The ISO code of the quoted currency of the stock is
+        stored in the slot "quoted_currency".
 
-        # todo: use 'select * from yahoo.finance.sectors' and 'select * from yahoo.finance.industry where id ="sector_id"' to retrieve name of stocks
-        # and allow creation by "stock name" instead of symbol or retrieval of all symbols for the same company
+        Args:
+            symbol (str): the symbol for the stock (e.g. YHOO for the Yahoo! stock)
 
+        Returns:
+            :class:`Commodity`: the stock as a commodity object
+
+        .. note::
+           The information is gathered from a yql query to the yahoo.finance.quotes
+           The default currency in which the quote is traded is stored as a slot
+
+        .. todo::
+           use 'select * from yahoo.finance.sectors' and 'select * from yahoo.finance.industry where id ="sector_id"'
+           to retrieve name of stocks and allow therefore the creation of a stock by giving its "stock name" (or part of it).
+           This could also be used to retrieve all symbols related to the same company
+        """
         yql = 'select Name, StockExchange, Symbol,Currency from yahoo.finance.quotes where symbol = "{}"'.format(symbol)
         symbol_info = run_yql(yql, scalar=True)
         if symbol_info.StockExchange:
-            return Commodity(mnemonic=symbol_info.Symbol,
+            stock = Commodity(mnemonic=symbol_info.Symbol,
                              fullname=symbol_info.Name,
                              fraction=10000,
-                             cusip="currency={}".format(symbol_info.Currency),
                              namespace=symbol_info.StockExchange.upper(),
                              quote_flag=1,
                              quote_source="yahoo"
             )
+            stock["quoted_currency"] = symbol_info.Currency
+            return stock
         else:
             raise GncCommodityError("Can't find information on symbol '{}'".format(symbol))
 
 
-    @property
-    def base_currency(self):
-        """Return the base_currency for a commodity.
-
-        If the commodity is a currency, returns the "default currency" of the book (ie the one of the root_account)
-        If the commodity is not a currency, returns the currency encoded in the cusip as "currency=mnemonic"
-
-        :return: Commodity
-        """
-        from .book import Book
-
-        s = self.get_session()
-        if s is None:
-            raise GnucashException("The commodity should be link to a session to have a 'base_currency'")
-
-        if self.namespace == "CURRENCY":
-            return s.query(Book).one().root_account.commodity
-        else:
-            # retrieve currency from cusip field or from the web (as fallback)
-            if self.cusip and self.cusip.startswith("currency="):
-                mnemonic = self.cusip.split("=")[1]
-                currency = s.query(Commodity).filter_by(namespace="CURRENCY", mnemonic=mnemonic).first()
-                if not currency:
-                    currency = Commodity.create_currency_from_ISO(mnemonic)
-                    s.add(currency)
-                return currency
-            else:
-                raise GnucashException("The commodity has no information about its base currency. "
-                                       "Update the cusip field to a string with 'currency=MNEMONIC' to have proper behavior")
-
 
     def update_prices(self, start_date=None):
-        """Update the prices for a commodity as of 'start_date'"""
+        """
+        Retrieve online prices for the commodity:
+
+        - for currencies, it will get from quandl the exchange rates between the currency and its base_currency
+        - for stocks, it will get from yahoo the daily closing prices expressed in its base_currency
+
+        Args:
+            start_date (:class:`datetime.date`): prices will be updated as of the start_date. If None, start_date is today
+            - 7 days.
+
+        .. note:: if prices are already available in the GnuCash file, the function will only retrieve prices as of the
+           max(start_date, last quoted price date)
+
+        .. todo:: add some frequency to retrieve prices only every X (week, month, ...)
+        """
 
         last_price = self.prices.order_by(-Price.date).limit(1).first()
 
@@ -239,17 +289,26 @@ class Commodity(DeclarativeBaseGuid):
 
 
     def create_stock_accounts(self, broker_account, income_account=None, income_account_types="D/CL/I"):
-        """Create all accounts to track a single stock, ie:
-        broker_account/stock.mnemonic
-        and the following accounts depending on the income_accounts
-        D = Income/Dividends/stock.mnemonic
-        CL = Income/Cap Gain (Long)/stock.mnemonic
-        CS = Income/Cap Gain (Short)/stock.mnemonic
-        I = Income/Interest/stock.mnemonic
+        """Create the multiple accounts used to track a single stock, ie:
 
-        :param stock: a commodity representing a stock
-        :param broker_account: the parent account holding the stock account
-        :return: the main account
+        - broker_account/stock.mnemonic
+
+        and the following accounts depending on the income_account_types argument
+
+        - D = Income/Dividends/stock.mnemonic
+        - CL = Income/Cap Gain (Long)/stock.mnemonic
+        - CS = Income/Cap Gain (Short)/stock.mnemonic
+        - I = Income/Interest/stock.mnemonic
+
+        Args:
+            broker_account (:class:`piecash.model_core.account.Account`): the broker account where the account holding
+            the stock is to be created
+            income_account (:class:`piecash.model_core.account.Account`): the income account where the accounts holding
+            the income related to the stock are to be created
+            income_account_types (str): "/" separated codes to drive the creation of income accounts
+
+        Returns:
+            :class:`piecash.model_core.account.Account`: the account under the broker_account where the stock is held.
         """
         if self.namespace == "CURRENCY":
             raise GnucashException("{} is a currency ! You can't create stock_accounts for currencies".format(self))

@@ -104,6 +104,12 @@ class DictWrapper(object):
         for sl in self.slot_collection:
             yield sl.name, sl.value
 
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
 
 class Slot(DeclarativeBase):
     __tablename__ = 'slots'
