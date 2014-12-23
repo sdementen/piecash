@@ -14,6 +14,7 @@ pyflakes==0.7.3
 
 # Documentation
 Sphinx==1.2
+sphinxcontrib.napoleon
 docutils==0.11
 Jinja2==2.7.1
 MarkupSafe==0.18
