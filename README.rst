@@ -5,7 +5,7 @@ piecash offers a pythonic interface to GnuCash documents stored through the SQL 
 
 A simple example::
 
-.. code-block:: python
+.. code:: python
 
     from piecash import open_book
 
