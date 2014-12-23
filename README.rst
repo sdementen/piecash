@@ -15,7 +15,10 @@ A simple example:
             print("Transaction : {}".format(tr.description))
             for i, sp in enumerate(tr.splits):
                 direction = "increased" if sp.value > 0 else "decreased"
-                print("\t{} : '{}' is {} by {}".format(i, sp.account.fullname, direction, sp.value))
+                print("\t{} : '{}' is {} by {}".format(i,
+                                                       sp.account.fullname,
+                                                       direction,
+                                                       sp.value))
 
     from piecash import create_book, Account
     # create a new account
