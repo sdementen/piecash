@@ -197,7 +197,7 @@ class GncSession(object):
         Generic getter for a GnuCash object in the `GncSession`. If no kwargs is given, it returns the list of all
         objects of type cls (uses the sqlalchemy session.query(cls).all()).
         Otherwise, it gets the unique object which attributes match the kwargs
-        (uses the sqlalchemy session.query(cls).filter_by(\*\*kwargs).one() underneath):
+        (uses the sqlalchemy session.query(cls).filter_by(\*\*kwargs).one() underneath)::
 
             # to get the first account with name="Income"
             inc_account = session.get(Account, name="Income")
@@ -205,9 +205,12 @@ class GncSession(object):
             # to get all accounts
             accs = session.get(Account)
 
-        :param cls: the class of the object to retrieve (Account, Price, Budget,...)
-        :param kwargs: the attributes to filter on
-        :return: the unique object if it exists, raises exceptions otherwise
+        Args:
+            cls (class): the class of the object to retrieve (Account, Price, Budget,...)
+            kwargs (dict): the attributes to filter on
+
+        Returns:
+            object: the unique object if it exists, raises exceptions otherwise
         """
         if kwargs:
             return self.sa_session.query(cls).filter_by(**kwargs).one()
