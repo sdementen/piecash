@@ -8,8 +8,8 @@ Information describing the project.
 package = 'piecash'
 project = "Python interface/bindings to GnuCash SQL documents"
 project_no_spaces = project.replace(' ', '')
-version = '0.2.0'
-description = 'An augmented SQLAlchemy layer for a pythonic interface to GnuCash SQL documents.'
+version = '0.3.0'
+description = 'A pythonic interface to GnuCash SQL documents.'
 authors = ['sdementen']
 authors_string = ', '.join(authors)
 emails = ['sdementen@gmail.com']
