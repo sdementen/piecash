@@ -219,7 +219,7 @@ def doc_open():
     elif sys.platform == 'win32':
         # Windows
         subprocess.check_call(['start', doc_index], shell=True)
-    elif sys.platform == 'linux':
+    elif sys.platform in ['linux', 'linux2']:
         # All freedesktop-compatible desktops
         subprocess.check_call(['xdg-open', doc_index])
     else:
