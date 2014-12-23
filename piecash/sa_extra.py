@@ -17,6 +17,8 @@ import pytz
 
 if sys.version > '3':
     long = int
+else:
+    long = long
 
 
 @as_declarative()

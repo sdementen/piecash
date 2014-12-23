@@ -6,4 +6,4 @@ Tutorials
 
    create_book.rst
    open_book.rst
-   examples.rst
+.. this   examples.rst

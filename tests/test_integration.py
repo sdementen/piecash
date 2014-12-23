@@ -19,7 +19,7 @@ import pytest
 import shutil
 from piecash import create_book, Account, ACCOUNT_TYPES, open_book, Price, Commodity
 from piecash.model_common import GnucashException
-from piecash.model_core.account import is_parent_child_account_types_consistent, root_types
+from piecash.model_core.account import _is_parent_child_account_types_consistent, root_types
 
 test_folder = os.path.dirname(os.path.realpath(__file__))
 file_template = os.path.join(test_folder, "empty_book.gnucash")
@@ -104,10 +104,10 @@ class TestIntegration_EmptyBook(object):
         ]
 
         for p,c in combi_OK:
-            assert is_parent_child_account_types_consistent(p, c)
+            assert _is_parent_child_account_types_consistent(p, c)
 
         for p,c in combi_not_OK:
-            assert not is_parent_child_account_types_consistent(p, c)
+            assert not _is_parent_child_account_types_consistent(p, c)
 
     def test_add_account_compatibility(self, session):
         # test compatibility between child account and parent account
@@ -116,7 +116,7 @@ class TestIntegration_EmptyBook(object):
 
             for acc_type2 in ACCOUNT_TYPES:
 
-                if not is_parent_child_account_types_consistent(acc_type1, acc_type2):
+                if not _is_parent_child_account_types_consistent(acc_type1, acc_type2):
                     with pytest.raises(ValueError):
                         acc2 = Account(name=acc_type2, account_type=acc_type2, parent=acc1, commodity=None)
                 else:
@@ -161,7 +161,7 @@ class TestIntegration_EmptyBook(object):
             print(account)
 
         # build map between account fullname (e.g. "Assets:Current Assets" and account)
-        map_fullname_account = {account.fullname():account for account in session.query(Account).all()}
+        map_fullname_account = {account.fullname:account for account in session.query(Account).all()}
 
         # use it to retrieve the current assets account
         acc_cur = map_fullname_account["Assets:Current Assets"]

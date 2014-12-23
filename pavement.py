@@ -239,6 +239,12 @@ def get_tasks():
 @task
 def doc_html():
     """Build the HTML docs."""
+
+    import os
+    env = os.environ.copy()
+    env['SPHINX_APIDOC_OPTIONS'] = 'members,show-inheritance'
+    subprocess.call(["sphinx-apidoc", "-f", "-T", "-e", "-o","docs/source/api", "piecash"], env=env)
+
     retcode = _doc_make('html')
 
     if retcode:

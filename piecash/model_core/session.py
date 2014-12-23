@@ -44,7 +44,41 @@ class Version(DeclarativeBase):
 
 class GncSession(object):
     """
-    The GncSession represents an open session to a GnuCash document.
+    The GncSession represents a session to a GnuCash document. It is created through one of the two factory functions
+    :func:`create_book` and :func:`open_book`.
+
+    Canonical use is as a context manager like (the session is automatically closed at the end of the with block)::
+
+        with create_book() as s:
+            ...
+
+    .. note:: If you do not use the context manager, do not forget to close the session explicitly (``s.close()``)
+       to release any lock on the file/DB.
+
+    The session puts at disposal several attributes to access the main objects of the GnuCash document::
+
+        # to get the book and the root_account
+        ra = s.book.root_account
+
+        # to get the list of accounts, commodities or transactions
+        for acc in s.accounts:  # or s.commodities or s.transactions
+            # do something with acc
+
+        # to get a specific element of these lists
+        EUR = s.commodities(namespace="CURRENCY", mnemonic="EUR")
+
+        # to get a list of all objects of some class (even non core classes)
+        budgets = s.get(Budget)
+        # or a specific object
+        budget = s.get(Budget, name="my first budget")
+
+    You can check a session has changes (new, deleted, changed objects) by getting the ``s.is_saved`` property.
+    To save or cancel changes, use ``s.save()`` or ``s.cancel()``::
+
+        # save a session if it is no saved (saving a unchanged session is a no-op)
+        if not s.is_saved:
+            s.save()
+
 
     .. attribute:: sa_session
 
@@ -160,16 +194,25 @@ class GncSession(object):
 
     def get(self, cls, **kwargs):
         """
-        generic getter for a GnuCash object in the `GncSession` (uses the sqlalchemy session.query(cls).filter_by(\*\*kwargs).one()
-        underneath):
+        Generic getter for a GnuCash object in the `GncSession`. If no kwargs is given, it returns the list of all
+        objects of type cls (uses the sqlalchemy session.query(cls).all()).
+        Otherwise, it gets the unique object which attributes match the kwargs
+        (uses the sqlalchemy session.query(cls).filter_by(\*\*kwargs).one() underneath):
 
+            # to get the first account with name="Income"
             inc_account = session.get(Account, name="Income")
+
+            # to get all accounts
+            accs = session.get(Account)
 
         :param cls: the class of the object to retrieve (Account, Price, Budget,...)
         :param kwargs: the attributes to filter on
         :return: the unique object if it exists, raises exceptions otherwise
         """
-        return self.sa_session.query(cls).filter_by(**kwargs).one()
+        if kwargs:
+            return self.sa_session.query(cls).filter_by(**kwargs).one()
+        else:
+            return self.sa_session.query(cls)
 
     def __enter__(self):
         return self

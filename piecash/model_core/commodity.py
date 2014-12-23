@@ -61,6 +61,10 @@ def quandl_fx(fx_mnemonic, base_mnemonic, start_date):
 
 
 class Commodity(DeclarativeBaseGuid):
+    """
+    A GnuCash Commodity.
+
+    """
     __tablename__ = 'commodities'
 
     __table_args__ = {}
@@ -312,7 +316,7 @@ class Price(DeclarativeBaseGuid):
         self.source = source
 
     def __repr__(self):
-        return "<Price {:%Y-%m-%d} : {} {}/{}".format(self.date,
+        return "<Price {:%Y-%m-%d} : {} {}/{}>".format(self.date,
                                                       self.value,
                                                       self.currency.mnemonic,
                                                       self.commodity.mnemonic)

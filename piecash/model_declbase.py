@@ -11,6 +11,7 @@ from .sa_extra import DeclarativeBase
 class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):
     __abstract__ = True
 
+    #: the unique identifier of the object
     guid = Column('guid', VARCHAR(length=32), primary_key=True, nullable=False, default=lambda: uuid.uuid4().hex)
 
     # set the relation to the slots table (KVP)
