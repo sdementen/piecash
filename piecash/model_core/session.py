@@ -217,6 +217,19 @@ class GncSession(object):
         else:
             return self.sa_session.query(cls)
 
+
+    def update_prices(self, start_date=None):
+        """
+        .. py:currentmodule:: piecash.model_core.commodity
+
+        Update prices for all commodities in the book which quote_flag is True (this just calls the
+        :func:`Commodity.update_prices` method of the commodities).
+
+        """
+        for c in self.commodities:
+            if c.quote_flag:
+                c.update_prices(start_date)
+
     def __enter__(self):
         return self
 

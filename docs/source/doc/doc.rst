@@ -4,7 +4,7 @@ Documentation
 
 This project provides a simple and pythonic interface to GnuCash files stored in SQL (sqlite3 and Postgres, not tested in MySQL).
 
-It is a pure python package, tested on python 2.7 and 3.4, that can be used as an alternative to:
+piecash is a pure python package, tested on python 2.7 and 3.4, that can be used as an alternative to:
 
 - the official python bindings (as long as no advanced book modifications and/or engine calculations are needed).
   This is specially useful on Windows where the official python bindings may be tricky to install or if you want to work with
