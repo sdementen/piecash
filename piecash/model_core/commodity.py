@@ -97,13 +97,18 @@ class Commodity(DeclarativeBaseGuid):
     @property
     def base_currency(self):
         from .book import Book
-
+        from .account import Account
         s = self.get_session()
         if s is None:
             raise GnucashException("The commodity should be link to a session to have a 'base_currency'")
 
         if self.namespace == "CURRENCY":
-            return s.query(Book).one().root_account.commodity
+            # get the base currency from the root account commmodity (if created bu piecash)
+            base_currency = s.query(Book).one().root_account.commodity
+            if base_currency:
+                return base_currency
+            # otherwise, assume it is the commodity of the first account with a commodity ever created
+            return s.query(Account).filter(Account.commodity!=None).first().commodity
         else:
             # retrieve currency from cusip field or from the web (as fallback)
             mnemonic = self.get("quoted_currency", None)

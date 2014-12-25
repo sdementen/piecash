@@ -166,7 +166,7 @@ class GncSession(object):
         """
         from .account import Account
 
-        return CallableList(self.sa_session.query(Account))
+        return CallableList(self.sa_session.query(Account).filter(Account.account_type!='ROOT'))
 
     @property
     def commodities(self):

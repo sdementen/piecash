@@ -8,14 +8,24 @@ from ..model_common import CallableList
 from ..sa_extra import mapped_to_slot_property
 
 
-equity_types = {"EQUITY"}
-incexp_types = {"INCOME", "EXPENSE"}
-asset_types = {'RECEIVABLE', 'MUTUAL', 'CREDIT', 'CASH', 'LIABILITY', 'PAYABLE', 'ASSET', 'BANK', 'STOCK'}
-trading_types = {'TRADING'}
 root_types = {"ROOT"}
-
+asset_types = {'RECEIVABLE', 'MUTUAL', 'CASH', 'ASSET', 'BANK', 'STOCK'}
+liability_types = { 'CREDIT',  'LIABILITY', 'PAYABLE'}
+income_types = {"INCOME"}
+expense_types = {"EXPENSE"}
+trading_types = {'TRADING'}
+equity_types = {"EQUITY"}
 #: the different types of accounts
-ACCOUNT_TYPES = equity_types | incexp_types | asset_types | root_types | trading_types
+ACCOUNT_TYPES = equity_types | income_types | expense_types | asset_types | liability_types | root_types | trading_types
+
+# types that are compatible with other types
+incexp_types = income_types | expense_types
+assetliab_types = asset_types | liability_types
+
+
+# types according to the sign of their balance
+positive_types = asset_types | expense_types | trading_types
+negative_types = liability_types | income_types | equity_types
 
 
 def _is_parent_child_account_types_consistent(account_type_parent, account_type_child):
@@ -26,9 +36,12 @@ def _is_parent_child_account_types_consistent(account_type_parent, account_type_
     2) if the child is a root account, it must have no parent account
     3) both parent and child are of the same family (asset, equity, income&expense, trading)
 
-    :param str account_type_parent: the type of the parent account
-    :param str account_type_child:  the type of the child account
-    :return: True if both accounts are consistent, False otherwise
+    Arguments
+        account_type_parent(str): the type of the parent account
+        account_type_child(str):  the type of the child account
+
+    Returns
+        True if both accounts are consistent, False otherwise
     """
     if account_type_parent in root_types:
         return account_type_child in (ACCOUNT_TYPES - root_types)
@@ -36,7 +49,7 @@ def _is_parent_child_account_types_consistent(account_type_parent, account_type_
     if account_type_child in root_types:
         return account_type_parent is None
 
-    for acc_types in (asset_types, equity_types, incexp_types, trading_types):
+    for acc_types in (assetliab_types, equity_types, incexp_types, trading_types):
         if (account_type_child in acc_types) and (account_type_parent in acc_types):
             return True
 
@@ -193,6 +206,15 @@ class Account(DeclarativeBaseGuid):
                 l.append(acc.name)
                 acc = acc.parent
             return ":".join(l[-2::-1])
+
+
+    def get_balance(self):
+        """
+
+        Returns
+            the balance of the account
+        """
+        return sum([sp.value for sp in self.splits]) * (-1 if self.account_type in negative_types else 1)
 
 
     def __repr__(self):
