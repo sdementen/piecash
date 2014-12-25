@@ -80,7 +80,7 @@ class TestIntegration_EmptyBook(object):
     def test_empty_gnucash_file(self, session):
         accs = session.accounts
 
-        assert len(accs)==2
+        assert len(accs)==0
         assert all(acc.parent is None for acc in accs)
         assert all(acc.account_type=="ROOT" for acc in accs)
 
@@ -124,7 +124,7 @@ class TestIntegration_EmptyBook(object):
 
         session.save()
 
-        assert len(session.accounts)==102
+        assert len(session.accounts)==100
 
     def test_add_account_names(self, session):
         # raise ValueError as acc1 and acc2 shares same parents with same name
