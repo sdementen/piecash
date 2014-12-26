@@ -1,6 +1,12 @@
 What's new
 ==========
 
+0.3.1
+-----
+
+- renamed modules in piecash packages
+- updated doc
+
 0.3.0
 -----
 
