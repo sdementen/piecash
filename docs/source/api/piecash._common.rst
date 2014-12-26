@@ -1,6 +1,6 @@
-piecash.model_common module
-===========================
+piecash._common module
+======================
 
-.. automodule:: piecash.model_common
+.. automodule:: piecash._common
     :members:
     :show-inheritance:

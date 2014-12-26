@@ -1,6 +1,6 @@
-piecash.model_declbase module
-=============================
+piecash._declbase module
+========================
 
-.. automodule:: piecash.model_declbase
+.. automodule:: piecash._declbase
     :members:
     :show-inheritance:

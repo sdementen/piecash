@@ -13,6 +13,8 @@ Submodules
 
 .. toctree::
 
+   piecash._common
+   piecash._declbase
    piecash.budget
    piecash.business
    piecash.kvp

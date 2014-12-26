@@ -243,7 +243,7 @@ def doc_html():
     import os
     env = os.environ.copy()
     env['SPHINX_APIDOC_OPTIONS'] = 'members,show-inheritance'
-    subprocess.call(["sphinx-apidoc", "-f", "-T", "-e", "-o","docs/source/api", "piecash"], env=env)
+    subprocess.call(["sphinx-apidoc", "-P", "-f", "-T", "-e", "-o","docs/source/api", "piecash"], env=env)
 
     retcode = _doc_make('html')
 
