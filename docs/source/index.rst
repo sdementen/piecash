@@ -23,19 +23,26 @@ Contents:
 For developers
 ==============
 
-The complete api documentation:
+The complete api documentation (apidoc) :
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 1
 
    api/piecash.rst
 
-with an overall view on the core objects in GnuCash:
+An overall view on the core objects in GnuCash:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    object_model.rst
+
+A list of resources used for the project:
+
+.. toctree::
+   :maxdepth: 1
+
+   doc/resources.rst
 
 The todo list:
 

@@ -250,6 +250,18 @@ def doc_html():
     if retcode:
         raise SystemExit(retcode)
 
+@task
+def doc_refresh_github():
+    """Build the github projects links."""
+
+    import os
+    env = os.environ.copy()
+    retcode = subprocess.call(["python", "github_gnucash_projects.py"])
+
+    if retcode:
+        raise SystemExit(retcode)
+
+
 
 @task
 def doc_clean():
