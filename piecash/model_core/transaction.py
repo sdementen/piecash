@@ -1,5 +1,6 @@
 from collections import defaultdict
 from decimal import Decimal
+import datetime
 
 from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, event
 from sqlalchemy.orm import relation, backref, validates
@@ -55,6 +56,20 @@ Commodity<CURRENCY:USD>    cross CAD to USD transfer (initiated from USD account
 
 
 class Split(DeclarativeBaseGuid):
+    """
+    A GnuCash Split.
+
+    Attributes:
+        transaction(:class:`piecash.model_core.transaction.Transaction`): transaction of the split
+        account(:class:`piecash.model_core.account.Account`): account of the split
+        lot(str): lot to which the split pertains
+        memo(str): memo of the split
+        value(:class:`decimal.Decimal`): amount express in the currency of the transaction of the split
+        quantity(:class:`decimal.Decimal`): amount express in the commodity of the account of the split
+        reconcile_state(str): 'n', 'c' or 'y'
+        reconcile_date(:class:`datetime.datetime`): time
+        action(str): new in GnuCash 2.6. usage not yet understood
+    """
     __tablename__ = 'splits'
 
     __table_args__ = {}
@@ -92,15 +107,22 @@ class Split(DeclarativeBaseGuid):
 
     def __init__(self,
                  account=None,
-                 transaction=None,
                  value=0,
                  quantity=0,
-                 **kwargs
+                 transaction=None,
+                 memo="",
+                 reconcile_date=None,
+                 reconcile_state="n",
+                 lot=None,
     ):
         self.transaction = transaction
         self.account = account
         self.value = value
         self.quantity = quantity
+        self.memo = memo
+        self.reconcile_date=reconcile_date
+        self.reconcile_state=reconcile_state
+        self.lot=lot
 
     def __repr__(self):
         try:
@@ -127,6 +149,14 @@ class Split(DeclarativeBaseGuid):
             trx = value
             acc = self.account
         if "account" == key:
+            # if the account is already defined
+            if self.account:
+                # check that we keep the same commodity across the account change
+                if self.account.commodity != value.commodity:
+                    raise GncValidationError("The commodity of the new account of this split is not the same as the old account")
+                if self.account.commodity_scu > value.commodity_scu:
+                    raise GncValidationError("The commodity_scu of the new account of this split is lower than the one of the old account")
+
             self._quantity_denom_basis = value.commodity_scu
             self.quantity = self.quantity
             trx = self.transaction
@@ -143,6 +173,18 @@ class Split(DeclarativeBaseGuid):
 
 
 class Transaction(DeclarativeBaseGuid):
+    """
+    A GnuCash Transaction.
+
+    Attributes:
+        currency (:class:`piecash.model_core.commodity.Commodity`): currency of the transaction. This attribute is
+            write-once (i.e. one cannot change it after being set)
+        description (str): description of the transaction
+        enter_date (:class:`datetime.datetime`): time at which transaction is entered
+        post_date (:class:`datetime.datetime`): day on which transaction is posted
+        num (str): user provided transaction number
+        splits (list of :class:`Split`): list of the splits of the transaction
+    """
     __tablename__ = 'transactions'
 
     __table_args__ = {}
@@ -172,18 +214,25 @@ class Transaction(DeclarativeBaseGuid):
 
     def __init__(self,
                  currency,
-                 description=None,
+                 description="",
+                 splits=[],
                  enter_date=None,
                  post_date=None,
                  num="",
-                 splits=[],
     ):
         self.currency = currency
         self.description = description
-        self.enter_date = enter_date
-        self.post_date = post_date
+        self.enter_date = enter_date if enter_date else datetime.datetime.today()
+        self.post_date = post_date if post_date else datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
         self.num = num
         self.splits = splits
+
+
+    @validates("currency")
+    def validate_currency(self, key, value):
+        if value and value.namespace!="CURRENCY":
+            raise GncValidationError("You are assigning a non currency commodity to a transaction")
+        return value
 
     def validate(self, session):
         old = instance_state(self).committed_state
@@ -247,6 +296,9 @@ class Transaction(DeclarativeBaseGuid):
                 Split(account=to_account, value=value),
             ])
         return tx
+
+    def __repr__(self):
+        return "<Transaction in {} on {} ({})>".format(self.currency, self.post_date, self.enter_date)
 
 
 @event.listens_for(Session, 'before_flush')
