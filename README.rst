@@ -1,7 +1,8 @@
 piecash
 =======
 
-[![Build Status](https://travis-ci.org/sdementen/piecash.svg?branch=master)](https://travis-ci.org/sdementen/piecash)
+.. image:: https://travis-ci.org/sdementen/piecash.svg?branch=master
+    :target: https://travis-ci.org/sdementen/piecash
 
 piecash offers a pythonic interface to GnuCash documents stored through the SQL backend (sqlite, postgres).
 
