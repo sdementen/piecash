@@ -13,6 +13,7 @@ pyflakes==0.7.3
 
 # Documentation
 Sphinx==1.2
+sphinx-rtd-theme
 sphinxcontrib-napoleon
 docutils==0.11
 Jinja2==2.7.1
