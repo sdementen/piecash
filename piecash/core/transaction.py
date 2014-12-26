@@ -7,9 +7,9 @@ from sqlalchemy.orm import relation, backref, validates
 from sqlalchemy.orm.base import instance_state
 from sqlalchemy.orm.exc import NoResultFound
 
-from ..model_common import GncValidationError, hybrid_property_gncnumeric
-from ..model_declbase import DeclarativeBaseGuid
-from ..model_common import CallableList
+from .._common import GncValidationError, hybrid_property_gncnumeric
+from .._declbase import DeclarativeBaseGuid
+from .._common import CallableList
 from ..sa_extra import _DateTime, Session, mapped_to_slot_property
 from .book import Book
 from .account import Account
@@ -60,8 +60,8 @@ class Split(DeclarativeBaseGuid):
     A GnuCash Split.
 
     Attributes:
-        transaction(:class:`piecash.model_core.transaction.Transaction`): transaction of the split
-        account(:class:`piecash.model_core.account.Account`): account of the split
+        transaction(:class:`piecash.core.transaction.Transaction`): transaction of the split
+        account(:class:`piecash.core.account.Account`): account of the split
         lot(str): lot to which the split pertains
         memo(str): memo of the split
         value(:class:`decimal.Decimal`): amount express in the currency of the transaction of the split
@@ -177,7 +177,7 @@ class Transaction(DeclarativeBaseGuid):
     A GnuCash Transaction.
 
     Attributes:
-        currency (:class:`piecash.model_core.commodity.Commodity`): currency of the transaction. This attribute is
+        currency (:class:`piecash.core.commodity.Commodity`): currency of the transaction. This attribute is
             write-once (i.e. one cannot change it after being set)
         description (str): description of the transaction
         enter_date (:class:`datetime.datetime`): time at which transaction is entered

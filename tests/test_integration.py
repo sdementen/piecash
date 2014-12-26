@@ -18,8 +18,8 @@ import pytest
 # parametrize = pytest.mark.parametrize
 import shutil
 from piecash import create_book, Account, ACCOUNT_TYPES, open_book, Price, Commodity
-from piecash.model_common import GnucashException
-from piecash.model_core.account import _is_parent_child_account_types_consistent, root_types
+from piecash._common import GnucashException
+from piecash.core.account import _is_parent_child_account_types_consistent, root_types
 
 test_folder = os.path.dirname(os.path.realpath(__file__))
 file_template = os.path.join(test_folder, "empty_book.gnucash")

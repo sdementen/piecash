@@ -11,10 +11,10 @@ import pytz
 
 from sqlalchemy import create_engine, Column, TEXT
 from sqlalchemy.orm import sessionmaker, composite
-from piecash.model_common import Address
+from piecash._common import Address
 
-import piecash.model_common as mc
-from piecash.model_declbase import DeclarativeBaseGuid
+import piecash._common as mc
+from piecash._declbase import DeclarativeBaseGuid
 from piecash.sa_extra import _Date, _DateTime
 
 # parametrize = pytest.mark.parametrize

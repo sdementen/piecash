@@ -1,7 +1,7 @@
 from sqlalchemy import Column, VARCHAR, ForeignKey
 from sqlalchemy.orm import relation, backref
 
-from ..model_declbase import DeclarativeBaseGuid
+from .._declbase import DeclarativeBaseGuid
 
 
 class Book(DeclarativeBaseGuid):

@@ -16,8 +16,8 @@ import pytest
 # parametrize = pytest.mark.parametrize
 from piecash import Transaction, Commodity, open_book, create_book, Account
 from piecash.kvp import Slot
-from piecash.model_common import GnucashException
-from piecash.model_core.session import Version, gnclock
+from piecash._common import GnucashException
+from piecash.core.session import Version, gnclock
 
 
 test_folder = os.path.dirname(os.path.realpath(__file__))

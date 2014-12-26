@@ -7,9 +7,9 @@ from sqlalchemy_utils import database_exists
 
 from .book import Book
 from .commodity import Commodity
-from ..model_common import CallableList
+from .._common import CallableList
 from ..sa_extra import DeclarativeBase, get_foreign_keys, Session
-from ..model_common import GnucashException
+from .._common import GnucashException
 
 
 version_supported = {u'Gnucash-Resave': 19920, u'invoices': 3, u'books': 1, u'accounts': 1, u'slots': 3,
@@ -144,7 +144,7 @@ class GncSession(object):
     @property
     def book(self):
         """
-        the single :class:`piecash.model_core.book.Book` within the GnuCash session.
+        the single :class:`piecash.core.book.Book` within the GnuCash session.
         """
         return self.sa_session.query(Book).one()
 
@@ -152,7 +152,7 @@ class GncSession(object):
     def transactions(self):
         """
         gives easy access to all transactions in the document through a :class:`piecash.model_common.CallableList`
-        of :class:`piecash.model_core.transaction.Transaction`
+        of :class:`piecash.core.transaction.Transaction`
         """
         from .transaction import Transaction
 
@@ -162,7 +162,7 @@ class GncSession(object):
     def accounts(self):
         """
         gives easy access to all accounts in the document through a :class:`piecash.model_common.CallableList`
-        of :class:`piecash.model_core.account.Account`
+        of :class:`piecash.core.account.Account`
         """
         from .account import Account
 
@@ -172,7 +172,7 @@ class GncSession(object):
     def commodities(self):
         """
         gives easy access to all commodities in the document through a :class:`piecash.model_common.CallableList`
-        of :class:`piecash.model_core.commodity.Commodity`
+        of :class:`piecash.core.commodity.Commodity`
         """
         from .commodity import Commodity
 
@@ -220,7 +220,7 @@ class GncSession(object):
 
     def update_prices(self, start_date=None):
         """
-        .. py:currentmodule:: piecash.model_core.commodity
+        .. py:currentmodule:: piecash.core.commodity
 
         Update prices for all commodities in the book which quote_flag is True (this just calls the
         :func:`Commodity.update_prices` method of the commodities).

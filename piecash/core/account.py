@@ -3,8 +3,8 @@ import uuid
 from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER
 from sqlalchemy.orm import relation, backref, validates
 
-from ..model_declbase import DeclarativeBaseGuid
-from ..model_common import CallableList
+from .._declbase import DeclarativeBaseGuid
+from .._common import CallableList
 from ..sa_extra import mapped_to_slot_property
 
 
@@ -63,7 +63,7 @@ class Account(DeclarativeBaseGuid):
     Attributes:
         account_type (str): type of the Account
         code (str): code of the Account
-        commodity (:class:`piecash.model_core.commodity.Commodity`): the commodity of the account
+        commodity (:class:`piecash.core.commodity.Commodity`): the commodity of the account
         commodity_scu (int): smallest currency unit for the account
         non_std_scu (int): 1 if the scu of the account is NOT the same as the commodity
         description (str): description of the account

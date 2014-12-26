@@ -1,6 +1,6 @@
-piecash.model_budget module
+piecash.core.session module
 ===========================
 
-.. automodule:: piecash.model_budget
+.. automodule:: piecash.core.session
     :members:
     :show-inheritance:

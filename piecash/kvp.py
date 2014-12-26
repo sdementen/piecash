@@ -8,8 +8,8 @@ from past.types import basestring
 from sqlalchemy import Column, VARCHAR, INTEGER, REAL, BIGINT, types, event
 from sqlalchemy.orm import relation, foreign, object_session, backref
 
-from .model_common import hybrid_property_gncnumeric
-from .model_common import CallableList
+from ._common import hybrid_property_gncnumeric
+from ._common import CallableList
 from .sa_extra import _DateTime, DeclarativeBase, _Date
 
 

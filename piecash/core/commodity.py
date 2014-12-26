@@ -7,9 +7,9 @@ import datetime
 from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT
 from sqlalchemy.orm import relation, backref
 
-from ..model_common import GnucashException,hybrid_property_gncnumeric
-from ..model_declbase import DeclarativeBaseGuid
-from ..model_common import CallableList
+from .._common import GnucashException,hybrid_property_gncnumeric
+from .._declbase import DeclarativeBaseGuid
+from .._common import CallableList
 from ..sa_extra import _DateTime
 
 
@@ -305,14 +305,14 @@ class Commodity(DeclarativeBaseGuid):
         - I = Income/Interest/stock.mnemonic
 
         Args:
-            broker_account (:class:`piecash.model_core.account.Account`): the broker account where the account holding
+            broker_account (:class:`piecash.core.account.Account`): the broker account where the account holding
             the stock is to be created
-            income_account (:class:`piecash.model_core.account.Account`): the income account where the accounts holding
+            income_account (:class:`piecash.core.account.Account`): the income account where the accounts holding
             the income related to the stock are to be created
             income_account_types (str): "/" separated codes to drive the creation of income accounts
 
         Returns:
-            :class:`piecash.model_core.account.Account`: the account under the broker_account where the stock is held.
+            :class:`piecash.core.account.Account`: the account under the broker_account where the stock is held.
         """
         if self.namespace == "CURRENCY":
             raise GnucashException("{} is a currency ! You can't create stock_accounts for currencies".format(self))

@@ -4,7 +4,7 @@ from sqlalchemy import Column, VARCHAR, event, inspect
 from sqlalchemy.orm import relation, foreign, object_session
 
 from .kvp import DictWrapper, Slot
-from .model_common import CallableList
+from ._common import CallableList
 from .sa_extra import DeclarativeBase
 
 

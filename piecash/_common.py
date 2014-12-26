@@ -112,7 +112,7 @@ class CallableList(list):
     A simple class (inherited from list) allowing to retrieve a given list element with a filter on an attribute.
 
     It can be used as the collection_class of a sqlalchemy relationship or to wrap any list (see examples
-    in :class:`piecash.model_core.session.GncSession`)
+    in :class:`piecash.core.session.GncSession`)
     """
     def get(self, **kwargs):
         """

@@ -6,19 +6,17 @@ Subpackages
 
 .. toctree::
 
-    piecash.model_core
+    piecash.core
 
 Submodules
 ----------
 
 .. toctree::
 
+   piecash.budget
+   piecash.business
    piecash.kvp
    piecash.metadata
-   piecash.model_budget
-   piecash.model_business
-   piecash.model_common
-   piecash.model_declbase
    piecash.sa_extra
 
 Module contents
