@@ -1,8 +1,7 @@
 piecash
 =======
 
-.. image:: https://travis-ci.org/sdementen/piecash.svg?branch=master
-    :target: https://travis-ci.org/sdementen/piecash
+|build-status| |docs|
 
 piecash offers a pythonic interface to GnuCash documents stored through the SQL backend (sqlite, postgres).
 
@@ -30,3 +29,15 @@ A simple example:
         s.save()
 
 The project documentation is available on http://piecash.readthedocs.org/en/latest/.
+
+
+.. |build-status| image:: https://travis-ci.org/sdementen/piecash.svg?branch=master
+    :alt: build status
+    :scale: 100%
+    :target: https://travis-ci.org/sdementen/piecash
+
+.. |docs| image:: https://readthedocs.org/projects/docs/badge/?version=latest
+    :alt: Documentation Status
+    :scale: 100%
+    :target: https://readthedocs.org/projects/docs/
+
