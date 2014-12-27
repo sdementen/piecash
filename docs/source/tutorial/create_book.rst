@@ -1,7 +1,7 @@
 Creating a new Book
 ===================
 
-.. py:currentmodule:: piecash.model_core.session
+.. py:currentmodule:: piecash.core.session
 
 piecash can create a new GnuCash document (a :class:`GncSession`) from scratch through the :func:`create_book` function.
 

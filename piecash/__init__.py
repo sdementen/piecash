@@ -8,11 +8,12 @@ __license__ = metadata.license
 __copyright__ = metadata.copyright
 
 from ._common import GncNoActiveSession, GnucashException
-from .core import (Book, Account, ACCOUNT_TYPES,
-                         Transaction, Split,
-                         Commodity, Price,
-                         create_book, open_book
+from .core import (Book,
+                   Account, ACCOUNT_TYPES,
+                   Transaction, Split,
+                   Commodity, Price,
+                   create_book, open_book
 )
-from .business import Lot  # must import as Transaction has a relation to it
+from .business import Lot, Invoice, Employee, Customer, Job, Vendor  # must import as Transaction has a relation to it
 from .budget import Budget, BudgetAmount
 from .kvp import slot

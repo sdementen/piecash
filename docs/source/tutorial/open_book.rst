@@ -1,7 +1,7 @@
 Opening an existing Book
 ========================
 
-.. py:currentmodule:: piecash.model_core.session
+.. py:currentmodule:: piecash.core.session
 
 To open an existing GnuCash document (and get the related :class:`GncSession`), use the :func:`open_book` function::
 
