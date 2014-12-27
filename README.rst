@@ -28,7 +28,7 @@ A simple example:
         acc = Account(name="Income", parent=s.book.root_account, account_type="INCOME")
         s.save()
 
-The project documentation is available on http://piecash.readthedocs.org/en/latest/.
+The project documentation is available on http://piecash.readthedocs.org.
 
 
 .. |build-status| image:: https://travis-ci.org/sdementen/piecash.svg?branch=master
@@ -36,8 +36,8 @@ The project documentation is available on http://piecash.readthedocs.org/en/late
     :scale: 100%
     :target: https://travis-ci.org/sdementen/piecash
 
-.. |docs| image:: https://readthedocs.org/projects/piecash/badge/?version=latest
+.. |docs| image:: https://readthedocs.org/projects/piecash/badge/?version=master
     :alt: Documentation Status
     :scale: 100%
-    :target: http://piecash.readthedocs.org/en/latest/
+    :target: http://piecash.readthedocs.org
 
