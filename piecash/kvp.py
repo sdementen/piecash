@@ -71,19 +71,41 @@ class DictWrapper(object):
 
 
     def __getitem__(self, key):
+        keys = key.split("/", maxsplit=1)
+        key = keys[0]
         for sl in self.slot_collection:
             if sl.name == key:
                 break
         else:
             raise KeyError("No slot exists with name '{}'".format(key))
-        return sl.value
+        if len(keys)>1:
+            return sl[keys[1]]
+        else:
+            return sl #.value
 
     def __setitem__(self, key, value):
+        print("setitem", self, key)
+        keys = key.split("/", maxsplit=1)
+        key = keys[0]
         for sl in self.slot_collection:
             if sl.name == key:
                 break
         else:
-            self.slot_collection.append(slot(name=key, value=value))
+            if isinstance(self, SlotFrame):
+                name = self._name + "/" + key
+            else:
+                name = key
+            # new key
+            if len(keys)>1:
+                sf = SlotFrame(name=name)
+                sf[keys[1]] = value
+                self.slot_collection.append(sf)
+            else:
+                self.slot_collection.append(slot(name=name, value=value))
+
+            return
+        if len(keys)>1:
+            sl[keys[1]] = value
             return
         # assign if type is correct
         if isinstance(value, sl._python_type):
@@ -92,21 +114,29 @@ class DictWrapper(object):
             raise TypeError("Type of '{}' is not one of {}".format(value, sl._python_type))
 
     def __delitem__(self, key):
+        if isinstance(key,slice):
+            # delete all
+            del self.slot_collection[key]
+            return
+        keys = key.split("/", maxsplit=1)
         for i, sl in enumerate(self.slot_collection):
-            if sl.name == key:
+            if sl.name == key[0]:
                 break
         else:
             raise KeyError("No slot exists with name '{}'".format(key))
-        del self.slot_collection[i]
+        if len(keys)>1:
+            del sl[keys[1]]
+        else:
+            del self.slot_collection[i]
 
 
     def iteritems(self):
         for sl in self.slot_collection:
-            yield sl.name, sl.value
+            yield sl.name, sl
 
     def get(self, key, default=None):
         try:
-            return self[key]
+            return self[key].value
         except KeyError:
             return default
 
@@ -115,7 +145,22 @@ class Slot(DeclarativeBase):
     __tablename__ = 'slots'
 
     # column definitions
-    name = Column('name', VARCHAR(length=4096), nullable=False)
+    _name = Column('name', VARCHAR(length=4096), nullable=False)
+    @property
+    def name(self):
+        if self._name:
+            return self._name.split("/")[-1]
+        else:
+            return self._name
+
+    @name.setter
+    def name(self, value):
+        print(self, self.parent, value)
+        if self.parent:
+            self._name = self.parent._name + "/" + value
+        else:
+            self._name = value
+
     id = Column('id', INTEGER(), primary_key=True, nullable=False)
     obj_guid = Column('obj_guid', VARCHAR(length=32), nullable=False, index=True)
     slot_type = Column('slot_type', SlotType(), nullable=False)
@@ -125,7 +170,7 @@ class Slot(DeclarativeBase):
     }
 
     def __repr__(self):
-        return "<{} {}={} as {}>".format(self.__class__.__name__, self.name, self.value, self._python_type)
+        return "<{} {}={}>".format(self.__class__.__name__, self.name, self.value)
         return "<slot {}={} ({}) -> {}>".format(self.name, self.value, self.slot_type, self.obj_guid)
 
 
@@ -219,7 +264,8 @@ class SlotFrame(DictWrapper, Slot):
                                primaryjoin=foreign(Slot.obj_guid) == guid_val,
                                cascade='all, delete-orphan',
                                collection_class=CallableList,
-                               backref=backref("parent", remote_side=guid_val, single_parent=True),
+                               single_parent=True,
+                               backref=backref("parent", remote_side=guid_val),
     )
 
     @property
@@ -229,6 +275,7 @@ class SlotFrame(DictWrapper, Slot):
 
     @value.setter
     def value(self, value):
+        print("setting value", self, value)
         self.slot_collection = [slot(name=k, value=v) for k, v in value.items()]
 
 
@@ -265,14 +312,17 @@ def slot(name, value):
         return SlotTime(name=name, value=value)
 
     for cls in get_all_subclasses(Slot):
-        if isinstance(value, cls._python_type):
+        if isinstance(value, cls._python_type) and cls!=SlotFrame:
             return cls(name=name, value=value)
 
     if isinstance(value, dict):
         # transform a dict to Frame/Slots
-        def dict2list_of_slots(dct):
-            return [slot(name=k, value=v) for k, v in dct.items()]
-
-        return slot(name=name, value=dict2list_of_slots(value))
+        print("slot frame for {}".format(name))
+        sf = SlotFrame(name=name)
+        for k, v in value.items():
+            sl = slot(name=k, value=v)
+            # sl.obj_guid = sf.guid_val
+            sl.parent = sf
+        return sf
 
     raise ValueError("Cannot handle type of '{}'".format(value))

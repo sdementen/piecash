@@ -12,6 +12,7 @@ import shutil
 from piecash import create_book, Account, ACCOUNT_TYPES, open_book, Price
 from piecash._common import GnucashException
 from piecash.core.account import _is_parent_child_account_types_consistent, root_types
+from piecash.kvp import Slot
 
 from test_helper import file_template_full, file_for_test_full, test_folder
 
@@ -32,24 +33,29 @@ def realbook_session(request):
     request.addfinalizer(lambda: os.remove(file_for_test_full))
     return s
 
-class TestIntegration_ExampleScripts(object):
+class FooTestIntegration_ExampleScripts(object):
     def test_simple_book(self):
         import examples.simple_book
+        print(examples.simple_book)
 
     def test_filtered_transaction_report(self):
         import examples.filtered_transaction_report
+        print(examples.filtered_transaction_report)
 
     def test_simple_session(self):
         import examples.simple_session
+        print(examples.simple_session)
 
     def test_simple_test(self):
         import examples.simple_test
+        print(examples.simple_test)
 
     def test_simple_sqlite_create(self):
         import examples.simple_sqlite_create
+        print(examples.simple_sqlite_create)
 
 class TestIntegration_EmptyBook(object):
-    def test_create_access_slots(self, session):
+    def test_slots_create_access(self, session):
         kv = {
             "vint": 3,
             "vfl": 2.34,
@@ -76,9 +82,63 @@ class TestIntegration_EmptyBook(object):
             assert k in session.book
             if isinstance(v, datetime.datetime):
                 # check string format as the date in piecash is localized
-                assert "{:%Y%m%d%h%M%s}".format(session.book[k]) == "{:%Y%m%d%h%M%s}".format(v)
+                assert "{:%Y%m%d%h%M%s}".format(session.book[k].value) == "{:%Y%m%d%h%M%s}".format(v)
             else:
-                assert session.book[k] == v
+                assert session.book[k].value == v
+
+    def test_slots_strings_access(self, session):
+        b = session.book
+
+        b["a/b/c/d/e"] = 1
+        session.sa_session.flush()
+        assert b["a"]["b"]["c"]["d"]["e"].value==1
+
+        # b["a/b/c"] = {"d": {"t":"ko"}}
+
+        b["a/b/c/d/f"] = "2"
+        session.sa_session.flush()
+        assert len(b["a"]["b"]["c"]["d"].slot_collection)==2
+
+        b["a/b/c/d/f"] = "5"
+        assert b["a"]["b/c"]["d"]["f"].value == "5"
+
+        for k, v in b["a/b/c/d"].iteritems():
+            assert k=="e" or k=="f"
+        assert b["a/b/c/d"].get("e", "hello")==1
+        assert b["a/b/c/d"].get("not there", "hello")=="hello"
+
+        del b["a/b/c/d/e"]
+        assert repr(b["a"])=="<SlotFrame a={'b': {'c': {'d': {'f': '5'}}}}>"
+
+        with pytest.raises(TypeError):
+            b["a/b/c/d/f"] = 4
+        with pytest.raises(TypeError):
+            b["a/b/c"] = True
+
+        assert {n for (n,) in session.sa_session.query(Slot._name)} == {'a' ,'a/b','a/b/c','a/b/c/d','a/b/c/d/e','a/b/c/d/f'}
+
+
+        # delete some elements
+        del b["a"]["b"][:]
+        session.sa_session.flush()
+        assert {n for (n,) in session.sa_session.query(Slot._name)} == {'a' ,'a/b'}
+
+        session.sa_session.flush()
+        assert len(b["a"].slot_collection)==1
+        assert len(b["a/b"].slot_collection)==0
+
+        with pytest.raises(KeyError):
+            b["a/b/c"]
+
+        del b["a"]["b"]
+        session.sa_session.flush()
+        assert len(b["a"].slot_collection)==0
+
+        del b[:]
+        session.sa_session.flush()
+        assert {n for (n,) in session.sa_session.query(Slot._name)} == set([])
+
+
 
     def test_empty_gnucash_file(self, session):
         accs = session.accounts

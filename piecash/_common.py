@@ -32,7 +32,7 @@ class Recurrence(DeclarativeBase):
     recurrence_weekend_adjust = Column('recurrence_weekend_adjust', VARCHAR(length=2048), nullable=False)
 
     # relation definitions
-    # added from the DeclarativeBaseGUID object (as linked from different objects like the slots
+    # added from the DeclarativeBaseGUID object (as linked from different objects like the slots)
     def __repr__(self):
         return "{}/{} from {} [{}]".format(self.recurrence_mult, self.recurrence_period_type,
                                            self.recurrence_period_start, self.recurrence_weekend_adjust)
