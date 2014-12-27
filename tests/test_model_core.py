@@ -1,28 +1,15 @@
-from builtins import object
 # -*- coding: utf-8 -*-
-
-# The parametrize function is generated, so this doesn't work:
-#
-# from pytest.mark import parametrize
-#
+from builtins import object
 import shutil
 import os
-
 import pytest
 
-
-
-
-# parametrize = pytest.mark.parametrize
 from piecash import Transaction, Commodity, open_book, create_book, Account
 from piecash.kvp import Slot
 from piecash._common import GnucashException
 from piecash.core.session import Version, gnclock
 
-
-test_folder = os.path.dirname(os.path.realpath(__file__))
-file_template = os.path.join(test_folder, "empty_book.gnucash")
-file_for_test = os.path.join(test_folder, "empty_book_for_test.gnucash")
+from test_helper import file_template, file_for_test
 
 
 @pytest.fixture

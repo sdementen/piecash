@@ -1,23 +1,16 @@
+# -*- coding: utf-8 -*-
 from builtins import str
 from builtins import object
-# -*- coding: utf-8 -*-
-
-# The parametrize function is generated, so this doesn't work:
-#
-# from pytest.mark import parametrize
-#
 import datetime
-import pytz
 
+import pytz
 from sqlalchemy import create_engine, Column, TEXT
 from sqlalchemy.orm import sessionmaker, composite
-from piecash._common import Address
 
+from piecash._common import Address
 import piecash._common as mc
 from piecash._declbase import DeclarativeBaseGuid
 from piecash.sa_extra import _Date, _DateTime
-
-# parametrize = pytest.mark.parametrize
 
 
 def session():

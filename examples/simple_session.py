@@ -7,6 +7,9 @@ from piecash import open_book, create_book, GnucashException
 FILE_1 = "/tmp/not_there.xac"
 FILE_2 = "/tmp/example_file.xac"
 
+if os.path.exists(FILE_2):
+    os.remove(FILE_2)
+
 # open a file that isn't there, detect the error
 try:
     session = open_book(FILE_1)

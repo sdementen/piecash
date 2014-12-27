@@ -1,10 +1,12 @@
 from __future__ import print_function
 import datetime
 import re
+import os.path
+
 from piecash import Transaction, open_book
 
-
-s = open_book("book.gnucash", open_if_lock=True)
+this_folder = os.path.dirname(os.path.realpath(__file__))
+s = open_book(os.path.join(this_folder,"..","gnucash_books","simple_sample.gnucash"), open_if_lock=True)
 
 regex = re.compile("^/Rental/")
 

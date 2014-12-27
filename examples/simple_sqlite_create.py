@@ -5,6 +5,7 @@
 
 from __future__ import print_function
 import os
+
 from piecash import create_book, Account, Commodity, open_book
 
 filename = os.path.abspath('test.blob')

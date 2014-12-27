@@ -1,37 +1,26 @@
 # -*- coding: utf-8 -*-
-
-# The parametrize function is generated, so this doesn't work:
-#
-# from pytest.mark import parametrize
-#
 from __future__ import print_function
 from __future__ import division
 from builtins import object
-from past.utils import old_div
 import datetime
+from importlib import import_module
 import os
 from decimal import Decimal
-
 import pytest
-
-
-# parametrize = pytest.mark.parametrize
 import shutil
-from piecash import create_book, Account, ACCOUNT_TYPES, open_book, Price, Commodity
+
+from piecash import create_book, Account, ACCOUNT_TYPES, open_book, Price
 from piecash._common import GnucashException
 from piecash.core.account import _is_parent_child_account_types_consistent, root_types
 
-test_folder = os.path.dirname(os.path.realpath(__file__))
-file_template = os.path.join(test_folder, "empty_book.gnucash")
-file_for_test = os.path.join(test_folder, "empty_book_for_test.gnucash")
-file_template_full = os.path.join(test_folder, "test_book.gnucash")
-file_for_test_full = os.path.join(test_folder, "test_book_for_test.gnucash")
+from test_helper import file_template_full, file_for_test_full, test_folder
 
 
 @pytest.fixture
 def session(request):
     s = create_book()
     return s
+
 
 @pytest.fixture
 def realbook_session(request):
@@ -43,7 +32,21 @@ def realbook_session(request):
     request.addfinalizer(lambda: os.remove(file_for_test_full))
     return s
 
+class TestIntegration_ExampleScripts(object):
+    def test_simple_book(self):
+        import examples.simple_book
 
+    def test_filtered_transaction_report(self):
+        import examples.filtered_transaction_report
+
+    def test_simple_session(self):
+        import examples.simple_session
+
+    def test_simple_test(self):
+        import examples.simple_test
+
+    def test_simple_sqlite_create(self):
+        import examples.simple_sqlite_create
 
 class TestIntegration_EmptyBook(object):
     def test_create_access_slots(self, session):
@@ -80,9 +83,9 @@ class TestIntegration_EmptyBook(object):
     def test_empty_gnucash_file(self, session):
         accs = session.accounts
 
-        assert len(accs)==0
+        assert len(accs) == 0
         assert all(acc.parent is None for acc in accs)
-        assert all(acc.account_type=="ROOT" for acc in accs)
+        assert all(acc.account_type == "ROOT" for acc in accs)
 
     def test_is_parent_child_account_types_consistent(self):
         combi_OK = [
@@ -103,10 +106,10 @@ class TestIntegration_EmptyBook(object):
             ("EXPENSE", "ASSET"),
         ]
 
-        for p,c in combi_OK:
+        for p, c in combi_OK:
             assert _is_parent_child_account_types_consistent(p, c)
 
-        for p,c in combi_not_OK:
+        for p, c in combi_not_OK:
             assert not _is_parent_child_account_types_consistent(p, c)
 
     def test_add_account_compatibility(self, session):
@@ -120,11 +123,11 @@ class TestIntegration_EmptyBook(object):
                     with pytest.raises(ValueError):
                         acc2 = Account(name=acc_type2, account_type=acc_type2, parent=acc1, commodity=None)
                 else:
-                   acc2 = Account(name=acc_type2, account_type=acc_type2, parent=acc1, commodity=None)
+                    acc2 = Account(name=acc_type2, account_type=acc_type2, parent=acc1, commodity=None)
 
         session.save()
 
-        assert len(session.accounts)==100
+        assert len(session.accounts) == 100
 
     def test_add_account_names(self, session):
         # raise ValueError as acc1 and acc2 shares same parents with same name
@@ -153,15 +156,15 @@ class TestIntegration_EmptyBook(object):
             print("{}/{} on {} = {} {}".format(price.commodity.namespace,
                                                price.commodity.mnemonic,
                                                price.date,
-                                               float(price.value_num)/price.value_denom,
+                                               float(price.value_num) / price.value_denom,
                                                price.currency.mnemonic,
-                                               ))
+            ))
 
         for account in session.accounts:
             print(account)
 
         # build map between account fullname (e.g. "Assets:Current Assets" and account)
-        map_fullname_account = {account.fullname:account for account in session.query(Account).all()}
+        map_fullname_account = {account.fullname: account for account in session.query(Account).all()}
 
         # use it to retrieve the current assets account
         acc_cur = map_fullname_account["Assets:Current Assets"]

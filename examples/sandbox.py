@@ -2,7 +2,57 @@ from __future__ import print_function
 from decimal import Decimal
 import datetime
 
-from piecash import Commodity, Price, get_active_session, create_book, Account, Transaction, open_book, Split
+
+from piecash import open_book, Transaction, Split
+
+with open_book("../gnucash_books/simple_sample.gnucash", acquire_lock=False, open_if_lock=True) as s:
+    asset = s.accounts.get(name="Asset")
+    expense = s.accounts.get(name="Expense")
+    eur = asset.commodity
+    tr = Transaction(currency=eur,
+                    description="test",
+                    splits=[Split(asset,100),Split(expense,-100)])
+    print(tr)
+dffdsfsd
+
+from piecash import open_book, create_book, ACCOUNT_TYPES, Account, Transaction, Split
+
+# with create_book("all_account_types.gnucash", overwrite=True) as s:
+#     for actype in ACCOUNT_TYPES:
+#         if actype=="ROOT":
+#             continue
+#         acc = Account(name=actype, account_type=actype, parent=s.book.root_account, commodity=s.book.root_account.commodity)
+#     s.save()
+
+with open_book("simple_sample.gnucash", acquire_lock=False, open_if_lock=True) as s:
+    asset = s.accounts.get(name="Asset")
+    expense = s.accounts.get(name="Expense")
+    eur = asset.commodity
+    tr = Transaction(currency=eur,
+                    description="test",
+                    splits=[Split(asset,100),Split(expense,-100)])
+    print(tr)
+    fdsdf
+    for tr in s.transactions:
+        for sp in tr.splits:
+            sp.account = asset
+
+
+
+    fdsfsdfd
+
+    for tr in s.transactions:
+        print(tr)
+        for sp in tr.splits:
+            print("\t", sp)
+
+    for acc in s.accounts:
+        if acc.commodity:
+            print(acc.commodity.base_currency)
+            bal = acc.get_balance()
+            print("{} : {} {}".format(acc.fullname, bal, acc.commodity.mnemonic))
+
+fsdsfsd
 
 
 # with create_book("test_simple_transaction.gnucash",overwrite=True) as s:
