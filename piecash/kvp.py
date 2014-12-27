@@ -71,7 +71,7 @@ class DictWrapper(object):
 
 
     def __getitem__(self, key):
-        keys = key.split("/", maxsplit=1)
+        keys = key.split("/", 1)
         key = keys[0]
         for sl in self.slot_collection:
             if sl.name == key:
@@ -84,7 +84,7 @@ class DictWrapper(object):
             return sl #.value
 
     def __setitem__(self, key, value):
-        keys = key.split("/", maxsplit=1)
+        keys = key.split("/", 1)
         key = keys[0]
         for sl in self.slot_collection:
             if sl.name == key:
@@ -116,7 +116,7 @@ class DictWrapper(object):
             # delete all
             del self.slot_collection[key]
             return
-        keys = key.split("/", maxsplit=1)
+        keys = key.split("/", 1)
         for i, sl in enumerate(self.slot_collection):
             if sl.name == keys[0]:
                 break
