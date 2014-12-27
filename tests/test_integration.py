@@ -33,7 +33,7 @@ def realbook_session(request):
     request.addfinalizer(lambda: os.remove(file_for_test_full))
     return s
 
-class FooTestIntegration_ExampleScripts(object):
+class TestIntegration_ExampleScripts(object):
     def test_simple_book(self):
         import examples.simple_book
         print(examples.simple_book)
