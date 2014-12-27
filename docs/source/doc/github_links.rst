@@ -1,50 +1,50 @@
 Projects per language
 =====================
 
-This page lists all projects found by searching 'gnucash' on github (generated on 2014-12-26 12:45:36)excluding mirrors of the gnucash repository
+This page lists all projects found by searching 'gnucash' on github (generated on 2014-12-27 23:38:11) excluding mirrors of the gnucash repository. Projects with a '\*' are projectsthat have not been updated since 12 months.
 
-+------------------------------+------------------------------+------------------------------+
-|           Language           |        # of projects         |# of projects updated in 2014 |
-+==============================+==============================+==============================+
-|        :ref:`Python`         |              51              |              38              |
-+------------------------------+------------------------------+------------------------------+
-|           :ref:`C`           |              3               |              3               |
-+------------------------------+------------------------------+------------------------------+
-|          :ref:`C#`           |              2               |              2               |
-+------------------------------+------------------------------+------------------------------+
-|          :ref:`C++`          |              2               |              2               |
-+------------------------------+------------------------------+------------------------------+
-|          :ref:`Go`           |              1               |              1               |
-+------------------------------+------------------------------+------------------------------+
-|        :ref:`Groovy`         |              1               |              0               |
-+------------------------------+------------------------------+------------------------------+
-|         :ref:`Java`          |              14              |              7               |
-+------------------------------+------------------------------+------------------------------+
-|      :ref:`JavaScript`       |              7               |              7               |
-+------------------------------+------------------------------+------------------------------+
-|          :ref:`PHP`          |              9               |              7               |
-+------------------------------+------------------------------+------------------------------+
-|         :ref:`Perl`          |              12              |              12              |
-+------------------------------+------------------------------+------------------------------+
-|         :ref:`Ruby`          |              6               |              2               |
-+------------------------------+------------------------------+------------------------------+
-|         :ref:`Scala`         |              2               |              2               |
-+------------------------------+------------------------------+------------------------------+
-|        :ref:`Scheme`         |              3               |              3               |
-+------------------------------+------------------------------+------------------------------+
-|         :ref:`Shell`         |              7               |              5               |
-+------------------------------+------------------------------+------------------------------+
-|          :ref:`Tcl`          |              1               |              1               |
-+------------------------------+------------------------------+------------------------------+
-|           :ref:``            |              11              |              7               |
-+------------------------------+------------------------------+------------------------------+
++--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
+|                     Language                     |                  # of projects                   |     # of projects updated in last 12 months      |
++==================================================+==================================================+==================================================+
+|                  :ref:`Python`                   |                        51                        |                        38                        |
++--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
+|                   :ref:`Perl`                    |                        12                        |                        12                        |
++--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
+|                   :ref:`Java`                    |                        14                        |                        7                         |
++--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
+|                :ref:`JavaScript`                 |                        7                         |                        7                         |
++--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
+|                    :ref:`PHP`                    |                        9                         |                        7                         |
++--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
+|                  :ref:`Unknown`                  |                        11                        |                        7                         |
++--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
+|                   :ref:`Shell`                   |                        7                         |                        5                         |
++--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
+|                     :ref:`C`                     |                        3                         |                        3                         |
++--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
+|                  :ref:`Scheme`                   |                        3                         |                        3                         |
++--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
+|                    :ref:`C#`                     |                        2                         |                        2                         |
++--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
+|                    :ref:`C++`                    |                        2                         |                        2                         |
++--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
+|                   :ref:`Ruby`                    |                        6                         |                        2                         |
++--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
+|                   :ref:`Scala`                   |                        2                         |                        2                         |
++--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
+|                    :ref:`Go`                     |                        1                         |                        1                         |
++--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
+|                    :ref:`Tcl`                    |                        1                         |                        1                         |
++--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
+|                  :ref:`Groovy`                   |                        1                         |                        0                         |
++--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
 
 .. _Python:
 
 Python
 ------
 
-`DnbNor2qif <https://github.com/djiti/DnbNor2qif>`__ by djiti (last updated on  2013-08-26)
+\* `DnbNor2qif <https://github.com/djiti/DnbNor2qif>`__ by djiti (last updated on  2013-08-26)
 	Turning DnbNor CSV files into GNUCash-compatible QIF files
 `Timetracker-to-Gnucash-Invoice <https://github.com/EvansMike/Timetracker-to-Gnucash-Invoice>`__ by EvansMike (last updated on  2014-07-22)
 	Takes Anuko Timetracker data and creates an Invoice in GnuCash
@@ -70,13 +70,11 @@ Python
 	Proyecto que timbra facturas de gnucash por medio de facturacion moderna.
 `gnucash-fiximports <https://github.com/sandeepmukherjee/gnucash-fiximports>`__ by sandeepmukherjee (last updated on  2014-09-08)
 	Change target accounts of imported gnucash transactions
-`gnucash-import <https://github.com/manzato/gnucash-import>`__ by manzato (last updated on  2014-07-15)
-	Imports transactions from a CSV file and places them to the appropriate account depending on a set of rules
 `gnucash-importers <https://github.com/rtucker/gnucash-importers>`__ by rtucker (last updated on  2014-12-07)
 	gnucash importer scripts for Interlock Rochester financial foo
 `gnucash-latex <https://github.com/mwellnitz/gnucash-latex>`__ by mwellnitz (last updated on  2014-11-06)
 	Create good looking invoices for gnucash using latex and python
-`gnucash-ofx-brokerage <https://github.com/7max/gnucash-ofx-brokerage>`__ by 7max (last updated on  2013-10-20)
+\* `gnucash-ofx-brokerage <https://github.com/7max/gnucash-ofx-brokerage>`__ by 7max (last updated on  2013-10-20)
 	GnuCash OFX importer that handles brokerages, ie stocks, mutual funds, optios
 `gnucash-ofx-export <https://github.com/hoffie/gnucash-ofx-export>`__ by hoffie (last updated on  2014-07-13)
 	Selectively export GnuCash transactions into OFX
@@ -86,13 +84,13 @@ Python
 	small set of python scripts to create a qif-file that can be imported to GnuCash
 `gnucash-qif-import <https://github.com/hjacobs/gnucash-qif-import>`__ by hjacobs (last updated on  2014-12-10)
 	GnuCash Python helper script to import transactions from QIF text files into GnuCash's own file format
-`gnucash-rest <https://github.com/loftx/gnucash-rest>`__ by loftx (last updated on  2013-10-30)
+\* `gnucash-rest <https://github.com/loftx/gnucash-rest>`__ by loftx (last updated on  2013-10-30)
 	A Python based REST framework for the Gnucash accounting application
-`gnucash-society <https://github.com/hendrikvanantwerpen/gnucash-society>`__ by hendrikvanantwerpen (last updated on  2013-11-02)
+\* `gnucash-society <https://github.com/hendrikvanantwerpen/gnucash-society>`__ by hendrikvanantwerpen (last updated on  2013-11-02)
 	Support application for societies based on GnuCash
 `gnucash-stock-portfolio <https://github.com/hjacobs/gnucash-stock-portfolio>`__ by hjacobs (last updated on  2014-12-10)
 	GnuCash Python utilities to manage a stock portfolio
-`gnucash-tools <https://github.com/dahnielson/gnucash-tools>`__ by dahnielson (last updated on  2013-11-30)
+\* `gnucash-tools <https://github.com/dahnielson/gnucash-tools>`__ by dahnielson (last updated on  2013-11-30)
 	Tools for working with GnuCash
 `gnucash-toolset <https://github.com/cirrax/gnucash-toolset>`__ by cirrax (last updated on  2014-12-11)
 	Access and manipulate gnucash data.
@@ -100,7 +98,7 @@ Python
 	Utility scripts using GnuCash python bindings
 `gnucash-xml-split <https://github.com/fefe982/gnucash-xml-split>`__ by fefe982 (last updated on  2014-08-26)
 	Split GnuCash XML files into files containing transaction in a certain period (e.g. a year)
-`gnucash2iif <https://github.com/pawl/gnucash2iif>`__ by pawl (last updated on  2013-08-18)
+\* `gnucash2iif <https://github.com/pawl/gnucash2iif>`__ by pawl (last updated on  2013-08-18)
 	Converts a Gnucash general ledger to an IIF file (for quickbooks)
 `gnucash_balance_report <https://github.com/tbhartman/gnucash_balance_report>`__ by tbhartman (last updated on  2014-07-24)
 	get balance report from gnucash file
@@ -108,27 +106,29 @@ Python
 	GnuCash Web Interface using Django.
 `gnucash_explorer <https://github.com/peap/gnucash_explorer>`__ by peap (last updated on  2014-04-27)
 	Another option for exploring your gnucash database
+`gnucash_explorer <https://github.com/peap/gnucash_explorer>`__ by peap (last updated on  2014-04-27)
+	Another option for exploring your gnucash database
 `gnucash_exports <https://github.com/jjuanda/gnucash_exports>`__ by jjuanda (last updated on  2014-01-13)
 	GnuCash export scripts into several DBs/file formats
-`gnucash_ofx <https://github.com/gevious/gnucash_ofx>`__ by gevious (last updated on  2013-12-20)
+\* `gnucash_ofx <https://github.com/gevious/gnucash_ofx>`__ by gevious (last updated on  2013-12-20)
 	Convert gnucash xml file to set of OFX files
 `gnucash_python <https://github.com/davidjo/gnucash_python>`__ by davidjo (last updated on  2014-10-13)
 	gnucash report writing in python
-`gnucash_scripts <https://github.com/vrih/gnucash_scripts>`__ by vrih (last updated on  2013-09-10)
+\* `gnucash_scripts <https://github.com/vrih/gnucash_scripts>`__ by vrih (last updated on  2013-09-10)
 	(No description available)
-`gnucashreports <https://github.com/youngchul/gnucashreports>`__ by youngchul (last updated on  2013-11-29)
+\* `gnucashreports <https://github.com/youngchul/gnucashreports>`__ by youngchul (last updated on  2013-11-29)
 	(No description available)
 `gnucashxml <https://github.com/jorgenschaefer/gnucashxml>`__ by jorgenschaefer (last updated on  2014-08-22)
 	Python library to read GNU Cash XML files
-`hackerspace-gnucash <https://github.com/cvonkleist/hackerspace-gnucash>`__ by cvonkleist (last updated on  2013-10-16)
+\* `hackerspace-gnucash <https://github.com/cvonkleist/hackerspace-gnucash>`__ by cvonkleist (last updated on  2013-10-16)
 	Gainesville Hackerspace GnuCash scripts, etc.
-`ing2gnucash <https://github.com/hjmeijer/ing2gnucash>`__ by hjmeijer (last updated on  2013-10-29)
+\* `ing2gnucash <https://github.com/hjmeijer/ing2gnucash>`__ by hjmeijer (last updated on  2013-10-29)
 	Converts downloaded ING (bank) transaction CSV files to GNUCash importable CSV
 `ing2qif <https://github.com/marijnvriens/ing2qif>`__ by marijnvriens (last updated on  2014-10-17)
 	Import ING bank statements and convert them to qif for importing into gnucash
 `jeffs-gnucash-utils <https://github.com/n1ywb/jeffs-gnucash-utils>`__ by n1ywb (last updated on  2014-09-08)
 	Jeff Laughlin's Python utilities for GnuCash. Includes HTML invoice generator.
-`koert <https://github.com/awesterb/koert>`__ by awesterb (last updated on  2013-10-04)
+\* `koert <https://github.com/awesterb/koert>`__ by awesterb (last updated on  2013-10-04)
 	Toolbox for the inspection of GnuCash files for the kasco7 of Karpe Noktem
 `masin <https://github.com/FelixAkk/masin>`__ by FelixAkk (last updated on  2013-12-28)
 	A rework and GUI wrapping of the gcInvoice Python package for generating template based invoices from .gnucash data files.
@@ -136,7 +136,7 @@ Python
 	mBank transactions history to GnuCash converter
 `ofxstatement <https://github.com/kedder/ofxstatement>`__ by kedder (last updated on  2014-11-12)
 	Tool to convert proprietary bank statement to OFX format, suitable for importing to GnuCash.
-`piecash <https://github.com/sdementen/piecash>`__ by sdementen (last updated on  2014-12-24)
+`piecash <https://github.com/sdementen/piecash>`__ by sdementen (last updated on  2014-12-26)
 	Pythonic interface to GnuCash SQL documents
 `pygnclib <https://github.com/tdf/pygnclib>`__ by tdf (last updated on  2014-05-26)
 	Pyxb-based read and write support for GnuCash XML files
@@ -192,7 +192,7 @@ Go
 Groovy
 ------
 
-`Zio-Antunello <https://github.com/masokotanga/Zio-Antunello>`__ by masokotanga (last updated on  2013-10-13)
+\* `Zio-Antunello <https://github.com/masokotanga/Zio-Antunello>`__ by masokotanga (last updated on  2013-10-13)
 	un gnucash online (?)
 
 .. _Java:
@@ -204,27 +204,27 @@ Java
 	Jasper Budget Report for GnuCash
 `GnuCashBudgetReport <https://github.com/bvitale/GnuCashBudgetReport>`__ by bvitale (last updated on  2014-04-18)
 	A budget report for GnuCash data that is stored in MySQL.
-`GnuCashToQIF <https://github.com/davidkgerman/GnuCashToQIF>`__ by davidkgerman (last updated on  2013-11-29)
+\* `GnuCashToQIF <https://github.com/davidkgerman/GnuCashToQIF>`__ by davidkgerman (last updated on  2013-11-29)
 	(No description available)
 `GnuCashViewer <https://github.com/jrmcsoftware/GnuCashViewer>`__ by jrmcsoftware (last updated on  2014-03-03)
 	GnuCash Viewer
-`androidcash <https://github.com/mbarbon/androidcash>`__ by mbarbon (last updated on  2013-09-29)
+\* `androidcash <https://github.com/mbarbon/androidcash>`__ by mbarbon (last updated on  2013-09-29)
 	Simple Android GnuCash companion
 `gnc4a <https://github.com/bwduncan/gnc4a>`__ by bwduncan (last updated on  2014-11-22)
 	GnuCash Companion for Android is an mobile application for devices running Google’s Android operating system, which will enable the users of GnuCash to do small things like adding a transaction or creating an invoice or expense voucher on the go.
-`gnc4a <https://github.com/glennji/gnc4a>`__ by glennji (last updated on  2013-10-20)
+\* `gnc4a <https://github.com/glennji/gnc4a>`__ by glennji (last updated on  2013-10-20)
 	Gnucash for Android
 `gnucash-android <https://github.com/codinguser/gnucash-android>`__ by codinguser (last updated on  2014-12-26)
 	Gnucash for Android mobile companion application. 
-`gnucashMobile <https://github.com/nhrdl/gnucashMobile>`__ by nhrdl (last updated on  2013-10-19)
+\* `gnucashMobile <https://github.com/nhrdl/gnucashMobile>`__ by nhrdl (last updated on  2013-10-19)
 	(No description available)
-`javacash <https://github.com/nhrdl/javacash>`__ by nhrdl (last updated on  2013-08-09)
+\* `javacash <https://github.com/nhrdl/javacash>`__ by nhrdl (last updated on  2013-08-09)
 	Yet another implementation of gnucash in Java
 `jgnash-converter <https://github.com/kmbnw/jgnash-converter>`__ by kmbnw (last updated on  2014-05-08)
 	A tool to convert from JGnash account XML files to other formats such as GnuCash.  Still in development; right now it just prints the accounts and transaction info to the screen.
-`jgnucashlib <https://github.com/tdf/jgnucashlib>`__ by tdf (last updated on  2013-09-28)
+\* `jgnucashlib <https://github.com/tdf/jgnucashlib>`__ by tdf (last updated on  2013-09-28)
 	jGnucashLib - a java access to GnuCash files
-`nordea-to-gnucash <https://github.com/mohamedamer/nordea-to-gnucash>`__ by mohamedamer (last updated on  2013-12-08)
+\* `nordea-to-gnucash <https://github.com/mohamedamer/nordea-to-gnucash>`__ by mohamedamer (last updated on  2013-12-08)
 	(No description available)
 `workspace_gnucash <https://github.com/won21kr1/workspace_gnucash>`__ by won21kr1 (last updated on  2014-04-16)
 	(No description available)
@@ -260,11 +260,11 @@ PHP
 	Webinterface für gnucash-Datenbank mit Funktion zum Verifizieren von Buchungen
 `cashonline-php-server <https://github.com/okovalov/cashonline-php-server>`__ by okovalov (last updated on  2014-10-07)
 	Backend part for cashonline project (clone of gnucash)
-`gnucash-htdocs <https://github.com/sss/gnucash-htdocs>`__ by sss (last updated on  2013-12-15)
+\* `gnucash-htdocs <https://github.com/sss/gnucash-htdocs>`__ by sss (last updated on  2013-12-15)
 	Gnucash Website
 `gnucash-php <https://github.com/cebe/gnucash-php>`__ by cebe (last updated on  2014-08-04)
 	A library for reading gnucash XML format in PHP
-`gnucash-tools <https://github.com/cccmzwi/gnucash-tools>`__ by cccmzwi (last updated on  2013-12-16)
+\* `gnucash-tools <https://github.com/cccmzwi/gnucash-tools>`__ by cccmzwi (last updated on  2013-12-16)
 	Convert your onlinebanking-export (CSV) to a neatly pre-categorized QIF-File which can be imported in Quicken or Gnucash
 `gnucash.cakephp <https://github.com/claudineimatos/gnucash.cakephp>`__ by claudineimatos (last updated on  2014-06-25)
 	(No description available)
@@ -308,15 +308,15 @@ Perl
 Ruby
 ----
 
-`accounting <https://github.com/freegeek-pdx/accounting>`__ by freegeek-pdx (last updated on  2013-12-04)
+\* `accounting <https://github.com/freegeek-pdx/accounting>`__ by freegeek-pdx (last updated on  2013-12-04)
 	accounting utilities for xtuple import and allocation in xtuple and gnucash
 `gnucash-invoice <https://github.com/ixti/gnucash-invoice>`__ by ixti (last updated on  2014-12-02)
 	Easy to use invoice printer for GnuCash.
-`gnucash-rb <https://github.com/vbatts/gnucash-rb>`__ by vbatts (last updated on  2013-09-18)
+\* `gnucash-rb <https://github.com/vbatts/gnucash-rb>`__ by vbatts (last updated on  2013-09-18)
 	Ruby access to Gnucash SQL database
-`gnucash2ledger <https://github.com/xaviershay/gnucash2ledger>`__ by xaviershay (last updated on  2013-12-23)
+\* `gnucash2ledger <https://github.com/xaviershay/gnucash2ledger>`__ by xaviershay (last updated on  2013-12-23)
 	Convert GnuCash files to a format supported by the ledger command line application
-`gnucash_export <https://github.com/alibby/gnucash_export>`__ by alibby (last updated on  2013-12-01)
+\* `gnucash_export <https://github.com/alibby/gnucash_export>`__ by alibby (last updated on  2013-12-01)
 	Export gnucash data to sqlite/ csv
 `ruby-gnucash <https://github.com/holtrop/ruby-gnucash>`__ by holtrop (last updated on  2014-11-10)
 	Ruby library for extracting data from GnuCash data files
@@ -348,11 +348,11 @@ Scheme
 Shell
 -----
 
-`LittleBudget <https://github.com/kstripp/LittleBudget>`__ by kstripp (last updated on  2013-09-30)
+\* `LittleBudget <https://github.com/kstripp/LittleBudget>`__ by kstripp (last updated on  2013-09-30)
 	Little Budget Tool for GNUCash
 `archlinux-gnucash-latest <https://github.com/nengxu/archlinux-gnucash-latest>`__ by nengxu (last updated on  2014-12-21)
 	Archlinux AUR package building scripts for latest Gnucash
-`gnucash-docs <https://github.com/sss/gnucash-docs>`__ by sss (last updated on  2013-12-25)
+\* `gnucash-docs <https://github.com/sss/gnucash-docs>`__ by sss (last updated on  2013-12-25)
 	Manual and User Guide for Gnucash, the open-source accounting program
 `gnucash-on-osx <https://github.com/jralls/gnucash-on-osx>`__ by jralls (last updated on  2014-12-21)
 	Build GnuCash on OSX without X11
@@ -376,13 +376,13 @@ Tcl
 Unknown
 -------
 
-`GCtranslate <https://github.com/AshokR/GCtranslate>`__ by AshokR (last updated on  2013-06-15)
+\* `GCtranslate <https://github.com/AshokR/GCtranslate>`__ by AshokR (last updated on  2013-06-15)
 	GnuCash Translation
-`GnuCash-3part-check <https://github.com/agh1/GnuCash-3part-check>`__ by agh1 (last updated on  2013-10-17)
+\* `GnuCash-3part-check <https://github.com/agh1/GnuCash-3part-check>`__ by agh1 (last updated on  2013-10-17)
 	A 3-part check format for GnuCash
 `accounting <https://github.com/communotey/accounting>`__ by communotey (last updated on  2014-05-18)
 	Accounting for Communote, using GNUCash
-`an-gnucash <https://github.com/wanjing/an-gnucash>`__ by wanjing (last updated on  2013-01-11)
+\* `an-gnucash <https://github.com/wanjing/an-gnucash>`__ by wanjing (last updated on  2013-01-11)
 	android app for gnucash
 `gnucash-api <https://github.com/jjuanda/gnucash-api>`__ by jjuanda (last updated on  2014-02-02)
 	REST APIs for GnuCash files
@@ -396,6 +396,6 @@ Unknown
 	Haskell xml library for parsing the gnucash file format
 `nordea-csv2qif <https://github.com/martinolsen/nordea-csv2qif>`__ by martinolsen (last updated on  2014-06-11)
 	Convert Nordea CSV exports to QIF format (usable by GnuCash and others)
-`rabo2qif <https://github.com/milovanderlinden/rabo2qif>`__ by milovanderlinden (last updated on  2013-12-13)
+\* `rabo2qif <https://github.com/milovanderlinden/rabo2qif>`__ by milovanderlinden (last updated on  2013-12-13)
 	export mut.txt to qif for gnucash
 

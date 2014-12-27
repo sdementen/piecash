@@ -84,24 +84,22 @@ class DictWrapper(object):
             return sl #.value
 
     def __setitem__(self, key, value):
-        print("setitem", self, key)
         keys = key.split("/", maxsplit=1)
         key = keys[0]
         for sl in self.slot_collection:
             if sl.name == key:
                 break
         else:
-            if isinstance(self, SlotFrame):
-                name = self._name + "/" + key
-            else:
-                name = key
             # new key
             if len(keys)>1:
-                sf = SlotFrame(name=name)
+                if isinstance(self, SlotFrame):
+                    sf = SlotFrame(name= self._name + "/" + key)
+                else:
+                    sf = SlotFrame(name= key)
                 sf[keys[1]] = value
                 self.slot_collection.append(sf)
             else:
-                self.slot_collection.append(slot(name=name, value=value))
+                self.slot_collection.append(slot(parent=self, name=key, value=value))
 
             return
         if len(keys)>1:
@@ -120,7 +118,7 @@ class DictWrapper(object):
             return
         keys = key.split("/", maxsplit=1)
         for i, sl in enumerate(self.slot_collection):
-            if sl.name == key[0]:
+            if sl.name == keys[0]:
                 break
         else:
             raise KeyError("No slot exists with name '{}'".format(key))
@@ -155,11 +153,7 @@ class Slot(DeclarativeBase):
 
     @name.setter
     def name(self, value):
-        print(self, self.parent, value)
-        if self.parent:
-            self._name = self.parent._name + "/" + value
-        else:
-            self._name = value
+        self._name = value
 
     id = Column('id', INTEGER(), primary_key=True, nullable=False)
     obj_guid = Column('obj_guid', VARCHAR(length=32), nullable=False, index=True)
@@ -171,7 +165,6 @@ class Slot(DeclarativeBase):
 
     def __repr__(self):
         return "<{} {}={}>".format(self.__class__.__name__, self.name, self.value)
-        return "<slot {}={} ({}) -> {}>".format(self.name, self.value, self.slot_type, self.obj_guid)
 
 
 class SlotSimple(Slot):
@@ -275,8 +268,7 @@ class SlotFrame(DictWrapper, Slot):
 
     @value.setter
     def value(self, value):
-        print("setting value", self, value)
-        self.slot_collection = [slot(name=k, value=v) for k, v in value.items()]
+        self.slot_collection = [slot(parent=self, name=k, value=v) for k, v in value.items()]
 
 
     def __init__(self, **kwargs):
@@ -306,7 +298,10 @@ def get_all_subclasses(cls):
     return all_subclasses
 
 
-def slot(name, value):
+def slot(parent, name, value):
+    if isinstance(parent, SlotFrame):
+        name = parent._name + "/" + name
+
     # handle datetime before others (as otherwise can be mixed with date)
     if isinstance(value, datetime.datetime):
         return SlotTime(name=name, value=value)
@@ -317,10 +312,9 @@ def slot(name, value):
 
     if isinstance(value, dict):
         # transform a dict to Frame/Slots
-        print("slot frame for {}".format(name))
         sf = SlotFrame(name=name)
         for k, v in value.items():
-            sl = slot(name=k, value=v)
+            sl = slot(parent=sf, name=k, value=v)
             # sl.obj_guid = sf.guid_val
             sl.parent = sf
         return sf

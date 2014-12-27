@@ -93,7 +93,7 @@ class TestIntegration_EmptyBook(object):
         session.sa_session.flush()
         assert b["a"]["b"]["c"]["d"]["e"].value==1
 
-        # b["a/b/c"] = {"d": {"t":"ko"}}
+        b["a/b/c"] = {"d": {"t":"ok"}}
 
         b["a/b/c/d/f"] = "2"
         session.sa_session.flush()
@@ -103,11 +103,12 @@ class TestIntegration_EmptyBook(object):
         assert b["a"]["b/c"]["d"]["f"].value == "5"
 
         for k, v in b["a/b/c/d"].iteritems():
-            assert k=="e" or k=="f"
-        assert b["a/b/c/d"].get("e", "hello")==1
+            assert k=="f" or k=="t"
+        print(b.slots)
+        assert b["a/b/c/d"].get("t", "hello")=="ok"
         assert b["a/b/c/d"].get("not there", "hello")=="hello"
 
-        del b["a/b/c/d/e"]
+        del b["a/b/c/d/t"]
         assert repr(b["a"])=="<SlotFrame a={'b': {'c': {'d': {'f': '5'}}}}>"
 
         with pytest.raises(TypeError):
@@ -115,7 +116,7 @@ class TestIntegration_EmptyBook(object):
         with pytest.raises(TypeError):
             b["a/b/c"] = True
 
-        assert {n for (n,) in session.sa_session.query(Slot._name)} == {'a' ,'a/b','a/b/c','a/b/c/d','a/b/c/d/e','a/b/c/d/f'}
+        assert {n for (n,) in session.sa_session.query(Slot._name)} == {'a' ,'a/b','a/b/c','a/b/c/d','a/b/c/d/t','a/b/c/d/f'}
 
 
         # delete some elements
@@ -133,6 +134,11 @@ class TestIntegration_EmptyBook(object):
         del b["a"]["b"]
         session.sa_session.flush()
         assert len(b["a"].slot_collection)==0
+
+        with pytest.raises(ValueError):
+            b["a/n"] = b
+        with pytest.raises(KeyError):
+            del b["a/n"]
 
         del b[:]
         session.sa_session.flush()
