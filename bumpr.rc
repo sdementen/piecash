@@ -20,9 +20,10 @@ message = Prepare version {version} for next development cycle
 
 [changelog]
 file = CHANGELOG.rst
-bump = {version} ({date:%Y-%m-%d})
 prepare = In development
+separator = ~
+bump = Version {version} ({date:%Y-%m-%d})
+empty = Empty
 
 [readthedoc]
 id = piecash
-
