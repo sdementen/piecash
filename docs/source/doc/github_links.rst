@@ -1,12 +1,12 @@
 Projects per language
 =====================
 
-This page lists all projects found by searching 'gnucash' on github (generated on 2014-12-27 23:38:11) excluding mirrors of the gnucash repository. Projects with a '\*' are projectsthat have not been updated since 12 months.
+This page lists all projects found by searching 'gnucash' on github (generated on 2014-12-28 23:01:40) excluding mirrors of the gnucash repository. Projects with a '\*' are projectsthat have not been updated since 12 months.
 
 +--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
 |                     Language                     |                  # of projects                   |     # of projects updated in last 12 months      |
 +==================================================+==================================================+==================================================+
-|                  :ref:`Python`                   |                        51                        |                        38                        |
+|                  :ref:`Python`                   |                        51                        |                        39                        |
 +--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
 |                   :ref:`Perl`                    |                        12                        |                        12                        |
 +--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
@@ -44,14 +44,12 @@ This page lists all projects found by searching 'gnucash' on github (generated o
 Python
 ------
 
-\* `DnbNor2qif <https://github.com/djiti/DnbNor2qif>`__ by djiti (last updated on  2013-08-26)
-	Turning DnbNor CSV files into GNUCash-compatible QIF files
-`Timetracker-to-Gnucash-Invoice <https://github.com/EvansMike/Timetracker-to-Gnucash-Invoice>`__ by EvansMike (last updated on  2014-07-22)
-	Takes Anuko Timetracker data and creates an Invoice in GnuCash
 `alchemy <https://github.com/zmoog/alchemy>`__ by zmoog (last updated on  2014-03-06)
 	A very simple Gnucash-inspired web application
 `django-openbudget <https://github.com/evandavey/django-openbudget>`__ by evandavey (last updated on  2014-07-31)
 	Simple django-based personal budgeting app that sources data from GNUCash sqlite data files
+\* `DnbNor2qif <https://github.com/djiti/DnbNor2qif>`__ by djiti (last updated on  2013-08-26)
+	Turning DnbNor CSV files into GNUCash-compatible QIF files
 `dropcopy <https://github.com/juniorbl/dropcopy>`__ by juniorbl (last updated on  2014-06-10)
 	A simple tool for GNOME to copy a given GnuCash file to a local dropbox directory whenever it is saved.
 `ebay2gnucash <https://github.com/EvansMike/ebay2gnucash>`__ by EvansMike (last updated on  2014-09-30)
@@ -70,6 +68,8 @@ Python
 	Proyecto que timbra facturas de gnucash por medio de facturacion moderna.
 `gnucash-fiximports <https://github.com/sandeepmukherjee/gnucash-fiximports>`__ by sandeepmukherjee (last updated on  2014-09-08)
 	Change target accounts of imported gnucash transactions
+`gnucash-import <https://github.com/manzato/gnucash-import>`__ by manzato (last updated on  2014-07-15)
+	Imports transactions from a CSV file and places them to the appropriate account depending on a set of rules
 `gnucash-importers <https://github.com/rtucker/gnucash-importers>`__ by rtucker (last updated on  2014-12-07)
 	gnucash importer scripts for Interlock Rochester financial foo
 `gnucash-latex <https://github.com/mwellnitz/gnucash-latex>`__ by mwellnitz (last updated on  2014-11-06)
@@ -106,8 +106,6 @@ Python
 	GnuCash Web Interface using Django.
 `gnucash_explorer <https://github.com/peap/gnucash_explorer>`__ by peap (last updated on  2014-04-27)
 	Another option for exploring your gnucash database
-`gnucash_explorer <https://github.com/peap/gnucash_explorer>`__ by peap (last updated on  2014-04-27)
-	Another option for exploring your gnucash database
 `gnucash_exports <https://github.com/jjuanda/gnucash_exports>`__ by jjuanda (last updated on  2014-01-13)
 	GnuCash export scripts into several DBs/file formats
 \* `gnucash_ofx <https://github.com/gevious/gnucash_ofx>`__ by gevious (last updated on  2013-12-20)
@@ -136,12 +134,14 @@ Python
 	mBank transactions history to GnuCash converter
 `ofxstatement <https://github.com/kedder/ofxstatement>`__ by kedder (last updated on  2014-11-12)
 	Tool to convert proprietary bank statement to OFX format, suitable for importing to GnuCash.
-`piecash <https://github.com/sdementen/piecash>`__ by sdementen (last updated on  2014-12-26)
+`piecash <https://github.com/sdementen/piecash>`__ by sdementen (last updated on  2014-12-28)
 	Pythonic interface to GnuCash SQL documents
 `pygnclib <https://github.com/tdf/pygnclib>`__ by tdf (last updated on  2014-05-26)
 	Pyxb-based read and write support for GnuCash XML files
 `pygnucash <https://github.com/MatzeB/pygnucash>`__ by MatzeB (last updated on  2014-11-16)
 	Python code to read gnucash 2.6 sqlite3 files
+`Timetracker-to-Gnucash-Invoice <https://github.com/EvansMike/Timetracker-to-Gnucash-Invoice>`__ by EvansMike (last updated on  2014-07-22)
+	Takes Anuko Timetracker data and creates an Invoice in GnuCash
 `tws-gnucash <https://github.com/timwswanson/tws-gnucash>`__ by timwswanson (last updated on  2014-03-29)
 	(No description available)
 `visa-parser <https://github.com/pguridi/visa-parser>`__ by pguridi (last updated on  2014-01-08)
@@ -152,32 +152,32 @@ Python
 C
 -
 
-`Lekhapala <https://github.com/kgrama/Lekhapala>`__ by kgrama (last updated on  2014-10-12)
-	Personal accounting software that borrows features from gnucash and kmymoney
 `gnucash-aqplus <https://github.com/jhs-s/gnucash-aqplus>`__ by jhs-s (last updated on  2014-05-02)
 	Usually contains some fixes for aqbanking for GnuCash
 `gnucash-svn <https://github.com/cstim/gnucash-svn>`__ by cstim (last updated on  2014-04-14)
 	another clone of gnucash, but this time not using github's clone, and therefore keeping the svn metadata
+`Lekhapala <https://github.com/kgrama/Lekhapala>`__ by kgrama (last updated on  2014-10-12)
+	Personal accounting software that borrows features from gnucash and kmymoney
 
 .. _C#:
 
 C#
 --
 
-`GnuCashReporter <https://github.com/Ettery/GnuCashReporter>`__ by Ettery (last updated on  2014-11-18)
-	(No description available)
 `gnucash2ledger-cli <https://github.com/marek-g/gnucash2ledger-cli>`__ by marek-g (last updated on  2014-08-05)
 	Gnucash (general ledger html report) to ledger-cli converter.
+`GnuCashReporter <https://github.com/Ettery/GnuCashReporter>`__ by Ettery (last updated on  2014-11-18)
+	(No description available)
 
 .. _C++:
 
 C++
 ---
 
-`UnderBudget <https://github.com/vimofthevine/UnderBudget>`__ by vimofthevine (last updated on  2014-10-03)
-	Advanced personal budget analysis application that integrates with GnuCash, Quicken, mint.com, etc.
 `gnucash-butchered <https://github.com/iulianu/gnucash-butchered>`__ by iulianu (last updated on  2014-10-23)
 	My own butchered version of Gnucash
+`UnderBudget <https://github.com/vimofthevine/UnderBudget>`__ by vimofthevine (last updated on  2014-10-03)
+	Advanced personal budget analysis application that integrates with GnuCash, Quicken, mint.com, etc.
 
 .. _Go:
 
@@ -200,24 +200,24 @@ Groovy
 Java
 ----
 
-`BudgetReportGnuCash <https://github.com/martinlong1978/BudgetReportGnuCash>`__ by martinlong1978 (last updated on  2014-04-23)
-	Jasper Budget Report for GnuCash
-`GnuCashBudgetReport <https://github.com/bvitale/GnuCashBudgetReport>`__ by bvitale (last updated on  2014-04-18)
-	A budget report for GnuCash data that is stored in MySQL.
-\* `GnuCashToQIF <https://github.com/davidkgerman/GnuCashToQIF>`__ by davidkgerman (last updated on  2013-11-29)
-	(No description available)
-`GnuCashViewer <https://github.com/jrmcsoftware/GnuCashViewer>`__ by jrmcsoftware (last updated on  2014-03-03)
-	GnuCash Viewer
 \* `androidcash <https://github.com/mbarbon/androidcash>`__ by mbarbon (last updated on  2013-09-29)
 	Simple Android GnuCash companion
+`BudgetReportGnuCash <https://github.com/martinlong1978/BudgetReportGnuCash>`__ by martinlong1978 (last updated on  2014-04-23)
+	Jasper Budget Report for GnuCash
 `gnc4a <https://github.com/bwduncan/gnc4a>`__ by bwduncan (last updated on  2014-11-22)
 	GnuCash Companion for Android is an mobile application for devices running Google’s Android operating system, which will enable the users of GnuCash to do small things like adding a transaction or creating an invoice or expense voucher on the go.
 \* `gnc4a <https://github.com/glennji/gnc4a>`__ by glennji (last updated on  2013-10-20)
 	Gnucash for Android
 `gnucash-android <https://github.com/codinguser/gnucash-android>`__ by codinguser (last updated on  2014-12-26)
 	Gnucash for Android mobile companion application. 
+`GnuCashBudgetReport <https://github.com/bvitale/GnuCashBudgetReport>`__ by bvitale (last updated on  2014-04-18)
+	A budget report for GnuCash data that is stored in MySQL.
 \* `gnucashMobile <https://github.com/nhrdl/gnucashMobile>`__ by nhrdl (last updated on  2013-10-19)
 	(No description available)
+\* `GnuCashToQIF <https://github.com/davidkgerman/GnuCashToQIF>`__ by davidkgerman (last updated on  2013-11-29)
+	(No description available)
+`GnuCashViewer <https://github.com/jrmcsoftware/GnuCashViewer>`__ by jrmcsoftware (last updated on  2014-03-03)
+	GnuCash Viewer
 \* `javacash <https://github.com/nhrdl/javacash>`__ by nhrdl (last updated on  2013-08-09)
 	Yet another implementation of gnucash in Java
 `jgnash-converter <https://github.com/kmbnw/jgnash-converter>`__ by kmbnw (last updated on  2014-05-08)
@@ -254,8 +254,6 @@ JavaScript
 PHP
 ---
 
-`GnuCashPHP <https://github.com/mrBussy/GnuCashPHP>`__ by mrBussy (last updated on  2014-10-03)
-	(No description available)
 `buchungen <https://github.com/jungepiraten/buchungen>`__ by jungepiraten (last updated on  2014-12-04)
 	Webinterface für gnucash-Datenbank mit Funktion zum Verifizieren von Buchungen
 `cashonline-php-server <https://github.com/okovalov/cashonline-php-server>`__ by okovalov (last updated on  2014-10-07)
@@ -267,6 +265,8 @@ PHP
 \* `gnucash-tools <https://github.com/cccmzwi/gnucash-tools>`__ by cccmzwi (last updated on  2013-12-16)
 	Convert your onlinebanking-export (CSV) to a neatly pre-categorized QIF-File which can be imported in Quicken or Gnucash
 `gnucash.cakephp <https://github.com/claudineimatos/gnucash.cakephp>`__ by claudineimatos (last updated on  2014-06-25)
+	(No description available)
+`GnuCashPHP <https://github.com/mrBussy/GnuCashPHP>`__ by mrBussy (last updated on  2014-10-03)
 	(No description available)
 `gnucashreports <https://github.com/pedroabel/gnucashreports>`__ by pedroabel (last updated on  2014-08-04)
 	Set of custom reports that I use for my personal finances. To see the reports working on a sample database, check the website http://gnucashreports.comuf.com/ ATTENTION: many problems yet. Many bugs that did not happen in my computer happened in this sample server.
@@ -280,14 +280,6 @@ Perl
 
 `Finance--Quote--YahooJapan <https://github.com/LiosK/Finance--Quote--YahooJapan>`__ by LiosK (last updated on  2014-09-08)
 	A Perl module that enables GnuCash to get quotes of Japanese stocks and funds from Yahoo! JAPAN.
-`GnuCash-SQLite <https://github.com/hoekit/GnuCash-SQLite>`__ by hoekit (last updated on  2014-11-15)
-	A perl module to access GnuCash SQLite files.
-`MoneyDance-GnuCash-Importer <https://github.com/ets/MoneyDance-GnuCash-Importer>`__ by ets (last updated on  2014-12-06)
-	Script to convert GnuCash data into a native MoneyDance XML file format
-`MumbaiStock <https://github.com/geetuvaswani/MumbaiStock>`__ by geetuvaswani (last updated on  2014-09-09)
-	Perl Module to fetch Bombay Stock Exchange bhavcopy for Indian Stocks for use with gnucash
-`Paypal-csv-to-qif-converter <https://github.com/sonologic/Paypal-csv-to-qif-converter>`__ by sonologic (last updated on  2014-09-08)
-	Converts paypal .csv to qif for importing in gnucash
 `finance-bomse <https://github.com/abhijit86k/finance-bomse>`__ by abhijit86k (last updated on  2014-09-09)
 	A Perl module for fetching quotes for Indian stocks, intended for use with gnucash
 `gc2latex <https://github.com/wertarbyte/gc2latex>`__ by wertarbyte (last updated on  2014-09-08)
@@ -296,8 +288,16 @@ Perl
 	Import CSV data from arbitrary bank format to CSV acceptable by GnuCash
 `gnucash-perl <https://github.com/goblin/gnucash-perl>`__ by goblin (last updated on  2014-09-08)
 	Perl modules for reading and writing the Gnucash XML file
+`GnuCash-SQLite <https://github.com/hoekit/GnuCash-SQLite>`__ by hoekit (last updated on  2014-11-15)
+	A perl module to access GnuCash SQLite files.
 `gnucash2mysql <https://github.com/xaprb/gnucash2mysql>`__ by xaprb (last updated on  2014-09-09)
 	Gnucash to MySQL export script.
+`MoneyDance-GnuCash-Importer <https://github.com/ets/MoneyDance-GnuCash-Importer>`__ by ets (last updated on  2014-12-06)
+	Script to convert GnuCash data into a native MoneyDance XML file format
+`MumbaiStock <https://github.com/geetuvaswani/MumbaiStock>`__ by geetuvaswani (last updated on  2014-09-09)
+	Perl Module to fetch Bombay Stock Exchange bhavcopy for Indian Stocks for use with gnucash
+`Paypal-csv-to-qif-converter <https://github.com/sonologic/Paypal-csv-to-qif-converter>`__ by sonologic (last updated on  2014-09-08)
+	Converts paypal .csv to qif for importing in gnucash
 `perl-gnucash-reader <https://github.com/hoekit/perl-gnucash-reader>`__ by hoekit (last updated on  2014-09-09)
 	(No description available)
 `tikzdipa <https://github.com/vimdude/tikzdipa>`__ by vimdude (last updated on  2014-12-21)
@@ -348,8 +348,6 @@ Scheme
 Shell
 -----
 
-\* `LittleBudget <https://github.com/kstripp/LittleBudget>`__ by kstripp (last updated on  2013-09-30)
-	Little Budget Tool for GNUCash
 `archlinux-gnucash-latest <https://github.com/nengxu/archlinux-gnucash-latest>`__ by nengxu (last updated on  2014-12-21)
 	Archlinux AUR package building scripts for latest Gnucash
 \* `gnucash-docs <https://github.com/sss/gnucash-docs>`__ by sss (last updated on  2013-12-25)
@@ -360,6 +358,8 @@ Shell
 	Support scripts to build gnucash for Windows using mingw32.
 `gnucash-on-windows <https://github.com/gjanssens/gnucash-on-windows>`__ by gjanssens (last updated on  2014-09-09)
 	Support scripts to build gnucash for Windows using mingw32.
+\* `LittleBudget <https://github.com/kstripp/LittleBudget>`__ by kstripp (last updated on  2013-09-30)
+	Little Budget Tool for GNUCash
 `nordea2ofx <https://github.com/nsrosenqvist/nordea2ofx>`__ by nsrosenqvist (last updated on  2014-10-24)
 	A quick implementation of a converter between Nordea's CSV export to OFX so that it can be imported into various applications, such as Homebank or GnuCash. Only supporting Swedish and my edge cases, please consider improving the script and send a pull request for the changes.
 
@@ -376,14 +376,14 @@ Tcl
 Unknown
 -------
 
-\* `GCtranslate <https://github.com/AshokR/GCtranslate>`__ by AshokR (last updated on  2013-06-15)
-	GnuCash Translation
-\* `GnuCash-3part-check <https://github.com/agh1/GnuCash-3part-check>`__ by agh1 (last updated on  2013-10-17)
-	A 3-part check format for GnuCash
 `accounting <https://github.com/communotey/accounting>`__ by communotey (last updated on  2014-05-18)
 	Accounting for Communote, using GNUCash
 \* `an-gnucash <https://github.com/wanjing/an-gnucash>`__ by wanjing (last updated on  2013-01-11)
 	android app for gnucash
+\* `GCtranslate <https://github.com/AshokR/GCtranslate>`__ by AshokR (last updated on  2013-06-15)
+	GnuCash Translation
+\* `GnuCash-3part-check <https://github.com/agh1/GnuCash-3part-check>`__ by agh1 (last updated on  2013-10-17)
+	A 3-part check format for GnuCash
 `gnucash-api <https://github.com/jjuanda/gnucash-api>`__ by jjuanda (last updated on  2014-02-02)
 	REST APIs for GnuCash files
 `gnucash-export <https://github.com/deonbredenhann/gnucash-export>`__ by deonbredenhann (last updated on  2014-06-19)

@@ -25,5 +25,7 @@ class Book(DeclarativeBaseGuid):
     #: the root template account of the book (usage not yet clear...)
     root_template = relation('Account', foreign_keys=[root_template_guid])
 
-
+    def __init__(self, root_account, root_template):
+        self.root_account=root_account
+        self.root_template=root_template
 

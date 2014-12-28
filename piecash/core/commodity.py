@@ -86,7 +86,7 @@ class Commodity(DeclarativeBaseGuid):
 
     # column definitions
     cusip = Column('cusip', VARCHAR(length=2048))
-    fraction = Column('fraction', INTEGER(), nullable=False, default=100)
+    fraction = Column('fraction', INTEGER(), nullable=False)
     fullname = Column('fullname', VARCHAR(length=2048))
     mnemonic = Column('mnemonic', VARCHAR(length=2048), nullable=False)
     namespace = Column('namespace', VARCHAR(length=2048), nullable=False)
@@ -125,6 +125,28 @@ class Commodity(DeclarativeBaseGuid):
 
     # relation definitions
 
+    def __init__(self,
+                 namespace,
+                 mnemonic,
+                 fullname,
+                 fraction=100,
+                 cusip="",
+                 quote_flag=0,
+                 quote_source=None,
+                 quote_tz=None):
+
+        if quote_source==None:
+            quote_source = "currency" if namespace=="CURRENCY" else "yahoo"
+
+        self.namespace=namespace
+        self.mnemonic=mnemonic
+        self.fullname=fullname
+        self.fraction=fraction
+        self.cusip=cusip
+        self.quote_flag=quote_flag
+        self.quote_source=quote_source
+        self.quote_tz=quote_tz
+
     def __repr__(self):
         return "Commodity<{}:{}>".format(self.namespace, self.mnemonic)
 
@@ -152,7 +174,6 @@ class Commodity(DeclarativeBaseGuid):
                                cusip=cur.cusip,
                                namespace="CURRENCY",
                                quote_flag=1,
-                               quote_source="currency"
                     )
             else:
                 raise ValueError("Could not find the ISO code '{}' in the ISO table".format(iso_code))
@@ -191,7 +212,6 @@ class Commodity(DeclarativeBaseGuid):
                        cusip=cusip,
                        namespace="CURRENCY",
                        quote_flag=1,
-                       quote_source="currency"
             )
 
     @classmethod
@@ -223,7 +243,6 @@ class Commodity(DeclarativeBaseGuid):
                              fraction=10000,
                              namespace=symbol_info.StockExchange.upper(),
                              quote_flag=1,
-                             quote_source="yahoo"
             )
             stock["quoted_currency"] = symbol_info.Currency
             return stock

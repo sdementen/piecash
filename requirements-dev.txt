@@ -25,3 +25,4 @@ Pygments==1.6
 Paver==1.2.1
 colorama==0.2.7
 bumpr
+requests

@@ -28,6 +28,7 @@ Unofficial projects related to GnuCash
 --------------------------------------
 
 .. toctree::
+   :maxdepth: 1
 
    ./github_links.rst
 
