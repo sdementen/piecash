@@ -13,6 +13,7 @@ files = README.rst
 [bump]
 unsuffix = true
 message = Bump version {version}
+commit=true
 
 [prepare]
 suffix = dev
