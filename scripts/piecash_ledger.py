@@ -13,8 +13,6 @@ if sys.version_info.major==2:
 else:
     out = sys.stdout
 
-if True:
-    sys.argv.append("../gnucash_books/simple_sample_new.gnucash")
 if len(sys.argv) == 1:
     sys.stderr.write("Invocation: {} gnucash_filename\n".format(sys.argv[0]))
     sys.exit(1)
