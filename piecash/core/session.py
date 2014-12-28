@@ -166,7 +166,7 @@ class GncSession(object):
         """
         from .account import Account
 
-        return CallableList(self.sa_session.query(Account).filter(Account.account_type!='ROOT'))
+        return CallableList(self.sa_session.query(Account).filter(Account.type!='ROOT'))
 
     @property
     def commodities(self):
@@ -177,6 +177,16 @@ class GncSession(object):
         from .commodity import Commodity
 
         return CallableList(self.sa_session.query(Commodity))
+
+    @property
+    def prices(self):
+        """
+        gives easy access to all commodities in the document through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.core.commodity.Commodity`
+        """
+        from .commodity import Price
+
+        return CallableList(self.sa_session.query(Price))
 
     @property
     def query(self):
@@ -289,9 +299,9 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
     # create Book and initial accounts
     from .account import Account
 
-    b = Book(root_account=Account(name="Root Account", account_type="ROOT",
+    b = Book(root_account=Account(name="Root Account", type="ROOT",
                                   commodity=Commodity.create_currency_from_ISO(currency)),
-             root_template=Account(name="Template Root", account_type="ROOT", commodity=None),
+             root_template=Account(name="Template Root", type="ROOT", commodity=None),
     )
     s.add(b)
     s.commit()

@@ -11,7 +11,7 @@ import shutil
 
 from piecash import create_book, Account, ACCOUNT_TYPES, open_book, Price
 from piecash._common import GnucashException
-from piecash.core.account import _is_parent_child_account_types_consistent, root_types
+from piecash.core.account import _is_parent_child_types_consistent, root_types
 from piecash.kvp import Slot
 
 from test_helper import file_template_full, file_for_test_full, test_folder
@@ -151,9 +151,9 @@ class TestIntegration_EmptyBook(object):
 
         assert len(accs) == 0
         assert all(acc.parent is None for acc in accs)
-        assert all(acc.account_type == "ROOT" for acc in accs)
+        assert all(acc.type == "ROOT" for acc in accs)
 
-    def test_is_parent_child_account_types_consistent(self):
+    def test_is_parent_child_types_consistent(self):
         combi_OK = [
             ("ROOT", "BANK"),
             (None, "ROOT"),
@@ -173,23 +173,23 @@ class TestIntegration_EmptyBook(object):
         ]
 
         for p, c in combi_OK:
-            assert _is_parent_child_account_types_consistent(p, c)
+            assert _is_parent_child_types_consistent(p, c)
 
         for p, c in combi_not_OK:
-            assert not _is_parent_child_account_types_consistent(p, c)
+            assert not _is_parent_child_types_consistent(p, c)
 
     def test_add_account_compatibility(self, session):
         # test compatibility between child account and parent account
         for acc_type1 in ACCOUNT_TYPES - root_types:
-            acc1 = Account(name=acc_type1, account_type=acc_type1, parent=session.book.root_account, commodity=None)
+            acc1 = Account(name=acc_type1, type=acc_type1, parent=session.book.root_account, commodity=None)
 
             for acc_type2 in ACCOUNT_TYPES:
 
-                if not _is_parent_child_account_types_consistent(acc_type1, acc_type2):
+                if not _is_parent_child_types_consistent(acc_type1, acc_type2):
                     with pytest.raises(ValueError):
-                        acc2 = Account(name=acc_type2, account_type=acc_type2, parent=acc1, commodity=None)
+                        acc2 = Account(name=acc_type2, type=acc_type2, parent=acc1, commodity=None)
                 else:
-                    acc2 = Account(name=acc_type2, account_type=acc_type2, parent=acc1, commodity=None)
+                    acc2 = Account(name=acc_type2, type=acc_type2, parent=acc1, commodity=None)
 
         session.save()
 
@@ -197,14 +197,14 @@ class TestIntegration_EmptyBook(object):
 
     def test_add_account_names(self, session):
         # raise ValueError as acc1 and acc2 shares same parents with same name
-        acc1 = Account(name="Foo", account_type="MUTUAL", parent=session.book.root_account, commodity=None)
-        acc2 = Account(name="Foo", account_type="BANK", parent=session.book.root_account, commodity=None)
+        acc1 = Account(name="Foo", type="MUTUAL", parent=session.book.root_account, commodity=None)
+        acc2 = Account(name="Foo", type="BANK", parent=session.book.root_account, commodity=None)
         with pytest.raises(ValueError):
             session.save()
         session.sa_session.rollback()
         # ok as same name but different parents
-        acc3 = Account(name="Fooz", account_type="BANK", parent=session.book.root_account, commodity=None)
-        acc4 = Account(name="Fooz", account_type="BANK", parent=acc3, commodity=None)
+        acc3 = Account(name="Fooz", type="BANK", parent=session.book.root_account, commodity=None)
+        acc4 = Account(name="Fooz", type="BANK", parent=acc3, commodity=None)
         session.save()
         # raise ValueError as now acc4 and acc3 shares same parents with same name
         acc4.parent = acc3.parent
@@ -239,7 +239,7 @@ class TestIntegration_EmptyBook(object):
         EUR = session.commodities.get(mnemonic='EUR')
 
         # add a new subaccount to this account of type ASSET with currency EUR
-        Account(name="new savings account", account_type="ASSET", parent=acc_cur, commodity=EUR)
+        Account(name="new savings account", type="ASSET", parent=acc_cur, commodity=EUR)
 
         # save changes
         with pytest.raises(GnucashException) as excinfo:

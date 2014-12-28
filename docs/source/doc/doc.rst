@@ -141,7 +141,7 @@ or to create a new expense account for utilities:
     acc_exp = session.accounts.get(fullname="Expenses:Utilities")
 
     # add a new subaccount to this account of type EXPENSE with currency EUR
-    new_acc = piecash.Account(name="Cable", account_type="EXPENSE", parent=acc_exp, commodity=EUR)
+    new_acc = piecash.Account(name="Cable", type="EXPENSE", parent=acc_exp, commodity=EUR)
 
     # save changes (it should raise an exception if we opened the book as readonly)
     session.save()

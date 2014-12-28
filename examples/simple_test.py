@@ -14,15 +14,15 @@ with create_book(FILE_1, overwrite=True) as session:
     cad = Commodity.create_currency_from_ISO("CAD")
     expenses_acct = Account(parent=root_acct,
                             name="Expenses",
-                            account_type="EXPENSE",
+                            type="EXPENSE",
                             commodity=cad)
     savings_acct = Account(parent=root_acct,
                            name="Savings",
-                           account_type="BANK",
+                           type="BANK",
                            commodity=cad)
     opening_acct = Account(parent=root_acct,
                            name="Opening Balance",
-                           account_type="EQUITY",
+                           type="EQUITY",
                            commodity=cad)
     num1 = Decimal("4")
     num2 = Decimal("100")

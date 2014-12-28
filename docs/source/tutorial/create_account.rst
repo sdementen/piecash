@@ -11,14 +11,14 @@ piecash easily create new accounts (a :class:`piecash.core.account.Account`)::
 
         # creating a placeholder account
         acc = Account(name="My account",
-                      account_type="ASSET",
+                      type="ASSET",
                       parent=s.book.root_account,
                       commodity=EUR,
                       placeholder=True,)
 
         # creating a detailed sub-account
         subacc = Account(name="My sub account",
-                         account_type="BANK",
+                         type="BANK",
                          parent=acc,
                          commodity=EUR,
                          commodity_scu=1000,

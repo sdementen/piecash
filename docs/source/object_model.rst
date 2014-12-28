@@ -130,7 +130,7 @@ An account tracks some commodity for some business purpose. Changes in the commo
 Fields
 ~~~~~~
 
-account_type (mandatory)
+type (mandatory)
   the type of the account as string
 
 commodity (mandatory)
@@ -162,14 +162,14 @@ hidden
 Invariant
 ~~~~~~~~~
  - if placeholder, no Splits can refer to account
- - only two accounts can have account_type ROOT (the root_account and the root_template of the book)
+ - only two accounts can have type ROOT (the root_account and the root_template of the book)
 
 
 Questions
 ~~~~~~~~~
  - changing the placeholder status of an account with splits in gnucash does not trigger any warning, is it normal ?
    is the placeholder flag just informative (or used for reporting)  ?
- - are there any constrains on the account_type of an account wrt account_type of its parent ?
+ - are there any constrains on the type of an account wrt type of its parent ?
 
 .. _Transaction:
 

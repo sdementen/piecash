@@ -13,7 +13,7 @@ filename = os.path.abspath('test.blob')
 with create_book(filename) as s:
     a = Account(parent=s.book.root_account,
                 name="wow",
-                account_type="ASSET",
+                type="ASSET",
                 commodity=Commodity.create_currency_from_ISO("CAD"))
 
     s.save()

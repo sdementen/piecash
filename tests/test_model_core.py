@@ -117,7 +117,7 @@ class TestModelCore_EmptyBook(object):
 # class TestModelCore_CreateObjects(object):
 #     def test_accounts(self, session):
 #         # two accounts in an empty gnucash file
-#         # Account(account_type=)
+#         # Account(type=)
 #         account_names = session.query(Account.name).all()
 #
 #         assert set(account_names) == {(u'Template Root',),

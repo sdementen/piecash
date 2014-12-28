@@ -266,7 +266,7 @@ class Transaction(DeclarativeBaseGuid):
                     acc = Account(name=imb_acc_name,
                                   parent=book.root_account,
                                   commodity=c,
-                                  account_type="BANK")
+                                  type="BANK")
 
                 Split(value=-imbalance,
                       quantity=-imbalance,

@@ -26,7 +26,7 @@ Accessing the book (:class:`piecash.core.book.Book`) and the accounts (:class:`p
         print("Account name={acc.name}\n"
               "        commodity={acc.commodity.namespace}/{acc.commodity.mnemonic}\n"
               "        fullname={acc.fullname}\n"
-              "        type={acc.account_type}".format(acc=acc))
+              "        type={acc.type}".format(acc=acc))
 
         # accessing all splits related to an account
         for sp in acc.splits:
@@ -39,8 +39,8 @@ You can get the first element of any list like attribute that match some attribu
     acc = root.children.get(name="Asset")
     assert acc.name == "Asset"
 
-    acc = root.children.get(account_type="ASSET")
-    assert acc.account_type == "ASSET"
+    acc = root.children.get(type="ASSET")
+    assert acc.type == "ASSET"
 
 The list of all accounts in the book can be retrieved via the ``accounts`` attribute::
 

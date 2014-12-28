@@ -266,8 +266,8 @@ setup_dict = dict(
         'pytest',
         'mock',
         'py',
-    ]
-    ,
+    ],
+    scripts=['scripts/piecash_ledger.py'],
     cmdclass={'test': TestAllCommand},
     zip_safe=False,  # don't use eggs
 )

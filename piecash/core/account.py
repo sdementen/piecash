@@ -28,7 +28,7 @@ positive_types = asset_types | expense_types | trading_types
 negative_types = liability_types | income_types | equity_types
 
 
-def _is_parent_child_account_types_consistent(account_type_parent, account_type_child):
+def _is_parent_child_types_consistent(type_parent, type_child):
     """
     Return True if the child account is consistent with the parent account in terms of types, i.e.:
 
@@ -37,20 +37,20 @@ def _is_parent_child_account_types_consistent(account_type_parent, account_type_
     3) both parent and child are of the same family (asset, equity, income&expense, trading)
 
     Arguments
-        account_type_parent(str): the type of the parent account
-        account_type_child(str):  the type of the child account
+        type_parent(str): the type of the parent account
+        type_child(str):  the type of the child account
 
     Returns
         True if both accounts are consistent, False otherwise
     """
-    if account_type_parent in root_types:
-        return account_type_child in (ACCOUNT_TYPES - root_types)
+    if type_parent in root_types:
+        return type_child in (ACCOUNT_TYPES - root_types)
 
-    if account_type_child in root_types:
-        return account_type_parent is None
+    if type_child in root_types:
+        return type_parent is None
 
     for acc_types in (assetliab_types, equity_types, incexp_types, trading_types):
-        if (account_type_child in acc_types) and (account_type_parent in acc_types):
+        if (type_child in acc_types) and (type_parent in acc_types):
             return True
 
     return False
@@ -61,7 +61,7 @@ class Account(DeclarativeBaseGuid):
     A GnuCash Account which is specified by its name, type and commodity.
 
     Attributes:
-        account_type (str): type of the Account
+        type (str): type of the Account
         code (str): code of the Account
         commodity (:class:`piecash.core.commodity.Commodity`): the commodity of the account
         commodity_scu (int): smallest currency unit for the account
@@ -80,7 +80,7 @@ class Account(DeclarativeBaseGuid):
 
     # column definitions
     guid = Column('guid', VARCHAR(length=32), primary_key=True, nullable=False, default=lambda: uuid.uuid4().hex)
-    account_type = Column('account_type', VARCHAR(length=2048), nullable=False)
+    type = Column('account_type', VARCHAR(length=2048), nullable=False)
     code = Column('code', VARCHAR(length=2048))
     commodity_guid = Column('commodity_guid', VARCHAR(length=32), ForeignKey('commodities.guid'))
     _commodity_scu = Column('commodity_scu', INTEGER(), nullable=False)
@@ -131,7 +131,7 @@ class Account(DeclarativeBaseGuid):
 
     def __init__(self,
                  name,
-                 account_type,
+                 type,
                  commodity,
                  parent=None,
                  description=None,
@@ -141,7 +141,7 @@ class Account(DeclarativeBaseGuid):
                  code=None):
         self.name = name
         self.commodity = commodity
-        self.account_type = account_type
+        self.type = type
         self.parent = parent
         self.description = description
         self.hidden = hidden
@@ -164,24 +164,24 @@ class Account(DeclarativeBaseGuid):
         return value
 
 
-    @validates('account_type', 'parent')
-    def validate_account_type(self, key, value):
+    @validates('type', 'parent')
+    def validate_type(self, key, value):
         """
         Ensure the account type is consistent
         """
-        if key == "account_type":
+        if key == "type":
             if value not in ACCOUNT_TYPES:
                 raise ValueError("Account_type '{}' is not in {}".format(value, ACCOUNT_TYPES))
 
             if self.parent:
-                if not _is_parent_child_account_types_consistent(self.parent.account_type, value):
-                    raise ValueError("Child account_type '{}' is not consistent with parent account_type {}".format(
-                        value, self.parent.account_type))
+                if not _is_parent_child_types_consistent(self.parent.type, value):
+                    raise ValueError("Child type '{}' is not consistent with parent type {}".format(
+                        value, self.parent.type))
 
-        if (key == "parent") and value and self.account_type:
-            if not _is_parent_child_account_types_consistent(value.account_type, self.account_type):
-                raise ValueError("Child account_type '{}' is not consistent with parent account_type {}".format(
-                    self.account_type, value.account_type))
+        if (key == "parent") and value and self.type:
+            if not _is_parent_child_types_consistent(value.type, self.type):
+                raise ValueError("Child type '{}' is not consistent with parent type {}".format(
+                    self.type, value.type))
 
         return value
 
@@ -214,7 +214,7 @@ class Account(DeclarativeBaseGuid):
         Returns
             the balance of the account
         """
-        return sum([sp.value for sp in self.splits]) * (-1 if self.account_type in negative_types else 1)
+        return sum([sp.value for sp in self.splits]) * (-1 if self.type in negative_types else 1)
 
 
     def __repr__(self):

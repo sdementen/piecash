@@ -25,7 +25,7 @@ A simple example:
     from piecash import create_book, Account
     # create a new account
     with create_book("my_new_book.gnucash") as s:
-        acc = Account(name="Income", parent=s.book.root_account, account_type="INCOME")
+        acc = Account(name="Income", parent=s.book.root_account, type="INCOME")
         s.save()
 
 The project documentation is available on http://piecash.readthedocs.org.
