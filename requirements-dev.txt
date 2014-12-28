@@ -5,6 +5,7 @@
 pytest==2.5.1
 py==1.4.19
 mock==1.0.1
+tox
 
 # Linting
 flake8==2.1.0
