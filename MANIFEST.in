@@ -18,3 +18,8 @@ include requirements-dev.txt
 include requirements.txt
 include setup.py
 include tox.ini
+
+# include examples
+include gnucash_books/*
+include scipts/*
+include examples/*

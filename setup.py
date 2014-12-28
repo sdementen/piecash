@@ -39,6 +39,7 @@ sys.path.append('.')
 CODE_DIRECTORY = 'piecash'
 DOCS_DIRECTORY = 'docs'
 TESTS_DIRECTORY = 'tests'
+DATA_DIRECTORY = 'gnucash_books'
 PYTEST_FLAGS = ['--doctest-modules']
 
 # Import metadata. Normally this would just be:
@@ -252,7 +253,7 @@ setup_dict = dict(
         'Topic :: Office/Business :: Financial :: Accounting',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
-    packages=find_packages(exclude=(TESTS_DIRECTORY,)),
+    packages=find_packages(exclude=(TESTS_DIRECTORY,DATA_DIRECTORY)),
     install_requires=[
                          'SQLAlchemy',
                          'enum34',

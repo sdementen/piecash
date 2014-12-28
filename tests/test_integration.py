@@ -14,7 +14,7 @@ from piecash._common import GnucashException
 from piecash.core.account import _is_parent_child_types_consistent, root_types
 from piecash.kvp import Slot
 
-from test_helper import file_template_full, file_for_test_full, test_folder
+from test_helper import file_template_full, file_for_test_full, test_folder, run_file
 
 
 @pytest.fixture
@@ -35,24 +35,19 @@ def realbook_session(request):
 
 class TestIntegration_ExampleScripts(object):
     def test_simple_book(self):
-        import examples.simple_book
-        print(examples.simple_book)
+        run_file("examples/simple_book.py")
 
     def test_filtered_transaction_report(self):
-        import examples.filtered_transaction_report
-        print(examples.filtered_transaction_report)
+        run_file("examples/filtered_transaction_report.py")
 
     def test_simple_session(self):
-        import examples.simple_session
-        print(examples.simple_session)
+        run_file("examples/simple_session.py")
 
     def test_simple_test(self):
-        import examples.simple_test
-        print(examples.simple_test)
+        run_file("examples/simple_test.py")
 
     def test_simple_sqlite_create(self):
-        import examples.simple_sqlite_create
-        print(examples.simple_sqlite_create)
+        run_file("examples/simple_sqlite_create.py")
 
 class TestIntegration_EmptyBook(object):
     def test_slots_create_access(self, session):

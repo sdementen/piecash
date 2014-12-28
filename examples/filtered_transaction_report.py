@@ -3,29 +3,33 @@ import datetime
 import re
 import os.path
 
-from piecash import Transaction, open_book
+from piecash import open_book
 
-this_folder = os.path.dirname(os.path.realpath(__file__))
-s = open_book(os.path.join(this_folder,"..","gnucash_books","simple_sample.gnucash"), open_if_lock=True)
 
-regex = re.compile("^/Rental/")
+if __name__=='__main__':
+    this_folder = os.path.dirname(os.path.realpath(__file__))
+    s = open_book(os.path.join(this_folder, "..", "gnucash_books", "simple_sample.gnucash"), open_if_lock=True)
+else:
+    s = open_book(os.path.join("gnucash_books", "simple_sample.gnucash"), open_if_lock=True)
+
+regex_filter = re.compile("^/Rental/")
 
 # retrieve relevant transactions
 transactions = [tr for tr in s.transactions  # query all transactions in the book/session and filter them on
-                if (regex.search(tr.description)                            # description field matching regex
-                    or any(regex.search(spl.memo) for spl in tr.splits))    # or memo field of any split of transaction
-                and tr.post_date.date() >= datetime.date(2014, 11, 1)]      # and with post_date no later than begin nov.
+                if (regex_filter.search(tr.description)  # description field matching regex
+                    or any(regex_filter.search(spl.memo) for spl in tr.splits))  # or memo field of any split of transaction
+                and tr.post_date.date() >= datetime.date(2014, 11, 1)]  # and with post_date no later than begin nov.
 
 
 # output report with simple 'print'
-print("Here are the transactions for the search criteria '{}':".format(regex.pattern))
+print("Here are the transactions for the search criteria '{}':".format(regex_filter.pattern))
 for tr in transactions:
     print("- {:%Y/%m/%d} : {}".format(tr.post_date, tr.description))
     for spl in tr.splits:
         print("\t{amount}  {direction}  {account} : {memo}".format(amount=abs(spl.value),
-                                                                 direction="-->" if spl.value > 0 else "<--",
-                                                                 account=spl.account.fullname(),
-                                                                 memo=spl.memo))
+                                                                   direction="-->" if spl.value > 0 else "<--",
+                                                                   account=spl.account.fullname(),
+                                                                   memo=spl.memo))
 
 # same with jinja2 templates
 try:
@@ -45,4 +49,4 @@ if jinja2:
       {% endfor %}
     {% endfor %}
     """).render(transactions=transactions,
-                regex=regex))
+                regex=regex_filter))
