@@ -11,9 +11,9 @@ clean =
 files = README.rst
 
 [bump]
-unsuffix = true
+unsuffix = True
 message = Bump version {version}
-commit=true
+commit=True
 
 [prepare]
 suffix = dev
