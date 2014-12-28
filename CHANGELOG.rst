@@ -1,8 +1,8 @@
 Changelog
 =========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.4.5 (2014-12-28)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - test version ...
 
