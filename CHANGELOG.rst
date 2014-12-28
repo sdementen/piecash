@@ -1,8 +1,8 @@
 Changelog
 =========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.4.4 (2014-12-28)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - fix bug in piecash_ledger (remove testing code)
 - improve documentation of core objects
