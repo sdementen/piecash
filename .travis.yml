@@ -13,3 +13,4 @@ deploy:
   on:
     tags: true
     repo: sdementen/piecash
+    all_branches: true
