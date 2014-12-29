@@ -93,7 +93,9 @@ def hybrid_property_gncnumeric(num_col, denom_col):
 
     def fget(self):
         num, denom = getattr(self, num_name), getattr(self, denom_name)
-        if num:
+        if num is None:
+            return
+        else:
             return Decimal(num) / denom
 
 

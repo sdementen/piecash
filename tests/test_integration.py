@@ -34,6 +34,9 @@ def realbook_session(request):
     return s
 
 class TestIntegration_ExampleScripts(object):
+    def test_simple_move_split(self):
+        run_file("examples/simple_move_split.py")
+
     def test_simple_book(self):
         run_file("examples/simple_book.py")
 

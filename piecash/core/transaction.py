@@ -97,7 +97,7 @@ class Split(DeclarativeBaseGuid):
     # relation definitions
     account = relation('Account', backref=backref('splits',
                                                   cascade='all, delete-orphan',
-                                                  collection_class=CallableList,
+                                                  # collection_class=CallableList,
     ))
 
     lot = relation('Lot', backref=backref('splits',
@@ -230,7 +230,7 @@ class Transaction(DeclarativeBaseGuid):
 
     @validates("currency")
     def validate_currency(self, key, value):
-        if value and value.namespace!="CURRENCY":
+        if value is not None and value.namespace!="CURRENCY":
             raise GncValidationError("You are assigning a non currency commodity to a transaction")
         return value
 

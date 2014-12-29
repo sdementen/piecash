@@ -3,6 +3,7 @@ python:
 - '3.4'
 - '3.3'
 - '2.7'
+- '2.6'
 install: pip install -r requirements-dev.txt
 script: python setup.py test
 deploy:
@@ -11,6 +12,7 @@ deploy:
   password:
     secure: kIW3wjCwmXVO5XyCU9SjT4NZxAcq/9XBjHKN5HuD8ACZzlaqxU3UI8YKTE3O8XFNaT56/6bySLDrR83O4+s7bcIW/tWacky5PqKSkTuYhyQfnggHn4EQC5iDBSYYONPIBwIMb28pCLps3HMAT2F868iGHpFge7hr+YQBwZ5O1Io=
   on:
-    tags: true
     repo: sdementen/piecash
-    all_branches: true
+    tags: true
+    all_branches: master
+    condition: $PYTHON_VERSION=3.4
