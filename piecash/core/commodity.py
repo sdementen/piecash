@@ -5,9 +5,9 @@ from xml.etree import ElementTree
 import datetime
 
 from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT
-from sqlalchemy.orm import relation, backref
+from sqlalchemy.orm import relation
 
-from .._common import GnucashException,hybrid_property_gncnumeric
+from .._common import GnucashException, hybrid_property_gncnumeric
 from .._declbase import DeclarativeBaseGuid
 from .._common import CallableList
 from ..sa_extra import _DateTime
@@ -60,6 +60,64 @@ def quandl_fx(fx_mnemonic, base_mnemonic, start_date):
     return [qdl_result(*v) for v in rows]
 
 
+class Price(DeclarativeBaseGuid):
+    """
+    A single Price for a commodity.
+
+    Attributes:
+        commodity (:class:`Commodity`): commodity to which the Price relates
+        currency (:class:`Commodity`): currency in which the Price is expressed
+        date (:class:`datetime.datetime`): datetime object representing the time at which the price is relevant
+        source (str): source of the price
+        type (str): last, ask, bid, unknown, nav
+        value (:class:`decimal.Decimal`): the price itself
+    """
+    __tablename__ = 'prices'
+
+    __table_args__ = {}
+
+    # column definitions
+    commodity_guid = Column('commodity_guid', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
+    currency_guid = Column('currency_guid', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
+    date = Column('date', _DateTime, nullable=False)
+    source = Column('source', VARCHAR(length=2048))
+    type = Column('type', VARCHAR(length=2048))
+
+    _value_denom = Column('value_denom', BIGINT(), nullable=False)
+    _value_num = Column('value_num', BIGINT(), nullable=False)
+    value = hybrid_property_gncnumeric(_value_num, _value_denom)
+
+    # relation definitions
+    commodity = relation('Commodity',
+                         back_populates="prices",
+                         foreign_keys=[commodity_guid],
+    )
+    currency = relation('Commodity',
+                        foreign_keys=[currency_guid],
+    )
+
+    def __init__(self,
+                 commodity,
+                 currency,
+                 date,
+                 value,
+                 type=None,
+                 source="piecash"):
+        self.commodity = commodity
+        self.currency = currency
+        assert isinstance(date, datetime.datetime)
+        self.date = date
+        self.value = value
+        self.type = type
+        self.source = source
+
+    def __repr__(self):
+        return "<Price {:%Y-%m-%d} : {} {}/{}>".format(self.date,
+                                                       self.value,
+                                                       self.currency.mnemonic,
+                                                       self.commodity.mnemonic)
+
+
 class Commodity(DeclarativeBaseGuid):
     """
     A GnuCash Commodity.
@@ -77,6 +135,8 @@ class Commodity(DeclarativeBaseGuid):
           - if the commodity is a currency, returns the "default currency" of the book (ie the one of the root_account)
           - if the commodity is not a currency, returns the currency encoded in the quoted_currency slot
 
+        accounts (list of :class:`piecash.core.account.Account`): list of accounts which have the commodity as commodity
+        transactions (list of :class:`piecash.core.transaction.Transaction`): list of transactions which have the commodity as currency
         prices (iterator of :class:`Price`): iterator on prices related to the commodity (it is a sqlalchemy query underneath)
 
     """
@@ -98,6 +158,7 @@ class Commodity(DeclarativeBaseGuid):
     def base_currency(self):
         from .book import Book
         from .account import Account
+
         s = self.get_session()
         if s is None:
             raise GnucashException("The commodity should be link to a session to have a 'base_currency'")
@@ -108,7 +169,7 @@ class Commodity(DeclarativeBaseGuid):
             if base_currency:
                 return base_currency
             # otherwise, assume it is the commodity of the first account with a commodity ever created
-            return s.query(Account).filter(Account.commodity!=None).first().commodity
+            return s.query(Account).filter(Account.commodity != None).first().commodity
         else:
             # retrieve currency from cusip field or from the web (as fallback)
             mnemonic = self.get("quoted_currency", None)
@@ -124,6 +185,23 @@ class Commodity(DeclarativeBaseGuid):
 
 
     # relation definitions
+    accounts = relation('Account',
+                        back_populates='commodity',
+                        cascade='all, delete-orphan',
+                        collection_class=CallableList)
+    transactions = relation('Transaction',
+                            back_populates='currency',
+                            cascade='all, delete-orphan',
+                            collection_class=CallableList,
+    )
+    prices = relation("Price",
+                      back_populates='commodity',
+                      foreign_keys=[Price.commodity_guid],
+                      cascade='all, delete-orphan',
+                      collection_class=CallableList,
+                      lazy="dynamic",
+    )
+
 
     def __init__(self,
                  namespace,
@@ -135,17 +213,17 @@ class Commodity(DeclarativeBaseGuid):
                  quote_source=None,
                  quote_tz=None):
 
-        if quote_source==None:
-            quote_source = "currency" if namespace=="CURRENCY" else "yahoo"
+        if quote_source == None:
+            quote_source = "currency" if namespace == "CURRENCY" else "yahoo"
 
-        self.namespace=namespace
-        self.mnemonic=mnemonic
-        self.fullname=fullname
-        self.fraction=fraction
-        self.cusip=cusip
-        self.quote_flag=quote_flag
-        self.quote_source=quote_source
-        self.quote_tz=quote_tz
+        self.namespace = namespace
+        self.mnemonic = mnemonic
+        self.fullname = fullname
+        self.fraction = fraction
+        self.cusip = cusip
+        self.quote_flag = quote_flag
+        self.quote_source = quote_source
+        self.quote_tz = quote_tz
 
     def __repr__(self):
         return "Commodity<{}:{}>".format(self.namespace, self.mnemonic)
@@ -239,16 +317,15 @@ class Commodity(DeclarativeBaseGuid):
         symbol_info = run_yql(yql, scalar=True)
         if symbol_info.StockExchange:
             stock = Commodity(mnemonic=symbol_info.Symbol,
-                             fullname=symbol_info.Name,
-                             fraction=10000,
-                             namespace=symbol_info.StockExchange.upper(),
-                             quote_flag=1,
+                              fullname=symbol_info.Name,
+                              fraction=10000,
+                              namespace=symbol_info.StockExchange.upper(),
+                              quote_flag=1,
             )
             stock["quoted_currency"] = symbol_info.Currency
             return stock
         else:
             raise GncCommodityError("Can't find information on symbol '{}'".format(symbol))
-
 
 
     def update_prices(self, start_date=None):
@@ -285,12 +362,12 @@ class Commodity(DeclarativeBaseGuid):
 
             # through Quandl for exchange rates
             quotes = quandl_fx(self.mnemonic, default_currency.mnemonic, start_date)
-
             for q in quotes:
-                Price(commodity=self,
-                      currency=default_currency,
-                      date=datetime.datetime.strptime(q.date, "%Y-%m-%d"),
-                      value=str(q.rate))
+                p = Price(commodity=self,
+                          currency=default_currency,
+                          date=datetime.datetime.strptime(q.date, "%Y-%m-%d"),
+                          value=str(q.rate))
+                print(p)
         else:
             symbol = self.mnemonic
             default_currency = self.base_currency
@@ -358,58 +435,3 @@ class Commodity(DeclarativeBaseGuid):
                 Account(symbol, "INCOME", cur, div)
 
 
-class Price(DeclarativeBaseGuid):
-    """
-    A single Price for a commodity.
-
-    Attributes:
-        commodity (:class:`Commodity`): commodity to which the Price relates
-        currency (:class:`Commodity`): currency in which the Price is expressed
-        date (:class:`datetime.datetime`): datetime object representing the time at which the price is relevant
-        source (str): source of the price
-        type (str): last, ask, bid, unknown, nav
-        value (:class:`decimal.Decimal`): the price itself
-    """
-    __tablename__ = 'prices'
-
-    __table_args__ = {}
-
-    # column definitions
-    commodity_guid = Column('commodity_guid', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
-    currency_guid = Column('currency_guid', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
-    date = Column('date', _DateTime, nullable=False)
-    source = Column('source', VARCHAR(length=2048))
-    type = Column('type', VARCHAR(length=2048))
-
-    _value_denom = Column('value_denom', BIGINT(), nullable=False)
-    _value_num = Column('value_num', BIGINT(), nullable=False)
-    value = hybrid_property_gncnumeric(_value_num, _value_denom)
-
-    # relation definitions
-
-    commodity = relation('Commodity', foreign_keys=[commodity_guid], backref=backref("prices",
-                                                                                     cascade='all, delete-orphan',
-                                                                                     collection_class=CallableList,
-                                                                                     lazy="dynamic"))
-    currency = relation('Commodity', foreign_keys=[currency_guid])
-
-    def __init__(self,
-                 commodity,
-                 currency,
-                 date,
-                 value,
-                 type=None,
-                 source="piecash"):
-        self.commodity = commodity
-        self.currency = currency
-        assert isinstance(date, datetime.datetime)
-        self.date = date
-        self.value = value
-        self.type = type
-        self.source = source
-
-    def __repr__(self):
-        return "<Price {:%Y-%m-%d} : {} {}/{}>".format(self.date,
-                                                      self.value,
-                                                      self.currency.mnemonic,
-                                                      self.commodity.mnemonic)

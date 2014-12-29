@@ -3,7 +3,7 @@ import datetime
 
 from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, event
 
-from sqlalchemy.orm import relation, backref, validates
+from sqlalchemy.orm import relation, validates
 from sqlalchemy.orm.base import instance_state
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -63,7 +63,7 @@ class Split(DeclarativeBaseGuid):
     Attributes:
         transaction(:class:`piecash.core.transaction.Transaction`): transaction of the split
         account(:class:`piecash.core.account.Account`): account of the split
-        lot(str): lot to which the split pertains
+        lot(:class:`piecash.business.Lot`): lot to which the split pertains
         memo(str): memo of the split
         value(:class:`decimal.Decimal`): amount express in the currency of the transaction of the split
         quantity(:class:`decimal.Decimal`): amount express in the commodity of the account of the split
@@ -96,15 +96,9 @@ class Split(DeclarativeBaseGuid):
     value = hybrid_property_gncnumeric(_value_num, _value_denom)
 
     # relation definitions
-    account = relation('Account', backref=backref('splits',
-                                                  cascade='all, delete-orphan',
-                                                  # collection_class=CallableList,
-    ))
-
-    lot = relation('Lot', backref=backref('splits',
-                                          cascade='all, delete-orphan',
-                                          collection_class=CallableList,
-    ))
+    account = relation('Account', back_populates='splits')
+    lot = relation('Lot', back_populates='splits')
+    transaction = relation('Transaction', back_populates='splits')
 
     def __init__(self,
                  account=None,
@@ -205,24 +199,22 @@ class Transaction(DeclarativeBaseGuid):
     post_date = mapped_to_slot_property(_post_date, slot_name="date-posted",
                                         slot_transform=lambda x: x.date() if x else None)
 
-    splits = relation(Split,
-                      backref=backref('transaction'),
+    # relation definitions
+    currency = relation('Commodity',
+                        back_populates='transactions',
+    )
+    splits = relation('Split',
+                      back_populates="transaction",
                       single_parent=True,
                       cascade='all, delete-orphan',
                       collection_class=CallableList,
     )
 
 
-    # relation definitions
-    currency = relation('Commodity', backref=backref('transactions',
-                                                     cascade='all, delete-orphan',
-                                                     collection_class=CallableList,
-    ))
-
     def __init__(self,
                  currency,
                  description="",
-                 splits=[],
+                 splits=None,
                  enter_date=None,
                  post_date=None,
                  num="",
@@ -230,10 +222,11 @@ class Transaction(DeclarativeBaseGuid):
         self.currency = currency
         self.description = description
         self.enter_date = enter_date if enter_date else datetime.datetime.today()
-        self.post_date = post_date if post_date else datetime.datetime.today().replace(hour=0, minute=0, second=0,
-                                                                                       microsecond=0)
+        self.post_date = post_date if post_date \
+            else datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
         self.num = num
-        self.splits = splits
+        if splits:
+            self.splits = splits
 
 
     @validates("currency")

@@ -1,21 +1,22 @@
 import uuid
 
 from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER
-from sqlalchemy.orm import relation, backref, validates
+from sqlalchemy.orm import relation, validates
 
 from .._declbase import DeclarativeBaseGuid
 from .._common import CallableList
 from ..sa_extra import mapped_to_slot_property
+from .book import Book
 
 
 root_types = {"ROOT"}
 asset_types = {'RECEIVABLE', 'MUTUAL', 'CASH', 'ASSET', 'BANK', 'STOCK'}
-liability_types = { 'CREDIT',  'LIABILITY', 'PAYABLE'}
+liability_types = {'CREDIT', 'LIABILITY', 'PAYABLE'}
 income_types = {"INCOME"}
 expense_types = {"EXPENSE"}
 trading_types = {'TRADING'}
 equity_types = {"EQUITY"}
-#: the different types of accounts
+# : the different types of accounts
 ACCOUNT_TYPES = equity_types | income_types | expense_types | asset_types | liability_types | root_types | trading_types
 
 # types that are compatible with other types
@@ -73,6 +74,10 @@ class Account(DeclarativeBaseGuid):
         hidden (int): 1 if the account is hidden
         parent (:class:`Account`): the parent account of the account (None for the root account of a book)
         children (list of :class:`Account`): the list of the children accounts
+        splits (list of :class:`piecash.core.transaction.Split`): the list of the splits linked to the account
+        lots (list of :class:`piecash.business.Lot`): the list of lots to which the account is linked
+        book (:class:`piecash.core.book.Book`): the book if the account is the root account (else None)
+        budget_amounts (list of :class:`piecash.budget.BudgetAmount`): list of budget amounts of the account
     """
     __tablename__ = 'accounts'
 
@@ -117,15 +122,36 @@ class Account(DeclarativeBaseGuid):
                                           slot_transform=lambda v: "true" if v else None)
 
     # relation definitions
-    commodity = relation('Commodity',
-                         # single_parent=True,
-                         backref=backref('accounts',
-                                         cascade='all, delete-orphan',
-                                         collection_class=CallableList))
+    commodity = relation('Commodity', back_populates='accounts')
     children = relation('Account',
-                        backref=backref('parent', remote_side=guid),
+                        back_populates='parent',
                         cascade='all, delete-orphan',
                         collection_class=CallableList,
+    )
+    parent = relation('Account',
+                      back_populates='children',
+                      remote_side=guid,
+    )
+    splits = relation('Split',
+                      back_populates='account',
+                      cascade='all, delete-orphan',
+                      collection_class=CallableList,
+    )
+    lots = relation('Lot',
+                    back_populates='account',
+                    cascade='all, delete-orphan',
+                    collection_class=CallableList,
+    )
+    book = relation('Book',
+                    back_populates='root_account',
+                    foreign_keys=[Book.root_account_guid],
+                    cascade='all, delete-orphan',
+                    uselist=False,
+    )
+    budget_amounts = relation('BudgetAmount',
+                              back_populates='account',
+                              cascade='all, delete-orphan',
+                              collection_class=CallableList,
     )
 
 

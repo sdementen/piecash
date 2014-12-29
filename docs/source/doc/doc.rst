@@ -88,7 +88,7 @@ and then access GnuCash objects through the session, for example to query the st
 
     # example 1, print all stock prices in the Book
     # display all prices
-    for price in session.get(piecash.Price):
+    for price in session.prices:
         print(price)
 
 .. parsed-literal::

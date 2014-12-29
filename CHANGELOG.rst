@@ -1,6 +1,13 @@
 Changelog
 =========
 
+In development
+~~~~~~~~~~~~~~
+
+- improve relationship in business model
+- fix account.placeholder validation in transaction/splits
+- made all relationships dual (with back_populates instead of backref)
+
 Version 0.4.7 (2014-12-29)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
