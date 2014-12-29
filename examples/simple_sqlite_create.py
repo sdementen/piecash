@@ -9,6 +9,8 @@ import os
 from piecash import create_book, Account, Commodity, open_book
 
 filename = os.path.abspath('test.blob')
+if os.path.exists(filename):
+    os.remove(filename)
 
 with create_book(filename) as s:
     a = Account(parent=s.book.root_account,
