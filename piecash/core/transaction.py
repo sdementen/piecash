@@ -1,13 +1,14 @@
-from collections import defaultdict
 from decimal import Decimal
 import datetime
 
 from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, event
+
 from sqlalchemy.orm import relation, backref, validates
 from sqlalchemy.orm.base import instance_state
 from sqlalchemy.orm.exc import NoResultFound
 
 from .._common import GncValidationError, hybrid_property_gncnumeric
+
 from .._declbase import DeclarativeBaseGuid
 from .._common import CallableList
 from ..sa_extra import _DateTime, Session, mapped_to_slot_property
@@ -120,9 +121,9 @@ class Split(DeclarativeBaseGuid):
         self.value = value
         self.quantity = quantity
         self.memo = memo
-        self.reconcile_date=reconcile_date
-        self.reconcile_state=reconcile_state
-        self.lot=lot
+        self.reconcile_date = reconcile_date
+        self.reconcile_state = reconcile_state
+        self.lot = lot
 
     def __repr__(self):
         try:
@@ -143,19 +144,25 @@ class Split(DeclarativeBaseGuid):
     def set_denom_basis(self, key, value):
         if value is None:
             return value
-        if "transaction" == key:
+        if key == "transaction":
             self._value_denom_basis = value.currency.fraction
             self.value = self.value
             trx = value
             acc = self.account
-        if "account" == key:
+        if key == "account":
+            # check that account is not a placeholder
+            if value.placeholder != 0:
+                raise ValueError("Account {} is a placeholder (or unknown)".format(value))
+
             # if the account is already defined
             if self.account:
                 # check that we keep the same commodity across the account change
                 if self.account.commodity != value.commodity:
-                    raise GncValidationError("The commodity of the new account of this split is not the same as the old account")
+                    raise GncValidationError(
+                        "The commodity of the new account of this split is not the same as the old account")
                 if self.account.commodity_scu > value.commodity_scu:
-                    raise GncValidationError("The commodity_scu of the new account of this split is lower than the one of the old account")
+                    raise GncValidationError(
+                        "The commodity_scu of the new account of this split is lower than the one of the old account")
 
             self._quantity_denom_basis = value.commodity_scu
             self.quantity = self.quantity
@@ -223,19 +230,25 @@ class Transaction(DeclarativeBaseGuid):
         self.currency = currency
         self.description = description
         self.enter_date = enter_date if enter_date else datetime.datetime.today()
-        self.post_date = post_date if post_date else datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
+        self.post_date = post_date if post_date else datetime.datetime.today().replace(hour=0, minute=0, second=0,
+                                                                                       microsecond=0)
         self.num = num
         self.splits = splits
 
 
     @validates("currency")
     def validate_currency(self, key, value):
-        if value is not None and value.namespace!="CURRENCY":
+        if value is not None and value.namespace != "CURRENCY":
             raise GncValidationError("You are assigning a non currency commodity to a transaction")
         return value
 
     def validate(self, session):
         old = instance_state(self).committed_state
+
+        # check all accounts related to the splits of the transaction are not placeholder(=frozen)
+        for sp in self.splits:
+            if sp.account.placeholder != 0:
+                raise GncValidationError("Account '{}' used in the transaction is a placeholder".format(sp.account))
 
         # check same currency
         if "currency" in old and old["currency"] is not None:

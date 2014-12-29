@@ -1,6 +1,7 @@
 import random
+import pytest
 
-from piecash import create_book, Account, Transaction, Split
+from piecash import create_book, Account, Transaction, Split, GncValidationError
 
 # create new book
 with create_book() as s:
@@ -36,3 +37,15 @@ with create_book() as s:
     # check no more splits in account acc
     assert len(acc.splits) == 0
 
+    # try to change a split account to an account that is a placeholder
+    acc.placeholder = 1
+    with pytest.raises(ValueError):
+        spl.account = acc
+
+    # set an account to a placeholder
+    tx = s.transactions[0]
+    tx.splits[0].account.placeholder = 1
+    s.save()
+    tx.description="foo"
+    with pytest.raises(GncValidationError):
+        s.save()
