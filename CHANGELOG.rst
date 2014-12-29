@@ -1,8 +1,8 @@
 What's new
 ==========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.5.1 (2014-12-30)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - fixed changelog/what's new documentation
 
