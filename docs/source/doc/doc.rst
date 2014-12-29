@@ -45,15 +45,19 @@ available :doc:`here <../object_model>`.
 Installation
 ============
 
-With pip::
+To install with pip::
 
     $ pip install piecash
 
-or easy_install::
+or to upgrade if piecash is already installed::
+
+    $ pip install -U piecash
+
+To install with easy_install::
 
     $ easy_install piecash
 
-Otherwise, you can install from the distribution using the setup.py script::
+Otherwise, you can install by unpacking the source distribution from PyPI and then::
 
     $ python setup.py install
 
@@ -63,6 +67,8 @@ and then::
 
     $ conda install pip sqlalchemy
     $ pip install piecash
+
+On OS X, this option may also be valuable.
 
 Quickstart
 ==========

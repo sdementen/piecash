@@ -4,7 +4,7 @@ file = piecash/metadata.py
 regex = version \= '(?P<version>.*)'
 vcs = git
 tests = tox
-publish = python setup.py sdist register upload
+;publish = python setup.py sdist register upload
 clean =
     python setup.py clean
     rm -rf *egg-info build dist
