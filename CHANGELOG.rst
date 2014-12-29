@@ -4,7 +4,7 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
-- Empty
+- fixed changelog/what's new documentation
 
 Version 0.5.0 (2014-12-30)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
