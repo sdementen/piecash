@@ -1,8 +1,8 @@
 Changelog
 =========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.5.0 (2014-12-30)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - improve relationship in business model
 - fix account.placeholder validation in transaction/splits
