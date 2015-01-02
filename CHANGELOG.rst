@@ -1,6 +1,14 @@
 What's new
 ==========
 
+In development
+~~~~~~~~~~~~~~
+
+- reworked documentation
+- moved Lot and ScheduledTransaction to transaction module + improved them
+- improve slots support
+- fixed minor bugs
+
 Version 0.5.1 (2014-12-30)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
