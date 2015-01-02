@@ -11,6 +11,9 @@ from .._common import GncValidationError, hybrid_property_gncnumeric
 
 from .._declbase import DeclarativeBaseGuid
 from .._common import CallableList
+from piecash._common import CallableList
+from piecash._declbase import DeclarativeBaseGuid
+from piecash.sa_extra import pure_slot_property
 from ..sa_extra import _Date, _DateTime, Session, mapped_to_slot_property, pure_slot_property
 from .book import Book
 from .account import Account
@@ -185,6 +188,7 @@ class Transaction(DeclarativeBaseGuid):
         post_date (:class:`datetime.datetime`): day on which transaction is posted
         num (str): user provided transaction number
         splits (list of :class:`Split`): list of the splits of the transaction
+        scheduled_transaction  (:class:`ScheduledTransaction`): scheduled transaction behind the transaction
     """
     __tablename__ = 'transactions'
 
@@ -199,6 +203,7 @@ class Transaction(DeclarativeBaseGuid):
     post_date = mapped_to_slot_property(_post_date,
                                         slot_name="date-posted",
                                         slot_transform=lambda x: x.date() if x else None)
+
     scheduled_transaction = pure_slot_property('from-sched-xaction')
 
     # relation definitions
@@ -347,3 +352,32 @@ class ScheduledTransaction(DeclarativeBaseGuid):
 
     # relation definitions
     template_act = relation('Account')  # todo: add a backref/back_populates ?
+
+
+class Lot(DeclarativeBaseGuid):
+    """
+    A GnuCash Lot. Each lot is linked to an account. Splits in this account can be associated to a Lot. Whenever
+    the balance of the splits goes to 0, the Lot is closed (otherwise it is opened)
+
+    Attributes:
+        is_closed (int) : 1 if lot is closed
+        account (:class:`piecash.core.account.Account`): account of the Lot
+        splits (:class:`piecash.core.transaction.Split`): splits associated to the Lot
+    """
+    __tablename__ = 'lots'
+
+    __table_args__ = {}
+
+    # column definitions
+    account_guid = Column('account_guid', VARCHAR(length=32), ForeignKey('accounts.guid'))
+    is_closed = Column('is_closed', INTEGER(), nullable=False)
+
+    title = pure_slot_property('title')
+    notes = pure_slot_property('notes')
+
+    # relation definitions
+    account = relation('Account', back_populates='lots', )
+    splits = relation('Split',
+                      back_populates='lot',
+                      collection_class=CallableList,
+    )

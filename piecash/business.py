@@ -313,27 +313,3 @@ class TaxtableEntry(DeclarativeBase):
     account = relation('Account')
 
 
-class Lot(DeclarativeBaseGuid):
-    """
-    A GnuCash Lot
-
-    Attributes:
-        is_closed (int) : todo
-        account (:class:`piecash.core.account.Account`): todo
-        splits (:class:`piecash.core.transaction.Split`): todo
-    """
-    __tablename__ = 'lots'
-
-    __table_args__ = {}
-
-    # column definitions
-    account_guid = Column('account_guid', VARCHAR(length=32), ForeignKey('accounts.guid'))
-    is_closed = Column('is_closed', INTEGER(), nullable=False)
-
-    # relation definitions
-    account = relation('Account', back_populates='lots', )
-    splits = relation('Split',
-                      back_populates='lot',
-                      cascade='all, delete-orphan',
-                      collection_class=CallableList,
-    )

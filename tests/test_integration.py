@@ -133,8 +133,9 @@ class TestIntegration_EmptyBook(object):
         session.sa_session.flush()
         assert len(b["a"].slot_collection)==0
 
-        with pytest.raises(ValueError):
-            b["a/n"] = b
+        with pytest.raises(TypeError):
+            b["a"] = b
+
         with pytest.raises(KeyError):
             del b["a/n"]
 

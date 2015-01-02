@@ -10,10 +10,10 @@ __copyright__ = metadata.copyright
 from ._common import GncNoActiveSession, GnucashException, GncValidationError
 from .core import (Book,
                    Account, ACCOUNT_TYPES,
-                   Transaction, Split,ScheduledTransaction,
+                   Transaction, Split, ScheduledTransaction, Lot,
                    Commodity, Price,
                    create_book, open_book
 )
-from .business import Lot, Invoice, Employee, Customer, Job, Vendor  # must import as Transaction has a relation to it
+from .business import Invoice, Employee, Customer, Job, Vendor  # must import as Transaction has a relation to it
 from .budget import Budget, BudgetAmount
 from .kvp import slot
