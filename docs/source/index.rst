@@ -19,7 +19,8 @@ Contents:
    :maxdepth: 2
 
    doc/doc.rst
-   tutorial/index.rst
+   tutorial/index_existing.rst
+   tutorial/index_new.rst
    tutorial/examples.rst
    doc/comparison.rst
 

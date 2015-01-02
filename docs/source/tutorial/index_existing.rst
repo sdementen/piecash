@@ -1,5 +1,5 @@
-Using existing GnuCash objects
-==============================
+Tutorial : using existing objects
+=================================
 
 .. include:: existing_objects/open_book.rst
 
@@ -8,7 +8,6 @@ Using existing GnuCash objects
 .. include:: existing_objects/commodity.rst
 
 .. include:: existing_objects/transaction.rst
-
 
 Other objects
 -------------
@@ -39,3 +38,5 @@ queries using the piecash classes::
 
     Easy access to objects from :mod:`piecash.business` and :mod:`piecash.budget` could be given directly from the session
     in future versions if deemed useful.
+
+.. include:: existing_objects/slots.rst

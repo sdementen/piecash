@@ -1,5 +1,5 @@
 Working with slots
-==================
+------------------
 
 With regard to slots, GnuCash objects and Frames behave as dictionaries and all values are automatically
 converted back and forth to python objects::

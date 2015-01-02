@@ -35,6 +35,7 @@ Once a GnuCash book is opened through a :class:`piecash.core.session.GncSession`
 through two different patterns:
 
 The object model
+
     In this mode, we access elements through their natural relations, starting from the book and jumping
     from one object to the other:
 
@@ -69,6 +70,7 @@ The object model
 
 
 The "table" access
+
     In this mode, we access elements through collections directly accessible from the session:
 
     .. ipython::
@@ -100,6 +102,7 @@ The "table" access
         In [1]: s.accounts(commodity=s.commodities[0], name="Gas") # filter by multiple criteria
 
 The "SQLAlchemy" access (advanced users)
+
     In this mode, we access elements through SQLAlchemy queries on the SQLAlchemy session:
 
     .. ipython::

@@ -154,5 +154,8 @@ or to create a new expense account for utilities:
 
 Most basic objects used for personal finance are supported (Account, Split, Transaction, Price, ...).
 
-For more information on how to use piecash, please refer to the :doc:`Tutorials <../tutorial/index>`,
-the :doc:`Example scripts <../tutorial/examples>` or the :doc:`package documentation <../api/piecash>`.
+For more information on how to use piecash, please refer to the Tutorials on
+:doc:`Using existing objects <../tutorial/index_existing>` and
+:doc:`Creating new objects <../tutorial/index_new>`,
+the :doc:`Example scripts <../tutorial/examples>` or
+the :doc:`package documentation <../api/piecash>`.
