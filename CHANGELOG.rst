@@ -1,8 +1,8 @@
 What's new
 ==========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.5.2 (2015-01-03)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - reworked documentation
 - moved Lot and ScheduledTransaction to transaction module + improved them
