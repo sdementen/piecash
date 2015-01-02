@@ -165,6 +165,11 @@ class Slot(DeclarativeBase):
         'polymorphic_on': slot_type,
     }
 
+    def __init__(self, name, value=None):
+        self.name = name
+        if value is not None:
+            self.value = value
+
     def __repr__(self):
         return "<{} {}={}>".format(self.__class__.__name__, self.name, self.value)
 
@@ -300,22 +305,26 @@ class SlotGUID(SlotFrame):
         'account': 'piecash.core.account.Account',
     }
 
+
     @property
-    def value(self):
+    def Class(self):
         name, guid = self.name, self.guid_val
         try:
             class_module, class_name = self._mapping_name_class[name].rsplit('.', 1)
         except KeyError:
             raise ValueError("Smart retrieval of GUID slot with name '{}' is not yet supported."
                              "Need to retrieve proper object type in kvp module (add in SlotGUID._mapping_name_class)".format(name))
-
         mod = import_module(class_module)
         Class = getattr(mod, class_name)
+        return Class
 
-        return object_session(self).query(Class).filter_by(guid=guid).one()
+    @property
+    def value(self):
+        return object_session(self).query(self.Class).filter_by(guid=self.guid_val).one()
 
     @value.setter
     def value(self, value):
+        assert isinstance(value, self.Class)
         self.guid_val = value.guid
 
     #guid_val = Column('guid_val', VARCHAR(length=32))
