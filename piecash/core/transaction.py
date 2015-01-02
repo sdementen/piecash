@@ -11,9 +11,6 @@ from .._common import GncValidationError, hybrid_property_gncnumeric
 
 from .._declbase import DeclarativeBaseGuid
 from .._common import CallableList
-from piecash._common import CallableList
-from piecash._declbase import DeclarativeBaseGuid
-from piecash.sa_extra import pure_slot_property
 from ..sa_extra import _Date, _DateTime, Session, mapped_to_slot_property, pure_slot_property
 from .book import Book
 from .account import Account
