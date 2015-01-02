@@ -127,6 +127,34 @@ def mapped_to_slot_property(col, slot_name, slot_transform=lambda x: x):
         expr=expr,
     )
 
+def pure_slot_property(slot_name, slot_transform=lambda x: x):
+    """
+    Create a property (class must have slots) that maps to a slot
+
+    :param slot_name: name of the slot
+    :param slot_transform: transformation to operate before assigning value
+    :return:
+    """
+    def fget(self):
+        # return None if the slot does not exist. alternative could be to raise an exception
+        try:
+            return self[slot_name].value
+        except KeyError:
+            return None
+
+    def fset(self, value):
+        v = slot_transform(value)
+        if v is None:
+            if slot_name in self:
+                del self[slot_name]
+        else:
+            self[slot_name] = v
+
+    return hybrid_property(
+        fget=fget,
+        fset=fset,
+    )
+
 
 def get_foreign_keys(metadata, engine):
     """ Retrieve all foreign keys from metadata bound to an engine

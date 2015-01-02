@@ -1,7 +1,7 @@
 from decimal import Decimal
 import datetime
 
-from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, event
+from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, event, INTEGER
 
 from sqlalchemy.orm import relation, validates
 from sqlalchemy.orm.base import instance_state
@@ -11,7 +11,7 @@ from .._common import GncValidationError, hybrid_property_gncnumeric
 
 from .._declbase import DeclarativeBaseGuid
 from .._common import CallableList
-from ..sa_extra import _DateTime, Session, mapped_to_slot_property
+from ..sa_extra import _Date, _DateTime, Session, mapped_to_slot_property, pure_slot_property
 from .book import Book
 from .account import Account
 
@@ -196,8 +196,10 @@ class Transaction(DeclarativeBaseGuid):
     enter_date = Column('enter_date', _DateTime)
     num = Column('num', VARCHAR(length=2048), nullable=False)
     _post_date = Column('post_date', _DateTime, index=True)
-    post_date = mapped_to_slot_property(_post_date, slot_name="date-posted",
+    post_date = mapped_to_slot_property(_post_date,
+                                        slot_name="date-posted",
                                         slot_transform=lambda x: x.date() if x else None)
+    scheduled_transaction = pure_slot_property('from-sched-xaction')
 
     # relation definitions
     currency = relation('Commodity',
@@ -321,3 +323,27 @@ def set_imbalance_on_transaction(session, flush_context, instances):
     # for each transaction, validate the transaction
     for tx in txs:
         tx.validate(session)
+
+
+class ScheduledTransaction(DeclarativeBaseGuid):
+    __tablename__ = 'schedxactions'
+
+    __table_args__ = {}
+
+    # column definitions
+    adv_creation = Column('adv_creation', INTEGER(), nullable=False)
+    adv_notify = Column('adv_notify', INTEGER(), nullable=False)
+    auto_create = Column('auto_create', INTEGER(), nullable=False)
+    auto_notify = Column('auto_notify', INTEGER(), nullable=False)
+    enabled = Column('enabled', INTEGER(), nullable=False)
+    end_date = Column('end_date', _Date())
+    instance_count = Column('instance_count', INTEGER(), nullable=False)
+    last_occur = Column('last_occur', _Date())
+    name = Column('name', VARCHAR(length=2048))
+    num_occur = Column('num_occur', INTEGER(), nullable=False)
+    rem_occur = Column('rem_occur', INTEGER(), nullable=False)
+    start_date = Column('start_date', _Date())
+    template_act_guid = Column('template_act_guid', VARCHAR(length=32), ForeignKey('accounts.guid'), nullable=False)
+
+    # relation definitions
+    template_act = relation('Account')  # todo: add a backref/back_populates ?

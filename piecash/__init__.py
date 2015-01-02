@@ -10,7 +10,7 @@ __copyright__ = metadata.copyright
 from ._common import GncNoActiveSession, GnucashException, GncValidationError
 from .core import (Book,
                    Account, ACCOUNT_TYPES,
-                   Transaction, Split,
+                   Transaction, Split,ScheduledTransaction,
                    Commodity, Price,
                    create_book, open_book
 )

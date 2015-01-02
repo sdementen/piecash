@@ -1,11 +1,13 @@
 import uuid
+
 from sqlalchemy import Column, INTEGER, BIGINT, VARCHAR, ForeignKey
 from sqlalchemy.orm import composite, relation
+
 
 # change of the __doc__ string as getting error in sphinx ==> should be reported to SA project
 composite.__doc__ = None  # composite.__doc__.replace(":ref:`mapper_composite`", "")
 
-from .sa_extra import _Date, _DateTime, DeclarativeBase
+from .sa_extra import _DateTime, DeclarativeBase
 from ._common import Address, CallableList, hybrid_property_gncnumeric
 from ._declbase import DeclarativeBaseGuid
 
@@ -309,30 +311,6 @@ class TaxtableEntry(DeclarativeBase):
     # relation definitions
     taxtable = relation('Taxtable', back_populates='entries')
     account = relation('Account')
-
-
-class Schedxaction(DeclarativeBaseGuid):
-    __tablename__ = 'schedxactions'
-
-    __table_args__ = {}
-
-    # column definitions
-    adv_creation = Column('adv_creation', INTEGER(), nullable=False)
-    adv_notify = Column('adv_notify', INTEGER(), nullable=False)
-    auto_create = Column('auto_create', INTEGER(), nullable=False)
-    auto_notify = Column('auto_notify', INTEGER(), nullable=False)
-    enabled = Column('enabled', INTEGER(), nullable=False)
-    end_date = Column('end_date', _Date())
-    instance_count = Column('instance_count', INTEGER(), nullable=False)
-    last_occur = Column('last_occur', _Date())
-    name = Column('name', VARCHAR(length=2048))
-    num_occur = Column('num_occur', INTEGER(), nullable=False)
-    rem_occur = Column('rem_occur', INTEGER(), nullable=False)
-    start_date = Column('start_date', _Date())
-    template_act_guid = Column('template_act_guid', VARCHAR(length=32), ForeignKey('accounts.guid'), nullable=False)
-
-    # relation definitions
-    template_act = relation('Account')  # todo: add a backref/back_populates ?
 
 
 class Lot(DeclarativeBaseGuid):

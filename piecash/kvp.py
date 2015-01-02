@@ -1,6 +1,8 @@
 from builtins import object
 import decimal
 import datetime
+from importlib import import_module
+import importlib
 import uuid
 
 from enum import Enum
@@ -245,6 +247,8 @@ class SlotNumeric(Slot):
     value = hybrid_property_gncnumeric(_numeric_val_num, _numeric_val_denom)
 
 
+
+
 class SlotFrame(DictWrapper, Slot):
     __mapper_args__ = {
         'polymorphic_identity': KVP_Type.KVP_TYPE_FRAME
@@ -284,6 +288,37 @@ def remove_slot(target, value, initiator):
     else:
         s.delete(value)
 
+class SlotGUID(SlotFrame):
+    __mapper_args__ = {
+        'polymorphic_identity': KVP_Type.KVP_TYPE_GUID
+    }
+    _python_type = (DeclarativeBase,)
+
+    # add
+    _mapping_name_class = {
+        'from-sched-xaction': 'piecash.core.transaction.ScheduledTransaction',
+        'account': 'piecash.core.account.Account',
+    }
+
+    @property
+    def value(self):
+        name, guid = self.name, self.guid_val
+        try:
+            class_module, class_name = self._mapping_name_class[name].rsplit('.', 1)
+        except KeyError:
+            raise ValueError("Smart retrieval of GUID slot with name '{}' is not yet supported."
+                             "Need to retrieve proper object type in kvp module (add in SlotGUID._mapping_name_class)".format(name))
+
+        mod = import_module(class_module)
+        Class = getattr(mod, class_name)
+
+        return object_session(self).query(Class).filter_by(guid=guid).one()
+
+    @value.setter
+    def value(self, value):
+        self.guid_val = value.guid
+
+    #guid_val = Column('guid_val', VARCHAR(length=32))
 
 def get_all_subclasses(cls):
     all_subclasses = []
@@ -320,3 +355,4 @@ def slot(parent, name, value):
         return sf
 
     raise ValueError("Cannot handle type of '{}'".format(value))
+
