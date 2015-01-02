@@ -41,8 +41,6 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx',
               ]
 
 ipython_mplbackend= None
-#ipython_rgxin = re.compile('>>> s?(.*)s*')
-#ipython_promptout = ">>>"
 ipython_execlines = ['from piecash import *']
 
 # show todos

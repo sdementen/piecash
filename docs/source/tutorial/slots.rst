@@ -34,3 +34,6 @@ converted back and forth to python objects::
         s3=s.book["options/Accounts"]["Use trading accounts"]
         s4=s.book["options"]["Accounts"]["Use trading accounts"]
         assert s1==s2==s3==s4
+
+Slots of type GUID use the name of the slot to do the conversion back and forth between an object and its guid. For
+these slots, there is an explicit mapping between slot names and object types.
