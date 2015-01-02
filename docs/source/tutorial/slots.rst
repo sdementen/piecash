@@ -15,6 +15,7 @@ converted back and forth to python objects::
         s.book["mydatekey"] = datetime.datetime.today().date()
         s.book["mydatetimekey"] = datetime.datetime.today()
         s.book["mynumerickey"] = decimal.Decimal("12.34567")
+        s.book["account"] = s.book.root_account
 
         # iterate over all slots
         for k, v in s.book.iteritems():
@@ -33,4 +34,3 @@ converted back and forth to python objects::
         s3=s.book["options/Accounts"]["Use trading accounts"]
         s4=s.book["options"]["Accounts"]["Use trading accounts"]
         assert s1==s2==s3==s4
-

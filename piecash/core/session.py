@@ -146,7 +146,9 @@ class GncSession(object):
         """
         the single :class:`piecash.core.book.Book` within the GnuCash session.
         """
-        return self.sa_session.query(Book).one()
+        b = self.sa_session.query(Book).one()
+        b.uri = self.sa_session.connection().engine.url
+        return b
 
     @property
     def transactions(self):

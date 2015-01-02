@@ -1,24 +1,85 @@
 from __future__ import print_function
 from decimal import Decimal
 import datetime
+import decimal
+
+from piecash import open_book, Transaction, Split, ScheduledTransaction, create_book
+
+with open_book("../gnucash_books/default_book.gnucash") as s:
+    # accessing the book object from the session
+    book = s.book
+
+    # accessing root accounts
+    root = book.root_account
+
+    # accessing children accounts of root
+    r = s.book.root_account.children(name="Assets").children[0]
+    for acc in s.book.root_account.children(name="Assets").children[0].children(name="Checking Account"):
+        print(acc)
+
+fdsfds
 
 
-from piecash import open_book, Transaction, Split
+with create_book() as s:
+    # retrieve list of slots
+    print(s.book.slots)
 
+    # set slots
+    s.book["myintkey"] = 3
+    s.book["mystrkey"] = "hello"
+    s.book["myboolkey"] = True
+    s.book["mydatekey"] = datetime.datetime.today().date()
+    s.book["mydatetimekey"] = datetime.datetime.today()
+    s.book["mynumerickey"] = decimal.Decimal("12.34567")
+    s.book["account"] = s.book.root_account
+
+    # iterate over all slots
+    for k, v in s.book.iteritems():
+        print("slot={v} has key={k} and value={v.value} of type {t}".format(k=k,v=v,t=type(v.value)))
+
+    # delete a slot
+    del s.book["myintkey"]
+    # delete all slots
+    del s.book[:]
+
+    # create a key/value in a slot frames (and create them if they do not exist)
+    s.book["options/Accounts/Use trading accounts"]="t"
+    # access a slot in frame in whatever notations
+    s1=s.book["options/Accounts/Use trading accounts"]
+    s2=s.book["options"]["Accounts/Use trading accounts"]
+    s3=s.book["options/Accounts"]["Use trading accounts"]
+    s4=s.book["options"]["Accounts"]["Use trading accounts"]
+    assert s1==s2==s3==s4
+
+dsqdsq
+with open_book("/home/sdementen/Desktop/test_sch_txn_sqlite.gnucash", acquire_lock=False, open_if_lock=True) as s:
+    print(s.book.root_template.children)
+    print(s.commodities)
+    for tr in s.transactions:
+        print(tr.splits[0].slots)
+        print(tr.slots)
+    print(s.transactions[0].scheduled_transaction)
+    s.transactions[0].scheduled_transaction = None
+    #print(s.transactions[0]["from-sched-xaction"])
+    s.book["a/n"]
+    print(s.accounts.get(name='Checking Account').lots.get(title="Lot 3"))
+fdsfdssfd
+
+dsqdsqdsq
 with open_book("../gnucash_books/simple_sample.gnucash", acquire_lock=False, open_if_lock=True) as s:
     asset = s.accounts.get(name="Asset")
     expense = s.accounts.get(name="Expense")
     eur = asset.commodity
     tr = Transaction(currency=eur,
-                    description="test",
-                    splits=[Split(asset,100),Split(expense,-100)])
+                     description="test",
+                     splits=[Split(asset, 100), Split(expense, -100)])
     print(tr)
 dffdsfsd
 
-from piecash import open_book, create_book, ACCOUNT_TYPES, Account, Transaction, Split
+from piecash import open_book, create_book, Account, Transaction, Split
 
 # with create_book("all_account_types.gnucash", overwrite=True) as s:
-#     for actype in ACCOUNT_TYPES:
+# for actype in ACCOUNT_TYPES:
 #         if actype=="ROOT":
 #             continue
 #         acc = Account(name=actype, account_type=actype, parent=s.book.root_account, commodity=s.book.root_account.commodity)
@@ -29,15 +90,13 @@ with open_book("simple_sample.gnucash", acquire_lock=False, open_if_lock=True) a
     expense = s.accounts.get(name="Expense")
     eur = asset.commodity
     tr = Transaction(currency=eur,
-                    description="test",
-                    splits=[Split(asset,100),Split(expense,-100)])
+                     description="test",
+                     splits=[Split(asset, 100), Split(expense, -100)])
     print(tr)
     fdsdf
     for tr in s.transactions:
         for sp in tr.splits:
             sp.account = asset
-
-
 
     fdsfsdfd
 

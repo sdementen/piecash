@@ -73,6 +73,7 @@ class DictWrapper(object):
 
 
     def __getitem__(self, key):
+        assert not isinstance(key, int), "You are accessing slots with an integer (={}) while a string is expected".format(key)
         keys = key.split("/", 1)
         key = keys[0]
         for sl in self.slot_collection:

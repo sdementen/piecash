@@ -116,7 +116,7 @@ class CallableList(list):
     It can be used as the collection_class of a sqlalchemy relationship or to wrap any list (see examples
     in :class:`piecash.core.session.GncSession`)
     """
-    def get(self, **kwargs):
+    def __call__(self, **kwargs):
         """
         Return the first element of the list that has attributes matching the kwargs dict.
         To be used as::
@@ -131,3 +131,5 @@ class CallableList(list):
                 return obj
         else:
             raise KeyError("Could not find object with {} in {}".format(kwargs, self))
+
+    get = __call__

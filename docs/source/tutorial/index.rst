@@ -2,10 +2,9 @@ Tutorials
 =========
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    create_book.rst
-   open_book.rst
    browsing_book.rst
    slots.rst
    create_account.rst

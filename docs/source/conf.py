@@ -19,6 +19,7 @@ import sys
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
+import re
 
 sys.path.insert(0, os.path.abspath('../..'))
 
@@ -33,7 +34,16 @@ from piecash import metadata
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx',
-              'sphinx.ext.todo', 'sphinx.ext.coverage', 'sphinx.ext.viewcode', 'sphinxcontrib.napoleon']
+              'sphinx.ext.todo', 'sphinx.ext.coverage',
+              'sphinx.ext.viewcode', 'sphinxcontrib.napoleon',
+              'IPython.sphinxext.ipython_console_highlighting',
+              'IPython.sphinxext.ipython_directive',
+              ]
+
+ipython_mplbackend= None
+#ipython_rgxin = re.compile('>>> s?(.*)s*')
+#ipython_promptout = ">>>"
+ipython_execlines = ['from piecash import *']
 
 # show todos
 todo_include_todos = True
@@ -75,7 +85,7 @@ release = metadata.version
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = []
+exclude_patterns = ['tutorial/existing_objects']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.

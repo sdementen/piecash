@@ -11,6 +11,7 @@ class Book(DeclarativeBaseGuid):
     Attributes:
         root_account (:class:`piecash.core.account.Account`): the root account of the book
         root_template (:class:`piecash.core.account.Account`): the root template of the book (usage not yet clear...)
+        uri (str): connection string of the book (set by the GncSession when accessing the book)
     """
     __tablename__ = 'books'
 
@@ -34,3 +35,5 @@ class Book(DeclarativeBaseGuid):
         self.root_account = root_account
         self.root_template = root_template
 
+    def __repr__(self):
+        return "<Book {}>".format(self.uri)

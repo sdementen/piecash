@@ -1,3 +1,5 @@
+:tocdepth: 4
+
 Welcome to the piecash documentation!
 =====================================
 
