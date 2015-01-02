@@ -40,6 +40,10 @@ The object model
 
     .. ipython::
 
+        In [1]: import os
+
+        In [1]: os.path.abspath(os.curdir)
+
         In [1]: s = open_book("../gnucash_books/default_book.gnucash")
 
         In [1]: s.book      # accessing the book
