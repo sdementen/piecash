@@ -1,14 +1,13 @@
 from decimal import Decimal
 import datetime
+import uuid
 
 from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, event, INTEGER
-
-from sqlalchemy.orm import relation, validates
+from sqlalchemy.orm import relation, validates, foreign
 from sqlalchemy.orm.base import instance_state
 from sqlalchemy.orm.exc import NoResultFound
 
-from .._common import GncValidationError, hybrid_property_gncnumeric
-
+from .._common import GncValidationError, hybrid_property_gncnumeric, Recurrence
 from .._declbase import DeclarativeBaseGuid
 from .._common import CallableList
 from ..sa_extra import _Date, _DateTime, Session, mapped_to_slot_property, pure_slot_property
@@ -60,6 +59,10 @@ class Split(DeclarativeBaseGuid):
     """
     A GnuCash Split.
 
+    .. note::
+
+        A split used in a scheduled transaction has its main attributes in form of slots.
+
     Attributes:
         transaction(:class:`piecash.core.transaction.Transaction`): transaction of the split
         account(:class:`piecash.core.account.Account`): account of the split
@@ -69,7 +72,7 @@ class Split(DeclarativeBaseGuid):
         quantity(:class:`decimal.Decimal`): amount express in the commodity of the account of the split
         reconcile_state(str): 'n', 'c' or 'y'
         reconcile_date(:class:`datetime.datetime`): time
-        action(str): new in GnuCash 2.6. usage not yet understood
+        action(str): describe the type of action behind the split (free form string but with dropdown in the GUI
     """
     __tablename__ = 'splits'
 
@@ -77,9 +80,9 @@ class Split(DeclarativeBaseGuid):
 
     # column definitions
     account_guid = Column('account_guid', VARCHAR(length=32), ForeignKey('accounts.guid'), nullable=False, index=True)
-    action = Column('action', VARCHAR(length=2048), nullable=False, default="")
+    action = Column('action', VARCHAR(length=2048), nullable=False)
     lot_guid = Column('lot_guid', VARCHAR(length=32), ForeignKey('lots.guid'))
-    memo = Column('memo', VARCHAR(length=2048), nullable=False, default="")
+    memo = Column('memo', VARCHAR(length=2048), nullable=False)
 
     _quantity_denom = Column('quantity_denom', BIGINT(), nullable=False)
     _quantity_denom_basis = None
@@ -87,7 +90,7 @@ class Split(DeclarativeBaseGuid):
     quantity = hybrid_property_gncnumeric(_quantity_num, _quantity_denom)
 
     reconcile_date = Column('reconcile_date', _DateTime())
-    reconcile_state = Column('reconcile_state', VARCHAR(length=1), nullable=False, default="n")
+    reconcile_state = Column('reconcile_state', VARCHAR(length=1), nullable=False)
     tx_guid = Column('tx_guid', VARCHAR(length=32), ForeignKey('transactions.guid'), nullable=False, index=True)
 
     _value_denom = Column('value_denom', BIGINT(), nullable=False)
@@ -106,6 +109,7 @@ class Split(DeclarativeBaseGuid):
                  quantity=0,
                  transaction=None,
                  memo="",
+                 action="",
                  reconcile_date=None,
                  reconcile_state="n",
                  lot=None,
@@ -115,6 +119,7 @@ class Split(DeclarativeBaseGuid):
         self.value = value
         self.quantity = quantity
         self.memo = memo
+        self.action = action
         self.reconcile_date = reconcile_date
         self.reconcile_state = reconcile_state
         self.lot = lot
@@ -124,10 +129,22 @@ class Split(DeclarativeBaseGuid):
             cur = self.transaction.currency.mnemonic
             acc = self.account
             com = acc.commodity.mnemonic
-            if cur == com:
+            if com == "template":
+                # case of template split from scheduled transaction
+                sched_xaction = self["sched-xaction"]
+                credit = sched_xaction["credit-formula"].value
+                debit = sched_xaction["debit-formula"].value
+                return "<SplitTemplate {} {} {}>".format(sched_xaction["account"].value,
+                                                         "credit={}".format(credit) if credit else "",
+                                                         "debit={}".format(debit) if debit else "",
+
+                )
+            elif cur == com:
+                # case of same currency split
                 return "<Split {} {} {}>".format(acc,
                                                  self.value, cur)
             else:
+                # case of non currency split
                 return "<Split {} {} {} [{} {}]>".format(acc,
                                                          self.value, cur,
                                                          self.quantity, com)
@@ -308,7 +325,10 @@ class Transaction(DeclarativeBaseGuid):
         return tx
 
     def __repr__(self):
-        return "<Transaction in {} on {} ({})>".format(self.currency, self.post_date, self.enter_date)
+        return "<Transaction[{}] '{}' on {:%Y-%m-%d}{}>".format(self.currency.mnemonic,
+                                                                self.description,
+                                                                self.post_date,
+                                                                " (from sch tx)" if self.scheduled_transaction else "")
 
 
 @event.listens_for(Session, 'before_flush')
@@ -328,11 +348,30 @@ def set_imbalance_on_transaction(session, flush_context, instances):
 
 
 class ScheduledTransaction(DeclarativeBaseGuid):
+    """
+    A GnuCash Scheduled Transaction.
+
+    Attributes
+        adv_creation (int) : days to create in advance (0 if disabled)
+        adv_notify (int) : days to notify in advance (0 if disabled)
+        auto_create (bool) :
+        auto_notify (bool) :
+        enabled (bool) :
+        start_date (:class:`datetime.datetime`) : date to start the scheduled transaction
+        last_occur (:class:`datetime.datetime`) : date of last occurence of the schedule transaction
+        end_date (:class:`datetime.datetime`) : date to end the scheduled transaction (num/rem_occur should be 0)
+        instance_count (int) :
+        name (str) : name of the scheduled transaction
+        num_occur (int) : number of occurences in total (end_date should be null)
+        rem_occur (int) : number of remaining occurences (end_date should be null)
+        template_account (:class:`piecash.core.account.Account`): template account of the transaction
+    """
     __tablename__ = 'schedxactions'
 
     __table_args__ = {}
 
     # column definitions
+    guid = Column('guid', VARCHAR(length=32), primary_key=True, nullable=False, default=lambda: uuid.uuid4().hex)
     adv_creation = Column('adv_creation', INTEGER(), nullable=False)
     adv_notify = Column('adv_notify', INTEGER(), nullable=False)
     auto_create = Column('auto_create', INTEGER(), nullable=False)
@@ -348,7 +387,15 @@ class ScheduledTransaction(DeclarativeBaseGuid):
     template_act_guid = Column('template_act_guid', VARCHAR(length=32), ForeignKey('accounts.guid'), nullable=False)
 
     # relation definitions
-    template_act = relation('Account')  # todo: add a backref/back_populates ?
+    template_account = relation('Account')
+    recurrence = relation('Recurrence',
+                          primaryjoin=guid == foreign(Recurrence.obj_guid),
+                          cascade='all, delete-orphan',
+                          uselist=False,
+    )
+
+    def __repr__(self):
+        return "<ScheduledTransaction '{}' {}>".format(self.name, self.recurrence)
 
 
 class Lot(DeclarativeBaseGuid):
@@ -357,7 +404,7 @@ class Lot(DeclarativeBaseGuid):
     the balance of the splits goes to 0, the Lot is closed (otherwise it is opened)
 
     Attributes:
-        is_closed (int) : 1 if lot is closed
+        is_closed (int) : 1 if lot is closed, 0 otherwise
         account (:class:`piecash.core.account.Account`): account of the Lot
         splits (:class:`piecash.core.transaction.Split`): splits associated to the Lot
     """
@@ -378,3 +425,27 @@ class Lot(DeclarativeBaseGuid):
                       back_populates='lot',
                       collection_class=CallableList,
     )
+
+    def __init__(self,
+                 title,
+                 account,
+                 notes="",
+                 splits=None):
+        self.title=title
+        self.account=account
+        self.notes=notes
+        if splits:
+            self.splits[:] = splits
+
+    @validates("splits", "account")
+    def validate_account_split_consistency(self, key, value):
+        if key == "account" and self.account and self.splits:
+            raise ValueError("You cannot change the account of a Lot once a split has alread been assigned")
+        if key == "splits" and not self.account:
+            raise ValueError("You can assign splits to a lot only once the account is set")
+        if key == "splits":
+            sp = value
+            assert sp.lot is None, "The split has already a lot "
+            assert sp.account==self.account, "You cannot assign to a lot a split that is not on the account of the lot"
+
+        return value

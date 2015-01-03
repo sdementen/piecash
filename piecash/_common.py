@@ -25,7 +25,7 @@ class Recurrence(DeclarativeBase):
 
     # column definitions
     id = Column('id', INTEGER(), primary_key=True, nullable=False)
-    obj_guid = Column('obj_guid', VARCHAR(length=32), nullable=False)
+    obj_guid = Column('obj_guid', VARCHAR(length=32),nullable=False)
     recurrence_mult = Column('recurrence_mult', INTEGER(), nullable=False)
     recurrence_period_start = Column('recurrence_period_start', _Date(), nullable=False)
     recurrence_period_type = Column('recurrence_period_type', VARCHAR(length=2048), nullable=False)
@@ -34,7 +34,7 @@ class Recurrence(DeclarativeBase):
     # relation definitions
     # added from the DeclarativeBaseGUID object (as linked from different objects like the slots)
     def __repr__(self):
-        return "{}/{} from {} [{}]".format(self.recurrence_mult, self.recurrence_period_type,
+        return "{}*{} from {} [{}]".format(self.recurrence_period_type,self.recurrence_mult,
                                            self.recurrence_period_start, self.recurrence_weekend_adjust)
 
 
@@ -118,10 +118,12 @@ class CallableList(list):
     """
     def __call__(self, **kwargs):
         """
-        Return the first element of the list that has attributes matching the kwargs dict.
+        Return the first element of the list that has attributes matching the kwargs dict. The `get` method is
+        an alias for this method.
+
         To be used as::
 
-            l.get(mnemonic="EUR", namespace="CURRENCY")
+            l(mnemonic="EUR", namespace="CURRENCY")
         """
         for obj in self:
             for k, v in kwargs.items():

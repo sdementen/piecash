@@ -72,12 +72,14 @@ class Account(DeclarativeBaseGuid):
         fullname (str): full name of the account (including name of parent accounts separated by ':')
         placeholder (int): 1 if the account is a placeholder (should not be involved in transactions)
         hidden (int): 1 if the account is hidden
+        is_template (bool): True if the account is a template account (ie commodity=template/template)
         parent (:class:`Account`): the parent account of the account (None for the root account of a book)
         children (list of :class:`Account`): the list of the children accounts
         splits (list of :class:`piecash.core.transaction.Split`): the list of the splits linked to the account
         lots (list of :class:`piecash.business.Lot`): the list of lots to which the account is linked
         book (:class:`piecash.core.book.Book`): the book if the account is the root account (else None)
         budget_amounts (list of :class:`piecash.budget.BudgetAmount`): list of budget amounts of the account
+        scheduled_transaction (:class:`piecash.core.transaction.ScheduledTransaction`): scheduled transaction linked to the account
     """
     __tablename__ = 'accounts'
 
@@ -152,6 +154,11 @@ class Account(DeclarativeBaseGuid):
                               back_populates='account',
                               cascade='all, delete-orphan',
                               collection_class=CallableList,
+    )
+    scheduled_transaction = relation('ScheduledTransaction',
+                    back_populates='template_account',
+                    cascade='all, delete-orphan',
+                    uselist=False,
     )
 
 
@@ -242,6 +249,10 @@ class Account(DeclarativeBaseGuid):
         """
         return sum([sp.value for sp in self.splits]) * (-1 if self.type in negative_types else 1)
 
+
+    @property
+    def is_template(self):
+        return self.commodity.namespace == 'template'
 
     def __repr__(self):
         if self.commodity:

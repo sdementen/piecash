@@ -1,12 +1,23 @@
 Transactions and Splits
 -----------------------
 
-The list of all transactions in the book can be retrieved via the ``transactions`` attribute::
+The list of all transactions in the book can be retrieved via the ``transactions`` attribute:
 
-    # all transactions
-    print(s.transactions)
+.. ipython:: python
 
-    tr = s.transactions[0]
+    s = open_book(gnucash_books + "book_schtx.gnucash", open_if_lock=True)
+
+    # all transactions (including transactions part of a scheduled transaction description)
+    for tr in s.transactions:
+        print(tr)
+
+    # selecting first transaction generated from a scheduled transaction
+    tr = [ tr for tr in s.transactions if tr.scheduled_transaction ][0]
+
+
+For a given transaction, the following attributes are accessible:
+
+.. ipython:: python
 
     # accessing attributes of a transaction
     print("Transaction description='{tr.description}'\n"
@@ -14,8 +25,9 @@ The list of all transactions in the book can be retrieved via the ``transactions
           "            post_date={tr.post_date}\n"
           "            enter_date={tr.enter_date}".format(tr=tr))
 
-and the related splits via the ``splits`` attribute of the transaction::
+    # accessing the splits of the transaction
+    tr.splits
 
-    for sp in tr.splits:
-        print("     Split memo='{sp.memo}'\n"
-              "           account={sp.account.fullname}\n"
+    # accessing the scheduled transaction
+    [ sp for sp in tr.scheduled_transaction.template_account.splits]
+

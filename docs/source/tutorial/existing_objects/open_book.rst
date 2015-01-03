@@ -41,7 +41,7 @@ The object model
 
     .. ipython::
 
-        In [1]: s = open_book("../../gnucash_books/default_book.gnucash")
+        In [1]: s = open_book(gnucash_books + "default_book.gnucash")
 
         In [1]: s.book      # accessing the book
 
@@ -51,7 +51,8 @@ The object model
            ...: for acc in s.book.root_account.children:
            ...:     print(acc)
 
-        In [1]: # accessing children accounts
+        # accessing children accounts
+        In [1]:
            ...: root = s.book.root_account              # select the root_account
            ...: assets = root.children(name="Assets")   # select child account by name
            ...: cur_assets = assets.children[0]         # select child account by index
@@ -73,43 +74,55 @@ The "table" access
 
     In this mode, we access elements through collections directly accessible from the session:
 
-    .. ipython::
+    .. ipython:: python
 
-        In [1]: s = open_book("../../gnucash_books/default_book.gnucash")
+        s = open_book(gnucash_books + "default_book.gnucash")
 
-        In [1]: s.accounts  # accessing all accounts
+        # accessing all accounts
+        s.accounts
 
-        In [1]: s.commodities  # accessing all commodities
+        # accessing all commodities
+        s.commodities
 
-        In [1]: s.transactions  # accessing all transactions
+        # accessing all transactions
+        s.transactions
+
 
     Each of these collections can be either iterated or accessed through some indexation or filter mechanism (return
     first element of collection satisfying some criteria(s)):
 
-    .. ipython::
+    .. ipython:: python
 
-        In [1]: for acc in s.accounts:  # iteration
-           ...:     if acc.type == "ASSET": print(acc)
+        # iteration
+        for acc in s.accounts:
+            if acc.type == "ASSET": print(acc)
 
-        In [1]: s.accounts[10]  # indexation
+        # indexation (not very meaningful)
+        s.accounts[10]
 
-        In [1]: s.accounts(name="Garbage collection")  # filter by name
+        # filter by name
+        s.accounts(name="Garbage collection")
 
-        In [1]: s.accounts(type="EXPENSE")  # filter by type
+        # filter by type
+        s.accounts(type="EXPENSE")
 
-        In [1]: s.accounts(fullname="Expenses:Taxes:Social Security") # filter by fullname
+        # filter by fullname
+        s.accounts(fullname="Expenses:Taxes:Social Security")
 
-        In [1]: s.accounts(commodity=s.commodities[0], name="Gas") # filter by multiple criteria
+        # filter by multiple criteria
+        s.accounts(commodity=s.commodities[0], name="Gas")
 
 The "SQLAlchemy" access (advanced users)
 
     In this mode, we access elements through SQLAlchemy queries on the SQLAlchemy session:
 
-    .. ipython::
+    .. ipython:: python
 
-        In [1]: session = s.sa_session # retrieve underlying SQLAlchemy session object
+        # retrieve underlying SQLAlchemy session object
+        session = s.sa_session
 
-        In [1]: session.query(Account).filter(Account.name>="T").all() # get all account with name >= "T"
+        # get all account with name >= "T"
+        session.query(Account).filter(Account.name>="T").all()
 
-        In [1]: # display underlying query
-           ...: str(session.query(Account).filter(Account.name>="T"))
+        # display underlying query
+        str(session.query(Account).filter(Account.name>="T"))

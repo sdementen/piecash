@@ -153,17 +153,16 @@ class GncSession(object):
     @property
     def transactions(self):
         """
-        gives easy access to all transactions in the document through a :class:`piecash.model_common.CallableList`
-        of :class:`piecash.core.transaction.Transaction`
+        gives easy access to all transactions (including transactions used in :class:`piecash.core.transaction.ScheduledTransaction`
+        in the document through a :class:`piecash._common.CallableList` of :class:`piecash.core.transaction.Transaction`
         """
         from .transaction import Transaction
-
         return CallableList(self.sa_session.query(Transaction))
 
     @property
     def accounts(self):
         """
-        gives easy access to all accounts in the document through a :class:`piecash.model_common.CallableList`
+        gives easy access to all accounts (except root accounts) in the document through a :class:`piecash._common.CallableList`
         of :class:`piecash.core.account.Account`
         """
         from .account import Account
@@ -173,7 +172,7 @@ class GncSession(object):
     @property
     def commodities(self):
         """
-        gives easy access to all commodities in the document through a :class:`piecash.model_common.CallableList`
+        gives easy access to all commodities in the document through a :class:`piecash._common.CallableList`
         of :class:`piecash.core.commodity.Commodity`
         """
         from .commodity import Commodity
@@ -183,7 +182,7 @@ class GncSession(object):
     @property
     def prices(self):
         """
-        gives easy access to all commodities in the document through a :class:`piecash.model_common.CallableList`
+        gives easy access to all commodities in the document through a :class:`piecash._common.CallableList`
         of :class:`piecash.core.commodity.Commodity`
         """
         from .commodity import Price
@@ -310,7 +309,7 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
     return GncSession(s)
 
 
-def open_book(sqlite_file=None, uri_conn=None, acquire_lock=True, readonly=True, open_if_lock=False, **kwargs):
+def open_book(sqlite_file=None, uri_conn=None, acquire_lock=False, readonly=True, open_if_lock=False, **kwargs):
     """Open an existing GnuCash book
 
     :param str sqlite_file: a path to an sqlite3 file
