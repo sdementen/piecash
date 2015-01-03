@@ -1,8 +1,8 @@
 What's new
 ==========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.5.3 (2015-01-03)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - add support for schedule_transactions and lots (in terms of access to data, not business logic)
 - improved doc
