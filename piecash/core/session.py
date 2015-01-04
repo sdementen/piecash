@@ -34,12 +34,16 @@ class Version(DeclarativeBase):
 
     # column definitions
     #: The name of the table
-    table_name = Column('table_name', VARCHAR(length=50), primary_key=True, nullable=False)
+    name = Column('table_name', VARCHAR(length=50), primary_key=True, nullable=False)
     #: The version for the table
-    table_version = Column('table_version', INTEGER(), nullable=False)
+    version = Column('table_version', INTEGER(), nullable=False)
 
     def __repr__(self):
-        return "Version<{}={}>".format(self.table_name, self.table_version)
+        return "Version<{}={}>".format(self.name, self.version)
+
+    def __init__(self, name, version):
+        self.name = name
+        self.version = version
 
 
 class GncSession(object):
@@ -84,6 +88,7 @@ class GncSession(object):
 
         the underlying sqlalchemy session
     """
+
     def __init__(self, session, acquire_lock=False):
         self.sa_session = session
         self._acquire_lock = acquire_lock
@@ -157,6 +162,7 @@ class GncSession(object):
         in the document through a :class:`piecash._common.CallableList` of :class:`piecash.core.transaction.Transaction`
         """
         from .transaction import Transaction
+
         return CallableList(self.sa_session.query(Transaction))
 
     @property
@@ -167,7 +173,7 @@ class GncSession(object):
         """
         from .account import Account
 
-        return CallableList(self.sa_session.query(Account).filter(Account.type!='ROOT'))
+        return CallableList(self.sa_session.query(Account).filter(Account.type != 'ROOT'))
 
     @property
     def commodities(self):
@@ -295,7 +301,7 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
 
     # create all rows in version table
     for table_name, table_version in version_supported.items():
-        s.add(Version(table_name=table_name, table_version=table_version))
+        s.add(Version(name=table_name, version=table_version))
 
     # create Book and initial accounts
     from .account import Account
@@ -348,14 +354,13 @@ def open_book(sqlite_file=None, uri_conn=None, acquire_lock=False, readonly=True
 
     # check the versions in the table versions is consistent with the API
     # TODO: improve this in the future to allow more than 1 version
-    version_book = {v.table_name: v.table_version for v in s.query(Version).all()}
+    version_book = {v.name: v.version for v in s.query(Version).all()}
     for k, v in version_book.items():
         # skip GnuCash
         if k in ("Gnucash"):
             continue
-        assert version_supported[k] == v, "Unsupported version for table {} : got {}, supported {}".format(k, v,
-                                                                                                           version_supported[
-                                                                                                               k])
+        assert version_supported[k] == v, "Unsupported version for table {} : " \
+                                          "got {}, supported {}".format(k, v, version_supported[k])
 
 
     # flush is a "no op" if readonly

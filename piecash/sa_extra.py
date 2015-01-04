@@ -21,26 +21,31 @@ else:
     long = long
 
 
-@as_declarative()
+def __init__blocked(self, *args, **kwargs):
+    raise NotImplementedError("Objects of type {} cannot be created from scratch "
+                                  "(only read)".format(self.__class__.__name__))
+
+@as_declarative(constructor=__init__blocked)
 class DeclarativeBase(object):
-    def __deepcopy__(self, memo):
-        raise Unsafe
-        print("memo", memo)
-        pk_keys = set([c.key for c in class_mapper(self.__class__).primary_key])
-
-        dct = {}
-        for p in class_mapper(self.__class__).iterate_properties:
-            if p.key in pk_keys:
-                continue
-            if p.key.endswith("guid"):
-                continue
-            attr = getattr(self, p.key)
-            if isinstance(attr, list):
-                attr = [deepcopy(sattr, memo) for sattr in attr]
-            dct[p.key] = attr
-
-        obj = self.__class__(**dct)
-        return obj
+    pass
+    # def __deepcopy__(self, memo):
+    #     raise Unsafe
+    #     print("memo", memo)
+    #     pk_keys = set([c.key for c in class_mapper(self.__class__).primary_key])
+    #
+    #     dct = {}
+    #     for p in class_mapper(self.__class__).iterate_properties:
+    #         if p.key in pk_keys:
+    #             continue
+    #         if p.key.endswith("guid"):
+    #             continue
+    #         attr = getattr(self, p.key)
+    #         if isinstance(attr, list):
+    #             attr = [deepcopy(sattr, memo) for sattr in attr]
+    #         dct[p.key] = attr
+    #
+    #     obj = self.__class__(**dct)
+    #     return obj
 
 
 tz = tzlocal.get_localzone()

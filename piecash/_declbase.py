@@ -37,32 +37,7 @@ class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):
                 else:
                     s.delete(value)
 
-
-    def __init__(self, *args, **kwargs):
-        """A simple constructor that allows initialization from kwargs.
-
-        Sets attributes on the constructed instance using the names and
-        values in ``kwargs``.
-
-        Only keys that are present as
-        attributes of the instance's class are allowed. These could be,
-        for example, any mapped columns or relationships.
-        """
-        cls_ = type(self)
-        key_rel = {rel.key: rel.mapper.class_ for rel in inspect(cls_).relationships}
-
-        for k, v in kwargs.items():
-            attr = getattr(cls_, k)
-            # if the field is a relation and the value is a string, replace the string by the lookup
-            if isinstance(v, str) and k in key_rel:
-                v = key_rel[k].lookup(v)
-            setattr(self, k, v)
-
-
     def get_session(self):
         # return the sa session of the object
         return object_session(self)
 
-    @property
-    def slot_collection(self):
-        return self.slots

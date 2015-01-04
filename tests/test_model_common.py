@@ -30,6 +30,8 @@ class TestModelCommon(object):
     def test_guid_on_declarativebase(self):
         class A(DeclarativeBaseGuid):
             __tablename__ = "a_table"
+            def __init__(self):
+                pass
 
         s = session()
         a = A()
@@ -40,11 +42,16 @@ class TestModelCommon(object):
 
 
     def test_addr_composite(self):
+        flds = "addr1 addr2 addr3 addr4 email fax name phone".split()
         class B(DeclarativeBaseGuid):
             __tablename__ = "b_table"
+            def __init__(self, **kwargs):
+                for k,v in kwargs.items():
+                    setattr(self, k, v)
+
 
         l = []
-        for fld in "addr1 addr2 addr3 addr4 email fax name phone".split():
+        for fld in flds:
             col = Column(fld, TEXT())
             setattr(B, fld, col)
             l.append(col)
@@ -66,7 +73,8 @@ class TestModelCommon(object):
         class C(DeclarativeBaseGuid):
             __tablename__ = "c_table"
             day = Column(_Date)
-
+            def __init__(self, day):
+                self.day=day
 
         s = session()
         a = C(day=datetime.date(2010, 4, 12))
@@ -80,6 +88,8 @@ class TestModelCommon(object):
         class C(DeclarativeBaseGuid):
             __tablename__ = "d_table"
             time = Column(_DateTime)
+            def __init__(self, time):
+                self.time=time
 
         s = session()
         a = C(time=datetime.datetime(2010, 4, 12, 3, 4, 5, tzinfo=pytz.utc))

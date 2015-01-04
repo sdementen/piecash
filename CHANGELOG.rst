@@ -4,7 +4,11 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
-- Empty
+- add sign property on account
+- raise NotImplementedError when creating an object is not "safe" (ie not __init__ and validators)
+- renamed slot_collection to slots in kvp handling
+- renamed field of Version + add explicit __init__
+- updated test to add explicit __init__ when needed
 
 Version 0.5.6 (2015-01-04)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

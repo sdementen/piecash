@@ -2,8 +2,10 @@ from __future__ import print_function
 from decimal import Decimal
 import datetime
 import decimal
+import inspect
 
-from piecash import open_book, Transaction, Split, ScheduledTransaction, create_book
+from piecash import open_book, Transaction, Split, ScheduledTransaction, create_book, Budget
+from piecash._common import Recurrence
 
 with open_book("../gnucash_books/default_book.gnucash") as s:
     # accessing the book object from the session
@@ -14,9 +16,15 @@ with open_book("../gnucash_books/default_book.gnucash") as s:
 
     # accessing children accounts of root
     r = s.book.root_account.children(name="Assets").children[0]
-    for acc in s.book.root_account.children(name="Assets").children[0].children(name="Checking Account"):
+    for acc in s.book.root_account.children(name="Assets").children[0].children:
         print(acc)
 
+    print(inspect.getmro(Budget))
+    print(inspect.getmro(Recurrence))
+    b = Budget(name=lambda x:x, foo="3")
+    b = Budget(name=lambda x:x, foo="3")
+    fdsd
+    print(b)
 fdsfds
 
 
