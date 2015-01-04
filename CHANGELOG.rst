@@ -1,8 +1,8 @@
 What's new
 ==========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.5.4 (2015-01-04)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - added back the order table in the declarations
 
