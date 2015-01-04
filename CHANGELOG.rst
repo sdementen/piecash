@@ -4,7 +4,7 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
-- Empty
+- add notes to Transaction (via slot)
 
 Version 0.5.7 (2015-01-04)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
