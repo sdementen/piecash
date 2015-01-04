@@ -136,36 +136,38 @@ class Entry(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
-    action = Column('action', VARCHAR(length=2048))
-    b_acct = Column('b_acct', VARCHAR(length=32))
-    b_paytype = Column('b_paytype', INTEGER())
-    b_price_denom = Column('b_price_denom', BIGINT())
-    b_price_num = Column('b_price_num', BIGINT())
-    b_taxable = Column('b_taxable', INTEGER())
-    b_taxincluded = Column('b_taxincluded', INTEGER())
-    b_taxtable = Column('b_taxtable', VARCHAR(length=32))
-    bill = Column('bill', VARCHAR(length=32))
-    billable = Column('billable', INTEGER())
-    billto_guid = Column('billto_guid', VARCHAR(length=32))
-    billto_type = Column('billto_type', INTEGER())
     date = Column('date', _DateTime(), nullable=False)
     date_entered = Column('date_entered', _DateTime())
     description = Column('description', VARCHAR(length=2048))
+    action = Column('action', VARCHAR(length=2048))
+    notes = Column('notes', VARCHAR(length=2048))
+    quantity_num = Column('quantity_num', BIGINT())
+    quantity_denom = Column('quantity_denom', BIGINT())
+
     i_acct = Column('i_acct', VARCHAR(length=32))
-    i_disc_how = Column('i_disc_how', VARCHAR(length=2048))
-    i_disc_type = Column('i_disc_type', VARCHAR(length=2048))
-    i_discount_denom = Column('i_discount_denom', BIGINT())
-    i_discount_num = Column('i_discount_num', BIGINT())
-    i_price_denom = Column('i_price_denom', BIGINT())
     i_price_num = Column('i_price_num', BIGINT())
+    i_price_denom = Column('i_price_denom', BIGINT())
+    i_discount_num = Column('i_discount_num', BIGINT())
+    i_discount_denom = Column('i_discount_denom', BIGINT())
+    invoice = Column('invoice', VARCHAR(length=32))
+    i_disc_type = Column('i_disc_type', VARCHAR(length=2048))
+    i_disc_how = Column('i_disc_how', VARCHAR(length=2048))
     i_taxable = Column('i_taxable', INTEGER())
     i_taxincluded = Column('i_taxincluded', INTEGER())
     i_taxtable = Column('i_taxtable', VARCHAR(length=32))
-    invoice = Column('invoice', VARCHAR(length=32))
-    notes = Column('notes', VARCHAR(length=2048))
+
+    b_acct = Column('b_acct', VARCHAR(length=32))
+    b_price_num = Column('b_price_num', BIGINT())
+    b_price_denom = Column('b_price_denom', BIGINT())
+    bill = Column('bill', VARCHAR(length=32))
+    b_taxtable = Column('b_taxtable', VARCHAR(length=32))
+    b_taxincluded = Column('b_taxincluded', INTEGER())
+    b_taxable = Column('b_taxable', INTEGER())
+    b_paytype = Column('b_paytype', INTEGER())
+    billable = Column('billable', INTEGER())
+    billto_type = Column('billto_type', INTEGER())
+    billto_guid = Column('billto_guid', VARCHAR(length=32))
     order_guid = Column('order_guid', VARCHAR(length=32))
-    quantity_denom = Column('quantity_denom', BIGINT())
-    quantity_num = Column('quantity_num', BIGINT())
 
     # relation definitions
     # todo: complete relations
@@ -176,24 +178,25 @@ class Invoice(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
-    active = Column('active', INTEGER(), nullable=False)
-    billing_id = Column('billing_id', VARCHAR(length=2048))
-    billto_guid = Column('billto_guid', VARCHAR(length=32))
-    billto_type = Column('billto_type', INTEGER())
-    _charge_amt_denom = Column('charge_amt_denom', BIGINT())
-    _charge_amt_num = Column('charge_amt_num', BIGINT())
-    charge_amt = hybrid_property_gncnumeric(_charge_amt_num, _charge_amt_denom)
-    currency_guid = Column('currency', VARCHAR(length=32), ForeignKey('commodities.guid'),nullable=False)
+    id = Column('id', VARCHAR(length=2048), nullable=False)
     date_opened = Column('date_opened', _DateTime())
     date_posted = Column('date_posted', _DateTime())
-    id = Column('id', VARCHAR(length=2048), nullable=False)
     notes = Column('notes', VARCHAR(length=2048), nullable=False)
-    owner_guid = Column('owner_guid', VARCHAR(length=32))
+    active = Column('active', INTEGER(), nullable=False)
+    currency_guid = Column('currency', VARCHAR(length=32), ForeignKey('commodities.guid'),nullable=False)
     owner_type = Column('owner_type', INTEGER())
-    post_acc_guid = Column('post_acc', VARCHAR(length=32), ForeignKey('accounts.guid'))
-    post_lot_guid = Column('post_lot', VARCHAR(length=32), ForeignKey('transactions.guid'))
-    post_txn_guid = Column('post_txn', VARCHAR(length=32), ForeignKey('lots.guid'))
+    owner_guid = Column('owner_guid', VARCHAR(length=32))
     term_guid = Column('terms', VARCHAR(length=32), ForeignKey('billterms.guid'))
+    billing_id = Column('billing_id', VARCHAR(length=2048))
+    post_txn_guid = Column('post_txn', VARCHAR(length=32), ForeignKey('lots.guid'))
+    post_lot_guid = Column('post_lot', VARCHAR(length=32), ForeignKey('transactions.guid'))
+    post_acc_guid = Column('post_acc', VARCHAR(length=32), ForeignKey('accounts.guid'))
+    billto_type = Column('billto_type', INTEGER())
+    billto_guid = Column('billto_guid', VARCHAR(length=32))
+    _charge_amt_num = Column('charge_amt_num', BIGINT())
+    _charge_amt_denom = Column('charge_amt_denom', BIGINT())
+    charge_amt = hybrid_property_gncnumeric(_charge_amt_num, _charge_amt_denom)
+
 
     # relation definitions
     # todo: check all relations and understanding of types...
@@ -210,12 +213,12 @@ class Job(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
-    active = Column('active', INTEGER(), nullable=False)
     id = Column('id', VARCHAR(length=2048), nullable=False)
     name = Column('name', VARCHAR(length=2048), nullable=False)
-    owner_guid = Column('owner_guid', VARCHAR(length=32))
-    owner_type = Column('owner_type', INTEGER())
     reference = Column('reference', VARCHAR(length=2048), nullable=False)
+    active = Column('active', INTEGER(), nullable=False)
+    owner_type = Column('owner_type', INTEGER())
+    owner_guid = Column('owner_guid', VARCHAR(length=32))
 
     # relation definitions
     # todo: owner_guid/type links to Vendor or Customer
@@ -228,14 +231,15 @@ class Order(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
-    active = Column('active', INTEGER(), nullable=False)
-    date_closed = Column('date_closed', _DateTime(), nullable=False)
-    date_opened = Column('date_opened', _DateTime(), nullable=False)
     id = Column('id', VARCHAR(length=2048), nullable=False)
     notes = Column('notes', VARCHAR(length=2048), nullable=False)
-    owner_guid = Column('owner_guid', VARCHAR(length=32), nullable=False)
-    owner_type = Column('owner_type', INTEGER(), nullable=False)
     reference = Column('reference', VARCHAR(length=2048), nullable=False)
+    active = Column('active', INTEGER(), nullable=False)
+
+    date_opened = Column('date_opened', _DateTime(), nullable=False)
+    date_closed = Column('date_closed', _DateTime(), nullable=False)
+    owner_type = Column('owner_type', INTEGER(), nullable=False)
+    owner_guid = Column('owner_guid', VARCHAR(length=32), nullable=False)
 
     # relation definitions
     # todo: owner_guid/type links to Vendor or Customer
@@ -247,25 +251,26 @@ class Vendor(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
+    name = Column('name', VARCHAR(length=2048), nullable=False)
+    id = Column('id', VARCHAR(length=2048), nullable=False)
+    notes = Column('notes', VARCHAR(length=2048), nullable=False)
+    currency_guid = Column('currency', VARCHAR(length=32), ForeignKey('commodities.guid'),nullable=False)
     active = Column('active', INTEGER(), nullable=False)
+    tax_override = Column('tax_override', INTEGER(), nullable=False)
+
+    addr_name = Column('addr_name', VARCHAR(length=1024))
     addr_addr1 = Column('addr_addr1', VARCHAR(length=1024))
     addr_addr2 = Column('addr_addr2', VARCHAR(length=1024))
     addr_addr3 = Column('addr_addr3', VARCHAR(length=1024))
     addr_addr4 = Column('addr_addr4', VARCHAR(length=1024))
-    addr_email = Column('addr_email', VARCHAR(length=256))
-    addr_fax = Column('addr_fax', VARCHAR(length=128))
-    addr_name = Column('addr_name', VARCHAR(length=1024))
     addr_phone = Column('addr_phone', VARCHAR(length=128))
+    addr_fax = Column('addr_fax', VARCHAR(length=128))
+    addr_email = Column('addr_email', VARCHAR(length=256))
     addr = composite(Address, addr_addr1, addr_addr2, addr_addr3, addr_addr4,
                      addr_email, addr_fax, addr_name, addr_phone)
-    currency_guid = Column('currency', VARCHAR(length=32), ForeignKey('commodities.guid'),nullable=False)
-    id = Column('id', VARCHAR(length=2048), nullable=False)
-    name = Column('name', VARCHAR(length=2048), nullable=False)
-    notes = Column('notes', VARCHAR(length=2048), nullable=False)
-    tax_inc = Column('tax_inc', VARCHAR(length=2048))
-    tax_override = Column('tax_override', INTEGER(), nullable=False)
-    tax_table_guid = Column('tax_table', VARCHAR(length=32), ForeignKey('taxtables.guid'))
     term_guid = Column('terms', VARCHAR(length=32), ForeignKey('billterms.guid'))
+    tax_inc = Column('tax_inc', VARCHAR(length=2048))
+    tax_table_guid = Column('tax_table', VARCHAR(length=32), ForeignKey('taxtables.guid'))
 
     # relation definitions
     taxtable = relation('Taxtable')
@@ -280,10 +285,10 @@ class Taxtable(DeclarativeBaseGuid):
 
     # column definitions
     guid = Column('guid', VARCHAR(length=32), primary_key=True, nullable=False, default=lambda: uuid.uuid4().hex)
-    invisible = Column('invisible', INTEGER(), nullable=False)
     name = Column('name', VARCHAR(length=50), nullable=False)
-    parent_guid = Column('parent', VARCHAR(length=32), ForeignKey('taxtables.guid'))
     refcount = Column('refcount', BIGINT(), nullable=False)
+    invisible = Column('invisible', INTEGER(), nullable=False)
+    parent_guid = Column('parent', VARCHAR(length=32), ForeignKey('taxtables.guid'))
 
     # relation definitions
     entries = relation('TaxtableEntry',
@@ -308,12 +313,13 @@ class TaxtableEntry(DeclarativeBase):
     __table_args__ = {}
 
     # column definitions
-    account_guid = Column('account', VARCHAR(length=32), ForeignKey('accounts.guid'),nullable=False)
-    amount_denom = Column('amount_denom', BIGINT(), nullable=False)
-    amount_num = Column('amount_num', BIGINT(), nullable=False)
     id = Column('id', INTEGER(), primary_key=True, nullable=False)
     taxtable_guid = Column('taxtable', VARCHAR(length=32),
                       ForeignKey('taxtables.guid'), nullable=False)
+    account_guid = Column('account', VARCHAR(length=32), ForeignKey('accounts.guid'),nullable=False)
+    _amount_num = Column('amount_num', BIGINT(), nullable=False)
+    _amount_denom = Column('amount_denom', BIGINT(), nullable=False)
+    amount = hybrid_property_gncnumeric(_amount_num, _amount_denom)
     type = Column('type', INTEGER(), nullable=False)
 
     # relation definitions
