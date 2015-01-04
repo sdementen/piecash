@@ -79,24 +79,25 @@ class Split(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
+    tx_guid = Column('tx_guid', VARCHAR(length=32), ForeignKey('transactions.guid'), nullable=False, index=True)
     account_guid = Column('account_guid', VARCHAR(length=32), ForeignKey('accounts.guid'), nullable=False, index=True)
-    action = Column('action', VARCHAR(length=2048), nullable=False)
-    lot_guid = Column('lot_guid', VARCHAR(length=32), ForeignKey('lots.guid'))
     memo = Column('memo', VARCHAR(length=2048), nullable=False)
+    action = Column('action', VARCHAR(length=2048), nullable=False)
 
     _quantity_denom = Column('quantity_denom', BIGINT(), nullable=False)
     _quantity_denom_basis = None
     _quantity_num = Column('quantity_num', BIGINT(), nullable=False)
     quantity = hybrid_property_gncnumeric(_quantity_num, _quantity_denom)
 
-    reconcile_date = Column('reconcile_date', _DateTime())
     reconcile_state = Column('reconcile_state', VARCHAR(length=1), nullable=False)
-    tx_guid = Column('tx_guid', VARCHAR(length=32), ForeignKey('transactions.guid'), nullable=False, index=True)
+    reconcile_date = Column('reconcile_date', _DateTime())
 
-    _value_denom = Column('value_denom', BIGINT(), nullable=False)
     _value_num = Column('value_num', BIGINT(), nullable=False)
+    _value_denom = Column('value_denom', BIGINT(), nullable=False)
     _value_denom_basis = None
     value = hybrid_property_gncnumeric(_value_num, _value_denom)
+
+    lot_guid = Column('lot_guid', VARCHAR(length=32), ForeignKey('lots.guid'))
 
     # relation definitions
     account = relation('Account', back_populates='splits')
@@ -210,13 +211,13 @@ class Transaction(DeclarativeBaseGuid):
 
     # column definitions
     currency_guid = Column('currency_guid', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
-    description = Column('description', VARCHAR(length=2048))
-    enter_date = Column('enter_date', _DateTime)
     num = Column('num', VARCHAR(length=2048), nullable=False)
     _post_date = Column('post_date', _DateTime, index=True)
     post_date = mapped_to_slot_property(_post_date,
                                         slot_name="date-posted",
                                         slot_transform=lambda x: x.date() if x else None)
+    enter_date = Column('enter_date', _DateTime)
+    description = Column('description', VARCHAR(length=2048))
 
     scheduled_transaction = pure_slot_property('from-sched-xaction')
 
@@ -372,18 +373,18 @@ class ScheduledTransaction(DeclarativeBaseGuid):
 
     # column definitions
     guid = Column('guid', VARCHAR(length=32), primary_key=True, nullable=False, default=lambda: uuid.uuid4().hex)
-    adv_creation = Column('adv_creation', INTEGER(), nullable=False)
-    adv_notify = Column('adv_notify', INTEGER(), nullable=False)
-    auto_create = Column('auto_create', INTEGER(), nullable=False)
-    auto_notify = Column('auto_notify', INTEGER(), nullable=False)
-    enabled = Column('enabled', INTEGER(), nullable=False)
-    end_date = Column('end_date', _Date())
-    instance_count = Column('instance_count', INTEGER(), nullable=False)
-    last_occur = Column('last_occur', _Date())
     name = Column('name', VARCHAR(length=2048))
+    enabled = Column('enabled', INTEGER(), nullable=False)
+    start_date = Column('start_date', _Date())
+    end_date = Column('end_date', _Date())
+    last_occur = Column('last_occur', _Date())
     num_occur = Column('num_occur', INTEGER(), nullable=False)
     rem_occur = Column('rem_occur', INTEGER(), nullable=False)
-    start_date = Column('start_date', _Date())
+    auto_create = Column('auto_create', INTEGER(), nullable=False)
+    auto_notify = Column('auto_notify', INTEGER(), nullable=False)
+    adv_creation = Column('adv_creation', INTEGER(), nullable=False)
+    adv_notify = Column('adv_notify', INTEGER(), nullable=False)
+    instance_count = Column('instance_count', INTEGER(), nullable=False)
     template_act_guid = Column('template_act_guid', VARCHAR(length=32), ForeignKey('accounts.guid'), nullable=False)
 
     # relation definitions

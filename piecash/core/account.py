@@ -87,8 +87,8 @@ class Account(DeclarativeBaseGuid):
 
     # column definitions
     guid = Column('guid', VARCHAR(length=32), primary_key=True, nullable=False, default=lambda: uuid.uuid4().hex)
+    name = Column('name', VARCHAR(length=2048), nullable=False)
     type = Column('account_type', VARCHAR(length=2048), nullable=False)
-    code = Column('code', VARCHAR(length=2048))
     commodity_guid = Column('commodity_guid', VARCHAR(length=32), ForeignKey('commodities.guid'))
     _commodity_scu = Column('commodity_scu', INTEGER(), nullable=False)
     _non_std_scu = Column('non_std_scu', INTEGER(), nullable=False)
@@ -114,11 +114,11 @@ class Account(DeclarativeBaseGuid):
 
         self._commodity_scu = value
 
-    description = Column('description', VARCHAR(length=2048))
-    hidden = Column('hidden', INTEGER())
-    name = Column('name', VARCHAR(length=2048), nullable=False)
 
     parent_guid = Column('parent_guid', VARCHAR(length=32), ForeignKey('accounts.guid'))
+    code = Column('code', VARCHAR(length=2048))
+    description = Column('description', VARCHAR(length=2048))
+    hidden = Column('hidden', INTEGER())
     _placeholder = Column('placeholder', INTEGER())
     placeholder = mapped_to_slot_property(_placeholder, slot_name="placeholder",
                                           slot_transform=lambda v: "true" if v else None)
@@ -129,37 +129,37 @@ class Account(DeclarativeBaseGuid):
                         back_populates='parent',
                         cascade='all, delete-orphan',
                         collection_class=CallableList,
-    )
+                        )
     parent = relation('Account',
                       back_populates='children',
                       remote_side=guid,
-    )
+                      )
     splits = relation('Split',
                       back_populates='account',
                       cascade='all, delete-orphan',
                       collection_class=CallableList,
-    )
+                      )
     lots = relation('Lot',
                     back_populates='account',
                     cascade='all, delete-orphan',
                     collection_class=CallableList,
-    )
+                    )
     book = relation('Book',
                     back_populates='root_account',
                     foreign_keys=[Book.root_account_guid],
                     cascade='all, delete-orphan',
                     uselist=False,
-    )
+                    )
     budget_amounts = relation('BudgetAmount',
                               back_populates='account',
                               cascade='all, delete-orphan',
                               collection_class=CallableList,
-    )
+                              )
     scheduled_transaction = relation('ScheduledTransaction',
-                    back_populates='template_account',
-                    cascade='all, delete-orphan',
-                    uselist=False,
-    )
+                                     back_populates='template_account',
+                                     cascade='all, delete-orphan',
+                                     uselist=False,
+                                     )
 
 
     def __init__(self,

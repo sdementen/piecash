@@ -4,7 +4,7 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
-- Empty
+- reordering of field definitions to match gnucash order (to complete)
 
 Version 0.5.4 (2015-01-04)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -25,8 +25,8 @@ class Budget(DeclarativeBaseGuid):
     # column definitions
     # keep this line as we reference it in the primaryjoin
     guid = Column('guid', VARCHAR(length=32), primary_key=True, nullable=False, default=lambda: uuid.uuid4().hex)
-    description = Column('description', VARCHAR(length=2048))
     name = Column('name', VARCHAR(length=2048), nullable=False)
+    description = Column('description', VARCHAR(length=2048))
     num_periods = Column('num_periods', INTEGER(), nullable=False)
 
     # # relation definitions
@@ -61,16 +61,16 @@ class BudgetAmount(DeclarativeBase):
     __table_args__ = {}
 
     # column definitions
-    account_guid = Column('account_guid', VARCHAR(length=32),
-                          ForeignKey('accounts.guid'), nullable=False)
-    _amount_denom = Column('amount_denom', BIGINT(), nullable=False)
-    _amount_num = Column('amount_num', BIGINT(), nullable=False)
-    amount = hybrid_property_gncnumeric(_amount_num, _amount_denom)
-
+    id = Column('id', INTEGER(), primary_key=True, nullable=False)
     budget_guid = Column('budget_guid', VARCHAR(length=32),
                          ForeignKey('budgets.guid'), nullable=False)
-    id = Column('id', INTEGER(), primary_key=True, nullable=False)
+    account_guid = Column('account_guid', VARCHAR(length=32),
+                          ForeignKey('accounts.guid'), nullable=False)
     period_num = Column('period_num', INTEGER(), nullable=False)
+    _amount_num = Column('amount_num', BIGINT(), nullable=False)
+    _amount_denom = Column('amount_denom', BIGINT(), nullable=False)
+    amount = hybrid_property_gncnumeric(_amount_num, _amount_denom)
+
 
     # relation definitions
     account = relation('Account', back_populates='budget_amounts')

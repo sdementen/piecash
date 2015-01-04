@@ -27,8 +27,8 @@ class Recurrence(DeclarativeBase):
     id = Column('id', INTEGER(), primary_key=True, nullable=False)
     obj_guid = Column('obj_guid', VARCHAR(length=32),nullable=False)
     recurrence_mult = Column('recurrence_mult', INTEGER(), nullable=False)
-    recurrence_period_start = Column('recurrence_period_start', _Date(), nullable=False)
     recurrence_period_type = Column('recurrence_period_type', VARCHAR(length=2048), nullable=False)
+    recurrence_period_start = Column('recurrence_period_start', _Date(), nullable=False)
     recurrence_weekend_adjust = Column('recurrence_weekend_adjust', VARCHAR(length=2048), nullable=False)
 
     # relation definitions

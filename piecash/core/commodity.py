@@ -83,8 +83,8 @@ class Price(DeclarativeBaseGuid):
     source = Column('source', VARCHAR(length=2048))
     type = Column('type', VARCHAR(length=2048))
 
-    _value_denom = Column('value_denom', BIGINT(), nullable=False)
     _value_num = Column('value_num', BIGINT(), nullable=False)
+    _value_denom = Column('value_denom', BIGINT(), nullable=False)
     value = hybrid_property_gncnumeric(_value_num, _value_denom)
 
     # relation definitions
@@ -145,11 +145,11 @@ class Commodity(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
+    namespace = Column('namespace', VARCHAR(length=2048), nullable=False)
+    mnemonic = Column('mnemonic', VARCHAR(length=2048), nullable=False)
+    fullname = Column('fullname', VARCHAR(length=2048))
     cusip = Column('cusip', VARCHAR(length=2048))
     fraction = Column('fraction', INTEGER(), nullable=False)
-    fullname = Column('fullname', VARCHAR(length=2048))
-    mnemonic = Column('mnemonic', VARCHAR(length=2048), nullable=False)
-    namespace = Column('namespace', VARCHAR(length=2048), nullable=False)
     quote_flag = Column('quote_flag', INTEGER(), nullable=False)
     quote_source = Column('quote_source', VARCHAR(length=2048))
     quote_tz = Column('quote_tz', VARCHAR(length=2048))

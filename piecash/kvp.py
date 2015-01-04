@@ -146,6 +146,8 @@ class Slot(DeclarativeBase):
     __tablename__ = 'slots'
 
     # column definitions
+    id = Column('id', INTEGER(), primary_key=True, nullable=False)
+    obj_guid = Column('obj_guid', VARCHAR(length=32), nullable=False, index=True)
     _name = Column('name', VARCHAR(length=4096), nullable=False)
     @property
     def name(self):
@@ -158,13 +160,11 @@ class Slot(DeclarativeBase):
     def name(self, value):
         self._name = value
 
-    id = Column('id', INTEGER(), primary_key=True, nullable=False)
-    obj_guid = Column('obj_guid', VARCHAR(length=32), nullable=False, index=True)
     slot_type = Column('slot_type', SlotType(), nullable=False)
 
     __mapper_args__ = {
         'polymorphic_on': slot_type,
-    }
+        }
 
     def __init__(self, name, value=None):
         self.name = name
@@ -212,6 +212,13 @@ SlotInt = define_simpleslot(postfix="Int",
                             col_type=BIGINT(),
                             col_default=0,
 )
+SlotString = define_simpleslot(postfix="String",
+                               pytype=(basestring,),
+                               KVPtype=KVP_Type.KVP_TYPE_STRING,
+                               field="string_val",
+                               col_type=VARCHAR(length=4096),
+                               col_default=None,
+)
 SlotDouble = define_simpleslot(postfix="Double",
                                pytype=(float,),
                                KVPtype=KVP_Type.KVP_TYPE_DOUBLE,
@@ -226,32 +233,6 @@ SlotTime = define_simpleslot(postfix="Time",
                              col_type=_DateTime(),
                              col_default=None,
 )
-SlotDate = define_simpleslot(postfix="Date",
-                             pytype=(datetime.date,),
-                             KVPtype=KVP_Type.KVP_TYPE_GDATE,
-                             field="gdate_val",
-                             col_type=_Date(),
-                             col_default=None,
-)
-SlotString = define_simpleslot(postfix="String",
-                               pytype=(basestring,),
-                               KVPtype=KVP_Type.KVP_TYPE_STRING,
-                               field="string_val",
-                               col_type=VARCHAR(length=4096),
-                               col_default=None,
-)
-
-
-class SlotNumeric(Slot):
-    __mapper_args__ = {
-        'polymorphic_identity': KVP_Type.KVP_TYPE_NUMERIC
-    }
-    _python_type = (tuple, decimal.Decimal)
-
-    _numeric_val_denom = Column('numeric_val_denom', BIGINT(), nullable=False, default=1)
-    _numeric_val_num = Column('numeric_val_num', BIGINT(), nullable=False, default=0)
-    value = hybrid_property_gncnumeric(_numeric_val_num, _numeric_val_denom)
-
 
 
 
@@ -269,7 +250,7 @@ class SlotFrame(DictWrapper, Slot):
                                collection_class=CallableList,
                                single_parent=True,
                                backref=backref("parent", remote_side=guid_val),
-    )
+                               )
 
     @property
     def value(self):
@@ -304,7 +285,7 @@ class SlotGUID(SlotFrame):
     _mapping_name_class = {
         'from-sched-xaction': 'piecash.core.transaction.ScheduledTransaction',
         'account': 'piecash.core.account.Account',
-    }
+        }
 
 
     @property
@@ -328,7 +309,8 @@ class SlotGUID(SlotFrame):
         assert isinstance(value, self.Class)
         self.guid_val = value.guid
 
-    #guid_val = Column('guid_val', VARCHAR(length=32))
+        #guid_val = Column('guid_val', VARCHAR(length=32))
+
 
 def get_all_subclasses(cls):
     all_subclasses = []
@@ -366,3 +348,21 @@ def slot(parent, name, value):
 
     raise ValueError("Cannot handle type of '{}'".format(value))
 
+
+class SlotNumeric(Slot):
+    __mapper_args__ = {
+        'polymorphic_identity': KVP_Type.KVP_TYPE_NUMERIC
+    }
+    _python_type = (tuple, decimal.Decimal)
+
+    _numeric_val_num = Column('numeric_val_num', BIGINT(), nullable=False, default=0)
+    _numeric_val_denom = Column('numeric_val_denom', BIGINT(), nullable=False, default=1)
+    value = hybrid_property_gncnumeric(_numeric_val_num, _numeric_val_denom)
+
+SlotDate = define_simpleslot(postfix="Date",
+                             pytype=(datetime.date,),
+                             KVPtype=KVP_Type.KVP_TYPE_GDATE,
+                             field="gdate_val",
+                             col_type=_Date(),
+                             col_default=None,
+                             )
