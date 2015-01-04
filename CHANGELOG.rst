@@ -4,7 +4,7 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
-- Empty
+- added back the order table in the declarations
 
 Version 0.5.3 (2015-01-03)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

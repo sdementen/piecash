@@ -213,24 +213,24 @@ class Job(DeclarativeBaseGuid):
     # todo: owner_guid/type links to Vendor or Customer
 
 # This class exists in code but not in the GUI (to confirm?)
-#
-# class Order(DeclarativeBaseGuid):
-#     __tablename__ = 'orders'
-#
-#     __table_args__ = {}
-#
-#     # column definitions
-#     active = Column('active', INTEGER(), nullable=False)
-#     date_closed = Column('date_closed', _DateTime(), nullable=False)
-#     date_opened = Column('date_opened', _DateTime(), nullable=False)
-#     id = Column('id', VARCHAR(length=2048), nullable=False)
-#     notes = Column('notes', VARCHAR(length=2048), nullable=False)
-#     owner_guid = Column('owner_guid', VARCHAR(length=32), nullable=False)
-#     owner_type = Column('owner_type', INTEGER(), nullable=False)
-#     reference = Column('reference', VARCHAR(length=2048), nullable=False)
-#
-#     # relation definitions
-#     # todo: owner_guid/type links to Vendor or Customer
+
+class Order(DeclarativeBaseGuid):
+    __tablename__ = 'orders'
+
+    __table_args__ = {}
+
+    # column definitions
+    active = Column('active', INTEGER(), nullable=False)
+    date_closed = Column('date_closed', _DateTime(), nullable=False)
+    date_opened = Column('date_opened', _DateTime(), nullable=False)
+    id = Column('id', VARCHAR(length=2048), nullable=False)
+    notes = Column('notes', VARCHAR(length=2048), nullable=False)
+    owner_guid = Column('owner_guid', VARCHAR(length=32), nullable=False)
+    owner_type = Column('owner_type', INTEGER(), nullable=False)
+    reference = Column('reference', VARCHAR(length=2048), nullable=False)
+
+    # relation definitions
+    # todo: owner_guid/type links to Vendor or Customer
 
 
 class Vendor(DeclarativeBaseGuid):
