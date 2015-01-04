@@ -1,8 +1,8 @@
 What's new
 ==========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.5.7 (2015-01-04)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - add sign property on account
 - raise NotImplementedError when creating an object is not "safe" (ie not __init__ and validators)
