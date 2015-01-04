@@ -63,6 +63,7 @@ class Account(DeclarativeBaseGuid):
 
     Attributes:
         type (str): type of the Account
+        sign (int): 1 for accounts with positive balances, -1 for accounts with negative balances
         code (str): code of the Account
         commodity (:class:`piecash.core.commodity.Commodity`): the commodity of the account
         commodity_scu (int): smallest currency unit for the account
@@ -247,8 +248,11 @@ class Account(DeclarativeBaseGuid):
         Returns
             the balance of the account
         """
-        return sum([sp.value for sp in self.splits]) * (-1 if self.type in negative_types else 1)
+        return sum([sp.value for sp in self.splits]) * self.sign
 
+    @property
+    def sign(self):
+        return 1 if (self.type in positive_types) else -1
 
     @property
     def is_template(self):
