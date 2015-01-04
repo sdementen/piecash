@@ -84,10 +84,6 @@ class Split(DeclarativeBaseGuid):
     memo = Column('memo', VARCHAR(length=2048), nullable=False)
     action = Column('action', VARCHAR(length=2048), nullable=False)
 
-    _quantity_denom = Column('quantity_denom', BIGINT(), nullable=False)
-    _quantity_denom_basis = None
-    _quantity_num = Column('quantity_num', BIGINT(), nullable=False)
-    quantity = hybrid_property_gncnumeric(_quantity_num, _quantity_denom)
 
     reconcile_state = Column('reconcile_state', VARCHAR(length=1), nullable=False)
     reconcile_date = Column('reconcile_date', _DateTime())
@@ -96,6 +92,10 @@ class Split(DeclarativeBaseGuid):
     _value_denom = Column('value_denom', BIGINT(), nullable=False)
     _value_denom_basis = None
     value = hybrid_property_gncnumeric(_value_num, _value_denom)
+    _quantity_num = Column('quantity_num', BIGINT(), nullable=False)
+    _quantity_denom = Column('quantity_denom', BIGINT(), nullable=False)
+    _quantity_denom_basis = None
+    quantity = hybrid_property_gncnumeric(_quantity_num, _quantity_denom)
 
     lot_guid = Column('lot_guid', VARCHAR(length=32), ForeignKey('lots.guid'))
 
@@ -438,7 +438,7 @@ class Lot(DeclarativeBaseGuid):
         if splits:
             self.splits[:] = splits
 
-    @validates("splits", "account")
+    @validates("splitsentries", "account")
     def validate_account_split_consistency(self, key, value):
         if key == "account" and self.account and self.splits:
             raise ValueError("You cannot change the account of a Lot once a split has alread been assigned")

@@ -145,6 +145,8 @@ class DictWrapper(object):
 class Slot(DeclarativeBase):
     __tablename__ = 'slots'
 
+    __table_args__ = {'sqlite_autoincrement': True}
+
     # column definitions
     id = Column('id', INTEGER(), primary_key=True, nullable=False)
     obj_guid = Column('obj_guid', VARCHAR(length=32), nullable=False, index=True)

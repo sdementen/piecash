@@ -160,9 +160,9 @@ class Entry(DeclarativeBaseGuid):
     b_price_num = Column('b_price_num', BIGINT())
     b_price_denom = Column('b_price_denom', BIGINT())
     bill = Column('bill', VARCHAR(length=32))
-    b_taxtable = Column('b_taxtable', VARCHAR(length=32))
-    b_taxincluded = Column('b_taxincluded', INTEGER())
     b_taxable = Column('b_taxable', INTEGER())
+    b_taxincluded = Column('b_taxincluded', INTEGER())
+    b_taxtable = Column('b_taxtable', VARCHAR(length=32))
     b_paytype = Column('b_paytype', INTEGER())
     billable = Column('billable', INTEGER())
     billto_type = Column('billto_type', INTEGER())
@@ -310,7 +310,7 @@ class Taxtable(DeclarativeBaseGuid):
 class TaxtableEntry(DeclarativeBase):
     __tablename__ = 'taxtable_entries'
 
-    __table_args__ = {}
+    __table_args__ = {'sqlite_autoincrement': True}
 
     # column definitions
     id = Column('id', INTEGER(), primary_key=True, nullable=False)

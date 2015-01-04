@@ -21,7 +21,7 @@ class GncValidationError(GnucashException):
 class Recurrence(DeclarativeBase):
     __tablename__ = 'recurrences'
 
-    __table_args__ = {}
+    __table_args__ = {'sqlite_autoincrement': True}
 
     # column definitions
     id = Column('id', INTEGER(), primary_key=True, nullable=False)

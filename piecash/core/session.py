@@ -90,7 +90,7 @@ class GncSession(object):
 
         if acquire_lock:
             # set a lock
-            session.execute(gnclock.insert(values=dict(hostname=socket.gethostname(), pid=os.getpid())))
+            session.execute(gnclock.insert(values=dict(Hostname=socket.gethostname(), PID=os.getpid())))
             session.commit()
 
         # setup tracking of session changes (see https://www.mail-archive.com/sqlalchemy@googlegroups.com/msg34201.html)
@@ -126,8 +126,8 @@ class GncSession(object):
 
         if self._acquire_lock:
             # remove the lock
-            session.execute(gnclock.delete(whereclause=(gnclock.c.hostname == socket.gethostname())
-                                                       and (gnclock.c.pid == os.getpid())))
+            session.execute(gnclock.delete(whereclause=(gnclock.c.Hostname == socket.gethostname())
+                                                       and (gnclock.c.PID == os.getpid())))
             session.commit()
 
         session.close()
