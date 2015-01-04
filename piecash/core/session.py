@@ -20,8 +20,8 @@ version_supported = {u'Gnucash-Resave': 19920, u'invoices': 3, u'books': 1, u'ac
 
 # this is not a declarative as it is used before binding the session to an engine.
 gnclock = Table(u'gnclock', DeclarativeBase.metadata,
-                Column('Hostname', VARCHAR(length=255)),
-                Column('PID', INTEGER()),
+                Column('Hostname', VARCHAR(length=255), quote=False),
+                Column('PID', INTEGER(), quote=False),
 )
 
 
