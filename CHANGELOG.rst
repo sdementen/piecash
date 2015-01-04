@@ -5,6 +5,7 @@ In development
 ~~~~~~~~~~~~~~
 
 - reordering of field definitions to match gnucash order (finished)
+- add autoincr
 
 Version 0.5.5 (2015-01-04)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
