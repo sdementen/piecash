@@ -204,6 +204,7 @@ class Transaction(DeclarativeBaseGuid):
         num (str): user provided transaction number
         splits (list of :class:`Split`): list of the splits of the transaction
         scheduled_transaction  (:class:`ScheduledTransaction`): scheduled transaction behind the transaction
+        notes (str): notes on the transaction (provided via a slot)
     """
     __tablename__ = 'transactions'
 
@@ -218,6 +219,7 @@ class Transaction(DeclarativeBaseGuid):
                                         slot_transform=lambda x: x.date() if x else None)
     enter_date = Column('enter_date', _DateTime)
     description = Column('description', VARCHAR(length=2048))
+    notes = pure_slot_property('notes')
 
     scheduled_transaction = pure_slot_property('from-sched-xaction')
 
@@ -236,6 +238,7 @@ class Transaction(DeclarativeBaseGuid):
     def __init__(self,
                  currency,
                  description="",
+                 notes=None,
                  splits=None,
                  enter_date=None,
                  post_date=None,
@@ -247,6 +250,8 @@ class Transaction(DeclarativeBaseGuid):
         self.post_date = post_date if post_date \
             else datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
         self.num = num
+        if notes is not None:
+            self.notes = notes
         if splits:
             self.splits = splits
 
