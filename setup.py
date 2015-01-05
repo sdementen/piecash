@@ -236,6 +236,7 @@ setup_dict = dict(
     url=metadata.url,
     description=metadata.description,
     long_description=read('docs/source/doc/doc.rst'),
+    keywords = ['GnuCash', 'python', 'binding', 'interface', 'sqlalchemy'], 
     # Find a list of classifiers here:
     # <http://pypi.python.org/pypi?%3Aaction=list_classifiers>
     classifiers=[
