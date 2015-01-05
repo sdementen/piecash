@@ -84,7 +84,6 @@ class Split(DeclarativeBaseGuid):
     memo = Column('memo', VARCHAR(length=2048), nullable=False)
     action = Column('action', VARCHAR(length=2048), nullable=False)
 
-
     reconcile_state = Column('reconcile_state', VARCHAR(length=1), nullable=False)
     reconcile_date = Column('reconcile_date', _DateTime())
 
@@ -255,6 +254,29 @@ class Transaction(DeclarativeBaseGuid):
         if splits:
             self.splits = splits
 
+    def __repr__(self):
+        return "<Transaction[{}] '{}' on {:%Y-%m-%d}{}>".format(self.currency.mnemonic,
+                                                                self.description,
+                                                                self.post_date,
+                                                                " (from sch tx)" if self.scheduled_transaction else "")
+
+    def ledger_str(self):
+        """Return a ledger-cli alike representation of the transaction"""
+        s = ["{:%Y/%m/%d} * {}\n".format(self.post_date, self.description)]
+        if self.notes:
+            s.append(";{}".format(self.notes))
+        for split in self.splits:
+            s.append("\t{:70} ".format(split.account.fullname))
+            if split.account.commodity != self.currency:
+                s.append("{:10.2f} {} @@ {:.2f} {}".format(
+                    split.quantity, split.account.commodity.mnemonic, abs(split.value),
+                    self.currency.mnemonic))
+            else:
+                s.append("{:10.2f} {}".format(split.value, self.currency.mnemonic))
+            if split.memo:
+                s.append(" ;   {:20}".format(split.memo))
+            s.append("\n")
+        return "".join(s)
 
     @validates("currency")
     def validate_currency(self, key, value):
@@ -329,12 +351,6 @@ class Transaction(DeclarativeBaseGuid):
                 Split(account=to_account, value=value),
             ])
         return tx
-
-    def __repr__(self):
-        return "<Transaction[{}] '{}' on {:%Y-%m-%d}{}>".format(self.currency.mnemonic,
-                                                                self.description,
-                                                                self.post_date,
-                                                                " (from sch tx)" if self.scheduled_transaction else "")
 
 
 @event.listens_for(Session, 'before_flush')
@@ -437,9 +453,9 @@ class Lot(DeclarativeBaseGuid):
                  account,
                  notes="",
                  splits=None):
-        self.title=title
-        self.account=account
-        self.notes=notes
+        self.title = title
+        self.account = account
+        self.notes = notes
         if splits:
             self.splits[:] = splits
 
@@ -452,6 +468,6 @@ class Lot(DeclarativeBaseGuid):
         if key == "splits":
             sp = value
             assert sp.lot is None, "The split has already a lot "
-            assert sp.account==self.account, "You cannot assign to a lot a split that is not on the account of the lot"
+            assert sp.account == self.account, "You cannot assign to a lot a split that is not on the account of the lot"
 
         return value

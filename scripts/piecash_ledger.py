@@ -56,14 +56,5 @@ with piecash.open_book(sys.argv[1], open_if_lock=True) as data:
     out.write("\n")
     
     for trans in sorted(data.transactions,key=lambda x: x.post_date):
-        out.write("{:%Y/%m/%d} * {}\n" .format(trans.post_date, trans.description))
-        for split in trans.splits:
-            out.write("\t{:40} " .format(split.account.fullname))
-            if split.account.commodity != trans.currency:
-                out.write("{:10.2f} {} @@ {:.2f} {}" .format(
-                    split.quantity, format_commodity(split.account.commodity), abs(split.value),
-                    format_commodity(trans.currency)))
-            else:
-                out.write("{:10.2f} {}" .format(split.value, format_commodity(trans.currency)))
-            out.write("\n")
+        out.write(trans.ledger_str())
         out.write("\n")

@@ -4,7 +4,7 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
-- Empty
+- add a ledger_str method to transaction to output transaction in the ledger-cli format
 
 Version 0.5.10 (2015-01-05)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
