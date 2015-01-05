@@ -1,6 +1,12 @@
 What's new
 ==========
 
+In development
+~~~~~~~~~~~~~~
+
+- add keywords to setup.py
+
+
 Version 0.5.8 (2015-01-05)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
