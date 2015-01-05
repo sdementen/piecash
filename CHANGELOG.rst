@@ -1,8 +1,8 @@
 What's new
 ==========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.5.8 (2015-01-05)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - add notes to Transaction (via slot)
 
