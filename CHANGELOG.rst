@@ -5,6 +5,7 @@ Version 0.5.8 (2015-01-05)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - add notes to Transaction (via slot)
+- removed standalone exe from git/package (as too large)
 
 Version 0.5.7 (2015-01-04)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
