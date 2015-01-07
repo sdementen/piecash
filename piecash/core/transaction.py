@@ -264,7 +264,7 @@ class Transaction(DeclarativeBaseGuid):
         """Return a ledger-cli alike representation of the transaction"""
         s = ["{:%Y/%m/%d} * {}\n".format(self.post_date, self.description)]
         if self.notes:
-            s.append(";{}".format(self.notes))
+            s.append(";{}\n".format(self.notes))
         for split in self.splits:
             s.append("\t{:70} ".format(split.account.fullname))
             if split.account.commodity != self.currency:
