@@ -1,4 +1,6 @@
+from datetime import datetime
 import os
+import shutil
 import socket
 
 from sqlalchemy import event, create_engine, Column, VARCHAR, INTEGER, Table
@@ -315,7 +317,13 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
     return GncSession(s)
 
 
-def open_book(sqlite_file=None, uri_conn=None, acquire_lock=False, readonly=True, open_if_lock=False, **kwargs):
+def open_book(sqlite_file=None,
+              uri_conn=None,
+              acquire_lock=False,
+              readonly=True,
+              open_if_lock=False,
+              backup=True,
+              **kwargs):
     """Open an existing GnuCash book
 
     :param str sqlite_file: a path to an sqlite3 file
@@ -324,6 +332,8 @@ def open_book(sqlite_file=None, uri_conn=None, acquire_lock=False, readonly=True
     :param bool readonly: open the file as readonly (useful to play with and avoid any unwanted save)
     :param bool open_if_lock: open the file even if it is locked by another user
         (using open_if_lock=True with readonly=False is not recommended)
+    :param bool backup: create a backup if readonly==False
+        (works only on sqlite)
 
     :return: the document as a gnucash session
     :rtype: :class:`GncSession`
@@ -337,8 +347,17 @@ def open_book(sqlite_file=None, uri_conn=None, acquire_lock=False, readonly=True
         else:
             raise ValueError("One sqlite_file and uri_conn arguments should be given.")
 
-    # create database (if not sqlite in memory
-    if not database_exists(uri_conn):
+    # create database (if not sqlite in memory)
+    if database_exists(uri_conn):
+        if not readonly and backup:
+            if uri_conn.startswith("sqlite:///"):
+                file = uri_conn[10:]
+                backup_file = "{}.piecash_{:%Y%m%d_%h%M%s}".format(file, datetime.today())
+                shutil.copy(file, backup_file)
+            else:
+                raise GnucashException("Cannot create backup of DB {}. "
+                                       "Set backup=False and ensure you have done yourself a backup".format(uri_conn))
+    else:
         raise GnucashException("Database '{}' does not exist (please use create_book to create " \
                                "GnuCash books from scratch)".format(uri_conn))
 

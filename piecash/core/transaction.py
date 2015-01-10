@@ -360,7 +360,7 @@ def set_imbalance_on_transaction(session, flush_context, instances):
     for o in session.dirty:
         if isinstance(o, Transaction):
             txs.add(o)
-        if isinstance(o, Split):
+        if isinstance(o, Split) and o.transaction:
             txs.add(o.transaction)
     txs = txs.union(o for o in session.new if isinstance(o, Transaction))
 
