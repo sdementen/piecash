@@ -79,7 +79,7 @@ class Split(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
-    tx_guid = Column('tx_guid', VARCHAR(length=32), ForeignKey('transactions.guid'), nullable=False, index=True)
+    transaction_guid = Column('tx_guid', VARCHAR(length=32), ForeignKey('transactions.guid'), nullable=False, index=True)
     account_guid = Column('account_guid', VARCHAR(length=32), ForeignKey('accounts.guid'), nullable=False, index=True)
     memo = Column('memo', VARCHAR(length=2048), nullable=False)
     action = Column('action', VARCHAR(length=2048), nullable=False)
@@ -228,9 +228,9 @@ class Transaction(DeclarativeBaseGuid):
     )
     splits = relation('Split',
                       back_populates="transaction",
-                      single_parent=True,
+                      # single_parent=True,
                       cascade='all, delete-orphan',
-                      collection_class=CallableList,
+                      # collection_class=CallableList,
     )
 
 
@@ -360,8 +360,9 @@ def set_imbalance_on_transaction(session, flush_context, instances):
     for o in session.dirty:
         if isinstance(o, Transaction):
             txs.add(o)
-        if isinstance(o, Split) and o.transaction:
-            txs.add(o.transaction)
+        if isinstance(o, Split):
+            if o.transaction:
+                txs.add(o.transaction)
     txs = txs.union(o for o in session.new if isinstance(o, Transaction))
 
     # for each transaction, validate the transaction

@@ -65,7 +65,7 @@ def hybrid_property_gncnumeric(num_col, denom_col):
     :return: sqlalchemy.ext.hybrid.hybrid_property
     """
     num_name, denom_name = "_{}".format(num_col.name), "_{}".format(denom_col.name)
-
+    name = num_col.name.split("_")[0]
     def fset(self, d):
         if d is None:
             num, denom = None, None
@@ -100,7 +100,7 @@ def hybrid_property_gncnumeric(num_col, denom_col):
 
 
     def expr(cls):
-        return cast(num_col, Float) / denom_col
+        return (cast(num_col, Float) / denom_col).label(name)
 
     return hybrid_property(
         fget=fget,
