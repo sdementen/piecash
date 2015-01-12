@@ -228,9 +228,8 @@ class Transaction(DeclarativeBaseGuid):
     )
     splits = relation('Split',
                       back_populates="transaction",
-                      # single_parent=True,
                       cascade='all, delete-orphan',
-                      # collection_class=CallableList,
+                      collection_class=CallableList,
     )
 
 

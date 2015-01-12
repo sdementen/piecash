@@ -5,6 +5,10 @@ In development
 ~~~~~~~~~~~~~~
 
 - add a ledger_str method to transaction to output transaction in the ledger-cli format
+- add label to Decimal field in sqlalchemy expr
+- add backup option when opening sqlite file in RW (enabled by default)
+- renamed tx_guid to transaction_guid in Split field
+- fix technical bug in validation of transaction
 
 Version 0.5.10 (2015-01-05)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
