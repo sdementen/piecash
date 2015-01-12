@@ -1,8 +1,8 @@
 What's new
 ==========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.5.11 (2015-01-12)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - add a ledger_str method to transaction to output transaction in the ledger-cli format
 - add label to Decimal field in sqlalchemy expr
