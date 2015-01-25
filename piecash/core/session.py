@@ -352,7 +352,7 @@ def open_book(sqlite_file=None,
         if not readonly and backup:
             if uri_conn.startswith("sqlite:///"):
                 file = uri_conn[10:]
-                backup_file = "{}.piecash_{:%Y%m%d_%h%M%s}".format(file, datetime.today())
+                backup_file = "{}.piecash_{:%Y%m%d_%H%M%s}".format(file, datetime.today())
                 shutil.copy(file, backup_file)
             else:
                 raise GnucashException("Cannot create backup of DB {}. "

@@ -183,9 +183,6 @@ class Split(DeclarativeBaseGuid):
         if trx and acc:
             if trx.currency == acc.commodity:
                 self.quantity = self.value
-                # if the quantity has different rounding that value, then reassign the quantity to the value
-                if self.quantity != self.value:
-                    self.value = self.quantity
 
         return value
 
@@ -462,7 +459,7 @@ class Lot(DeclarativeBaseGuid):
     @validates("splitsentries", "account")
     def validate_account_split_consistency(self, key, value):
         if key == "account" and self.account and self.splits:
-            raise ValueError("You cannot change the account of a Lot once a split has alread been assigned")
+            raise ValueError("You cannot change the account of a Lot once a split has already been assigned")
         if key == "splits" and not self.account:
             raise ValueError("You can assign splits to a lot only once the account is set")
         if key == "splits":
