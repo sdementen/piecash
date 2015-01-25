@@ -44,6 +44,7 @@ def _is_parent_child_types_consistent(type_parent, type_child):
     Returns
         True if both accounts are consistent, False otherwise
     """
+    # TODO: if we want to allow multiple root accounts below the ROOT account, relax constrain
     if type_parent in root_types:
         return type_child in (ACCOUNT_TYPES - root_types)
 

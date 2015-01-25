@@ -315,7 +315,7 @@ class Commodity(DeclarativeBaseGuid):
         """
         yql = 'select Name, StockExchange, Symbol,Currency from yahoo.finance.quotes where symbol = "{}"'.format(symbol)
         symbol_info = run_yql(yql, scalar=True)
-        if symbol_info.StockExchange:
+        if symbol_info and symbol_info.StockExchange:
             stock = Commodity(mnemonic=symbol_info.Symbol,
                               fullname=symbol_info.Name,
                               fraction=10000,
@@ -395,10 +395,10 @@ class Commodity(DeclarativeBaseGuid):
 
         and the following accounts depending on the income_account_types argument
 
-        - D = Income/Dividends/stock.mnemonic
+        - D = Income/Dividend Income/stock.mnemonic
         - CL = Income/Cap Gain (Long)/stock.mnemonic
         - CS = Income/Cap Gain (Short)/stock.mnemonic
-        - I = Income/Interest/stock.mnemonic
+        - I = Income/Interest Income/stock.mnemonic
 
         Args:
             broker_account (:class:`piecash.core.account.Account`): the broker account where the account holding
@@ -423,10 +423,10 @@ class Commodity(DeclarativeBaseGuid):
 
             for inc_acc in income_account_types.split("/"):
                 sub_account_name = {
-                    "D": "Dividends",
+                    "D": "Dividend Income",
                     "CL": "Cap Gain (Long)",
                     "CS": "Cap Gain (Short)",
-                    "I": "Interest",
+                    "I": "Interest Income",
                 }[inc_acc]
                 try:
                     div = income_account.children.get(name=sub_account_name)

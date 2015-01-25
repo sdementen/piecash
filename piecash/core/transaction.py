@@ -308,6 +308,9 @@ class Transaction(DeclarativeBaseGuid):
 
             # if there is an imbalance, add an imbalance split to the transaction
             if imbalance:
+                # TODO: trigger this if open "strict transaction" is enabled
+                raise GncValidationError("Transaction is not balanced by {}:\n{}".format(imbalance,
+                # TODO: otherwise, generate the imbalance splits
                 # retrieve imbalance account
                 imb_acc_name = "Imbalance-{}".format(c.mnemonic)
                 try:
