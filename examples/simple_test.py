@@ -11,7 +11,7 @@ FILE_1 = "/tmp/example.gnucash"
 with create_book(FILE_1, overwrite=True) as session:
     book = session.book
     root_acct = book.root_account
-    cad = s.book.create_currency_from_ISO("CAD")
+    cad = session.book.create_currency_from_ISO("CAD")
     expenses_acct = Account(parent=root_acct,
                             name="Expenses",
                             type="EXPENSE",

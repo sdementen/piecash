@@ -6,7 +6,7 @@ from piecash import create_book, Account, Transaction, Split, GncValidationError
 # create new book
 with create_book() as s:
     ra = s.book.root_account
-    eur = ra.commodity
+    eur = s.book.default_currency
 
     # number of accounts
     N = 5
