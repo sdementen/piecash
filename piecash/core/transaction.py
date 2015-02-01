@@ -265,7 +265,7 @@ class Transaction(DeclarativeBaseGuid):
         if self.notes:
             s.append(";{}\n".format(self.notes))
         for split in self.splits:
-            s.append("\t{:70} ".format(split.account.fullname))
+            s.append("\t{:40} ".format(split.account.fullname))
             if split.account.commodity != self.currency:
                 s.append("{:10.2f} {} @@ {:.2f} {}".format(
                     split.quantity, split.account.commodity.mnemonic, abs(split.value),

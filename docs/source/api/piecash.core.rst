@@ -6,6 +6,7 @@ Submodules
 
 .. toctree::
 
+   piecash.core._commodity_helper
    piecash.core.account
    piecash.core.book
    piecash.core.commodity

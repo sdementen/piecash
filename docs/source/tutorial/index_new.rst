@@ -1,10 +1,10 @@
 Tutorial : creating new objects
 ===============================
 
-.. toctree::
-   :maxdepth: 2
+.. include:: new_objects/create_book.rst
 
+.. include:: new_objects/create_account.rst
 
-   create_book.rst
-   create_account.rst
-.. this   examples.rst
+.. include:: new_objects/create_commodity.rst
+
+.. include:: new_objects/create_transaction.rst

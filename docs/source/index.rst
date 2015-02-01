@@ -53,7 +53,6 @@ The todo list:
 - write more tests
 - review non core objects (:py:mod:`~piecash.budget`, :py:mod:`~piecash.business`)
 - build a single exe to ease install on windows (following http://milkator.wordpress.com/2014/07/19/windows-executable-from-python-developing-in-ubuntu/)
-- compare piecash and the official python bindings
 
 Indices and tables
 ==================

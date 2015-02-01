@@ -23,15 +23,15 @@ A simple example of a piecash script::
 
     with open_book("example.gnucash") as s:
         # get default currency of book
-        print( s.book.root_account.commodity )  # ==> Commodity<CURRENCY:EUR>
+        print( s.book.default_currency )  # ==> Commodity<CURRENCY:EUR>
 
         # iterating over all splits in all books and print the transaction description:
         for acc in s.accounts:
             for sp in acc.splits:
                 print(sp.transaction.description)
 
-As piecash is essentially a SQLAlchemy layer, it could be reused by any web framework that has a SQLAlchemy interface to develop
-REST API or classical websites. It can also be used for reporting purposes.
+As piecash is essentially a SQLAlchemy layer, it could be potentially reused by any web framework that has
+a SQLAlchemy interface to develop REST API or classical websites. It can also be used for reporting purposes.
 
 The project has reached beta stage. Knowledge of SQLAlchemy is at this stage not anymore required to use it and/or
 to contribute to it. Some documentation for developers on the object model of GnuCash as understood by the author is

@@ -115,6 +115,11 @@ class GncSession(object):
             self._is_modified = False
 
 
+    def flush(self):
+        """Flush the changes to trigger validation/PK generation/... (=flush transaction)
+        """
+        self.sa_session.flush()
+
     def save(self):
         """Save the changes to the file/DB (=commit transaction)
         """
@@ -310,13 +315,19 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
     # create Book and initial accounts
     from .account import Account
 
-    b = Book(root_account=Account(name="Root Account", type="ROOT",
-                                  commodity=Commodity.create_currency_from_ISO(currency)),
+    gnc_s = GncSession(s)
+
+    # create the Book with the 2 root accounts
+    b = Book(root_account=Account(name="Root Account", type="ROOT", commodity=None),
              root_template=Account(name="Template Root", type="ROOT", commodity=None),
     )
     s.add(b)
     s.commit()
-    return GncSession(s)
+
+    # create the currency
+    gnc_s.book.create_currency_from_ISO(currency)
+    s.commit()
+    return gnc_s
 
 
 def open_book(sqlite_file=None,

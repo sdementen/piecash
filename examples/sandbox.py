@@ -4,8 +4,169 @@ import datetime
 import decimal
 import inspect
 
-from piecash import open_book, Transaction, Split, ScheduledTransaction, create_book, Budget
+from piecash import open_book, Budget
 from piecash._common import Recurrence
+from piecash import create_book, Account, Transaction, Split
+
+
+
+
+
+# create a book (in memory)
+s = create_book(currency="EUR")
+# get the EUR and create the USD currencies
+c1 = s.book.default_currency
+c2 = s.book.create_currency_from_ISO("USD")
+# create two accounts
+a1 = Account("Acc 1", "ASSET", c1, parent=s.book.root_account)
+a2 = Account("Acc 2", "ASSET", c2, parent=s.book.root_account)
+# create a transaction from a1 to a2
+tr = Transaction(currency=c1,
+                 description="transfer",
+                 splits=[
+                     Split(account=a1, value=-100),
+                     Split(account=a2, value=100, quantity=30)
+                 ])
+s.flush()
+
+# ledger_str() returns a representation of the transaction in the ledger-cli format
+tr.ledger_str()
+
+# change the book to use the "trading accounts" options
+s.book.use_trading_accounts = True
+# add a new transaction identical to the previous
+tr2 = Transaction(currency=c1,
+                  description="transfer 2",
+                  splits=[
+                      Split(account=a1, value=-100),
+                      Split(account=a2, value=100, quantity=30)
+                  ])
+tr2.ledger_str()
+# when flushing, the trading accounts are created
+s.flush()
+tr2.ledger_str()
+
+# trying to create an unbalanced transaction trigger an exception
+# (there is not automatic creation of an imbalance split)
+tr3 = Transaction(currency=c1,
+                  description="transfer imb",
+                  splits=[
+                      Split(account=a1, value=-100),
+                      Split(account=a2, value=90, quantity=30)
+                  ])
+tr3.ledger_str()
+s.flush()
+
+fdsfdsfds
+if True:
+    from piecash import create_book, Account
+
+    with create_book(currency="EUR") as s:
+        # retrieve the default currency
+        EUR = s.commodities.get(mnemonic="EUR")
+
+        # creating a placeholder account
+        acc = Account(name="My account",
+                      type="ASSET",
+                      parent=s.book.root_account,
+                      commodity=EUR,
+                      placeholder=True, )
+
+        # creating a detailed sub-account
+        subacc = Account(name="My sub account",
+                         type="BANK",
+                         parent=acc,
+                         commodity=EUR,
+                         commodity_scu=1000,
+                         description="my bank account",
+                         code="FR013334...", )
+        print(acc)
+        s.save()
+dfds
+
+from piecash import create_book, Commodity
+
+# create a book (in memory) with some currency
+s = create_book(currency="EUR")
+
+print(s.commodities)
+print(s, s.book, s.book.gnc_session)
+
+# creating a new ISO currency (if not already available in s.commodities)
+USD = s.book.create_currency_from_ISO("USD")
+print(USD)
+
+# create a commodity
+apple = s.book.create_stock_from_symbol("AAPL")
+print(apple)
+
+XBT = Commodity(namespace="CURRENCY", mnemonic="XBT", fullname="Bitcoin", fraction=1000000)
+print(XBT)
+cxwcxwcxw
+# with create_book("empty.gnucash", overwrite=True) as s:
+# print(list(s.book.iteritems()))
+
+# with open_book("test_bitcoin_piecash.gnucash", readonly=False, open_if_lock=True, backup=False) as s:
+# for tr in s.transactions:
+# print(tr.ledger_str())
+# with create_book("super_empty_piecash.gnucash") as s:
+# pass
+# dffdsfds
+
+
+with open_book("super_empty_piecash.gnucash", readonly=False, open_if_lock=True, backup=False) as s:
+    print(s.book.root_account.commodity)
+    print(s.commodities)
+    fdfdsfds
+    sa = s.sa_session
+    sql = sa.query(Split.value).filter_by(value=100)
+    print(sql)
+    print(sql.all())
+    # print(list(sa.execute("select * from splits")))
+
+dsdsqdsq
+#
+with open_book("test_bitcoin_piecash.gnucash", readonly=False, open_if_lock=True, backup=False) as s:
+    # print(s.book.use_trading_accounts)
+    # print(s.book.RO_threshold_day)
+    # s.book.use_split_action_field=True
+    # print(list(s.book.iteritems()))
+    # s.book.RO_threshold_day=0
+    # s.book.use_trading_accounts=not s.book.use_trading_accounts
+    # print(s.book.use_trading_accounts)
+    # print(list(s.book.iteritems()))
+    # s.book.RO_threshold_day=12
+    # s.book.use_trading_accounts=not s.book.use_trading_accounts
+    # print(s.book.use_trading_accounts)
+    # print(list(s.book.iteritems()))
+    # fdfdsfds
+    s.book.use_trading_accounts = True
+
+    # mtr = s.transactions(description="weird transaction")
+    # print(mtr.ledger_str())
+    # print(mtr.calculate_imbalances())
+    # fdsfds
+
+    for tr in s.transactions:
+        if tr.description == "weird transaction":
+            print(tr.ledger_str())
+            tr.splits = [sp for sp in tr.splits if sp.account.type != "TRADING"]
+
+        before = tr.ledger_str()
+        if any(tr.calculate_imbalances()[1]):
+            print(before)
+            tr.normalize_trading_accounts()
+            print(tr.ledger_str())
+
+    s.save()
+fdsfdsfds
+
+with create_book("test_bitcoin.gnucash", overwrite=True) as s:
+    root = s.book.root_account
+    bitcoin = Commodity("CURRENCY", "XBT", "Bitcoin", 1000000)
+    Account("My bitcoin account", "BANK", bitcoin, parent=root)
+    s.save()
+fdsfds
 
 with open_book("../gnucash_books/default_book.gnucash") as s:
     # accessing the book object from the session
@@ -21,12 +182,11 @@ with open_book("../gnucash_books/default_book.gnucash") as s:
 
     print(inspect.getmro(Budget))
     print(inspect.getmro(Recurrence))
-    b = Budget(name=lambda x:x, foo="3")
-    b = Budget(name=lambda x:x, foo="3")
+    b = Budget(name=lambda x: x, foo="3")
+    b = Budget(name=lambda x: x, foo="3")
     fdsd
     print(b)
 fdsfds
-
 
 with create_book() as s:
     # retrieve list of slots
@@ -43,7 +203,7 @@ with create_book() as s:
 
     # iterate over all slots
     for k, v in s.book.iteritems():
-        print("slot={v} has key={k} and value={v.value} of type {t}".format(k=k,v=v,t=type(v.value)))
+        print("slot={v} has key={k} and value={v.value} of type {t}".format(k=k, v=v, t=type(v.value)))
 
     # delete a slot
     del s.book["myintkey"]
@@ -51,13 +211,13 @@ with create_book() as s:
     del s.book[:]
 
     # create a key/value in a slot frames (and create them if they do not exist)
-    s.book["options/Accounts/Use trading accounts"]="t"
+    s.book["options/Accounts/Use trading accounts"] = "t"
     # access a slot in frame in whatever notations
-    s1=s.book["options/Accounts/Use trading accounts"]
-    s2=s.book["options"]["Accounts/Use trading accounts"]
-    s3=s.book["options/Accounts"]["Use trading accounts"]
-    s4=s.book["options"]["Accounts"]["Use trading accounts"]
-    assert s1==s2==s3==s4
+    s1 = s.book["options/Accounts/Use trading accounts"]
+    s2 = s.book["options"]["Accounts/Use trading accounts"]
+    s3 = s.book["options/Accounts"]["Use trading accounts"]
+    s4 = s.book["options"]["Accounts"]["Use trading accounts"]
+    assert s1 == s2 == s3 == s4
 
 dsqdsq
 with open_book("/home/sdementen/Desktop/test_sch_txn_sqlite.gnucash", acquire_lock=False, open_if_lock=True) as s:
@@ -68,7 +228,7 @@ with open_book("/home/sdementen/Desktop/test_sch_txn_sqlite.gnucash", acquire_lo
         print(tr.slots)
     print(s.transactions[0].scheduled_transaction)
     s.transactions[0].scheduled_transaction = None
-    #print(s.transactions[0]["from-sched-xaction"])
+    # print(s.transactions[0]["from-sched-xaction"])
     s.book["a/n"]
     print(s.accounts.get(name='Checking Account').lots.get(title="Lot 3"))
 fdsfdssfd
@@ -88,8 +248,8 @@ from piecash import open_book, create_book, Account, Transaction, Split
 
 # with create_book("all_account_types.gnucash", overwrite=True) as s:
 # for actype in ACCOUNT_TYPES:
-#         if actype=="ROOT":
-#             continue
+# if actype=="ROOT":
+# continue
 #         acc = Account(name=actype, account_type=actype, parent=s.book.root_account, commodity=s.book.root_account.commodity)
 #     s.save()
 

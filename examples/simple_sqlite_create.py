@@ -16,7 +16,7 @@ with create_book(filename) as s:
     a = Account(parent=s.book.root_account,
                 name="wow",
                 type="ASSET",
-                commodity=Commodity.create_currency_from_ISO("CAD"))
+                commodity=s.book.create_currency_from_ISO("CAD"))
 
     s.save()
 
