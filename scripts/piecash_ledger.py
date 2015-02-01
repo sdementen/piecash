@@ -1,8 +1,10 @@
 #!/usr/local/bin/python
-# original script from https://github.com/MatzeB/pygnucash/blob/master/gnucash2ledger.py by Matthias Braun matze@braunis.de
-# adapted for:
-# - python 3 support
-# - new string formatting
+"""original script from https://github.com/MatzeB/pygnucash/blob/master/gnucash2ledger.py by Matthias Braun matze@braunis.de
+ adapted for:
+ - python 3 support
+ - new string formatting
+"""
+import argparse
 
 import sys
 import codecs
@@ -13,9 +15,10 @@ if sys.version_info.major==2:
 else:
     out = sys.stdout
 
-if len(sys.argv) == 1:
-    sys.stderr.write("Invocation: {} gnucash_filename\n".format(sys.argv[0]))
-    sys.exit(1)
+parser = argparse.ArgumentParser(description="Generate a ledger-cli representation of a gnucash book")
+parser.add_argument("gnucash_filename",
+                    help="the name of the gnucash file to process")
+args = parser.parse_args()
 
 def format_commodity(commodity):
     mnemonic = commodity.mnemonic
@@ -26,8 +29,7 @@ def format_commodity(commodity):
         pass
     return "\"{}\"" .format(mnemonic)  # TODO: escape " char in mnemonic
 
-
-with piecash.open_book(sys.argv[1], open_if_lock=True) as data:
+with piecash.open_book(args.gnucash_filename, open_if_lock=True) as data:
     
     for commodity in data.commodities:
         if commodity.mnemonic == "":

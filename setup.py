@@ -235,8 +235,10 @@ setup_dict = dict(
     maintainer_email=metadata.emails[0],
     url=metadata.url,
     description=metadata.description,
-    long_description=read('docs/source/doc/doc.rst'),
-    keywords = ['GnuCash', 'python', 'binding', 'interface', 'sqlalchemy'], 
+    long_description=read('README.rst'),
+    keywords=['GnuCash', 'python', 'binding', 'interface', 'sqlalchemy'],
+    license='MIT',
+    platforms='any',
     # Find a list of classifiers here:
     # <http://pypi.python.org/pypi?%3Aaction=list_classifiers>
     classifiers=[
@@ -254,7 +256,7 @@ setup_dict = dict(
         'Topic :: Office/Business :: Financial :: Accounting',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
-    packages=find_packages(exclude=(TESTS_DIRECTORY,DATA_DIRECTORY)),
+    packages=find_packages(exclude=(TESTS_DIRECTORY, DATA_DIRECTORY)),
     install_requires=[
                          'SQLAlchemy',
                          'enum34',

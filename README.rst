@@ -3,32 +3,48 @@ piecash
 
 |build-status| |docs|
 
-piecash offers a pythonic interface to GnuCash documents stored through the SQL backend (sqlite, postgres).
+Piecash provides a simple and pythonic interface to GnuCash files stored in SQL (sqlite3 and Postgres, not tested in MySQL).
 
-A simple example:
+It is a pure python package, tested on python 2.7 and 3.4, that can be used as an alternative to:
 
-.. code:: python
+- the official python bindings (as long as no advanced book modifications and/or engine calculations are needed).
+  This is specially useful on Windows where the official python bindings may be tricky to install or if you want to work with
+  python 3.
+- XML parsing/reading of XML GnuCash files if you prefer python over XML/XLST manipulations.
 
-    from piecash import open_book
+It allows you to:
 
-    # open a book and print all transactions to screen
-    with open_book("test_cur.gnucash") as s:
-        for tr in s.transactions:
-            print("Transaction : {}".format(tr.description))
-            for i, sp in enumerate(tr.splits):
-                direction = "increased" if sp.value > 0 else "decreased"
-                print("\t{} : '{}' is {} by {}".format(i,
-                                                       sp.account.fullname,
-                                                       direction,
-                                                       sp.value))
+- open existing GnuCash documents and access all objects within
+- modify objects or add new objects (accounts, transactions, prices, ...)
+- create new GnuCash documents from scratch
 
-    from piecash import create_book, Account
-    # create a new account
-    with create_book("my_new_book.gnucash") as s:
-        acc = Account(name="Income", parent=s.book.root_account, type="INCOME")
-        s.save()
+Scripts are also available to:
+
+- export to ledger-cli format (http://www.ledger-cli.org/)
+- export to QIF format
 
 The project documentation is available on http://piecash.readthedocs.org.
+
+A simple example of a piecash script:
+
+.. code-block:: python
+
+    with open_book("example.gnucash") as s:
+        # get default currency of book
+        print( s.book.default_currency )  # ==> Commodity<CURRENCY:EUR>
+
+        # iterating over all splits in all books and print the transaction description:
+        for acc in s.accounts:
+            for sp in acc.splits:
+                print(sp.transaction.description)
+
+The project has reached beta stage.
+
+.. warning::
+
+   1) Always do a backup of your gnucash file/DB before using piecash.
+   2) Test first your script by opening your file in readonly mode (which is the default mode)
+
 
 
 .. |build-status| image:: https://travis-ci.org/sdementen/piecash.svg?branch=master

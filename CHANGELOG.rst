@@ -1,6 +1,14 @@
 What's new
 ==========
 
+In development
+~~~~~~~~~~~~~~
+
+- add a basic QIF exporter script as piecash_toqif
+- implemented "Trading accounts"
+- improved documentation
+- other small api enhancements/changes
+
 Version 0.5.11 (2015-01-12)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
