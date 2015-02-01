@@ -1,8 +1,8 @@
 What's new
 ==========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.6.1 (2015-02-01)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - fix: qif scripts was not included in package
 
