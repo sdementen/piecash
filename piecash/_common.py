@@ -1,6 +1,7 @@
 from decimal import Decimal
 
-from sqlalchemy import Column, VARCHAR, INTEGER, cast, Float
+from sqlalchemy import Column, VARCHAR, INTEGER, cast, Float, DECIMAL
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from .sa_extra import DeclarativeBase, _Date, long
@@ -98,8 +99,8 @@ def hybrid_property_gncnumeric(num_col, denom_col):
         else:
             return Decimal(num) / denom
 
-
     def expr(cls):
+        # todo: cast into Decimal for postgres and for sqlite (for the latter, use sqlite3.register_converter ?)
         return (cast(num_col, Float) / denom_col).label(name)
 
     return hybrid_property(
