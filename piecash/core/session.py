@@ -92,6 +92,7 @@ class GncSession(object):
     """
 
     def __init__(self, session, acquire_lock=False):
+        session.gnc_session = self
         self.sa_session = session
         self._acquire_lock = acquire_lock
 
@@ -155,6 +156,7 @@ class GncSession(object):
         """
         b = self.sa_session.query(Book).one()
         b.uri = self.sa_session.connection().engine.url
+        b.gnc_session = self
         return b
 
     @property
