@@ -271,7 +271,7 @@ setup_dict = dict(
         'mock',
         'py',
     ],
-    scripts=['scripts/piecash_ledger.py'],
+    scripts=['scripts/piecash_ledger.py','scripts/piecash_toqif.py'],
     cmdclass={'test': TestAllCommand},
     zip_safe=False,  # don't use eggs
 )

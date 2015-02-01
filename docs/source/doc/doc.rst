@@ -154,6 +154,22 @@ or to create a new expense account for utilities:
 
 Most basic objects used for personal finance are supported (Account, Split, Transaction, Price, ...).
 
+Ready to use scripts
+====================
+
+The following 'experimental' scripts are available:
+
+- usage: piecash_ledger.py [-h] gnucash_filename
+
+  Output to screen a ledger-cli representation of the gnucash file (http://www.ledger-cli.org/)
+
+- usage: piecash_toqif.py [-h] gnucash_filename
+
+  Output to screen a QIF representation of the gnucash file
+
+None of these scripts can damage your files. However, their output may be inaccurate.
+To produce a file, just redirect the output to a file as (e.g. "piecash_toqif.py mybook.gnucash > mybook.qif").
+
 For more information on how to use piecash, please refer to the Tutorials on
 :doc:`Using existing objects <../tutorial/index_existing>` and
 :doc:`Creating new objects <../tutorial/index_new>`,
