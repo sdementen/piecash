@@ -1,3 +1,4 @@
+from collections import defaultdict
 from decimal import Decimal
 import datetime
 import uuid
@@ -10,6 +11,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from .._common import GncValidationError, hybrid_property_gncnumeric, Recurrence
 from .._declbase import DeclarativeBaseGuid
 from .._common import CallableList
+from piecash._common import GncImbalanceError
 from ..sa_extra import _Date, _DateTime, Session, mapped_to_slot_property, pure_slot_property
 from .book import Book
 from .account import Account
@@ -79,7 +81,8 @@ class Split(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
-    transaction_guid = Column('tx_guid', VARCHAR(length=32), ForeignKey('transactions.guid'), nullable=False, index=True)
+    transaction_guid = Column('tx_guid', VARCHAR(length=32), ForeignKey('transactions.guid'), nullable=False,
+                              index=True)
     account_guid = Column('account_guid', VARCHAR(length=32), ForeignKey('accounts.guid'), nullable=False, index=True)
     memo = Column('memo', VARCHAR(length=2048), nullable=False)
     action = Column('action', VARCHAR(length=2048), nullable=False)
@@ -280,7 +283,59 @@ class Transaction(DeclarativeBaseGuid):
             raise GncValidationError("You are assigning a non currency commodity to a transaction")
         return value
 
-    def validate(self, session):
+
+    def calculate_imbalances(self):
+        """Calculate value and quantity imbalances of a transaction"""
+        value_imbalance = Decimal(0) # hold imbalance on split.value
+        quantity_imbalances = defaultdict(Decimal) # hold imbalance on split.quantity per cdty
+
+        # collect imbalance information
+        for sp in self.splits:
+            value_imbalance += sp.value
+            quantity_imbalances[sp.account.commodity] += sp.quantity
+
+        return value_imbalance, quantity_imbalances
+
+    def normalize_trading_accounts(self):
+        # collect imbalance information
+        classic_splits =defaultdict(list)
+        trading_splits =defaultdict(list)
+        trading_target_value = defaultdict(Decimal)
+        trading_target_quantity = defaultdict(Decimal)
+        for sp in self.splits:
+            cdty = sp.account.commodity
+            if sp.account.type == "TRADING":
+                trading_splits[cdty].append(sp)
+            else:
+                classic_splits[cdty].append(sp)
+            trading_target_value[cdty] += sp.value
+            trading_target_quantity[cdty] += sp.quantity
+
+        root = self.book.root_account
+        # imbalance in quantities to be settled using trading accounts
+        for cdty, v in trading_target_value.items():
+            q = trading_target_quantity[cdty]
+
+            # if commodity is balanced, do not do anything
+            if (v == q == 0): continue
+
+            # otherwise, look if there is some trading imbalance (ie a split with the trading account already exists!)
+            if cdty in trading_splits:
+                # and adjust the related split to rebalance
+                sp, = trading_splits[cdty]
+                sp.value -= v
+                sp.quantity -= q
+            else:
+                # otherwise, we must create the split related to the trading account
+                # assume trading account exists
+                t_acc = self.book.trading_account(cdty)
+                sp = Split(account=t_acc,
+                           value=-v,
+                           quantity=-q,
+                           transaction=self,
+                )
+
+    def validate(self):
         old = instance_state(self).committed_state
 
         # check all accounts related to the splits of the transaction are not placeholder(=frozen)
@@ -294,39 +349,14 @@ class Transaction(DeclarativeBaseGuid):
 
         # validate the splits
         if "splits" in old:
-            imbalance = Decimal(0)
-            c = self.currency
-            for sp in self.splits:
-                if sp.account.commodity != c:
-                    raise GncValidationError("Only single currency transactions are supported")
+            value_imbalance, quantity_imbalances = self.calculate_imbalances()
+            if value_imbalance:
+                # raise exception instead of creating an imbalance entry as probably an error
+                # (in the gnucash GUI, another decision taken because need of "save unfinished transaction")
+                raise GncImbalanceError("The transaction {} is not balanced on its value".format(self))
 
-                sp.quantity = sp.value
-                if sp.quantity != sp.value:
-                    sp.value = sp.quantity
-
-                imbalance += sp.value
-
-            # if there is an imbalance, add an imbalance split to the transaction
-            if imbalance:
-                # TODO: trigger this if open "strict transaction" is enabled
-                raise GncValidationError("Transaction is not balanced by {}:\n{}".format(imbalance,
-                # TODO: otherwise, generate the imbalance splits
-                # retrieve imbalance account
-                imb_acc_name = "Imbalance-{}".format(c.mnemonic)
-                try:
-                    acc = session.query(Account).filter_by(name=imb_acc_name).one()
-                except NoResultFound:
-                    book = session.query(Book).one()
-                    acc = Account(name=imb_acc_name,
-                                  parent=book.root_account,
-                                  commodity=c,
-                                  type="BANK")
-
-                Split(value=-imbalance,
-                      quantity=-imbalance,
-                      account=acc,
-                      transaction=self)
-
+            if any(quantity_imbalances.values()) and self.book.use_trading_accounts:
+                self.normalize_trading_accounts()
 
     @classmethod
     def single_transaction(cls,
@@ -366,7 +396,7 @@ def set_imbalance_on_transaction(session, flush_context, instances):
 
     # for each transaction, validate the transaction
     for tx in txs:
-        tx.validate(session)
+        tx.validate()
 
 
 class ScheduledTransaction(DeclarativeBaseGuid):

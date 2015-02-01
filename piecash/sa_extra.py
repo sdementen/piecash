@@ -10,7 +10,7 @@ from sqlalchemy.dialects import sqlite
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import class_mapper, sessionmaker
+from sqlalchemy.orm import class_mapper, sessionmaker, object_session
 import tzlocal
 import pytz
 
@@ -27,6 +27,12 @@ def __init__blocked(self, *args, **kwargs):
 
 @as_declarative(constructor=__init__blocked)
 class DeclarativeBase(object):
+    @property
+    def book(self):
+        """Return the gnc book
+        """
+        return object_session(self).gnc_session.book
+
     pass
     # def __deepcopy__(self, memo):
     #     raise Unsafe

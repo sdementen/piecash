@@ -135,3 +135,7 @@ class CallableList(list):
             raise KeyError("Could not find object with {} in {}".format(kwargs, self))
 
     get = __call__
+
+
+class GncImbalanceError(GncValidationError):
+    pass
