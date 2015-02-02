@@ -4,7 +4,8 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
-- Empty
+- add reference to google groups
+- disable acquiring lock on file
 
 Version 0.6.1 (2015-02-01)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

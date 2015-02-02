@@ -91,15 +91,15 @@ class GncSession(object):
         the underlying sqlalchemy session
     """
 
-    def __init__(self, session, acquire_lock=False):
+    def __init__(self, session):
         session.gnc_session = self
         self.sa_session = session
-        self._acquire_lock = acquire_lock
-
-        if acquire_lock:
-            # set a lock
-            session.execute(gnclock.insert(values=dict(Hostname=socket.gethostname(), PID=os.getpid())))
-            session.commit()
+        # self._acquire_lock = acquire_lock
+        #
+        # if acquire_lock:
+        #     # set a lock
+        #     session.execute(gnclock.insert(values=dict(Hostname=socket.gethostname(), PID=os.getpid())))
+        #     session.commit()
 
         # setup tracking of session changes (see https://www.mail-archive.com/sqlalchemy@googlegroups.com/msg34201.html)
         self._is_modified = False
@@ -137,11 +137,11 @@ class GncSession(object):
         # cancel pending changes
         session.rollback()
 
-        if self._acquire_lock:
-            # remove the lock
-            session.execute(gnclock.delete(whereclause=(gnclock.c.Hostname == socket.gethostname())
-                                                       and (gnclock.c.PID == os.getpid())))
-            session.commit()
+        # if self._acquire_lock:
+        #     # remove the lock
+        #     session.execute(gnclock.delete(whereclause=(gnclock.c.Hostname == socket.gethostname())
+        #                                                and (gnclock.c.PID == os.getpid())))
+        #     session.commit()
 
         session.close()
 
@@ -341,7 +341,7 @@ def open_book(sqlite_file=None,
 
     :param str sqlite_file: a path to an sqlite3 file
     :param str uri_conn: a sqlalchemy connection string
-    :param bool acquire_lock: acquire a lock on the file
+    :param bool acquire_lock: deprecated, no effect (was "acquire a lock on the file")
     :param bool readonly: open the file as readonly (useful to play with and avoid any unwanted save)
     :param bool open_if_lock: open the file even if it is locked by another user
         (using open_if_lock=True with readonly=False is not recommended)
@@ -409,7 +409,7 @@ def open_book(sqlite_file=None,
         s.commit = new_commit
         # s.flush = new_flush
 
-    return GncSession(s, acquire_lock and not readonly)
+    return GncSession(s)
 
 
 

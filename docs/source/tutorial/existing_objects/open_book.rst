@@ -19,10 +19,10 @@ The documents are open as readonly per default. To allow RW access, specify expl
 
     s = piecash.open_book("existing_file.gnucash", readonly=False)
 
-Per default, piecash will acquire a lock on the file (as GnuCash does). To avoid acquiring the lock, you can
-set the acquire_lock=False argument::
+When opening in full access (readonly=False), piecash will automatically create a backup file named
+filename.piecash_YYYYMMDD_HHMMSS with the original file. To avoid creating the backup file, specificy backup=False as::
 
-    s = piecash.open_book("existing_file.gnucash", acquire_lock=False)
+    s = piecash.open_book("existing_file.gnucash", readonly=False, backup=False)
 
 To force opening the file even through there is a lock on it, use the open_if_lock=True argument::
 

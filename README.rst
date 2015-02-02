@@ -4,6 +4,10 @@ piecash
 |build-status| |docs|
 
 Piecash provides a simple and pythonic interface to GnuCash files stored in SQL (sqlite3 and Postgres, not tested in MySQL).
+Documentation : http://piecash.readthedocs.org.
+Google group  : https://groups.google.com/d/forum/piecash
+Github        : https://github.com/sdementen/piecash
+
 
 It is a pure python package, tested on python 2.7 and 3.4, that can be used as an alternative to:
 
@@ -23,7 +27,6 @@ Scripts are also available to:
 - export to ledger-cli format (http://www.ledger-cli.org/)
 - export to QIF format
 
-The project documentation is available on http://piecash.readthedocs.org.
 
 A simple example of a piecash script:
 

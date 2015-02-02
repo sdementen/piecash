@@ -167,7 +167,9 @@ The following 'experimental' scripts are available:
 
   Output to screen a QIF representation of the gnucash file
 
-None of these scripts can damage your files. However, their output may be inaccurate.
+None of these scripts can damage your files. However, their output may be inaccurate/false (they haven't been
+fully tested).
+You can also run the script on a gnucash file that is already opened by GnuCash.
 To produce a file, just redirect the output to a file as (e.g. "piecash_toqif.py mybook.gnucash > mybook.qif").
 
 For more information on how to use piecash, please refer to the Tutorials on
