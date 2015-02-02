@@ -1,8 +1,8 @@
 What's new
 ==========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.6.2 (2015-02-02)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - add reference to google groups
 - disable acquiring lock on file
