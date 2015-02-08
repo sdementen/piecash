@@ -1,6 +1,6 @@
 pytz
 tzlocal
-future
+#future
 enum34
 SQLAlchemy
 SQLAlchemy-Utils
