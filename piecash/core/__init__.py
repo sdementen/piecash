@@ -3,3 +3,4 @@ from .account import Account, ACCOUNT_TYPES
 from .book import Book
 from .commodity import Commodity, Price
 from .transaction import Transaction, Split, ScheduledTransaction, Lot
+from . import factories

@@ -2,8 +2,9 @@ from sqlalchemy import Column, VARCHAR, ForeignKey
 from sqlalchemy.orm import relation
 
 from .._declbase import DeclarativeBaseGuid
+from piecash._common import CallableList
 from piecash.core._commodity_helper import run_yql
-from piecash.core.commodity import GncCommodityError
+from piecash.core.commodity import GncCommodityError, Commodity
 
 
 def option(name, to_gnc, from_gnc, default=None):
@@ -25,13 +26,46 @@ def option(name, to_gnc, from_gnc, default=None):
 
 class Book(DeclarativeBaseGuid):
     """
-    A Book represents an accounting book. A new GnuCash document contains only a single Book .
+    A Book represents a GnuCash document. It is created through one of the two factory functions
+    :func:`create_book` and :func:`open_book`.
+
+    Canonical use is as a context manager like (the book is automatically closed at the end of the with block)::
+
+        with create_book() as book:
+            ...
+
+    .. note:: If you do not use the context manager, do not forget to close the session explicitly (``book.close()``)
+       to release any lock on the file/DB.
+
+    The book puts at disposal several attributes to access the main objects of the GnuCash document::
+
+        # to get the book and the root_account
+        ra = book.root_account
+
+        # to get the list of accounts, commodities or transactions
+        for acc in book.accounts:  # or book.commodities or book.transactions
+            # do something with acc
+
+        # to get a specific element of these lists
+        EUR = book.commodities(namespace="CURRENCY", mnemonic="EUR")
+
+        # to get a list of all objects of some class (even non core classes)
+        budgets = book.get(Budget)
+        # or a specific object
+        budget = book.get(Budget, name="my first budget")
+
+    You can check a session has changes (new, deleted, changed objects) by getting the ``book.is_saved`` property.
+    To save or cancel changes, use ``book.save()`` or ``book.cancel()``::
+
+        # save a session if it is no saved (saving a unchanged session is a no-op)
+        if not book.is_saved:
+            book.save()
 
     Attributes:
         root_account (:class:`piecash.core.account.Account`): the root account of the book
         root_template (:class:`piecash.core.account.Account`): the root template of the book (usage not yet clear...)
         uri (str): connection string of the book (set by the GncSession when accessing the book)
-        gnc_session (:class:`piecash.core.session.GncSession`): the GncSession encapsulating the book
+        session (:class:`sqlalchemy.orm.session.Session`): the sqlalchemy session encapsulating the book
         use_trading_accounts (bool): true if option "Use trading accounts" is enabled
         use_split_action_field (bool): true if option "Use Split Action Field for Number" is enabled
         RO_threshold_day (int): value of Day Threshold for Read-Only Transactions (red line)
@@ -56,8 +90,9 @@ class Book(DeclarativeBaseGuid):
                              foreign_keys=[root_template_guid])
 
     uri = None
-    gnc_session = None
+    session = None
 
+    # link options to KVP
     use_trading_accounts = option("options/Accounts/Use Trading Accounts",
                                   from_gnc=lambda v: v == 't',
                                   to_gnc=lambda v: 't',
@@ -82,11 +117,14 @@ class Book(DeclarativeBaseGuid):
 
     @property
     def default_currency(self):
-        return self.gnc_session.commodities[0]
+        return self.session.query(Commodity).first()
 
+    @property
+    def book(self):
+        print("deprecated")
+        return self
 
     _trading_accounts = None
-
     def trading_account(self, cdty):
         """Return the trading account related to the commodity. If it does not exist and the option
         "Use Trading Accounts" is enabled, create it on the fly"""
@@ -125,115 +163,114 @@ class Book(DeclarativeBaseGuid):
                            parent=nspc)
         return tacc
 
-    def create_currency_from_ISO(self, iso_code, from_web=False):
+
+    # add session alike functions
+    def add(self, obj):
+        """Add an object to the book (to be used if object not linked in any way to the book)"""
+        self.session.add(obj)
+    def save(self):
+        """Save the changes to the file/DB (=commit transaction)
         """
-        Factory function to create a new currency from its ISO code
-
-        Args:
-            iso_code (str): the ISO code of the currency (e.g. EUR for the euro)
-            from_web (bool): True to get the info from the website, False to get it from the hardcoded currency_ISO module
-
-        Returns:
-            :class:`Commodity`: the currency as a commodity object
+        self.session.commit()
+    def flush(self):
+        """Flush the book"""
+        self.session.flush()
+    def cancel(self):
+        """Cancel all the changes that have not been saved (=rollback transaction)
         """
-        from .commodity import Commodity
-
-        if self.get_session().query(Commodity).filter_by(mnemonic=iso_code).first():
-            raise GncCommodityError("Currency '{}' already exists".format(iso_code))
-
-        if not from_web:
-            from .currency_ISO import ISO_currencies
-
-            for cur in ISO_currencies:
-                if cur.mnemonic == iso_code:
-                    # create the currency
-                    cdty = Commodity(mnemonic=cur.mnemonic,
-                                     fullname=cur.currency,
-                                     fraction=10 ** int(cur.fraction),
-                                     cusip=cur.cusip,
-                                     namespace="CURRENCY",
-                                     quote_flag=1,
-                    )
-                    break
-            else:
-                raise ValueError("Could not find the ISO code '{}' in the ISO table".format(iso_code))
-
-        else:
-            # retrieve XML table with currency information
-            import requests
-            from xml.etree import ElementTree
-
-            url = "http://www.currency-iso.org/dam/downloads/table_a1.xml"
-            table = requests.get(url)
-
-            # parse it with elementree
-            root = ElementTree.fromstring(table.content)
-            # and look for each currency item
-            for i in root.findall(".//CcyNtry"):
-                # if there is no iso_code, skip it
-                mnemonic_node = i.find("Ccy")
-                if mnemonic_node is None:
-                    continue
-                # if the iso_code is not the one expected, skip it
-                if mnemonic_node.text != iso_code:
-                    continue
-                # retreive currency info from xml
-                cusip = i.find("CcyNbr").text
-                fraction = 10 ** int(i.find("CcyMnrUnts").text)
-                fullname = i.find("CcyNm").text
-                break
-            else:
-                # raise error if iso_code has not been found
-                raise ValueError("Could not find the iso_code '{}' in the table at {}".format(iso_code, url))
-
-            # create the currency
-            cdty = Commodity(mnemonic=iso_code,
-                             fullname=fullname,
-                             fraction=fraction,
-                             cusip=cusip,
-                             namespace="CURRENCY",
-                             quote_flag=1,
-            )
-        self.gnc_session.add(cdty)
-        return cdty
-
-    def create_stock_from_symbol(self, symbol):
+        self.session.rollback()
+    @property
+    def is_saved(self):
+        """Save the changes to the file/DB (=commit transaction)
         """
-        Factory function to create a new stock from its symbol. The ISO code of the quoted currency of the stock is
-        stored in the slot "quoted_currency".
+        self.session.is_saved
 
-        Args:
-            symbol (str): the symbol for the stock (e.g. YHOO for the Yahoo! stock)
 
-        Returns:
-            :class:`Commodity`: the stock as a commodity object
-
-        .. note::
-           The information is gathered from a yql query to the yahoo.finance.quotes
-           The default currency in which the quote is traded is stored as a slot
-
-        .. todo::
-           use 'select * from yahoo.finance.sectors' and 'select * from yahoo.finance.industry where id ="sector_id"'
-           to retrieve name of stocks and allow therefore the creation of a stock by giving its "stock name" (or part of it).
-           This could also be used to retrieve all symbols related to the same company
-        """
-        from .commodity import Commodity
-        yql = 'select Name, StockExchange, Symbol,Currency from yahoo.finance.quotes where symbol = "{}"'.format(symbol)
-        symbol_info = run_yql(yql, scalar=True)
-        if symbol_info and symbol_info.StockExchange:
-            stock = Commodity(mnemonic=symbol_info.Symbol,
-                              fullname=symbol_info.Name,
-                              fraction=10000,
-                              namespace=symbol_info.StockExchange.upper(),
-                              quote_flag=1,
-            )
-            stock["quoted_currency"] = symbol_info.Currency
-            return stock
-        else:
-            raise GncCommodityError("Can't find information on symbol '{}'".format(symbol))
-
+    # add context manager that close the session when leaving
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.session.close()
+        """Close a session. Any changes not yet saved are rolled back. Any lock on the file/DB is released.
+        """
+        session = self.session
+        # cancel pending changes
+        session.rollback()
+        # if self._acquire_lock:
+        #     # remove the lock
+        #     session.delete_lock()
+        session.close()
+
+    # add general getters for gnucash classes
+
+    def get(self, cls, **kwargs):
+        """
+        Generic getter for a GnuCash object in the `GncSession`. If no kwargs is given, it returns the list of all
+        objects of type cls (uses the sqlalchemy session.query(cls).all()).
+        Otherwise, it gets the unique object which attributes match the kwargs
+        (uses the sqlalchemy session.query(cls).filter_by(\*\*kwargs).one() underneath)::
+
+            # to get the first account with name="Income"
+            inc_account = session.get(Account, name="Income")
+
+            # to get all accounts
+            accs = session.get(Account)
+
+        Args:
+            cls (class): the class of the object to retrieve (Account, Price, Budget,...)
+            kwargs (dict): the attributes to filter on
+
+        Returns:
+            object: the unique object if it exists, raises exceptions otherwise
+        """
+        if kwargs:
+            return self.session.query(cls).filter_by(**kwargs).one()
+        else:
+            return self.session.query(cls)
+
+    @property
+    def transactions(self):
+        """
+        gives easy access to all transactions in the document through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.core.transaction.Transaction`
+        """
+        from .transaction import Transaction
+
+        return CallableList(self.session.query(Transaction))
+
+    @property
+    def accounts(self):
+        """
+        gives easy access to all accounts in the document through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.core.account.Account`
+        """
+        from .account import Account
+
+        return CallableList(self.session.query(Account).filter(Account.type != 'ROOT'))
+
+    @property
+    def commodities(self):
+        """
+        gives easy access to all commodities in the document through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.core.commodity.Commodity`
+        """
+        from .commodity import Commodity
+
+        return CallableList(self.session.query(Commodity))
+
+    @property
+    def prices(self):
+        """
+        gives easy access to all commodities in the document through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.core.commodity.Commodity`
+        """
+        from .commodity import Price
+
+        return CallableList(self.session.query(Price))
+
+    @property
+    def query(self):
+        """
+        proxy for the query function of the underlying sqlalchemy session
+        """
+        return self.session.query

@@ -7,15 +7,15 @@ piecash can create new accounts (a :class:`piecash.core.account.Account`):
 
     from piecash import create_book, Account
 
-    s = create_book(currency="EUR")
+    book = create_book(currency="EUR")
 
     # retrieve the default currency
-    EUR = s.commodities.get(mnemonic="EUR")
+    EUR = book.commodities.get(mnemonic="EUR")
 
     # creating a placeholder account
     acc = Account(name="My account",
                   type="ASSET",
-                  parent=s.book.root_account,
+                  parent=book.root_account,
                   commodity=EUR,
                   placeholder=True,)
 
@@ -28,7 +28,8 @@ piecash can create new accounts (a :class:`piecash.core.account.Account`):
                      description="my bank account",
                      code="FR013334...",)
 
-    s.save()
+    book.save()
 
-    s.accounts
+    book.accounts
+
 

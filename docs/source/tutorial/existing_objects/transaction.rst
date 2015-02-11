@@ -5,14 +5,14 @@ The list of all transactions in the book can be retrieved via the ``transactions
 
 .. ipython:: python
 
-    s = open_book(gnucash_books + "book_schtx.gnucash", open_if_lock=True)
+    book = open_book(gnucash_books + "book_schtx.gnucash", open_if_lock=True)
 
     # all transactions (including transactions part of a scheduled transaction description)
-    for tr in s.transactions:
+    for tr in book.transactions:
         print(tr)
 
     # selecting first transaction generated from a scheduled transaction
-    tr = [ tr for tr in s.transactions if tr.scheduled_transaction ][0]
+    tr = [ tr for tr in book.transactions if tr.scheduled_transaction ][0]
 
 
 For a given transaction, the following attributes are accessible:

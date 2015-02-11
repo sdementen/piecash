@@ -11,6 +11,7 @@ Submodules
    piecash.core.book
    piecash.core.commodity
    piecash.core.currency_ISO
+   piecash.core.factories
    piecash.core.session
    piecash.core.transaction
 

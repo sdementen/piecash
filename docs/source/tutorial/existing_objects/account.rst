@@ -5,9 +5,9 @@ Accessing the accounts (:class:`piecash.core.account.Account`)::
 
     from piecash import open_book
 
-    with open_book("gnucash_books/simple_sample.gnucash") as s:
+    with open_book("gnucash_books/simple_sample.gnucash") as book:
         # accessing the root_account
-        root = s.book.root_account
+        root = book.root_account
         print(root)
 
         # accessing the first children account of a book
