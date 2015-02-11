@@ -1,21 +1,22 @@
 import uuid
 
 from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER
-from sqlalchemy.orm import relation, backref, validates
+from sqlalchemy.orm import relation, validates
 
 from .._declbase import DeclarativeBaseGuid
 from .._common import CallableList
 from ..sa_extra import mapped_to_slot_property
+from .book import Book
 
 
 root_types = {"ROOT"}
 asset_types = {'RECEIVABLE', 'MUTUAL', 'CASH', 'ASSET', 'BANK', 'STOCK'}
-liability_types = { 'CREDIT',  'LIABILITY', 'PAYABLE'}
+liability_types = {'CREDIT', 'LIABILITY', 'PAYABLE'}
 income_types = {"INCOME"}
 expense_types = {"EXPENSE"}
 trading_types = {'TRADING'}
 equity_types = {"EQUITY"}
-#: the different types of accounts
+# : the different types of accounts
 ACCOUNT_TYPES = equity_types | income_types | expense_types | asset_types | liability_types | root_types | trading_types
 
 # types that are compatible with other types
@@ -43,6 +44,7 @@ def _is_parent_child_types_consistent(type_parent, type_child):
     Returns
         True if both accounts are consistent, False otherwise
     """
+    # TODO: if we want to allow multiple root accounts below the ROOT account, relax constrain
     if type_parent in root_types:
         return type_child in (ACCOUNT_TYPES - root_types)
 
@@ -62,6 +64,7 @@ class Account(DeclarativeBaseGuid):
 
     Attributes:
         type (str): type of the Account
+        sign (int): 1 for accounts with positive balances, -1 for accounts with negative balances
         code (str): code of the Account
         commodity (:class:`piecash.core.commodity.Commodity`): the commodity of the account
         commodity_scu (int): smallest currency unit for the account
@@ -71,8 +74,14 @@ class Account(DeclarativeBaseGuid):
         fullname (str): full name of the account (including name of parent accounts separated by ':')
         placeholder (int): 1 if the account is a placeholder (should not be involved in transactions)
         hidden (int): 1 if the account is hidden
+        is_template (bool): True if the account is a template account (ie commodity=template/template)
         parent (:class:`Account`): the parent account of the account (None for the root account of a book)
         children (list of :class:`Account`): the list of the children accounts
+        splits (list of :class:`piecash.core.transaction.Split`): the list of the splits linked to the account
+        lots (list of :class:`piecash.business.Lot`): the list of lots to which the account is linked
+        book (:class:`piecash.core.book.Book`): the book if the account is the root account (else None)
+        budget_amounts (list of :class:`piecash.budget.BudgetAmount`): list of budget amounts of the account
+        scheduled_transaction (:class:`piecash.core.transaction.ScheduledTransaction`): scheduled transaction linked to the account
     """
     __tablename__ = 'accounts'
 
@@ -80,8 +89,8 @@ class Account(DeclarativeBaseGuid):
 
     # column definitions
     guid = Column('guid', VARCHAR(length=32), primary_key=True, nullable=False, default=lambda: uuid.uuid4().hex)
+    name = Column('name', VARCHAR(length=2048), nullable=False)
     type = Column('account_type', VARCHAR(length=2048), nullable=False)
-    code = Column('code', VARCHAR(length=2048))
     commodity_guid = Column('commodity_guid', VARCHAR(length=32), ForeignKey('commodities.guid'))
     _commodity_scu = Column('commodity_scu', INTEGER(), nullable=False)
     _non_std_scu = Column('non_std_scu', INTEGER(), nullable=False)
@@ -107,26 +116,52 @@ class Account(DeclarativeBaseGuid):
 
         self._commodity_scu = value
 
-    description = Column('description', VARCHAR(length=2048))
-    hidden = Column('hidden', INTEGER())
-    name = Column('name', VARCHAR(length=2048), nullable=False)
 
     parent_guid = Column('parent_guid', VARCHAR(length=32), ForeignKey('accounts.guid'))
+    code = Column('code', VARCHAR(length=2048))
+    description = Column('description', VARCHAR(length=2048))
+    hidden = Column('hidden', INTEGER())
     _placeholder = Column('placeholder', INTEGER())
     placeholder = mapped_to_slot_property(_placeholder, slot_name="placeholder",
                                           slot_transform=lambda v: "true" if v else None)
 
     # relation definitions
-    commodity = relation('Commodity',
-                         # single_parent=True,
-                         backref=backref('accounts',
-                                         cascade='all, delete-orphan',
-                                         collection_class=CallableList))
+    commodity = relation('Commodity', back_populates='accounts')
     children = relation('Account',
-                        backref=backref('parent', remote_side=guid),
+                        back_populates='parent',
                         cascade='all, delete-orphan',
                         collection_class=CallableList,
-    )
+                        )
+    parent = relation('Account',
+                      back_populates='children',
+                      remote_side=guid,
+                      )
+    splits = relation('Split',
+                      back_populates='account',
+                      cascade='all, delete-orphan',
+                      collection_class=CallableList,
+                      )
+    lots = relation('Lot',
+                    back_populates='account',
+                    cascade='all, delete-orphan',
+                    collection_class=CallableList,
+                    )
+    book = relation('Book',
+                    back_populates='root_account',
+                    foreign_keys=[Book.root_account_guid],
+                    cascade='all, delete-orphan',
+                    uselist=False,
+                    )
+    budget_amounts = relation('BudgetAmount',
+                              back_populates='account',
+                              cascade='all, delete-orphan',
+                              collection_class=CallableList,
+                              )
+    scheduled_transaction = relation('ScheduledTransaction',
+                                     back_populates='template_account',
+                                     cascade='all, delete-orphan',
+                                     uselist=False,
+                                     )
 
 
     def __init__(self,
@@ -214,8 +249,15 @@ class Account(DeclarativeBaseGuid):
         Returns
             the balance of the account
         """
-        return sum([sp.value for sp in self.splits]) * (-1 if self.type in negative_types else 1)
+        return sum([sp.value for sp in self.splits]) * self.sign
 
+    @property
+    def sign(self):
+        return 1 if (self.type in positive_types) else -1
+
+    @property
+    def is_template(self):
+        return self.commodity.namespace == 'template'
 
     def __repr__(self):
         if self.commodity:

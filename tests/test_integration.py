@@ -34,6 +34,9 @@ def realbook_session(request):
     return s
 
 class TestIntegration_ExampleScripts(object):
+    def test_simple_move_split(self):
+        run_file("examples/simple_move_split.py")
+
     def test_simple_book(self):
         run_file("examples/simple_book.py")
 
@@ -92,7 +95,7 @@ class TestIntegration_EmptyBook(object):
 
         b["a/b/c/d/f"] = "2"
         session.sa_session.flush()
-        assert len(b["a"]["b"]["c"]["d"].slot_collection)==2
+        assert len(b["a"]["b"]["c"]["d"].slots)==2
 
         b["a/b/c/d/f"] = "5"
         assert b["a"]["b/c"]["d"]["f"].value == "5"
@@ -120,18 +123,19 @@ class TestIntegration_EmptyBook(object):
         assert {n for (n,) in session.sa_session.query(Slot._name)} == {'a' ,'a/b'}
 
         session.sa_session.flush()
-        assert len(b["a"].slot_collection)==1
-        assert len(b["a/b"].slot_collection)==0
+        assert len(b["a"].slots)==1
+        assert len(b["a/b"].slots)==0
 
         with pytest.raises(KeyError):
             b["a/b/c"]
 
         del b["a"]["b"]
         session.sa_session.flush()
-        assert len(b["a"].slot_collection)==0
+        assert len(b["a"].slots)==0
 
-        with pytest.raises(ValueError):
-            b["a/n"] = b
+        with pytest.raises(TypeError):
+            b["a"] = b
+
         with pytest.raises(KeyError):
             del b["a/n"]
 

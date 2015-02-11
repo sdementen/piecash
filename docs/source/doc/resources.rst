@@ -28,6 +28,7 @@ Unofficial projects related to GnuCash
 --------------------------------------
 
 .. toctree::
+   :maxdepth: 1
 
    ./github_links.rst
 
@@ -37,3 +38,18 @@ Python links
 - cross compilation of python executable from Linux to Windows :
   http://milkator.wordpress.com/2014/07/19/windows-executable-from-python-developing-in-ubuntu/
 - SQLAlchemy page: http://www.sqlalchemy.org/
+
+Threads used during the course of development
+---------------------------------------------
+
+- sphinx error message:
+  http://stackoverflow.com/questions/15249340/warning-document-isnt-included-in-any-toctree-for-included-file
+
+Thanks
+------
+
+None of this could be possible without :
+
+- the GnuCash project, its core team of developers and its active community of users
+- python and its packages amongst which sqlalchemy
+- github, readthedocs and travis-ci for managing code, docs and testing

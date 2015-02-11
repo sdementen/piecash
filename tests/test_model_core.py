@@ -73,8 +73,8 @@ class TestModelCore_EmptyBook(object):
 
     def test_versions(self, session):
         # confirm versions of tables
-        versions = session.query(Version.table_name,
-                                 Version.table_version).all()
+        versions = session.query(Version.name,
+                                 Version.version).all()
         assert set(versions) == {(u'Gnucash', 2060400), (u'Gnucash-Resave', 19920),
                                  (u'accounts', 1), (u'books', 1),
                                  (u'budgets', 1), (u'budget_amounts', 1), ('jobs', 1), (u'orders', 1),
@@ -86,7 +86,7 @@ class TestModelCore_EmptyBook(object):
 
     def test_readonly_true(self, session_readonly):
         # control exception when adding object to readonly gnucash db
-        v = Version(table_name="sample", table_version="other sample")
+        v = Version(name="sample", version="other sample")
         sa_session_readonly = session_readonly.sa_session
         sa_session_readonly.add(v)
         with pytest.raises(GnucashException):
@@ -104,7 +104,7 @@ class TestModelCore_EmptyBook(object):
 
 
     def test_readonly_false(self, sa_session):
-        v = Version(table_name="fo", table_version="ok")
+        v = Version(name="fo", version="ok")
         sa_session.add(v)
         assert sa_session.flush() is None
 

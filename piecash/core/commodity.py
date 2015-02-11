@@ -1,15 +1,13 @@
 from __future__ import division
-from collections import namedtuple
-import json
-from xml.etree import ElementTree
 import datetime
 
 from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT
-from sqlalchemy.orm import relation, backref
+from sqlalchemy.orm import relation
 
-from .._common import GnucashException,hybrid_property_gncnumeric
+from .._common import GnucashException, hybrid_property_gncnumeric
 from .._declbase import DeclarativeBaseGuid
 from .._common import CallableList
+from piecash.core._commodity_helper import run_yql, quandl_fx
 from ..sa_extra import _DateTime
 
 
@@ -21,43 +19,68 @@ class GncPriceError(GnucashException):
     pass
 
 
-def run_yql(yql, scalar=False):
-    # run a yql query and return results as list or scalar
-    import requests
-
-    DATATABLES_URL = 'store://datatables.org/alltableswithkeys'
-    PUBLIC_API_URL = 'http://query.yahooapis.com/v1/public/yql'
-    text_result = requests.get(PUBLIC_API_URL, params={'q': yql, 'format': 'json', 'env': DATATABLES_URL}).text
-    query_result = json.loads(text_result)["query"]
-
-    if query_result["count"] == 0:
-        # no results
-        return None if scalar else []
-
-    quotes = query_result["results"]["quote"]
-    fields = (quotes if scalar else quotes[0]).keys()
-    yql_result = namedtuple("YQL", fields)
-
-    if scalar:
-        return yql_result(**quotes)
-    else:
-        return [yql_result(**v) for v in quotes]
 
 
-def quandl_fx(fx_mnemonic, base_mnemonic, start_date):
-    """Retrieve exchange rate of commodity fx in function of base
+
+
+
+
+class Price(DeclarativeBaseGuid):
     """
-    import requests
+    A single Price for a commodity.
 
-    PUBLIC_API_URL = 'http://www.quandl.com/api/v1/datasets/CURRFX/{}{}.json'.format(fx_mnemonic, base_mnemonic)
-    text_result = requests.get(PUBLIC_API_URL, params={'request_source': 'python', 'request_version': 2,
-                                                       'trim_start': "{:%Y-%m-%d}".format(start_date)}).text
-    query_result = json.loads(text_result)
-    rows = query_result["data"]
+    Attributes:
+        commodity (:class:`Commodity`): commodity to which the Price relates
+        currency (:class:`Commodity`): currency in which the Price is expressed
+        date (:class:`datetime.datetime`): datetime object representing the time at which the price is relevant
+        source (str): source of the price
+        type (str): last, ask, bid, unknown, nav
+        value (:class:`decimal.Decimal`): the price itself
+    """
+    __tablename__ = 'prices'
 
-    qdl_result = namedtuple("QUANDL", ["date", "rate", "high", "low"])
+    __table_args__ = {}
 
-    return [qdl_result(*v) for v in rows]
+    # column definitions
+    commodity_guid = Column('commodity_guid', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
+    currency_guid = Column('currency_guid', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
+    date = Column('date', _DateTime, nullable=False)
+    source = Column('source', VARCHAR(length=2048))
+    type = Column('type', VARCHAR(length=2048))
+
+    _value_num = Column('value_num', BIGINT(), nullable=False)
+    _value_denom = Column('value_denom', BIGINT(), nullable=False)
+    value = hybrid_property_gncnumeric(_value_num, _value_denom)
+
+    # relation definitions
+    commodity = relation('Commodity',
+                         back_populates="prices",
+                         foreign_keys=[commodity_guid],
+    )
+    currency = relation('Commodity',
+                        foreign_keys=[currency_guid],
+    )
+
+    def __init__(self,
+                 commodity,
+                 currency,
+                 date,
+                 value,
+                 type=None,
+                 source="piecash"):
+        self.commodity = commodity
+        self.currency = currency
+        assert isinstance(date, datetime.datetime)
+        self.date = date
+        self.value = value
+        self.type = type
+        self.source = source
+
+    def __repr__(self):
+        return "<Price {:%Y-%m-%d} : {} {}/{}>".format(self.date,
+                                                       self.value,
+                                                       self.currency.mnemonic,
+                                                       self.commodity.mnemonic)
 
 
 class Commodity(DeclarativeBaseGuid):
@@ -77,6 +100,8 @@ class Commodity(DeclarativeBaseGuid):
           - if the commodity is a currency, returns the "default currency" of the book (ie the one of the root_account)
           - if the commodity is not a currency, returns the currency encoded in the quoted_currency slot
 
+        accounts (list of :class:`piecash.core.account.Account`): list of accounts which have the commodity as commodity
+        transactions (list of :class:`piecash.core.transaction.Transaction`): list of transactions which have the commodity as currency
         prices (iterator of :class:`Price`): iterator on prices related to the commodity (it is a sqlalchemy query underneath)
 
     """
@@ -85,37 +110,32 @@ class Commodity(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
-    cusip = Column('cusip', VARCHAR(length=2048))
-    fraction = Column('fraction', INTEGER(), nullable=False, default=100)
-    fullname = Column('fullname', VARCHAR(length=2048))
-    mnemonic = Column('mnemonic', VARCHAR(length=2048), nullable=False)
     namespace = Column('namespace', VARCHAR(length=2048), nullable=False)
+    mnemonic = Column('mnemonic', VARCHAR(length=2048), nullable=False)
+    fullname = Column('fullname', VARCHAR(length=2048))
+    cusip = Column('cusip', VARCHAR(length=2048))
+    fraction = Column('fraction', INTEGER(), nullable=False)
     quote_flag = Column('quote_flag', INTEGER(), nullable=False)
     quote_source = Column('quote_source', VARCHAR(length=2048))
     quote_tz = Column('quote_tz', VARCHAR(length=2048))
 
     @property
     def base_currency(self):
-        from .book import Book
-        from .account import Account
+
         s = self.get_session()
         if s is None:
             raise GnucashException("The commodity should be link to a session to have a 'base_currency'")
 
         if self.namespace == "CURRENCY":
-            # get the base currency from the root account commmodity (if created bu piecash)
-            base_currency = s.query(Book).one().root_account.commodity
-            if base_currency:
-                return base_currency
-            # otherwise, assume it is the commodity of the first account with a commodity ever created
-            return s.query(Account).filter(Account.commodity!=None).first().commodity
+            # get the base currency as first commodity in DB
+            return s.query(Commodity).first()
         else:
             # retrieve currency from cusip field or from the web (as fallback)
             mnemonic = self.get("quoted_currency", None)
             if mnemonic:
                 currency = s.query(Commodity).filter_by(namespace="CURRENCY", mnemonic=mnemonic).first()
                 if not currency:
-                    currency = Commodity.create_currency_from_ISO(mnemonic)
+                    currency = s.book.create_currency_from_ISO(mnemonic)
                     s.add(currency)
                 return currency
             else:
@@ -124,113 +144,48 @@ class Commodity(DeclarativeBaseGuid):
 
 
     # relation definitions
+    accounts = relation('Account',
+                        back_populates='commodity',
+                        cascade='all, delete-orphan',
+                        collection_class=CallableList)
+    transactions = relation('Transaction',
+                            back_populates='currency',
+                            cascade='all, delete-orphan',
+                            collection_class=CallableList,
+    )
+    prices = relation("Price",
+                      back_populates='commodity',
+                      foreign_keys=[Price.commodity_guid],
+                      cascade='all, delete-orphan',
+                      collection_class=CallableList,
+                      lazy="dynamic",
+    )
+
+
+    def __init__(self,
+                 namespace,
+                 mnemonic,
+                 fullname,
+                 fraction=100,
+                 cusip="",
+                 quote_flag=0,
+                 quote_source=None,
+                 quote_tz=None):
+
+        if quote_source == None:
+            quote_source = "currency" if namespace == "CURRENCY" else "yahoo"
+
+        self.namespace = namespace
+        self.mnemonic = mnemonic
+        self.fullname = fullname
+        self.fraction = fraction
+        self.cusip = cusip
+        self.quote_flag = quote_flag
+        self.quote_source = quote_source
+        self.quote_tz = quote_tz
 
     def __repr__(self):
         return "Commodity<{}:{}>".format(self.namespace, self.mnemonic)
-
-    @classmethod
-    def create_currency_from_ISO(cls, iso_code, from_web=False):
-        """
-        Factory function to create a new currency from its ISO code
-
-        Args:
-            iso_code (str): the ISO code of the currency (e.g. EUR for the euro)
-            from_web (bool): True to get the info from the website, False to get it from the hardcoded currency_ISO module
-
-        Returns:
-            :class:`Commodity`: the currency as a commodity object
-        """
-        if not from_web:
-            from .currency_ISO import ISO_currencies
-
-            for cur in ISO_currencies:
-                if cur.mnemonic == iso_code:
-                    # create the currency
-                    return cls(mnemonic=cur.mnemonic,
-                               fullname=cur.currency,
-                               fraction=10 ** int(cur.fraction),
-                               cusip=cur.cusip,
-                               namespace="CURRENCY",
-                               quote_flag=1,
-                               quote_source="currency"
-                    )
-            else:
-                raise ValueError("Could not find the ISO code '{}' in the ISO table".format(iso_code))
-
-        else:
-            # retrieve XML table with currency information
-            import requests
-
-            url = "http://www.currency-iso.org/dam/downloads/table_a1.xml"
-            table = requests.get(url)
-
-            # parse it with elementree
-            root = ElementTree.fromstring(table.content)
-            # and look for each currency item
-            for i in root.findall(".//CcyNtry"):
-                # if there is no iso_code, skip it
-                mnemonic_node = i.find("Ccy")
-                if mnemonic_node is None:
-                    continue
-                # if the iso_code is not the one expected, skip it
-                if mnemonic_node.text != iso_code:
-                    continue
-                # retreive currency info from xml
-                cusip = i.find("CcyNbr").text
-                fraction = 10 ** int(i.find("CcyMnrUnts").text)
-                fullname = i.find("CcyNm").text
-                break
-            else:
-                # raise error if iso_code has not been found
-                raise ValueError("Could not find the iso_code '{}' in the table at {}".format(iso_code, url))
-
-            # create the currency
-            return cls(mnemonic=iso_code,
-                       fullname=fullname,
-                       fraction=fraction,
-                       cusip=cusip,
-                       namespace="CURRENCY",
-                       quote_flag=1,
-                       quote_source="currency"
-            )
-
-    @classmethod
-    def create_stock_from_symbol(cls, symbol):
-        """
-        Factory function to create a new stock from its symbol. The ISO code of the quoted currency of the stock is
-        stored in the slot "quoted_currency".
-
-        Args:
-            symbol (str): the symbol for the stock (e.g. YHOO for the Yahoo! stock)
-
-        Returns:
-            :class:`Commodity`: the stock as a commodity object
-
-        .. note::
-           The information is gathered from a yql query to the yahoo.finance.quotes
-           The default currency in which the quote is traded is stored as a slot
-
-        .. todo::
-           use 'select * from yahoo.finance.sectors' and 'select * from yahoo.finance.industry where id ="sector_id"'
-           to retrieve name of stocks and allow therefore the creation of a stock by giving its "stock name" (or part of it).
-           This could also be used to retrieve all symbols related to the same company
-        """
-        yql = 'select Name, StockExchange, Symbol,Currency from yahoo.finance.quotes where symbol = "{}"'.format(symbol)
-        symbol_info = run_yql(yql, scalar=True)
-        if symbol_info.StockExchange:
-            stock = Commodity(mnemonic=symbol_info.Symbol,
-                             fullname=symbol_info.Name,
-                             fraction=10000,
-                             namespace=symbol_info.StockExchange.upper(),
-                             quote_flag=1,
-                             quote_source="yahoo"
-            )
-            stock["quoted_currency"] = symbol_info.Currency
-            return stock
-        else:
-            raise GncCommodityError("Can't find information on symbol '{}'".format(symbol))
-
-
 
     def update_prices(self, start_date=None):
         """
@@ -266,12 +221,12 @@ class Commodity(DeclarativeBaseGuid):
 
             # through Quandl for exchange rates
             quotes = quandl_fx(self.mnemonic, default_currency.mnemonic, start_date)
-
             for q in quotes:
-                Price(commodity=self,
-                      currency=default_currency,
-                      date=datetime.datetime.strptime(q.date, "%Y-%m-%d"),
-                      value=str(q.rate))
+                p = Price(commodity=self,
+                          currency=default_currency,
+                          date=datetime.datetime.strptime(q.date, "%Y-%m-%d"),
+                          value=str(q.rate))
+                print(p)
         else:
             symbol = self.mnemonic
             default_currency = self.base_currency
@@ -299,10 +254,10 @@ class Commodity(DeclarativeBaseGuid):
 
         and the following accounts depending on the income_account_types argument
 
-        - D = Income/Dividends/stock.mnemonic
+        - D = Income/Dividend Income/stock.mnemonic
         - CL = Income/Cap Gain (Long)/stock.mnemonic
         - CS = Income/Cap Gain (Short)/stock.mnemonic
-        - I = Income/Interest/stock.mnemonic
+        - I = Income/Interest Income/stock.mnemonic
 
         Args:
             broker_account (:class:`piecash.core.account.Account`): the broker account where the account holding
@@ -327,10 +282,10 @@ class Commodity(DeclarativeBaseGuid):
 
             for inc_acc in income_account_types.split("/"):
                 sub_account_name = {
-                    "D": "Dividends",
+                    "D": "Dividend Income",
                     "CL": "Cap Gain (Long)",
                     "CS": "Cap Gain (Short)",
-                    "I": "Interest",
+                    "I": "Interest Income",
                 }[inc_acc]
                 try:
                     div = income_account.children.get(name=sub_account_name)
@@ -339,58 +294,3 @@ class Commodity(DeclarativeBaseGuid):
                 Account(symbol, "INCOME", cur, div)
 
 
-class Price(DeclarativeBaseGuid):
-    """
-    A single Price for a commodity.
-
-    Attributes:
-        commodity (:class:`Commodity`): commodity to which the Price relates
-        currency (:class:`Commodity`): currency in which the Price is expressed
-        date (:class:`datetime.datetime`): datetime object representing the time at which the price is relevant
-        source (str): source of the price
-        type (str): last, ask, bid, unknown, nav
-        value (:class:`decimal.Decimal`): the price itself
-    """
-    __tablename__ = 'prices'
-
-    __table_args__ = {}
-
-    # column definitions
-    commodity_guid = Column('commodity_guid', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
-    currency_guid = Column('currency_guid', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
-    date = Column('date', _DateTime, nullable=False)
-    source = Column('source', VARCHAR(length=2048))
-    type = Column('type', VARCHAR(length=2048))
-
-    _value_denom = Column('value_denom', BIGINT(), nullable=False)
-    _value_num = Column('value_num', BIGINT(), nullable=False)
-    value = hybrid_property_gncnumeric(_value_num, _value_denom)
-
-    # relation definitions
-
-    commodity = relation('Commodity', foreign_keys=[commodity_guid], backref=backref("prices",
-                                                                                     cascade='all, delete-orphan',
-                                                                                     collection_class=CallableList,
-                                                                                     lazy="dynamic"))
-    currency = relation('Commodity', foreign_keys=[currency_guid])
-
-    def __init__(self,
-                 commodity,
-                 currency,
-                 date,
-                 value,
-                 type=None,
-                 source="piecash"):
-        self.commodity = commodity
-        self.currency = currency
-        assert isinstance(date, datetime.datetime)
-        self.date = date
-        self.value = value
-        self.type = type
-        self.source = source
-
-    def __repr__(self):
-        return "<Price {:%Y-%m-%d} : {} {}/{}>".format(self.date,
-                                                      self.value,
-                                                      self.currency.mnemonic,
-                                                      self.commodity.mnemonic)
