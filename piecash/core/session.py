@@ -84,28 +84,14 @@ class GncSession(object):
 
         the underlying sqlalchemy session
     """
+
     def __init__(self, session, acquire_lock=False):
         self.sa_session = session
         self._acquire_lock = acquire_lock
 
         if acquire_lock:
             # set a lock
-            session.execute(gnclock.insert(values=dict(hostname=socket.gethostname(), pid=os.getpid())))
-            session.commit()
-
-        # setup tracking of session changes (see https://www.mail-archive.com/sqlalchemy@googlegroups.com/msg34201.html)
-        self._is_modified = False
-
-        @event.listens_for(session, 'after_flush')
-        def receive_after_flush(session, flush_context):
-            self._is_modified = not self.is_saved
-
-        @event.listens_for(session, 'after_commit')
-        @event.listens_for(session, 'after_begin')
-        @event.listens_for(session, 'after_rollback')
-        def init_session_status(session, *args, **kwargs):
-            self._is_modified = False
-
+            session.create_lock()
 
     def save(self):
         """Save the changes to the file/DB (=commit transaction)
@@ -126,9 +112,7 @@ class GncSession(object):
 
         if self._acquire_lock:
             # remove the lock
-            session.execute(gnclock.delete(whereclause=(gnclock.c.hostname == socket.gethostname())
-                                                       and (gnclock.c.pid == os.getpid())))
-            session.commit()
+            session.delete_lock()
 
         session.close()
 
@@ -138,8 +122,7 @@ class GncSession(object):
         """
         True if nothing has yet been changed (False otherwise)
         """
-        s = self.sa_session
-        return not (self._is_modified or s.dirty or s.deleted or s.new)
+        return self.sa_session.is_saved
 
     @property
     def book(self):
@@ -166,7 +149,7 @@ class GncSession(object):
         """
         from .account import Account
 
-        return CallableList(self.sa_session.query(Account).filter(Account.type!='ROOT'))
+        return CallableList(self.sa_session.query(Account).filter(Account.type != 'ROOT'))
 
     @property
     def commodities(self):
@@ -240,12 +223,6 @@ class GncSession(object):
             if c.quote_flag:
                 c.update_prices(start_date)
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
-
 
 def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False, keep_foreign_keys=False, **kwargs):
     """Create a new empty GnuCash book. If both sqlite_file and uri_conn are None, then an "in memory" sqlite book is created.
@@ -305,7 +282,10 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
     )
     s.add(b)
     s.commit()
-    return GncSession(s)
+
+    adapt_session(s, book=b, readonly=False)
+
+    return b
 
 
 def open_book(sqlite_file=None, uri_conn=None, acquire_lock=True, readonly=True, open_if_lock=False, **kwargs):
@@ -355,23 +335,67 @@ def open_book(sqlite_file=None, uri_conn=None, acquire_lock=True, readonly=True,
         assert version_supported[k] == v, "Unsupported version for table {} : got {}, supported {}".format(k, v,
                                                                                                            version_supported[
                                                                                                                k])
+    book = s.query(Book).one()
+    adapt_session(s, book=book, readonly=readonly)
+
+    return book
 
 
-    # flush is a "no op" if readonly
+def adapt_session(session, book, readonly):
+    """
+    Change the SA session object to add some features.
+
+    :param session: the SA session object that will be modified in place
+    :param book: the gnucash singleton book linked to the SA session
+    :param readonly: True if the session should not allow commits.
+    :return:
+    """
+    # link session and book together
+    book.session = session
+    session.book = book
+
+    # def new_flush(*args, **kwargs):
+    # if session.dirty or session.new or session.deleted:
+    #         session.rollback()
+    #         raise GnucashException("You cannot change the DB, it is locked !")
+
+    # add logic to make session readonly
+    def readonly_commit(*args, **kwargs):
+        # session.rollback()
+        raise GnucashException("You cannot change the DB, it is locked !")
+
     if readonly:
-        def new_flush(*args, **kwargs):
-            if s.dirty or s.new or s.deleted:
-                s.rollback()
-                raise GnucashException("You cannot change the DB, it is locked !")
+        session.commit = readonly_commit
 
-        def new_commit(*args, **kwargs):
-            s.rollback()
-            raise GnucashException("You cannot change the DB, it is locked !")
+    # add logic to create/delete GnuCash locks
+    def delete_lock():
+        session.execute(gnclock.delete(whereclause=(gnclock.c.hostname == socket.gethostname())
+                                                   and (gnclock.c.pid == os.getpid())))
+        session.commit()
 
-        s.commit = new_commit
-        # s.flush = new_flush
+    session.delete_lock = delete_lock
 
-    return GncSession(s, acquire_lock and not readonly)
+    def create_lock():
+        session.execute(gnclock.insert(values=dict(hostname=socket.gethostname(), pid=os.getpid())))
+        session.commit()
+
+    session.create_lock = create_lock
 
 
+    # add logic to track if a session has been modified or not
+    session._is_modified = False
+
+    @event.listens_for(session, 'after_flush')
+    def receive_after_flush(session, flush_context):
+        session._is_modified = not session.is_saved
+
+    @event.listens_for(session, 'after_commit')
+    @event.listens_for(session, 'after_begin')
+    @event.listens_for(session, 'after_rollback')
+    def init_session_status(session, *args, **kwargs):
+        session._is_modified = False
+
+    session.__class__.is_saved = property(
+        fget=lambda self: not (self._is_modified or self.dirty or self.deleted or self.new),
+        doc="True if nothing has yet been changed (False otherwise)")
 
