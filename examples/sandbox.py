@@ -13,10 +13,12 @@ from piecash import create_book, Account, Transaction, Split
 
 
 # create a book (in memory)
+from piecash.core import factories
+
 s = create_book(currency="EUR")
 # get the EUR and create the USD currencies
 c1 = s.book.default_currency
-c2 = s.book.create_currency_from_ISO("USD")
+c2 = factories.create_currency_from_ISO("USD")
 # create two accounts
 a1 = Account("Acc 1", "ASSET", c1, parent=s.book.root_account)
 a2 = Account("Acc 2", "ASSET", c2, parent=s.book.root_account)
@@ -52,9 +54,9 @@ tr3 = Transaction(currency=c1,
                   description="transfer imb",
                   splits=[
                       Split(account=a1, value=-100),
-                      Split(account=a2, value=90, quantity=30)
+                      Split(account=a2, value=100, quantity=30)
                   ])
-tr3.ledger_str()
+print(tr3.ledger_str())
 s.flush()
 
 fdsfdsfds
@@ -118,7 +120,7 @@ with open_book("super_empty_piecash.gnucash", readonly=False, open_if_lock=True,
     print(s.book.root_account.commodity)
     print(s.commodities)
     fdfdsfds
-    sa = s.sa_session
+    sa = s.session
     sql = sa.query(Split.value).filter_by(value=100)
     print(sql)
     print(sql.all())
@@ -294,7 +296,7 @@ with create_book(currency="EUR") as s:
                    parent=s.book.root_account,
                    account_type="BANK",
                    commodity_scu=10)
-    s.sa_session.flush()
+    s.session.flush()
 
     tr = Transaction(currency=EUR,
                      description="foo",
@@ -304,10 +306,10 @@ with create_book(currency="EUR") as s:
                          Split(value=Decimal("-1.2345"),
                                account=acc2),
                      ])
-    s.sa_session.flush()
+    s.session.flush()
 
     print([(sp._quantity_denom, sp._value_denom) for sp in tr.splits])
-    print(s.sa_session.query(Account.commodity).all())
+    print(s.session.query(Account.commodity).all())
     print(tr.slots)
     tr.post_date = datetime.datetime.now()
     print(tr.slots)
@@ -347,7 +349,7 @@ dsqsdqdqs
 #     # print sp
 #     print "o"*100
 #     sp.transaction = tr2
-#     s.sa_session.flush()
+#     s.session.flush()
 # fdfdsfsd
 
 with open_book("trading_accounts.gnucash", readonly=False, open_if_lock=True, acquire_lock=True) as s:
@@ -358,7 +360,7 @@ with open_book("trading_accounts.gnucash", readonly=False, open_if_lock=True, ac
             print("\t[{}] {} / {} for {}".format(sp.account.commodity, sp.value, sp.quantity, sp.account))
     # sp.memo = "foo"
     # tr.description = "foo"
-    # s.sa_session.flush()
+    # s.session.flush()
 
     tr = s.transactions.get(description="cross CAD to USD transfer (initiated from USD account)")
     sp = s.transactions.get(description="cross CAD to USD transfer").splits[0]
@@ -372,7 +374,7 @@ with open_book("trading_accounts.gnucash", readonly=False, open_if_lock=True, ac
     assert isinstance(acc, Account)
     acc.commodity_scu = 1
 
-    s.sa_session.flush()
+    s.session.flush()
     Transaction(currency=s.commodities.get(mnemonic="EUR"),
                 description="foo",
                 splits=[
@@ -381,7 +383,7 @@ with open_book("trading_accounts.gnucash", readonly=False, open_if_lock=True, ac
                     Split(value=Decimal("1.2345"),
                           account=s.accounts[1]),
                 ])
-    s.sa_session.flush()
+    s.session.flush()
     # del tr.splits[-1]
     # print tr.get_imbalances()
 fdfsdfds
@@ -422,7 +424,7 @@ imb = t.get_imbalances()
 print(imb)
 t.add_imbalance_splits()
 s.save()
-# print s.sa_session.query(Split).filter(Split.value_magic>=1.0).all()
+# print s.session.query(Split).filter(Split.value_magic>=1.0).all()
 ffdsfdd
 
 # print t.splits[0].value_gnc, t.splits[0].value_denom, t.splits[0].value_num
@@ -448,7 +450,7 @@ with open_book("sample1.gnucash", readonly=False, open_if_lock=True) as s1, open
               commodity=eur,
               value=Decimal("4234.342"),
     )
-    s1.sa_session.add(p)
+    s1.session.add(p)
     print(p.value)
     print(p.value_denom)
     print(p.value_num)
@@ -461,4 +463,4 @@ with open_book("sample1.gnucash", readonly=False, open_if_lock=True) as s1, open
 
     with b1:
         acc = Account(name="foo")
-    print(s1.sa_session.new)
+    print(s1.session.new)

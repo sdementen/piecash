@@ -4,9 +4,9 @@ import pytest
 from piecash import create_book, Account, Transaction, Split, GncValidationError
 
 # create new book
-with create_book() as s:
-    ra = s.book.root_account
-    eur = s.book.default_currency
+with create_book() as book:
+    ra = book.root_account
+    eur = book.default_currency
 
     # number of accounts
     N = 5
@@ -24,7 +24,7 @@ with create_book() as s:
         )
         Split(accounts[random.randrange(N)], value=v, transaction=tx)
         Split(accounts[random.randrange(N)], value=-v, transaction=tx)
-    s.save()
+    book.save()
 
     # select two accounts
     acc = accounts[0]
@@ -32,7 +32,7 @@ with create_book() as s:
     # move all splits from account acc to account tacc
     for spl in list(acc.splits):
         spl.account = tacc
-    s.save()
+    book.save()
 
     # check no more splits in account acc
     assert len(acc.splits) == 0
@@ -43,9 +43,9 @@ with create_book() as s:
         spl.account = acc
 
     # set an account to a placeholder
-    tx = s.transactions[0]
+    tx = book.transactions[0]
     tx.splits[0].account.placeholder = 1
-    s.save()
+    book.save()
     tx.description="foo"
     with pytest.raises(GncValidationError):
-        s.save()
+        book.save()

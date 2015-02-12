@@ -21,12 +21,12 @@ piecash allows you to:
 
 A simple example of a piecash script::
 
-    with open_book("example.gnucash") as s:
+    with open_book("example.gnucash") as book:
         # get default currency of book
-        print( s.book.default_currency )  # ==> Commodity<CURRENCY:EUR>
+        print( book.default_currency )  # ==> Commodity<CURRENCY:EUR>
 
         # iterating over all splits in all books and print the transaction description:
-        for acc in s.accounts:
+        for acc in book.accounts:
             for sp in acc.splits:
                 print(sp.transaction.description)
 
@@ -80,15 +80,15 @@ The simplest workflow to use piecash starts by opening a GnuCash file
     import piecash
 
     # open a GnuCash Book
-    session = piecash.open_book("test.gnucash", readonly=True)
+    book = piecash.open_book("test.gnucash", readonly=True)
 
-and then access GnuCash objects through the session, for example to query the stock prices
+and then access GnuCash objects through the book, for example to query the stock prices
 
 .. code-block:: python
 
     # example 1, print all stock prices in the Book
     # display all prices
-    for price in session.prices:
+    for price in book.prices:
         print(price)
 
 .. parsed-literal::
@@ -109,7 +109,7 @@ or to query the accounts:
 
 .. code-block:: python
 
-    for account in session.accounts:
+    for account in book.accounts:
         print(account)
 
 .. parsed-literal::
@@ -141,16 +141,16 @@ or to create a new expense account for utilities:
 .. code-block:: python
 
     # retrieve currency
-    EUR = session.commodities.get(mnemonic='EUR')
+    EUR = book.commodities.get(mnemonic='EUR')
 
     # retrieve parent account
-    acc_exp = session.accounts.get(fullname="Expenses:Utilities")
+    acc_exp = book.accounts.get(fullname="Expenses:Utilities")
 
     # add a new subaccount to this account of type EXPENSE with currency EUR
     new_acc = piecash.Account(name="Cable", type="EXPENSE", parent=acc_exp, commodity=EUR)
 
     # save changes (it should raise an exception if we opened the book as readonly)
-    session.save()
+    book.save()
 
 Most basic objects used for personal finance are supported (Account, Split, Transaction, Price, ...).
 

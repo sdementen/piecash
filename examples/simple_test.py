@@ -5,13 +5,13 @@
 from decimal import Decimal
 
 from piecash import create_book, Account, Transaction, Split, Commodity
+from piecash.core.factories import create_currency_from_ISO
 
 FILE_1 = "/tmp/example.gnucash"
 
-with create_book(FILE_1, overwrite=True) as session:
-    book = session.book
+with create_book(FILE_1, overwrite=True) as book:
     root_acct = book.root_account
-    cad = session.book.create_currency_from_ISO("CAD")
+    cad = create_currency_from_ISO("CAD")
     expenses_acct = Account(parent=root_acct,
                             name="Expenses",
                             type="EXPENSE",
@@ -51,6 +51,6 @@ with create_book(FILE_1, overwrite=True) as session:
     # create transaction with factory function
     trans3 = Transaction.single_transaction(None,None,"Pharmacy", num3, savings_acct, expenses_acct)
 
-    session.save()
+    book.save()
 
 

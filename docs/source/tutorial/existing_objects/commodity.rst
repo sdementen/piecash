@@ -4,9 +4,9 @@ Commodities and Prices
 The list of all commodities in the book can be retrieved via the ``commodities`` attribute::
 
     # all commodities
-    print(s.commodities)
+    print(book.commodities)
 
-    cdty = s.commodities[0]
+    cdty = book.commodities[0]
 
     # accessing attributes of a commodity
     print("Commodity namespace={cdty.namespace}\n"

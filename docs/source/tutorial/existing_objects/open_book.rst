@@ -1,37 +1,37 @@
 Opening an existing Book
 ------------------------
 
-.. py:currentmodule:: piecash.core.session
+.. py:currentmodule:: piecash.core.book
 
-To open an existing GnuCash document (and get the related :class:`GncSession`), use the :func:`open_book` function::
+To open an existing GnuCash document (and get the related :class:`Book`), use the :func:`open_book` function::
 
     import piecash
 
     # for a sqlite3 document
-    s = piecash.open_book("existing_file.gnucash")
+    book = piecash.open_book("existing_file.gnucash")
 
     # or through an URI connection string for sqlite3
-    s = piecash.open_book(uri_conn="sqlite:///existing_file.gnucash")
+    book = piecash.open_book(uri_conn="sqlite:///existing_file.gnucash")
     # or for postgres
-    s = piecash.open_book(uri_conn="postgres://user:passwd@localhost/existing_gnucash_db")
+    book = piecash.open_book(uri_conn="postgres://user:passwd@localhost/existing_gnucash_db")
 
 The documents are open as readonly per default. To allow RW access, specify explicitly readonly=False as::
 
-    s = piecash.open_book("existing_file.gnucash", readonly=False)
+    book = piecash.open_book("existing_file.gnucash", readonly=False)
 
 When opening in full access (readonly=False), piecash will automatically create a backup file named
 filename.piecash_YYYYMMDD_HHMMSS with the original file. To avoid creating the backup file, specificy backup=False as::
 
-    s = piecash.open_book("existing_file.gnucash", readonly=False, backup=False)
+    book = piecash.open_book("existing_file.gnucash", readonly=False, backup=False)
 
 To force opening the file even through there is a lock on it, use the open_if_lock=True argument::
 
-    s = piecash.open_book("existing_file.gnucash", open_if_lock=True)
+    book = piecash.open_book("existing_file.gnucash", open_if_lock=True)
 
 Access to objects
 -----------------
 
-Once a GnuCash book is opened through a :class:`piecash.core.session.GncSession`, GnuCash objects can be accessed
+Once a GnuCash book is opened through a :class:`piecash.core.book.Book`, GnuCash objects can be accessed
 through two different patterns:
 
 The object model
@@ -41,19 +41,17 @@ The object model
 
     .. ipython::
 
-        In [1]: s = open_book(gnucash_books + "default_book.gnucash")
+        In [1]: book = open_book(gnucash_books + "default_book.gnucash")
 
-        In [1]: s.book      # accessing the book
-
-        In [1]: s.book.root_account # accessing the root_account
+        In [1]: book.root_account # accessing the root_account
 
         In [1]: # looping through the children accounts of the root_account
-           ...: for acc in s.book.root_account.children:
+           ...: for acc in book.root_account.children:
            ...:     print(acc)
 
         # accessing children accounts
         In [1]:
-           ...: root = s.book.root_account              # select the root_account
+           ...: root = book.root_account              # select the root_account
            ...: assets = root.children(name="Assets")   # select child account by name
            ...: cur_assets = assets.children[0]         # select child account by index
            ...: cash = cur_assets.children(type="CASH") # select child account by type
@@ -67,25 +65,23 @@ The object model
            ...: for acc in commo.accounts[:10]:
            ...:     print(acc)
 
-        In [1]: s.close()
-
 
 The "table" access
 
-    In this mode, we access elements through collections directly accessible from the session:
+    In this mode, we access elements through collections directly accessible from the book:
 
     .. ipython:: python
 
-        s = open_book(gnucash_books + "default_book.gnucash")
+        book = open_book(gnucash_books + "default_book.gnucash")
 
         # accessing all accounts
-        s.accounts
+        book.accounts
 
         # accessing all commodities
-        s.commodities
+        book.commodities
 
         # accessing all transactions
-        s.transactions
+        book.transactions
 
 
     Each of these collections can be either iterated or accessed through some indexation or filter mechanism (return
@@ -94,23 +90,23 @@ The "table" access
     .. ipython:: python
 
         # iteration
-        for acc in s.accounts:
+        for acc in book.accounts:
             if acc.type == "ASSET": print(acc)
 
         # indexation (not very meaningful)
-        s.accounts[10]
+        book.accounts[10]
 
         # filter by name
-        s.accounts(name="Garbage collection")
+        book.accounts(name="Garbage collection")
 
         # filter by type
-        s.accounts(type="EXPENSE")
+        book.accounts(type="EXPENSE")
 
         # filter by fullname
-        s.accounts(fullname="Expenses:Taxes:Social Security")
+        book.accounts(fullname="Expenses:Taxes:Social Security")
 
         # filter by multiple criteria
-        s.accounts(commodity=s.commodities[0], name="Gas")
+        book.accounts(commodity=book.commodities[0], name="Gas")
 
 The "SQLAlchemy" access (advanced users)
 
@@ -119,7 +115,7 @@ The "SQLAlchemy" access (advanced users)
     .. ipython:: python
 
         # retrieve underlying SQLAlchemy session object
-        session = s.sa_session
+        session = book.session
 
         # get all account with name >= "T"
         session.query(Account).filter(Account.name>="T").all()

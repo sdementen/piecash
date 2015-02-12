@@ -15,12 +15,7 @@ from test_helper import file_template, file_for_test
 @pytest.fixture
 def session(request):
     s = create_book()
-    return s
-
-@pytest.fixture
-def sa_session(request):
-    s = create_book()
-    return s.sa_session
+    return s.session
 
 
 @pytest.fixture
@@ -34,17 +29,17 @@ def session_readonly(request):
     return s
 
 @pytest.fixture
-def session_readonly_lock(request):
+def book_readonly_lock(request):
     shutil.copyfile(file_template, file_for_test)
 
     # default session is readonly
-    s = open_book(file_for_test, acquire_lock=True)
+    book = open_book(file_for_test, acquire_lock=True)
 
     def close_s():
-        s.close()
+        book.session.close()
         os.remove(file_for_test)
     request.addfinalizer(close_s)
-    return s
+    return book
 
 
 class TestModelCore_EmptyBook(object):
@@ -73,8 +68,8 @@ class TestModelCore_EmptyBook(object):
 
     def test_versions(self, session):
         # confirm versions of tables
-        versions = session.query(Version.name,
-                                 Version.version).all()
+        versions = session.query(Version.table_name,
+                                 Version.table_version).all()
         assert set(versions) == {(u'Gnucash', 2060400), (u'Gnucash-Resave', 19920),
                                  (u'accounts', 1), (u'books', 1),
                                  (u'budgets', 1), (u'budget_amounts', 1), ('jobs', 1), (u'orders', 1),
@@ -86,8 +81,8 @@ class TestModelCore_EmptyBook(object):
 
     def test_readonly_true(self, session_readonly):
         # control exception when adding object to readonly gnucash db
-        v = Version(name="sample", version="other sample")
-        sa_session_readonly = session_readonly.sa_session
+        v = Version(table_name="sample", table_version="other sample")
+        sa_session_readonly = session_readonly.session
         sa_session_readonly.add(v)
         with pytest.raises(GnucashException):
             sa_session_readonly.commit()
@@ -103,14 +98,14 @@ class TestModelCore_EmptyBook(object):
             sa_session_readonly.commit()
 
 
-    def test_readonly_false(self, sa_session):
-        v = Version(name="fo", version="ok")
-        sa_session.add(v)
-        assert sa_session.flush() is None
+    def test_readonly_false(self, session):
+        v = Version(table_name="fo", table_version="ok")
+        session.add(v)
+        assert session.flush() is None
 
-    def test_lock(self, session_readonly_lock):
+    def test_lock(self, book_readonly_lock):
         # test that lock is not taken in readonly session
-        locks = list(session_readonly_lock.sa_session.execute(gnclock.select()))
+        locks = list(book_readonly_lock.session.execute(gnclock.select()))
         assert len(locks) == 0
 
 

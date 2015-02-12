@@ -31,7 +31,7 @@ class DeclarativeBase(object):
     def book(self):
         """Return the gnc book
         """
-        return object_session(self).gnc_session.book
+        return object_session(self).book
 
     pass
     # def __deepcopy__(self, memo):

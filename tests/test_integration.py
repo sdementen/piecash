@@ -88,13 +88,13 @@ class TestIntegration_EmptyBook(object):
         b = session.book
 
         b["a/b/c/d/e"] = 1
-        session.sa_session.flush()
+        session.session.flush()
         assert b["a"]["b"]["c"]["d"]["e"].value==1
 
         b["a/b/c"] = {"d": {"t":"ok"}}
 
         b["a/b/c/d/f"] = "2"
-        session.sa_session.flush()
+        session.session.flush()
         assert len(b["a"]["b"]["c"]["d"].slots)==2
 
         b["a/b/c/d/f"] = "5"
@@ -114,15 +114,15 @@ class TestIntegration_EmptyBook(object):
         with pytest.raises(TypeError):
             b["a/b/c"] = True
 
-        assert {n for (n,) in session.sa_session.query(Slot._name)} == {'a' ,'a/b','a/b/c','a/b/c/d','a/b/c/d/t','a/b/c/d/f'}
+        assert {n for (n,) in session.session.query(Slot._name)} == {'a' ,'a/b','a/b/c','a/b/c/d','a/b/c/d/t','a/b/c/d/f'}
 
 
         # delete some elements
         del b["a"]["b"][:]
-        session.sa_session.flush()
-        assert {n for (n,) in session.sa_session.query(Slot._name)} == {'a' ,'a/b'}
+        session.session.flush()
+        assert {n for (n,) in session.session.query(Slot._name)} == {'a' ,'a/b'}
 
-        session.sa_session.flush()
+        session.session.flush()
         assert len(b["a"].slots)==1
         assert len(b["a/b"].slots)==0
 
@@ -130,7 +130,7 @@ class TestIntegration_EmptyBook(object):
             b["a/b/c"]
 
         del b["a"]["b"]
-        session.sa_session.flush()
+        session.session.flush()
         assert len(b["a"].slots)==0
 
         with pytest.raises(TypeError):
@@ -140,8 +140,8 @@ class TestIntegration_EmptyBook(object):
             del b["a/n"]
 
         del b[:]
-        session.sa_session.flush()
-        assert {n for (n,) in session.sa_session.query(Slot._name)} == set([])
+        session.session.flush()
+        assert {n for (n,) in session.session.query(Slot._name)} == set([])
 
 
 
@@ -200,7 +200,7 @@ class TestIntegration_EmptyBook(object):
         acc2 = Account(name="Foo", type="BANK", parent=session.book.root_account, commodity=None)
         with pytest.raises(ValueError):
             session.save()
-        session.sa_session.rollback()
+        session.session.rollback()
         # ok as same name but different parents
         acc3 = Account(name="Fooz", type="BANK", parent=session.book.root_account, commodity=None)
         acc4 = Account(name="Fooz", type="BANK", parent=acc3, commodity=None)
