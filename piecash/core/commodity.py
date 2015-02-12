@@ -19,12 +19,6 @@ class GncPriceError(GnucashException):
     pass
 
 
-
-
-
-
-
-
 class Price(DeclarativeBaseGuid):
     """
     A single Price for a commodity.

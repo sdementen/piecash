@@ -33,12 +33,12 @@ A simple example of a piecash script:
 
 .. code-block:: python
 
-    with open_book("example.gnucash") as s:
+    with open_book("example.gnucash") as book:
         # get default currency of book
-        print( s.book.default_currency )  # ==> Commodity<CURRENCY:EUR>
+        print( book.default_currency )  # ==> Commodity<CURRENCY:EUR>
 
         # iterating over all splits in all books and print the transaction description:
-        for acc in s.accounts:
+        for acc in book.accounts:
             for sp in acc.splits:
                 print(sp.transaction.description)
 
