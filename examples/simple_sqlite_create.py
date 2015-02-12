@@ -7,19 +7,22 @@ from __future__ import print_function
 import os
 
 from piecash import create_book, Account, Commodity, open_book
+from piecash.core.factories import create_currency_from_ISO
 
 filename = os.path.abspath('test.blob')
+if os.path.exists(filename):
+    os.remove(filename)
 
-with create_book(filename) as s:
-    a = Account(parent=s.book.root_account,
+with create_book(filename) as book:
+    a = Account(parent=book.root_account,
                 name="wow",
                 type="ASSET",
-                commodity=Commodity.create_currency_from_ISO("CAD"))
+                commodity=create_currency_from_ISO("CAD"))
 
-    s.save()
+    book.save()
 
-with open_book(filename) as s:
-    print(s.book.root_account.children)
-    print(s.commodities.get(mnemonic="CAD"))
+with open_book(filename) as book:
+    print(book.root_account.children)
+    print(book.commodities.get(mnemonic="CAD"))
 
 os.remove(filename)

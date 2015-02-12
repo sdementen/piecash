@@ -21,17 +21,17 @@ piecash allows you to:
 
 A simple example of a piecash script::
 
-    with open_book("example.gnucash") as s:
+    with open_book("example.gnucash") as book:
         # get default currency of book
-        print( s.book.root_account.commodity )  # ==> Commodity<CURRENCY:EUR>
+        print( book.default_currency )  # ==> Commodity<CURRENCY:EUR>
 
         # iterating over all splits in all books and print the transaction description:
-        for acc in s.accounts:
+        for acc in book.accounts:
             for sp in acc.splits:
                 print(sp.transaction.description)
 
-As piecash is essentially a SQLAlchemy layer, it could be reused by any web framework that has a SQLAlchemy interface to develop
-REST API or classical websites. It can also be used for reporting purposes.
+As piecash is essentially a SQLAlchemy layer, it could be potentially reused by any web framework that has
+a SQLAlchemy interface to develop REST API or classical websites. It can also be used for reporting purposes.
 
 The project has reached beta stage. Knowledge of SQLAlchemy is at this stage not anymore required to use it and/or
 to contribute to it. Some documentation for developers on the object model of GnuCash as understood by the author is
@@ -45,15 +45,19 @@ available :doc:`here <../object_model>`.
 Installation
 ============
 
-With pip::
+To install with pip::
 
     $ pip install piecash
 
-or easy_install::
+or to upgrade if piecash is already installed::
+
+    $ pip install -U piecash
+
+To install with easy_install::
 
     $ easy_install piecash
 
-Otherwise, you can install from the distribution using the setup.py script::
+Otherwise, you can install by unpacking the source distribution from PyPI and then::
 
     $ python setup.py install
 
@@ -63,6 +67,8 @@ and then::
 
     $ conda install pip sqlalchemy
     $ pip install piecash
+
+On OS X, this option may also be valuable.
 
 Quickstart
 ==========
@@ -74,15 +80,15 @@ The simplest workflow to use piecash starts by opening a GnuCash file
     import piecash
 
     # open a GnuCash Book
-    session = piecash.open_book("test.gnucash", readonly=True)
+    book = piecash.open_book("test.gnucash", readonly=True)
 
-and then access GnuCash objects through the session, for example to query the stock prices
+and then access GnuCash objects through the book, for example to query the stock prices
 
 .. code-block:: python
 
     # example 1, print all stock prices in the Book
     # display all prices
-    for price in session.get(piecash.Price):
+    for price in book.prices:
         print(price)
 
 .. parsed-literal::
@@ -103,7 +109,7 @@ or to query the accounts:
 
 .. code-block:: python
 
-    for account in session.accounts:
+    for account in book.accounts:
         print(account)
 
 .. parsed-literal::
@@ -135,18 +141,39 @@ or to create a new expense account for utilities:
 .. code-block:: python
 
     # retrieve currency
-    EUR = session.commodities.get(mnemonic='EUR')
+    EUR = book.commodities.get(mnemonic='EUR')
 
     # retrieve parent account
-    acc_exp = session.accounts.get(fullname="Expenses:Utilities")
+    acc_exp = book.accounts.get(fullname="Expenses:Utilities")
 
     # add a new subaccount to this account of type EXPENSE with currency EUR
     new_acc = piecash.Account(name="Cable", type="EXPENSE", parent=acc_exp, commodity=EUR)
 
     # save changes (it should raise an exception if we opened the book as readonly)
-    session.save()
+    book.save()
 
 Most basic objects used for personal finance are supported (Account, Split, Transaction, Price, ...).
 
-For more information on how to use piecash, please refer to the :doc:`Tutorials <../tutorial/index>`,
-the :doc:`Example scripts <../tutorial/examples>` or the :doc:`package documentation <../api/piecash>`.
+Ready to use scripts
+====================
+
+The following 'experimental' scripts are available:
+
+- usage: piecash_ledger.py [-h] gnucash_filename
+
+  Output to screen a ledger-cli representation of the gnucash file (http://www.ledger-cli.org/)
+
+- usage: piecash_toqif.py [-h] gnucash_filename
+
+  Output to screen a QIF representation of the gnucash file
+
+None of these scripts can damage your files. However, their output may be inaccurate/false (they haven't been
+fully tested).
+You can also run the script on a gnucash file that is already opened by GnuCash.
+To produce a file, just redirect the output to a file as (e.g. "piecash_toqif.py mybook.gnucash > mybook.qif").
+
+For more information on how to use piecash, please refer to the Tutorials on
+:doc:`Using existing objects <../tutorial/index_existing>` and
+:doc:`Creating new objects <../tutorial/index_new>`,
+the :doc:`Example scripts <../tutorial/examples>` or
+the :doc:`package documentation <../api/piecash>`.

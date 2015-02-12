@@ -1,6 +1,7 @@
 from decimal import Decimal
 
-from sqlalchemy import Column, VARCHAR, INTEGER, cast, Float
+from sqlalchemy import Column, VARCHAR, INTEGER, cast, Float, DECIMAL
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from .sa_extra import DeclarativeBase, _Date, long
@@ -21,20 +22,20 @@ class GncValidationError(GnucashException):
 class Recurrence(DeclarativeBase):
     __tablename__ = 'recurrences'
 
-    __table_args__ = {}
+    __table_args__ = {'sqlite_autoincrement': True}
 
     # column definitions
     id = Column('id', INTEGER(), primary_key=True, nullable=False)
-    obj_guid = Column('obj_guid', VARCHAR(length=32), nullable=False)
+    obj_guid = Column('obj_guid', VARCHAR(length=32),nullable=False)
     recurrence_mult = Column('recurrence_mult', INTEGER(), nullable=False)
-    recurrence_period_start = Column('recurrence_period_start', _Date(), nullable=False)
     recurrence_period_type = Column('recurrence_period_type', VARCHAR(length=2048), nullable=False)
+    recurrence_period_start = Column('recurrence_period_start', _Date(), nullable=False)
     recurrence_weekend_adjust = Column('recurrence_weekend_adjust', VARCHAR(length=2048), nullable=False)
 
     # relation definitions
     # added from the DeclarativeBaseGUID object (as linked from different objects like the slots)
     def __repr__(self):
-        return "{}/{} from {} [{}]".format(self.recurrence_mult, self.recurrence_period_type,
+        return "{}*{} from {} [{}]".format(self.recurrence_period_type,self.recurrence_mult,
                                            self.recurrence_period_start, self.recurrence_weekend_adjust)
 
 
@@ -65,7 +66,7 @@ def hybrid_property_gncnumeric(num_col, denom_col):
     :return: sqlalchemy.ext.hybrid.hybrid_property
     """
     num_name, denom_name = "_{}".format(num_col.name), "_{}".format(denom_col.name)
-
+    name = num_col.name.split("_")[0]
     def fset(self, d):
         if d is None:
             num, denom = None, None
@@ -93,12 +94,14 @@ def hybrid_property_gncnumeric(num_col, denom_col):
 
     def fget(self):
         num, denom = getattr(self, num_name), getattr(self, denom_name)
-        if num:
+        if num is None:
+            return
+        else:
             return Decimal(num) / denom
 
-
     def expr(cls):
-        return cast(num_col, Float) / denom_col
+        # todo: cast into Decimal for postgres and for sqlite (for the latter, use sqlite3.register_converter ?)
+        return (cast(num_col, Float) / denom_col).label(name)
 
     return hybrid_property(
         fget=fget,
@@ -114,12 +117,14 @@ class CallableList(list):
     It can be used as the collection_class of a sqlalchemy relationship or to wrap any list (see examples
     in :class:`piecash.core.session.GncSession`)
     """
-    def get(self, **kwargs):
+    def __call__(self, **kwargs):
         """
-        Return the first element of the list that has attributes matching the kwargs dict.
+        Return the first element of the list that has attributes matching the kwargs dict. The `get` method is
+        an alias for this method.
+
         To be used as::
 
-            l.get(mnemonic="EUR", namespace="CURRENCY")
+            l(mnemonic="EUR", namespace="CURRENCY")
         """
         for obj in self:
             for k, v in kwargs.items():
@@ -129,3 +134,9 @@ class CallableList(list):
                 return obj
         else:
             raise KeyError("Could not find object with {} in {}".format(kwargs, self))
+
+    get = __call__
+
+
+class GncImbalanceError(GncValidationError):
+    pass

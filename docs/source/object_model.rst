@@ -45,24 +45,13 @@ Fields
 root_account (mandatory)
   The account at the root of the tree structure
 
-root_template (???)
-  Use to be investigated...
-
+root_template (mandatory)
+  Use to attach split from template/scheduled transactions
 
 Invariant
 ~~~~~~~~~
  - one (and only one) Book per GnuCash document
 
-
-Questions
-~~~~~~~~~
-
- - in the XML version, the book encapsulates the whole XML structure. If we had two books in a single xml document,
-   they would not share the commodities. In the C api, the creation of a commodity requires a Book.
-
-   In the SQL version, the book only has a root_account. It has no directly link to the other objects. If we had to have
-   two Books in a single document, they would de facto share the Commodity/Price/etc as there is no explicit link between
-   the Commodity/Price/etc and the book ?
 
 Commodity
 ---------
@@ -115,12 +104,6 @@ Invariant
  - a stock commodity has namespace!='CURRENCY'
 
 
-Questions
-~~~~~~~~~
- - is the guid of a currency hardcoded in GnuCash (as is the full list of currencies) or can it be assigned freely ?
-   the guid of the currency can be assigned freely
-
-
 Account
 -------
 
@@ -161,15 +144,10 @@ hidden
 
 Invariant
 ~~~~~~~~~
- - if placeholder, no Splits can refer to account
- - only two accounts can have type ROOT (the root_account and the root_template of the book)
-
-
-Questions
-~~~~~~~~~
- - changing the placeholder status of an account with splits in gnucash does not trigger any warning, is it normal ?
-   is the placeholder flag just informative (or used for reporting)  ?
- - are there any constrains on the type of an account wrt type of its parent ?
+ - if placeholder, no new splits can be created/changed (like a "freeze")
+ - only two accounts can have type ROOT (the root_account and the root_template of the book).
+ - the type of an account is constrained by the type of the parent account
+ - trading account are used when the option "use trading accounts" is enabled
 
 .. _Transaction:
 
@@ -230,18 +208,9 @@ Invariant
  - the value and quantity fields are expressed as numerator / denominator. The denominator of the value should be
    the same as the fraction of the currency. The denominator of the quantity should be the same as the commodity_scu of
    the account.
-
-Questions
-~~~~~~~~~
-
- - how is the currency of the transaction defined ? is the default currency (in gnucash preferences) ? No.
-   Is it the currency (if any) of the account into which the transaction is initiated in the gui ? Yes.
-   Can this be changed through the GUI ? No (AFAIK)
- - what happens to the splits of an account that is removed ? in GUI, splits are either moved to other account or deleted
-   with a corresponding entry created in the Imbalance-XXX account.
- - what happens to the splits when the currency of a transaction is changed ? the quantity and value do not change
-   (irrespective of any exchange rate) ?
-
+ - the currency of a transaction is the currency of the account into which it is created in the GUI
+ - if "use trading accounts" is enabled then the sum of quantities per commodity should also be balanced. This is done thanks
+   to the automatic creation of splits with trading accounts (of type TRADING)
 
 Price
 -----
@@ -269,8 +238,3 @@ Invariant
 
  - the value is expressed as numerator / denominator. The denominator of the value should be
    the same as the fraction of the currency.
-
-Questions
-~~~~~~~~~
-
-None

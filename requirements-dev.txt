@@ -4,7 +4,6 @@
 # Testing
 pytest==2.5.1
 py==1.4.19
-mock==1.0.1
 tox
 
 # Linting
@@ -20,8 +19,10 @@ docutils==0.11
 Jinja2==2.7.1
 MarkupSafe==0.18
 Pygments==1.6
+ipython
 
 # Miscellaneous
 Paver==1.2.1
 colorama==0.2.7
 bumpr
+requests
