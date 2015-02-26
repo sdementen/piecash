@@ -6,15 +6,11 @@ import uuid
 from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, event, INTEGER
 from sqlalchemy.orm import relation, validates, foreign
 from sqlalchemy.orm.base import instance_state
-from sqlalchemy.orm.exc import NoResultFound
 
 from .._common import GncValidationError, hybrid_property_gncnumeric, Recurrence
 from .._declbase import DeclarativeBaseGuid
-from .._common import CallableList
-from piecash._common import GncImbalanceError
+from .._common import CallableList, GncImbalanceError
 from ..sa_extra import _Date, _DateTime, Session, mapped_to_slot_property, pure_slot_property
-from .book import Book
-from .account import Account
 
 
 """

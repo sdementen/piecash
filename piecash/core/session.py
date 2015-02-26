@@ -6,9 +6,7 @@ from sqlalchemy.sql.ddl import DropConstraint
 from sqlalchemy_utils import database_exists
 
 from .book import Book
-from .commodity import Commodity
-from .._common import CallableList
-from piecash.core import factories
+from . import factories
 from ..sa_extra import DeclarativeBase, get_foreign_keys, Session
 from .._common import GnucashException
 
