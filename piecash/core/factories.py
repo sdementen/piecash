@@ -1,6 +1,6 @@
-from piecash import GnucashException
-from piecash.core._commodity_helper import run_yql
-from piecash.core.commodity import GncCommodityError
+from .._common import GnucashException
+from ._commodity_helper import run_yql
+from .commodity import GncCommodityError
 
 
 def create_stock_accounts(cdty, broker_account, income_account=None, income_account_types="D/CL/I"):
@@ -54,12 +54,12 @@ def create_stock_accounts(cdty, broker_account, income_account=None, income_acco
     return acc, inc_accounts
 
 
-def create_currency_from_ISO(iso_code, from_web=False):
+def create_currency_from_ISO(isocode, from_web=False):
     """
     Factory function to create a new currency from its ISO code
 
     Args:
-        iso_code (str): the ISO code of the currency (e.g. EUR for the euro)
+        isocode (str): the ISO code of the currency (e.g. EUR for the euro)
         from_web (bool): True to get the info from the website, False to get it from the hardcoded currency_ISO module
 
     Returns:
@@ -67,14 +67,14 @@ def create_currency_from_ISO(iso_code, from_web=False):
     """
     from .commodity import Commodity
 
-    # if self.get_session().query(Commodity).filter_by(mnemonic=iso_code).first():
-    #     raise GncCommodityError("Currency '{}' already exists".format(iso_code))
+    # if self.get_session().query(Commodity).filter_by(isocode=isocode).first():
+    #     raise GncCommodityError("Currency '{}' already exists".format(isocode))
 
     if not from_web:
         from .currency_ISO import ISO_currencies
 
         for cur in ISO_currencies:
-            if cur.mnemonic == iso_code:
+            if cur.mnemonic == isocode:
                 # create the currency
                 cdty = Commodity(mnemonic=cur.mnemonic,
                                  fullname=cur.currency,
@@ -85,7 +85,7 @@ def create_currency_from_ISO(iso_code, from_web=False):
                 )
                 break
         else:
-            raise ValueError("Could not find the ISO code '{}' in the ISO table".format(iso_code))
+            raise ValueError("Could not find the ISO code '{}' in the ISO table".format(isocode))
 
     else:
         # retrieve XML table with currency information
@@ -99,12 +99,12 @@ def create_currency_from_ISO(iso_code, from_web=False):
         root = ElementTree.fromstring(table.content)
         # and look for each currency item
         for i in root.findall(".//CcyNtry"):
-            # if there is no iso_code, skip it
+            # if there is no isocode, skip it
             mnemonic_node = i.find("Ccy")
             if mnemonic_node is None:
                 continue
-            # if the iso_code is not the one expected, skip it
-            if mnemonic_node.text != iso_code:
+            # if the isocode is not the one expected, skip it
+            if mnemonic_node.text != isocode:
                 continue
             # retreive currency info from xml
             cusip = i.find("CcyNbr").text
@@ -112,11 +112,11 @@ def create_currency_from_ISO(iso_code, from_web=False):
             fullname = i.find("CcyNm").text
             break
         else:
-            # raise error if iso_code has not been found
-            raise ValueError("Could not find the iso_code '{}' in the table at {}".format(iso_code, url))
+            # raise error if isocode has not been found
+            raise ValueError("Could not find the isocode '{}' in the table at {}".format(isocode, url))
 
         # create the currency
-        cdty = Commodity(mnemonic=iso_code,
+        cdty = Commodity(mnemonic=isocode,
                          fullname=fullname,
                          fraction=fraction,
                          cusip=cusip,
@@ -160,3 +160,25 @@ def create_stock_from_symbol(symbol):
         return stock
     else:
         raise GncCommodityError("Can't find information on symbol '{}'".format(symbol))
+
+def single_transaction(post_date,
+                       enter_date,
+                       description,
+                       value,
+                       from_account,
+                       to_account):
+    from . import Transaction, Split
+    # currency is derived from "from_account" (as in GUI)
+    currency = from_account.commodity
+    # currency of other destination account should be identical (as only one value given)
+    assert currency == to_account.commodity, "Commodities of accounts should be the same"
+    tx = Transaction(
+        currency=currency,
+        post_date=post_date,
+        enter_date=enter_date,
+        description=description,
+        splits=[
+            Split(account=from_account, value=-value),
+            Split(account=to_account, value=value),
+        ])
+    return tx

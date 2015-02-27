@@ -49,7 +49,8 @@ with create_book(FILE_1, overwrite=True) as book:
                    transaction=trans2)
 
     # create transaction with factory function
-    trans3 = Transaction.single_transaction(None,None,"Pharmacy", num3, savings_acct, expenses_acct)
+    from piecash.core.factories import single_transaction
+    trans3 = single_transaction(None,None,"Pharmacy", num3, savings_acct, expenses_acct)
 
     book.save()
 

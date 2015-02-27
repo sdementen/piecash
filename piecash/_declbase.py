@@ -37,7 +37,4 @@ class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):
                 else:
                     s.delete(value)
 
-    def get_session(self):
-        # return the sa session of the object
-        return object_session(self)
 

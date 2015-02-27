@@ -1,8 +1,11 @@
+import logging
+import warnings
 from sqlalchemy import Column, VARCHAR, ForeignKey
 from sqlalchemy.orm import relation
 
 from .._declbase import DeclarativeBaseGuid
 from piecash._common import CallableList
+from piecash.core import factories
 from piecash.core._commodity_helper import run_yql
 from piecash.core.commodity import GncCommodityError, Commodity
 
@@ -69,7 +72,7 @@ class Book(DeclarativeBaseGuid):
         use_trading_accounts (bool): true if option "Use trading accounts" is enabled
         use_split_action_field (bool): true if option "Use Split Action Field for Number" is enabled
         RO_threshold_day (int): value of Day Threshold for Read-Only Transactions (red line)
-
+        control_mode (list(str)) : list of allowed non-standard operations from "allow-root-subaccounts",
     """
     __tablename__ = 'books'
 
@@ -83,7 +86,7 @@ class Book(DeclarativeBaseGuid):
 
     # relation definitions
     root_account = relation('Account',
-                            back_populates='book',
+                            # back_populates='root_book',
                             foreign_keys=[root_account_guid],
     )
     root_template = relation('Account',
@@ -91,6 +94,7 @@ class Book(DeclarativeBaseGuid):
 
     uri = None
     session = None
+    control_mode = None
 
     # link options to KVP
     use_trading_accounts = option("options/Accounts/Use Trading Accounts",
@@ -108,9 +112,10 @@ class Book(DeclarativeBaseGuid):
                               to_gnc=lambda v: float(v),
                               default=0)
 
-    def __init__(self, root_account, root_template):
+    def __init__(self, root_account=None, root_template=None):
         self.root_account = root_account
         self.root_template = root_template
+        self.control_mode = []
 
     def __repr__(self):
         return "<Book {}>".format(self.uri)
@@ -121,7 +126,7 @@ class Book(DeclarativeBaseGuid):
 
     @property
     def book(self):
-        print("deprecated")
+        warnings.warn("deprecated", DeprecationWarning)
         return self
 
     _trading_accounts = None
@@ -168,6 +173,9 @@ class Book(DeclarativeBaseGuid):
     def add(self, obj):
         """Add an object to the book (to be used if object not linked in any way to the book)"""
         self.session.add(obj)
+    def delete(self, obj):
+        """Add an object to the book (to be used if object not linked in any way to the book)"""
+        self.session.delete(obj)
     def save(self):
         """Save the changes to the file/DB (=commit transaction)
         """
@@ -202,7 +210,6 @@ class Book(DeclarativeBaseGuid):
         session.close()
 
     # add general getters for gnucash classes
-
     def get(self, cls, **kwargs):
         """
         Generic getter for a GnuCash object in the `GncSession`. If no kwargs is given, it returns the list of all
@@ -231,7 +238,7 @@ class Book(DeclarativeBaseGuid):
     @property
     def transactions(self):
         """
-        gives easy access to all transactions in the document through a :class:`piecash.model_common.CallableList`
+        gives easy access to all transactions in the book through a :class:`piecash.model_common.CallableList`
         of :class:`piecash.core.transaction.Transaction`
         """
         from .transaction import Transaction
@@ -241,17 +248,16 @@ class Book(DeclarativeBaseGuid):
     @property
     def accounts(self):
         """
-        gives easy access to all accounts in the document through a :class:`piecash.model_common.CallableList`
+        gives easy access to all accounts in the book through a :class:`piecash.model_common.CallableList`
         of :class:`piecash.core.account.Account`
         """
         from .account import Account
-
-        return CallableList(self.session.query(Account).filter(Account.type != 'ROOT'))
+        return CallableList(self.session.query(Account).filter(Account.parent!=None))
 
     @property
     def commodities(self):
         """
-        gives easy access to all commodities in the document through a :class:`piecash.model_common.CallableList`
+        gives easy access to all commodities in the book through a :class:`piecash.model_common.CallableList`
         of :class:`piecash.core.commodity.Commodity`
         """
         from .commodity import Commodity
@@ -259,10 +265,24 @@ class Book(DeclarativeBaseGuid):
         return CallableList(self.session.query(Commodity))
 
     @property
+    def currencies(self):
+        """
+        gives easy access to all currencies in the book through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.core.commodity.Commodity`
+        """
+        from .commodity import Commodity
+        def fallback(mnemonic):
+            cur = factories.create_currency_from_ISO(isocode=mnemonic)
+            self.add(cur)
+            return cur
+        return CallableList(self.session.query(Commodity).filter_by(namespace="CURRENCY"),
+                            fallback=fallback)
+
+    @property
     def prices(self):
         """
-        gives easy access to all commodities in the document through a :class:`piecash.model_common.CallableList`
-        of :class:`piecash.core.commodity.Commodity`
+        gives easy access to all prices in the book through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.core.commodity.Price`
         """
         from .commodity import Price
 

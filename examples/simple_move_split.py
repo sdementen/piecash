@@ -41,6 +41,8 @@ with create_book() as book:
     acc.placeholder = 1
     with pytest.raises(ValueError):
         spl.account = acc
+        book.save()
+    book.cancel()
 
     # set an account to a placeholder
     tx = book.transactions[0]

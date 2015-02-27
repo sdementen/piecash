@@ -6,7 +6,6 @@ from sqlalchemy.orm import relation, validates
 from .._declbase import DeclarativeBaseGuid
 from .._common import CallableList
 from ..sa_extra import mapped_to_slot_property
-from .book import Book
 
 
 root_types = {"ROOT"}
@@ -29,7 +28,7 @@ positive_types = asset_types | expense_types | trading_types
 negative_types = liability_types | income_types | equity_types
 
 
-def _is_parent_child_types_consistent(type_parent, type_child):
+def _is_parent_child_types_consistent(type_parent, type_child, control_mode):
     """
     Return True if the child account is consistent with the parent account in terms of types, i.e.:
 
@@ -44,12 +43,14 @@ def _is_parent_child_types_consistent(type_parent, type_child):
     Returns
         True if both accounts are consistent, False otherwise
     """
-    # TODO: if we want to allow multiple root accounts below the ROOT account, relax constrain
     if type_parent in root_types:
-        return type_child in (ACCOUNT_TYPES - root_types)
+        if "allow-root-subaccounts" in control_mode:
+            return type_child in ACCOUNT_TYPES
+        else:
+            return type_child in (ACCOUNT_TYPES - root_types)
 
     if type_child in root_types:
-        return type_parent is None
+        return (type_parent is None) or ("allow-root-subaccounts" in control_mode)
 
     for acc_types in (assetliab_types, equity_types, incexp_types, trading_types):
         if (type_child in acc_types) and (type_parent in acc_types):
@@ -146,12 +147,12 @@ class Account(DeclarativeBaseGuid):
                     cascade='all, delete-orphan',
                     collection_class=CallableList,
                     )
-    book = relation('Book',
-                    back_populates='root_account',
-                    foreign_keys=[Book.root_account_guid],
-                    cascade='all, delete-orphan',
-                    uselist=False,
-                    )
+    # root_book = relation('Book',
+    #                 back_populates='root_account',
+    #                 foreign_keys=[Book.root_account_guid],
+    #                 cascade='all, delete-orphan',
+    #                 uselist=False,
+    #                 )
     budget_amounts = relation('BudgetAmount',
                               back_populates='account',
                               cascade='all, delete-orphan',
@@ -173,7 +174,11 @@ class Account(DeclarativeBaseGuid):
                  commodity_scu=None,
                  hidden=0,
                  placeholder=0,
-                 code=None):
+                 code=None,
+                 book=None):
+        book = book or (commodity and commodity.book) or (parent and parent.book)
+        book.add(self)
+
         self.name = name
         self.commodity = commodity
         self.type = type
@@ -184,68 +189,50 @@ class Account(DeclarativeBaseGuid):
         self.code = code
         self.commodity_scu = commodity_scu
 
-    @validates('parent_guid', 'name')
-    def validate_account_name(self, key, value):
-        """
-        Ensure the account name is unique amongst its sibling accounts
-        """
-        name = value if key == 'name' else self.name
+
+    def object_to_validate(self, change):
+        if change!="deleted":
+            yield self
+
+    def validate(self):
+        if self.type not in ACCOUNT_TYPES:
+                raise ValueError("Account_type '{}' is not in {}".format(self.type, ACCOUNT_TYPES))
 
         if self.parent:
-            for acc in self.parent.children:
-                if acc.name == name and acc != self:
-                    raise ValueError("{} has two children with the same name {} : {} and {}".format(self.parent, name,
-                                                                                                    acc, self))
-        return value
-
-
-    @validates('type', 'parent')
-    def validate_type(self, key, value):
-        """
-        Ensure the account type is consistent
-        """
-        if key == "type":
-            if value not in ACCOUNT_TYPES:
-                raise ValueError("Account_type '{}' is not in {}".format(value, ACCOUNT_TYPES))
-
-            if self.parent:
-                if not _is_parent_child_types_consistent(self.parent.type, value):
-                    raise ValueError("Child type '{}' is not consistent with parent type {}".format(
-                        value, self.parent.type))
-
-        if (key == "parent") and value and self.type:
-            if not _is_parent_child_types_consistent(value.type, self.type):
+            if not _is_parent_child_types_consistent(self.parent.type, self.type, self.book.control_mode):
                 raise ValueError("Child type '{}' is not consistent with parent type {}".format(
-                    self.type, value.type))
+                    self.type, self.parent.type))
 
-        return value
+            for acc in self.parent.children:
+                if acc.name == self.name and acc != self:
+                    raise ValueError("{} has two children with the same name {} : {} and {}".format(self.parent, self.name,
+                                                                                                    self, acc))
+
 
     @validates('commodity')
-    def validate_commodity(self, key, value):
+    def observe_commodity(self, key, value):
         """
         Ensure update of commodity_scu when commodity is changed
         """
-        if value is None:
-            return
-        if self.commodity_scu is None or self.non_std_scu == 0:
+        if value and (self.commodity_scu is None or self.non_std_scu == 0):
             self.commodity_scu = value.fraction
 
         return value
 
     @property
     def fullname(self):
-        if self.name:
-            acc = self
-            l = []
-            while acc:
-                l.append(acc.name)
-                acc = acc.parent
-            return ":".join(l[-2::-1])
+        if self.parent:
+            pfn = self.parent.fullname
+            if pfn:
+                return "{}:{}".format(pfn, self.name)
+            else:
+                return self.name
+        else:
+            return ""
 
 
     def get_balance(self):
         """
-
         Returns
             the balance of the account
         """

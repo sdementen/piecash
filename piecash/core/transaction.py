@@ -5,8 +5,6 @@ import uuid
 
 from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, event, INTEGER
 from sqlalchemy.orm import relation, validates, foreign
-from sqlalchemy.orm.base import instance_state
-from sqlalchemy.orm.exc import NoResultFound
 
 from .._common import GncValidationError, hybrid_property_gncnumeric, Recurrence
 from .._declbase import DeclarativeBaseGuid
@@ -154,41 +152,25 @@ class Split(DeclarativeBaseGuid):
         except AttributeError:
             return "<Split {}>".format(self.account)
 
-    @validates("transaction", "account")
-    def set_denom_basis(self, key, value):
-        if value is None:
-            return value
-        if key == "transaction":
-            self._value_denom_basis = value.currency.fraction
-            self.value = self.value
-            trx = value
-            acc = self.account
-        if key == "account":
-            # check that account is not a placeholder
-            if value.placeholder != 0:
-                raise ValueError("Account {} is a placeholder (or unknown)".format(value))
+    def object_to_validate(self, change):
+        yield self
+        yield self.transaction
+        yield self.lot
 
-            # if the account is already defined
-            if self.account:
-                # check that we keep the same commodity across the account change
-                if self.account.commodity != value.commodity:
-                    raise GncValidationError(
-                        "The commodity of the new account of this split is not the same as the old account")
-                if self.account.commodity_scu > value.commodity_scu:
-                    raise GncValidationError(
-                        "The commodity_scu of the new account of this split is lower than the one of the old account")
+    def validate(self):
+        # if single currency, assign value to quantity
+        if self.transaction.currency == self.account.commodity:
+            self.quantity = self.value
+        else:
+            if self.quantity is None:
+                raise ValueError("The split quantity is not defined while the split is on a commodity different from the transaction")
 
-            self._quantity_denom_basis = value.commodity_scu
-            self.quantity = self.quantity
-            trx = self.transaction
-            acc = value
+        # check that account is not a placeholder
+        if self.account.placeholder != 0:
+            raise ValueError("You cannot change a split linked to account {} as the latter is a placeholder.".format(self.account))
 
-        if trx and acc:
-            if trx.currency == acc.commodity:
-                self.quantity = self.value
-
-        return value
-
+        self._quantity_denom_basis = self.account.commodity_scu
+        self._value_denom_basis = self.transaction.currency.fraction
 
 class Transaction(DeclarativeBaseGuid):
     """
@@ -259,30 +241,34 @@ class Transaction(DeclarativeBaseGuid):
                                                                 self.post_date,
                                                                 " (from sch tx)" if self.scheduled_transaction else "")
 
-    def ledger_str(self):
-        """Return a ledger-cli alike representation of the transaction"""
-        s = ["{:%Y/%m/%d} * {}\n".format(self.post_date, self.description)]
-        if self.notes:
-            s.append(";{}\n".format(self.notes))
-        for split in self.splits:
-            s.append("\t{:40} ".format(split.account.fullname))
-            if split.account.commodity != self.currency:
-                s.append("{:10.2f} {} @@ {:.2f} {}".format(
-                    split.quantity, split.account.commodity.mnemonic, abs(split.value),
-                    self.currency.mnemonic))
-            else:
-                s.append("{:10.2f} {}".format(split.value, self.currency.mnemonic))
-            if split.memo:
-                s.append(" ;   {:20}".format(split.memo))
-            s.append("\n")
-        return "".join(s)
+    def object_to_validate(self, change):
+        yield self
 
-    @validates("currency")
-    def validate_currency(self, key, value):
-        if value is not None and value.namespace != "CURRENCY":
+    def validate(self):
+        old = self.object_beforechange()
+
+        if self.currency.namespace != "CURRENCY":
             raise GncValidationError("You are assigning a non currency commodity to a transaction")
-        return value
 
+        # check all accounts related to the splits of the transaction are not placeholder(=frozen)
+        for sp in self.splits:
+            if sp.account.placeholder != 0:
+                raise GncValidationError("Account '{}' used in the transaction is a placeholder".format(sp.account))
+
+        # check same currency
+        if "currency" in old and old["currency"] is not None:
+            raise GncValidationError("You cannot change the currency of a transaction once it has been set")
+
+        # validate the splits
+        if "splits" in old:
+            value_imbalance, quantity_imbalances = self.calculate_imbalances()
+            if value_imbalance:
+                # raise exception instead of creating an imbalance entry as probably an error
+                # (in the gnucash GUI, another decision taken because need of "save unfinished transaction")
+                raise GncImbalanceError("The transaction {} is not balanced on its value".format(self))
+
+            if any(quantity_imbalances.values()) and self.book.use_trading_accounts:
+                self.normalize_trading_accounts()
 
     def calculate_imbalances(self):
         """Calculate value and quantity imbalances of a transaction"""
@@ -334,70 +320,6 @@ class Transaction(DeclarativeBaseGuid):
                            quantity=-q,
                            transaction=self,
                 )
-
-    def validate(self):
-        old = instance_state(self).committed_state
-
-        # check all accounts related to the splits of the transaction are not placeholder(=frozen)
-        for sp in self.splits:
-            if sp.account.placeholder != 0:
-                raise GncValidationError("Account '{}' used in the transaction is a placeholder".format(sp.account))
-
-        # check same currency
-        if "currency" in old and old["currency"] is not None:
-            raise GncValidationError("You cannot change the currency of a transaction once it has been set")
-
-        # validate the splits
-        if "splits" in old:
-            value_imbalance, quantity_imbalances = self.calculate_imbalances()
-            if value_imbalance:
-                # raise exception instead of creating an imbalance entry as probably an error
-                # (in the gnucash GUI, another decision taken because need of "save unfinished transaction")
-                raise GncImbalanceError("The transaction {} is not balanced on its value".format(self))
-
-            if any(quantity_imbalances.values()) and self.book.use_trading_accounts:
-                self.normalize_trading_accounts()
-
-    @classmethod
-    def single_transaction(cls,
-                           post_date,
-                           enter_date,
-                           description,
-                           value,
-                           from_account,
-                           to_account):
-        # currency is derived from "from_account" (as in GUI)
-        currency = from_account.commodity
-        # currency of other destination account should be identical (as only one value given)
-        assert currency == to_account.commodity, "Commodities of accounts should be the same"
-        tx = Transaction(
-            currency=currency,
-            post_date=post_date,
-            enter_date=enter_date,
-            description=description,
-            splits=[
-                Split(account=from_account, value=-value),
-                Split(account=to_account, value=value),
-            ])
-        return tx
-
-
-@event.listens_for(Session, 'before_flush')
-def set_imbalance_on_transaction(session, flush_context, instances):
-    # identify transactions to verify
-    txs = set()
-    for o in session.dirty:
-        if isinstance(o, Transaction):
-            txs.add(o)
-        if isinstance(o, Split):
-            if o.transaction:
-                txs.add(o.transaction)
-    txs = txs.union(o for o in session.new if isinstance(o, Transaction))
-
-    # for each transaction, validate the transaction
-    for tx in txs:
-        tx.validate()
-
 
 class ScheduledTransaction(DeclarativeBaseGuid):
     """
@@ -489,15 +411,17 @@ class Lot(DeclarativeBaseGuid):
         if splits:
             self.splits[:] = splits
 
-    @validates("splitsentries", "account")
-    def validate_account_split_consistency(self, key, value):
-        if key == "account" and self.account and self.splits:
-            raise ValueError("You cannot change the account of a Lot once a split has already been assigned")
-        if key == "splits" and not self.account:
-            raise ValueError("You can assign splits to a lot only once the account is set")
-        if key == "splits":
-            sp = value
-            assert sp.lot is None, "The split has already a lot "
-            assert sp.account == self.account, "You cannot assign to a lot a split that is not on the account of the lot"
-
+    @validates("splits", "account")
+    def check_no_change_if_lot_is_close(self, key, value):
+        if self.is_closed:
+            raise ValueError("Lot is closed and cannot be changed (adding splits or changing account")
         return value
+
+    def object_to_validate(self, change):
+        yield self
+
+    def validate(self):
+        # check all splits have same account
+        for sp in self.splits:
+            if sp.account != self.account:
+                raise ValueError("Split {} is not in the same commodity of the lot {}".format(sp, self))

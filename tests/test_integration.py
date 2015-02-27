@@ -18,16 +18,16 @@ from test_helper import file_template_full, file_for_test_full, test_folder, run
 
 
 @pytest.fixture
-def session(request):
-    s = create_book()
-    return s
+def book(request):
+    b = create_book()
+    return b
 
 
 @pytest.fixture
 def realbook_session(request):
     shutil.copyfile(file_template_full, file_for_test_full)
 
-    # default session is readonly
+    # default book is readonly
     s = open_book(file_for_test_full)
 
     request.addfinalizer(lambda: os.remove(file_for_test_full))
@@ -53,7 +53,7 @@ class TestIntegration_ExampleScripts(object):
         run_file("examples/simple_sqlite_create.py")
 
 class TestIntegration_EmptyBook(object):
-    def test_slots_create_access(self, session):
+    def test_slots_create_access(self, book):
         kv = {
             "vint": 3,
             "vfl": 2.34,
@@ -73,28 +73,28 @@ class TestIntegration_EmptyBook(object):
             }
         }
         for k, v in kv.items():
-            session.book[k] = v
-        session.save()
+            book[k] = v
+        book.save()
 
         for k, v in kv.items():
-            assert k in session.book
+            assert k in book
             if isinstance(v, datetime.datetime):
                 # check string format as the date in piecash is localized
-                assert "{:%Y%m%d%h%M%s}".format(session.book[k].value) == "{:%Y%m%d%h%M%s}".format(v)
+                assert "{:%Y%m%d%h%M%s}".format(book[k].value) == "{:%Y%m%d%h%M%s}".format(v)
             else:
-                assert session.book[k].value == v
+                assert book[k].value == v
 
-    def test_slots_strings_access(self, session):
-        b = session.book
+    def test_slots_strings_access(self, book):
+        b = book
 
         b["a/b/c/d/e"] = 1
-        session.session.flush()
+        book.book.flush()
         assert b["a"]["b"]["c"]["d"]["e"].value==1
 
         b["a/b/c"] = {"d": {"t":"ok"}}
 
         b["a/b/c/d/f"] = "2"
-        session.session.flush()
+        book.book.flush()
         assert len(b["a"]["b"]["c"]["d"].slots)==2
 
         b["a/b/c/d/f"] = "5"
@@ -114,15 +114,15 @@ class TestIntegration_EmptyBook(object):
         with pytest.raises(TypeError):
             b["a/b/c"] = True
 
-        assert {n for (n,) in session.session.query(Slot._name)} == {'a' ,'a/b','a/b/c','a/b/c/d','a/b/c/d/t','a/b/c/d/f'}
+        assert {n for (n,) in book.session.query(Slot._name)} == {'a' ,'a/b','a/b/c','a/b/c/d','a/b/c/d/t','a/b/c/d/f'}
 
 
         # delete some elements
         del b["a"]["b"][:]
-        session.session.flush()
-        assert {n for (n,) in session.session.query(Slot._name)} == {'a' ,'a/b'}
+        book.flush()
+        assert {n for (n,) in book.session.query(Slot._name)} == {'a' ,'a/b'}
 
-        session.session.flush()
+        book.flush()
         assert len(b["a"].slots)==1
         assert len(b["a/b"].slots)==0
 
@@ -130,7 +130,7 @@ class TestIntegration_EmptyBook(object):
             b["a/b/c"]
 
         del b["a"]["b"]
-        session.session.flush()
+        book.session.flush()
         assert len(b["a"].slots)==0
 
         with pytest.raises(TypeError):
@@ -140,13 +140,13 @@ class TestIntegration_EmptyBook(object):
             del b["a/n"]
 
         del b[:]
-        session.session.flush()
-        assert {n for (n,) in session.session.query(Slot._name)} == set([])
+        book.session.flush()
+        assert {n for (n,) in book.session.query(Slot._name)} == set([])
 
 
 
-    def test_empty_gnucash_file(self, session):
-        accs = session.accounts
+    def test_empty_gnucash_file(self, book):
+        accs = book.accounts
 
         assert len(accs) == 0
         assert all(acc.parent is None for acc in accs)
@@ -172,52 +172,53 @@ class TestIntegration_EmptyBook(object):
         ]
 
         for p, c in combi_OK:
-            assert _is_parent_child_types_consistent(p, c)
+            assert _is_parent_child_types_consistent(p, c, [])
 
         for p, c in combi_not_OK:
-            assert not _is_parent_child_types_consistent(p, c)
+            assert not _is_parent_child_types_consistent(p, c, [])
 
-    def test_add_account_compatibility(self, session):
+    def test_add_account_compatibility(self, book):
         # test compatibility between child account and parent account
         for acc_type1 in ACCOUNT_TYPES - root_types:
-            acc1 = Account(name=acc_type1, type=acc_type1, parent=session.book.root_account, commodity=None)
+            acc1 = Account(name=acc_type1, type=acc_type1, parent=book.root_account, commodity=None)
 
             for acc_type2 in ACCOUNT_TYPES:
 
-                if not _is_parent_child_types_consistent(acc_type1, acc_type2):
+                if not _is_parent_child_types_consistent(acc_type1, acc_type2, []):
                     with pytest.raises(ValueError):
                         acc2 = Account(name=acc_type2, type=acc_type2, parent=acc1, commodity=None)
+                        book.flush()
+                    book.session.expunge(acc2)
                 else:
                     acc2 = Account(name=acc_type2, type=acc_type2, parent=acc1, commodity=None)
 
-        session.save()
+        book.save()
 
-        assert len(session.accounts) == 100
+        assert len(book.accounts) == 100
 
-    def test_add_account_names(self, session):
+    def test_add_account_names(self, book):
         # raise ValueError as acc1 and acc2 shares same parents with same name
-        acc1 = Account(name="Foo", type="MUTUAL", parent=session.book.root_account, commodity=None)
-        acc2 = Account(name="Foo", type="BANK", parent=session.book.root_account, commodity=None)
+        acc1 = Account(name="Foo", type="MUTUAL", parent=book.root_account, commodity=None)
+        acc2 = Account(name="Foo", type="BANK", parent=book.root_account, commodity=None)
         with pytest.raises(ValueError):
-            session.save()
-        session.session.rollback()
+            book.save()
+        book.cancel()
         # ok as same name but different parents
-        acc3 = Account(name="Fooz", type="BANK", parent=session.book.root_account, commodity=None)
+        acc3 = Account(name="Fooz", type="BANK", parent=book.root_account, commodity=None)
         acc4 = Account(name="Fooz", type="BANK", parent=acc3, commodity=None)
-        session.save()
+        book.save()
         # raise ValueError as now acc4 and acc3 shares same parents with same name
         acc4.parent = acc3.parent
         with pytest.raises(ValueError):
-            session.save()
+            book.save()
 
 
     def test_example(self, realbook_session):
-        session = realbook_session
-        book = session.book
+        book = realbook_session
 
         # example 1, print all stock prices in the Book
         # display all prices
-        for price in session.query(Price).all():
+        for price in book.query(Price).all():
             print("{}/{} on {} = {} {}".format(price.commodity.namespace,
                                                price.commodity.mnemonic,
                                                price.date,
@@ -225,21 +226,21 @@ class TestIntegration_EmptyBook(object):
                                                price.currency.mnemonic,
             ))
 
-        for account in session.accounts:
+        for account in book.accounts:
             print(account)
 
         # build map between account fullname (e.g. "Assets:Current Assets" and account)
-        map_fullname_account = {account.fullname: account for account in session.query(Account).all()}
+        map_fullname_account = {account.fullname: account for account in book.query(Account).all()}
 
         # use it to retrieve the current assets account
         acc_cur = map_fullname_account["Assets:Current Assets"]
 
         # retrieve EUR currency
-        EUR = session.commodities.get(mnemonic='EUR')
+        EUR = book.commodities.get(mnemonic='EUR')
 
         # add a new subaccount to this account of type ASSET with currency EUR
         Account(name="new savings account", type="ASSET", parent=acc_cur, commodity=EUR)
 
         # save changes
         with pytest.raises(GnucashException) as excinfo:
-            session.save()
+            book.save()

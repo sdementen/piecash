@@ -13,6 +13,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import class_mapper, sessionmaker, object_session
 import tzlocal
 import pytz
+from sqlalchemy.orm.base import instance_state
 
 
 if sys.version > '3':
@@ -29,29 +30,27 @@ def __init__blocked(self, *args, **kwargs):
 class DeclarativeBase(object):
     @property
     def book(self):
-        """Return the gnc book
+        """Return the gnc book holding the object
         """
-        return object_session(self).book
+        s = object_session(self)
+        return s and s.book
 
-    pass
-    # def __deepcopy__(self, memo):
-    #     raise Unsafe
-    #     print("memo", memo)
-    #     pk_keys = set([c.key for c in class_mapper(self.__class__).primary_key])
-    #
-    #     dct = {}
-    #     for p in class_mapper(self.__class__).iterate_properties:
-    #         if p.key in pk_keys:
-    #             continue
-    #         if p.key.endswith("guid"):
-    #             continue
-    #         attr = getattr(self, p.key)
-    #         if isinstance(attr, list):
-    #             attr = [deepcopy(sattr, memo) for sattr in attr]
-    #         dct[p.key] = attr
-    #
-    #     obj = self.__class__(**dct)
-    #     return obj
+    def object_to_validate(self, change):
+        """yield the objects to validate when the object is modified (change="new" "deleted" or "dirty").
+
+        For instance, if the object is a Split, if it changes, we want to revalidate not the split
+        but its transaction and its lot (if any). split.object_to_validate should yeild both split.transaction
+        and split.lot
+        """
+        yield None
+
+    def validate(self):
+        """This must be reimplemented for object requiring validation
+        """
+        raise NotImplementedError(self)
+
+    def object_beforechange(self):
+        return instance_state(self).committed_state
 
 
 tz = tzlocal.get_localzone()

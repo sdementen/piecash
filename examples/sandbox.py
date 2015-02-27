@@ -3,6 +3,7 @@ from decimal import Decimal
 import datetime
 import decimal
 import inspect
+from sqlalchemy.orm import object_session
 
 from piecash import open_book, Budget
 from piecash._common import Recurrence
@@ -14,14 +15,35 @@ from piecash import create_book, Account, Transaction, Split
 
 # create a book (in memory)
 from piecash.core import factories
+from piecash.ledger import ledger
 
-s = create_book(currency="EUR")
+b = create_book(currency="EUR")
+b.control_mode=["allow-root-subaccounts"]
 # get the EUR and create the USD currencies
-c1 = s.book.default_currency
-c2 = factories.create_currency_from_ISO("USD")
+c1 = b.default_currency
 # create two accounts
-a1 = Account("Acc 1", "ASSET", c1, parent=s.book.root_account)
-a2 = Account("Acc 2", "ASSET", c2, parent=s.book.root_account)
+a1 = Account("Acc 1", "ROOT", c1, parent=b.root_account)
+b.add(a1)
+print(object_session(a1).book)
+print(a1)
+print(b.currencies(mnemonic="USD"))
+a2 = Account("Acc 2", "ROOT", c1, parent=a1)
+print(a2)
+b.save()
+a1.name="foo"
+b.save()
+tr=Transaction(b.default_currency,
+               splits=[
+                   Split(account=a1, value=100, quantity=10),
+                   Split(account=a2, value=-100, quantity=20)
+               ])
+b.save()
+# del tr.splits[0]
+# b.save()
+print(ledger(b))
+
+
+fdsfds
 # create a transaction from a1 to a2
 tr = Transaction(currency=c1,
                  description="transfer",

@@ -18,6 +18,7 @@ Submodules
    piecash.budget
    piecash.business
    piecash.kvp
+   piecash.ledger
    piecash.metadata
    piecash.sa_extra
 
