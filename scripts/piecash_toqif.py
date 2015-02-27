@@ -2,7 +2,11 @@
 """Basic script to export QIF. Heavily untested ..."""
 import argparse
 from piecash import open_book, Transaction
-import qifparse.qif as qif
+
+try:
+    import qifparse.qif as qif
+except ImportError:
+    print "You need to install the qifparse module ('pip install qifparse')"
 # https://github.com/jemmyw/Qif/blob/master/QIF_references
 
 parser = argparse.ArgumentParser(description="Generate a QIF representation of a gnucash book")
@@ -107,7 +111,7 @@ with open_book(args.gnucash_filename, open_if_lock=True) as s:
         else:
             # match pattern of splits for an investment
 
-            sp_account, sp_security, *sp_others = splits
+            sp_account, sp_security, sp_others = splits[0], splits[1], splits[2:]
 
             assert split_type(sp_account) in ["Bank", "Cash"]
             assert split_type(sp_security) in ["Invst"]
