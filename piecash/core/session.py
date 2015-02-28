@@ -38,8 +38,8 @@ class Version(DeclarativeBase):
     table_version = Column('table_version', INTEGER(), nullable=False)
 
     def __init__(self, table_name, table_version):
-        self.table_name=table_name
-        self.table_version=table_version
+        self.table_name = table_name
+        self.table_version = table_version
 
     def __repr__(self):
         return "Version<{}={}>".format(self.table_name, self.table_version)
@@ -94,17 +94,19 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
     for table_name, table_version in version_supported.items():
         s.add(Version(table_name=table_name, table_version=table_version))
 
-    # create Book and initial accounts
+    # create book and merge with session
+
+    b = Book()
+    s.add(b)
+    adapt_session(s, book=b, readonly=False)
+
+    # create commodities and initial accounts
     from .account import Account
 
-    b = Book(root_account=Account(name="Root Account", type="ROOT",
-                                  commodity=factories.create_currency_from_ISO(currency)),
-             root_template=Account(name="Template Root", type="ROOT", commodity=None),
-    )
-    s.add(b)
-    s.commit()
-
-    adapt_session(s, book=b, readonly=False)
+    EUR = b.currencies(mnemonic="EUR")
+    b.root_account = Account(name="Root Account", type="ROOT", commodity=None, book=b)
+    b.root_template = Account(name="Template Root", type="ROOT", commodity=None, book=b)
+    b.save()
 
     return b
 
@@ -177,7 +179,7 @@ def adapt_session(session, book, readonly):
 
     # def new_flush(*args, **kwargs):
     # if session.dirty or session.new or session.deleted:
-    #         session.rollback()
+    # session.rollback()
     #         raise GnucashException("You cannot change the DB, it is locked !")
 
     # add logic to make session readonly
@@ -220,3 +222,21 @@ def adapt_session(session, book, readonly):
         fget=lambda self: not (self._is_modified or self.dirty or self.deleted or self.new),
         doc="True if nothing has yet been changed (False otherwise)")
 
+
+@event.listens_for(Session, 'before_flush')
+def validate_book(session, flush_context, instances):
+    # identify object to validate
+    txs = set()
+    for change, l in {"dirty": session.dirty,
+                      "new": session.new,
+                      "deleted": session.deleted}.items():
+        for o in l:
+            print(o)
+            for o_to_validate in o.object_to_validate(change):
+                txs.add(o_to_validate)
+    # txs = txs.union(o for o in session.new if isinstance(o, Transaction))
+    txs.discard(None)
+
+    # for each transaction, validate the transaction
+    for tx in txs:
+        tx.validate()

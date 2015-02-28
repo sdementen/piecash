@@ -39,7 +39,7 @@ with create_book() as book:
 
     # try to change a split account to an account that is a placeholder
     acc.placeholder = 1
-    with pytest.raises(ValueError):
+    with pytest.raises(GncValidationError):
         spl.account = acc
         book.save()
     book.cancel()

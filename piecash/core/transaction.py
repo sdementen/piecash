@@ -163,11 +163,12 @@ class Split(DeclarativeBaseGuid):
             self.quantity = self.value
         else:
             if self.quantity is None:
-                raise ValueError("The split quantity is not defined while the split is on a commodity different from the transaction")
+                raise GncValidationError("The split quantity is not defined while the split is on a commodity different from the transaction")
 
-        # check that account is not a placeholder
-        if self.account.placeholder != 0:
-            raise ValueError("You cannot change a split linked to account {} as the latter is a placeholder.".format(self.account))
+        # not needed as check done anyway at transaction level
+        # # check that account is not a placeholder
+        # if self.account.placeholder != 0:
+        #     raise GncValidationError("You cannot change a split linked to account {} as the latter is a placeholder.".format(self.account))
 
         self._quantity_denom_basis = self.account.commodity_scu
         self._value_denom_basis = self.transaction.currency.fraction
