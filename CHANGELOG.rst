@@ -4,6 +4,11 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
+- Empty
+
+Version 0.7.0 (2015-02-12)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 - Merge the GncSession and Book objects
 - extract factory function into a factories module
 
