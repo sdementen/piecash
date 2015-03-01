@@ -275,8 +275,9 @@ class Book(DeclarativeBaseGuid):
             cur = factories.create_currency_from_ISO(isocode=mnemonic)
             self.add(cur)
             return cur
-        return CallableList(self.session.query(Commodity).filter_by(namespace="CURRENCY"),
-                            fallback=fallback)
+        cl = CallableList(self.session.query(Commodity).filter_by(namespace="CURRENCY"))
+        cl.fallback =fallback
+        return cl
 
     @property
     def prices(self):

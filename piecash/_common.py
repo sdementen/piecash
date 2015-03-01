@@ -117,9 +117,10 @@ class CallableList(list):
     It can be used as the collection_class of a sqlalchemy relationship or to wrap any list (see examples
     in :class:`piecash.core.session.GncSession`)
     """
-    def __init__(self, *args, fallback=None):
+    fallback = None
+
+    def __init__(self, *args):
         list.__init__(self, *args)
-        self.fallback = fallback
 
     def __call__(self, **kwargs):
         """
