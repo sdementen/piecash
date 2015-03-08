@@ -1,13 +1,12 @@
-import logging
 import warnings
+
 from sqlalchemy import Column, VARCHAR, ForeignKey
 from sqlalchemy.orm import relation
 
 from .._declbase import DeclarativeBaseGuid
-from piecash._common import CallableList
-from piecash.core import factories
-from piecash.core._commodity_helper import run_yql
-from piecash.core.commodity import GncCommodityError, Commodity
+from .._common import CallableList
+from . import factories
+from .commodity import Commodity
 
 
 def option(name, to_gnc, from_gnc, default=None):
@@ -19,7 +18,7 @@ def option(name, to_gnc, from_gnc, default=None):
             return default
 
     def setter(self, value):
-        if value == default:
+        if value == default and name in self.book:
             del self.book[name]
         else:
             self.book[name] = to_gnc(value)
@@ -130,6 +129,7 @@ class Book(DeclarativeBaseGuid):
         return self
 
     _trading_accounts = None
+
     def trading_account(self, cdty):
         """Return the trading account related to the commodity. If it does not exist and the option
         "Use Trading Accounts" is enabled, create it on the fly"""
@@ -173,20 +173,25 @@ class Book(DeclarativeBaseGuid):
     def add(self, obj):
         """Add an object to the book (to be used if object not linked in any way to the book)"""
         self.session.add(obj)
+
     def delete(self, obj):
         """Add an object to the book (to be used if object not linked in any way to the book)"""
         self.session.delete(obj)
+
     def save(self):
         """Save the changes to the file/DB (=commit transaction)
         """
         self.session.commit()
+
     def flush(self):
         """Flush the book"""
         self.session.flush()
+
     def cancel(self):
         """Cancel all the changes that have not been saved (=rollback transaction)
         """
         self.session.rollback()
+
     @property
     def is_saved(self):
         """Save the changes to the file/DB (=commit transaction)
@@ -205,8 +210,8 @@ class Book(DeclarativeBaseGuid):
         # cancel pending changes
         session.rollback()
         # if self._acquire_lock:
-        #     # remove the lock
-        #     session.delete_lock()
+        # # remove the lock
+        # session.delete_lock()
         session.close()
 
     # add general getters for gnucash classes
@@ -252,7 +257,8 @@ class Book(DeclarativeBaseGuid):
         of :class:`piecash.core.account.Account`
         """
         from .account import Account
-        return CallableList(self.session.query(Account).filter(Account.parent!=None))
+
+        return CallableList(self.session.query(Account).filter(Account.parent != None))
 
     @property
     def commodities(self):
@@ -271,12 +277,14 @@ class Book(DeclarativeBaseGuid):
         of :class:`piecash.core.commodity.Commodity`
         """
         from .commodity import Commodity
+
         def fallback(mnemonic):
             cur = factories.create_currency_from_ISO(isocode=mnemonic)
             self.add(cur)
             return cur
+
         cl = CallableList(self.session.query(Commodity).filter_by(namespace="CURRENCY"))
-        cl.fallback =fallback
+        cl.fallback = fallback
         return cl
 
     @property

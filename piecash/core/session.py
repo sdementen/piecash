@@ -103,7 +103,7 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
     # create commodities and initial accounts
     from .account import Account
 
-    EUR = b.currencies(mnemonic="EUR")
+    CUR = b.currencies(mnemonic=currency)
     b.root_account = Account(name="Root Account", type="ROOT", commodity=None, book=b)
     b.root_template = Account(name="Template Root", type="ROOT", commodity=None, book=b)
     b.save()
@@ -205,6 +205,19 @@ def adapt_session(session, book, readonly):
     session.create_lock = create_lock
 
 
+    # add proper isolation code for sqlite engine
+    if session.bind.name=="sqlite":
+        @event.listens_for(session.bind, "connect")
+        def do_connect(dbapi_connection, connection_record):
+            # disable pysqlite's emitting of the BEGIN statement entirely.
+            # also stops it from emitting COMMIT before any DDL.
+            dbapi_connection.isolation_level = None
+
+        @event.listens_for(session.bind, "begin")
+        def do_begin(conn):
+            # emit our own BEGIN
+            conn.execute("BEGIN EXCLUSIVE")
+
     # add logic to track if a session has been modified or not
     session._is_modified = False
 
@@ -240,3 +253,4 @@ def validate_book(session, flush_context, instances):
     # for each transaction, validate the transaction
     for tx in txs:
         tx.validate()
+

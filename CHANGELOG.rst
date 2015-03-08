@@ -4,7 +4,8 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
-- Empty
+- refactor ledger functionalities
+- bug fixing
 
 Version 0.7.0 (2015-02-12)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

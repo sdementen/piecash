@@ -1,14 +1,14 @@
 from __future__ import division
 import datetime
 
-from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT
+from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT, UniqueConstraint
 from sqlalchemy.orm import relation
 
 from .._common import GnucashException, hybrid_property_gncnumeric
 from .._declbase import DeclarativeBaseGuid
 from .._common import CallableList
-from piecash.core._commodity_helper import run_yql, quandl_fx
 from ..sa_extra import _DateTime
+from ._commodity_helper import run_yql, quandl_fx
 
 
 class GncCommodityError(GnucashException):
@@ -101,7 +101,8 @@ class Commodity(DeclarativeBaseGuid):
     """
     __tablename__ = 'commodities'
 
-    __table_args__ = {}
+    __table_args__ = (UniqueConstraint('namespace', 'mnemonic', name='_unique_cdty'),
+                     )
 
     # column definitions
     namespace = Column('namespace', VARCHAR(length=2048), nullable=False)
