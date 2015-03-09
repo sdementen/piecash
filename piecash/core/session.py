@@ -8,7 +8,6 @@ from sqlalchemy.sql.ddl import DropConstraint
 from sqlalchemy_utils import database_exists
 
 from .book import Book
-from . import factories
 from ..sa_extra import DeclarativeBase, get_foreign_keys, Session
 from .._common import GnucashException
 
@@ -267,7 +266,6 @@ def validate_book(session, flush_context, instances):
                       "new": session.new,
                       "deleted": session.deleted}.items():
         for o in l:
-            print(o)
             for o_to_validate in o.object_to_validate(change):
                 txs.add(o_to_validate)
     # txs = txs.union(o for o in session.new if isinstance(o, Transaction))

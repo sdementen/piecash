@@ -4,7 +4,7 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
-- Empty
+- remove some remaining print in code
 
 Version 0.7.3 (2015-03-09)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

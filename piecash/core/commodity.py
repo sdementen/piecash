@@ -221,7 +221,7 @@ class Commodity(DeclarativeBaseGuid):
                           currency=default_currency,
                           date=datetime.datetime.strptime(q.date, "%Y-%m-%d"),
                           value=str(q.rate))
-                print(p)
+
         else:
             symbol = self.mnemonic
             default_currency = self.base_currency
