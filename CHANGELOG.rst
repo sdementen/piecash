@@ -4,7 +4,7 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
-- Empty
+- fix requirements to include ipython==2.3.1
 
 Version 0.7.2 (2015-03-09)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
