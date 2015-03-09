@@ -1,4 +1,6 @@
+import datetime
 import os
+import shutil
 import socket
 
 from sqlalchemy import event, create_engine, Column, VARCHAR, INTEGER, Table
@@ -111,7 +113,13 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
     return b
 
 
-def open_book(sqlite_file=None, uri_conn=None, acquire_lock=True, readonly=True, open_if_lock=False, **kwargs):
+def open_book(sqlite_file=None,
+              uri_conn=None,
+              acquire_lock=True,
+              readonly=True,
+              open_if_lock=False,
+              do_backup=True,
+              **kwargs):
     """Open an existing GnuCash book
 
     :param str sqlite_file: a path to an sqlite3 file
@@ -120,6 +128,8 @@ def open_book(sqlite_file=None, uri_conn=None, acquire_lock=True, readonly=True,
     :param bool readonly: open the file as readonly (useful to play with and avoid any unwanted save)
     :param bool open_if_lock: open the file even if it is locked by another user
         (using open_if_lock=True with readonly=False is not recommended)
+    :param bool do_backup: do a backup if the file written in RW (i.e. readonly=False)
+        (this only works with the sqlite backend and copy the file with .{:%Y%m%d%H%M%S}.gnucash appended to it)
 
     :return: the document as a gnucash session
     :rtype: :class:`GncSession`
@@ -139,6 +149,19 @@ def open_book(sqlite_file=None, uri_conn=None, acquire_lock=True, readonly=True,
                                "GnuCash books from scratch)".format(uri_conn))
 
     engine = create_engine(uri_conn, **kwargs)
+
+    # backup database if readonly=False and do_backup=True
+    if not readonly and do_backup:
+        if engine.name != "sqlite":
+            raise GnucashException("Cannot do a backup for engine '{}'. Do yourself a backup and then specify do_backup=False".format(engine.name))
+        if not uri_conn.startswith("sqlite:///"):
+            raise GnucashException("Cannot create a backup for URI '{}'".format(uri_conn))
+
+        url = uri_conn[len("sqlite:///"):]
+        url_backup = url + ".{:%Y%m%d%H%M%S}.gnucash".format(datetime.datetime.now())
+
+        shutil.copyfile(url, url_backup)
+
 
     locks = list(engine.execute(gnclock.select()))
 
@@ -211,7 +234,7 @@ def adapt_session(session, book, readonly):
         def do_connect(dbapi_connection, connection_record):
             # disable pysqlite's emitting of the BEGIN statement entirely.
             # also stops it from emitting COMMIT before any DDL.
-            dbapi_connection.isolation_level = None
+            dbapi_connection.isolation_level = "EXCLUSIVE"
 
         @event.listens_for(session.bind, "begin")
         def do_begin(conn):
