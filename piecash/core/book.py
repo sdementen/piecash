@@ -93,7 +93,6 @@ class Book(DeclarativeBaseGuid):
 
     uri = None
     session = None
-    control_mode = None
 
     # link options to KVP
     use_trading_accounts = option("options/Accounts/Use Trading Accounts",
@@ -114,10 +113,17 @@ class Book(DeclarativeBaseGuid):
     def __init__(self, root_account=None, root_template=None):
         self.root_account = root_account
         self.root_template = root_template
-        self.control_mode = []
 
     def __repr__(self):
         return "<Book {}>".format(self.uri)
+
+
+    _control_mode = None
+    @property
+    def control_mode(self):
+        if self._control_mode is None:
+            self._control_mode = []
+        return self._control_mode
 
     @property
     def default_currency(self):
@@ -175,7 +181,7 @@ class Book(DeclarativeBaseGuid):
         self.session.add(obj)
 
     def delete(self, obj):
-        """Add an object to the book (to be used if object not linked in any way to the book)"""
+        """Delete an object from the book (to remove permanently an object)"""
         self.session.delete(obj)
 
     def save(self):
