@@ -5,7 +5,7 @@ piecash can create new transactions (a :class:`piecash.core.transaction.Transact
 
 .. ipython:: python
 
-    from piecash import create_book, Account, Transaction, Split, GncImbalanceError, factories
+    from piecash import create_book, Account, Transaction, Split, GncImbalanceError, factories, ledger
 
     # create a book (in memory)
     book = create_book(currency="EUR")
@@ -24,8 +24,8 @@ piecash can create new transactions (a :class:`piecash.core.transaction.Transact
                      ])
     book.flush()
 
-    # ledger_str() returns a representation of the transaction in the ledger-cli format
-    print(tr.ledger_str())
+    # ledger() returns a representation of the transaction in the ledger-cli format
+    print(ledger(tr))
 
     # change the book to use the "trading accounts" options
     book.use_trading_accounts = True
@@ -36,10 +36,10 @@ piecash can create new transactions (a :class:`piecash.core.transaction.Transact
                           Split(account=a1, value=-100),
                           Split(account=a2, value=100, quantity=30)
                       ])
-    print(tr2.ledger_str())
+    print(ledger(tr2))
     # when flushing, the trading accounts are created
     book.flush()
-    print(tr2.ledger_str())
+    print(ledger(tr2))
 
     # trying to create an unbalanced transaction trigger an exception
     # (there is not automatic creation of an imbalance split)
@@ -49,7 +49,7 @@ piecash can create new transactions (a :class:`piecash.core.transaction.Transact
                           Split(account=a1, value=-100),
                           Split(account=a2, value=90, quantity=30)
                       ])
-    print(tr3.ledger_str())
+    print(ledger(tr3))
     try:
         # the imbalance exception is triggered at flush time
         book.flush()

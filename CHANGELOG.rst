@@ -4,7 +4,7 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
-- Empty
+- fix bug in doc (was using ledger_str instead of ledger)
 
 Version 0.7.1 (2015-03-09)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
