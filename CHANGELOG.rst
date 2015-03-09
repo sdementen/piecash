@@ -1,8 +1,8 @@
 What's new
 ==========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.7.4 (2015-03-09)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - remove some remaining print in code
 
