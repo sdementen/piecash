@@ -6,7 +6,7 @@ In development
 
 - refactor ledger functionalities
 - bug fixing
-- read backup functionnality (ie backup when opening a book in RW)
+- read backup functionality (ie backup when opening a book in RW)
 
 Version 0.7.0 (2015-02-12)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
