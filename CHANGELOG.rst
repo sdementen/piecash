@@ -1,8 +1,8 @@
 What's new
 ==========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.7.2 (2015-03-09)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - fix bug in doc (was using ledger_str instead of ledger)
 
