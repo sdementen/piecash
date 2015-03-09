@@ -1,7 +1,5 @@
 from __future__ import print_function
 from __future__ import division
-from copy import deepcopy
-from builtins import object
 import sys
 import datetime
 
@@ -18,6 +16,7 @@ from sqlalchemy.orm.base import instance_state
 
 if sys.version > '3':
     long = int
+    from builtins import object
 else:
     long = long
 
