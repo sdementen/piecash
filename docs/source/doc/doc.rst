@@ -61,12 +61,25 @@ Otherwise, you can install by unpacking the source distribution from PyPI and th
 
     $ python setup.py install
 
-If you are on windows and not so familiar with python, we would suggest you to install the miniconda python distribution
-available at http://conda.pydata.org/miniconda.html (you can choose whatever version - 2.7 or 3.X - of python you would like)
-and then::
+If you are on MS Windows and not so familiar with python, we would suggest you to install the miniconda python distribution
+from Continuum Analytics available at http://conda.pydata.org/miniconda.html (you can choose whatever version -- 2.7 or 3.X --
+of python you would like) and then run the following command in the command prompt (cmd.exe)::
 
-    $ conda install pip sqlalchemy
+    $ conda create -n piecash_venv python=2 pip sqlalchemy
+    $ activate piecash_venv
     $ pip install piecash
+
+The first command create a new python environment named "piecash_venv" with python 2.7, pip and sqlalchemy installed (if you want to
+test piecash on python 3 you can replace "python=2" by "python=3", irrespective of the version of miniconda you installed).
+
+The second command activates the newly created piecash_venv. Afterwards, you only need to execute this command before using
+python through the command line.
+
+The third command installs piecash and its dependencies. piecash depends also on sqlalchemy but as the sqlalchemy package requires
+a compiler if it is installed through pip, we found it easier to install it through conda (this is done in the first command).
+
+If you need to use directly the python interpreter in the newly created "piecash_env", you can find it
+installed in your user folder under Miniconda3\\envs\\piecash_venv\\python.exe (or Miniconda2\\...).
 
 On OS X, this option may also be valuable.
 
