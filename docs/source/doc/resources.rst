@@ -24,8 +24,8 @@ Blogs & discussions
 - Google search on python in user mailing list: `python site:http://lists.gnucash.org/pipermail/gnucash-user" python <https://www.google.be/search?hl=en&as_q=python&as_epq=&as_oq=&as_eq=&as_nlo=&as_nhi=&lr=&cr=&as_qdr=all&as_sitesearch=http%3A%2F%2Flists.gnucash.org%2Fpipermail%2Fgnucash-user&as_occt=any&safe=images&tbs=&as_filetype=&as_rights=>`__
 - Google search on python in devel mailing list: `python site:http://lists.gnucash.org/pipermail/gnucash-devel" python <https://www.google.be/search?hl=en&as_q=python&as_epq=&as_oq=&as_eq=&as_nlo=&as_nhi=&lr=&cr=&as_qdr=all&as_sitesearch=http%3A%2F%2Flists.gnucash.org%2Fpipermail%2Fgnucash-devel&as_occt=any&safe=images&tbs=&as_filetype=&as_rights=>`__
 
-Unofficial projects related to GnuCash
---------------------------------------
+Github projects related to GnuCash
+----------------------------------
 
 .. toctree::
    :maxdepth: 1
