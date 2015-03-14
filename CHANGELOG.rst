@@ -14,6 +14,7 @@ Version 0.7.5 (2015-03-14)
 - update github project list
 - refactor sqlite isolation level code
 - fix setup.py to avoid sqlalchemy 0.9.9 (buggy version)
+- fix requirements.txt to avoid sqlalchemy 0.9.9 (buggy version)
 
 Version 0.7.4 (2015-03-09)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

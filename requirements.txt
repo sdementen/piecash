@@ -2,5 +2,5 @@ pytz
 tzlocal
 future
 enum34
-SQLAlchemy
+SQLAlchemy!=0.9.9
 SQLAlchemy-Utils
