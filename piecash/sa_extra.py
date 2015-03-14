@@ -3,12 +3,12 @@ from __future__ import division
 import sys
 import datetime
 
-from sqlalchemy import types, Table, MetaData, ForeignKeyConstraint
+from sqlalchemy import types, Table, MetaData, ForeignKeyConstraint, event, create_engine
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import class_mapper, sessionmaker, object_session
+from sqlalchemy.orm import sessionmaker, object_session
 import tzlocal
 import pytz
 from sqlalchemy.orm.base import instance_state
@@ -187,3 +187,27 @@ def get_foreign_keys(metadata, engine):
 
 
 Session = sessionmaker(autoflush=False)
+
+
+def create_piecash_engine(uri_conn, **kwargs):
+    eng = create_engine(uri_conn,**kwargs)
+
+    if eng.name == "sqlite":
+        # add proper isolation code for sqlite engine
+        @event.listens_for(eng, "connect")
+        def do_connect(dbapi_connection, connection_record):
+            # disable pysqlite's emitting of the BEGIN statement entirely.
+            # also stops it from emitting COMMIT before any DDL.
+            # print("=========================== in DO CONNECT")
+            # dbapi_connection.isolation_level = "IMMEDIATE"
+            # dbapi_connection.isolation_level = "EXCLUSIVE"
+            pass
+
+        @event.listens_for(eng, "begin")
+        def do_begin(conn):
+            # emit our own BEGIN
+            # print("=========================== in DO BEGIN")
+            # conn.execute("BEGIN EXCLUSIVE")
+            pass
+
+    return eng

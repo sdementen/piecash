@@ -7,6 +7,8 @@ In development
 - improve doc on installation on windows through conda
 - add .gitattributes to exclude html from githug language detection algorithm
 - update github project list
+- refactor sqlite isolation level code
+- fix setup.py to avoid sqlalchemy 0.9.9 (buggy version)
 
 Version 0.7.4 (2015-03-09)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
