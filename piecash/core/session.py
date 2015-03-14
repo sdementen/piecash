@@ -3,12 +3,12 @@ import os
 import shutil
 import socket
 
-from sqlalchemy import event, create_engine, Column, VARCHAR, INTEGER, Table
+from sqlalchemy import event, Column, VARCHAR, INTEGER, Table
 from sqlalchemy.sql.ddl import DropConstraint
 from sqlalchemy_utils import database_exists
 
 from .book import Book
-from ..sa_extra import DeclarativeBase, get_foreign_keys, Session
+from ..sa_extra import create_piecash_engine, DeclarativeBase, get_foreign_keys, Session
 from .._common import GnucashException
 
 
@@ -46,6 +46,7 @@ class Version(DeclarativeBase):
         return "Version<{}={}>".format(self.table_name, self.table_version)
 
 
+
 def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False, keep_foreign_keys=False, **kwargs):
     """Create a new empty GnuCash book. If both sqlite_file and uri_conn are None, then an "in memory" sqlite book is created.
 
@@ -77,7 +78,7 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
                 raise GnucashException("'{}' db already exists".format(uri_conn))
         create_database(uri_conn)
 
-    engine = create_engine(uri_conn, **kwargs)
+    engine = create_piecash_engine(uri_conn, **kwargs)
 
     # create all (tables, fk, ...)
     DeclarativeBase.metadata.create_all(engine)
@@ -147,7 +148,7 @@ def open_book(sqlite_file=None,
         raise GnucashException("Database '{}' does not exist (please use create_book to create " \
                                "GnuCash books from scratch)".format(uri_conn))
 
-    engine = create_engine(uri_conn, **kwargs)
+    engine = create_piecash_engine(uri_conn, **kwargs)
 
     # backup database if readonly=False and do_backup=True
     if not readonly and do_backup:
@@ -225,20 +226,6 @@ def adapt_session(session, book, readonly):
         session.commit()
 
     session.create_lock = create_lock
-
-
-    # add proper isolation code for sqlite engine
-    if session.bind.name=="sqlite":
-        @event.listens_for(session.bind, "connect")
-        def do_connect(dbapi_connection, connection_record):
-            # disable pysqlite's emitting of the BEGIN statement entirely.
-            # also stops it from emitting COMMIT before any DDL.
-            dbapi_connection.isolation_level = "EXCLUSIVE"
-
-        @event.listens_for(session.bind, "begin")
-        def do_begin(conn):
-            # emit our own BEGIN
-            conn.execute("BEGIN EXCLUSIVE")
 
     # add logic to track if a session has been modified or not
     session._is_modified = False

@@ -6,6 +6,7 @@ In development
 
 - improve doc on installation on windows through conda
 - add .gitattributes to exclude html from githug language detection algorithm
+- refactor sqlite isolation level code
 
 Version 0.7.4 (2015-03-09)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

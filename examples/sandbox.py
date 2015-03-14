@@ -10,6 +10,24 @@ from piecash._common import Recurrence
 from piecash import create_book, Account, Transaction, Split
 
 
+# b1 = create_book("foo.gnucash",overwrite=True,echo=True)
+# b1.save()
+b1 = open_book("foo.gnucash", readonly=False, echo=True, do_backup=False)
+b2 = open_book("foo.gnucash", readonly=False, echo=True, do_backup=False)
+# a1 = Account("Acc 1", "ASSET", b1.default_currency, parent=b1.root_account)
+# b1.flush()
+# b1.save()
+a= b2.accounts[0].name
+# b2["fooo"] = b2.accounts[0].name
+b2.accounts[0].name="hello you2"
+b1.accounts[0].name="hello me1"
+b1.flush()
+b1.save()
+b2.flush()
+b2.save()
+print(a, b1.accounts[0].name, b2.accounts[0].name)
+fdsffds
+
 
 
 
