@@ -1,8 +1,8 @@
 What's new
 ==========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.7.5 (2015-03-14)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - improve doc on installation on windows through conda
 - add .gitattributes to exclude html from githug language detection algorithm
