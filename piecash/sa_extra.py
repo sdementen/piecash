@@ -200,12 +200,14 @@ def create_piecash_engine(uri_conn, **kwargs):
             # also stops it from emitting COMMIT before any DDL.
             # print("=========================== in DO CONNECT")
             # dbapi_connection.isolation_level = "IMMEDIATE"
-            dbapi_connection.isolation_level = "EXCLUSIVE"
+            # dbapi_connection.isolation_level = "EXCLUSIVE"
+            pass
 
         @event.listens_for(eng, "begin")
         def do_begin(conn):
             # emit our own BEGIN
             # print("=========================== in DO BEGIN")
-            conn.execute("BEGIN EXCLUSIVE")
+            # conn.execute("BEGIN EXCLUSIVE")
+            pass
 
     return eng
