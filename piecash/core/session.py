@@ -198,6 +198,7 @@ def adapt_session(session, book, readonly):
     # link session and book together
     book.session = session
     session.book = book
+    book.uri = session.bind.url
 
     # def new_flush(*args, **kwargs):
     # if session.dirty or session.new or session.deleted:

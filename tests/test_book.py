@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 from sqlalchemy_utils import database_exists, drop_database
 
 from piecash import create_book, Account, GnucashException, Book
-from piecash.sa_extra import get_foreign_keys, DeclarativeBase
 
 test_folder = os.path.dirname(os.path.realpath(__file__))
 db_sqlite = os.path.join(test_folder, "fooze.sqlite")
@@ -43,8 +42,8 @@ class TestBook_create_book(object):
 
         assert isinstance(s, Book)
         assert isinstance(s.session, Session)
-        assert s.uri is None
-        assert s.session.bind.name == "sqlite"
+        assert s.uri is not None
+        assert s.session.bind.name in ["sqlite", "postgresql"]
 
         EUR = s.commodities[0]
         assert EUR.mnemonic == "EUR"
@@ -142,8 +141,6 @@ class TestBook_create_book(object):
         s = create_book(uri_conn=db_sqlite_uri, keep_foreign_keys=False, overwrite=True, echo=True)
         s.session.close()
 
-        eng = create_engine(db_sqlite_uri)
-        # assert list(eng.execute("pragma foreign_key_list('entries');"))==0
         insp = Inspector.from_engine(create_engine(db_sqlite_uri))
         for tbl in insp.get_table_names():
             fk = insp.get_foreign_keys(tbl)
