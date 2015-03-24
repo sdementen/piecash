@@ -4,7 +4,7 @@ python:
 - '3.3'
 - '2.7'
 services:
-– postgresql
+- postgresql
 install: pip install -r requirements-dev.txt
 script: python setup.py test
 deploy:
