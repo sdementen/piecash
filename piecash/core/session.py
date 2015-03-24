@@ -115,7 +115,6 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
 
 def open_book(sqlite_file=None,
               uri_conn=None,
-              acquire_lock=True,
               readonly=True,
               open_if_lock=False,
               do_backup=True,
@@ -124,7 +123,6 @@ def open_book(sqlite_file=None,
 
     :param str sqlite_file: a path to an sqlite3 file
     :param str uri_conn: a sqlalchemy connection string
-    :param bool acquire_lock: acquire a lock on the file
     :param bool readonly: open the file as readonly (useful to play with and avoid any unwanted save)
     :param bool open_if_lock: open the file even if it is locked by another user
         (using open_if_lock=True with readonly=False is not recommended)
