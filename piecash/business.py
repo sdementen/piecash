@@ -43,6 +43,7 @@ class Billterm(DeclarativeBaseGuid):
                       remote_side=guid,
     )
 
+
 class Customer(DeclarativeBaseGuid):
     __tablename__ = 'customers'
 
@@ -59,7 +60,7 @@ class Customer(DeclarativeBaseGuid):
     _credit_num = Column('credit_num', BIGINT(), nullable=False)
     _credit_denom = Column('credit_denom', BIGINT(), nullable=False)
     credit = hybrid_property_gncnumeric(_credit_num, _credit_denom)
-    currency_guid = Column('currency', VARCHAR(length=32), ForeignKey('commodities.guid'),nullable=False)
+    currency_guid = Column('currency', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
     tax_override = Column('tax_override', INTEGER(), nullable=False)
 
     addr_name = Column('addr_name', VARCHAR(length=1024))
@@ -90,7 +91,7 @@ class Customer(DeclarativeBaseGuid):
 
     # relation definitions
     taxtable = relation('Taxtable')
-    currency= relation('Commodity')
+    currency = relation('Commodity')
     term = relation('Billterm')
 
 
@@ -105,7 +106,7 @@ class Employee(DeclarativeBaseGuid):
     language = Column('language', VARCHAR(length=2048), nullable=False)
     acl = Column('acl', VARCHAR(length=2048), nullable=False)
     active = Column('active', INTEGER(), nullable=False)
-    currency_guid = Column('currency', VARCHAR(length=32), ForeignKey('commodities.guid'),nullable=False)
+    currency_guid = Column('currency', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
     ccard_guid = Column('ccard_guid', VARCHAR(length=32), ForeignKey('accounts.guid'))
     _workday_num = Column('workday_num', BIGINT(), nullable=False)
     _workday_denom = Column('workday_denom', BIGINT(), nullable=False)
@@ -113,7 +114,7 @@ class Employee(DeclarativeBaseGuid):
     _rate_num = Column('rate_num', BIGINT(), nullable=False)
     _rate_denom = Column('rate_denom', BIGINT(), nullable=False)
     rate = hybrid_property_gncnumeric(_rate_num, _rate_denom)
-    
+
     addr_name = Column('addr_name', VARCHAR(length=1024))
     addr_addr1 = Column('addr_addr1', VARCHAR(length=1024))
     addr_addr2 = Column('addr_addr2', VARCHAR(length=1024))
@@ -126,7 +127,7 @@ class Employee(DeclarativeBaseGuid):
                      addr_email, addr_fax, addr_name, addr_phone)
 
     # relation definitions
-    currency= relation('Commodity')
+    currency = relation('Commodity')
     credit_account = relation('Account')
 
 
@@ -167,10 +168,11 @@ class Entry(DeclarativeBaseGuid):
     billable = Column('billable', INTEGER())
     billto_type = Column('billto_type', INTEGER())
     billto_guid = Column('billto_guid', VARCHAR(length=32))
-    order_guid = Column('order_guid', VARCHAR(length=32))
+    order_guid = Column('order_guid', VARCHAR(length=32), ForeignKey("orders.guid"))
 
     # relation definitions
-    # todo: complete relations
+    order = relation('Order', back_populates="entries")
+
 
 class Invoice(DeclarativeBaseGuid):
     __tablename__ = 'invoices'
@@ -183,7 +185,7 @@ class Invoice(DeclarativeBaseGuid):
     date_posted = Column('date_posted', _DateTime())
     notes = Column('notes', VARCHAR(length=2048), nullable=False)
     active = Column('active', INTEGER(), nullable=False)
-    currency_guid = Column('currency', VARCHAR(length=32), ForeignKey('commodities.guid'),nullable=False)
+    currency_guid = Column('currency', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
     owner_type = Column('owner_type', INTEGER())
     owner_guid = Column('owner_guid', VARCHAR(length=32))
     term_guid = Column('terms', VARCHAR(length=32), ForeignKey('billterms.guid'))
@@ -223,6 +225,7 @@ class Job(DeclarativeBaseGuid):
     # relation definitions
     # todo: owner_guid/type links to Vendor or Customer
 
+
 # This class exists in code but not in the GUI (to confirm?)
 
 class Order(DeclarativeBaseGuid):
@@ -243,6 +246,11 @@ class Order(DeclarativeBaseGuid):
 
     # relation definitions
     # todo: owner_guid/type links to Vendor or Customer
+    entries = relation('Entry',
+                       back_populates='order',
+                       cascade='all, delete-orphan',
+                       collection_class=CallableList,
+    )
 
 
 class Vendor(DeclarativeBaseGuid):
@@ -254,7 +262,7 @@ class Vendor(DeclarativeBaseGuid):
     name = Column('name', VARCHAR(length=2048), nullable=False)
     id = Column('id', VARCHAR(length=2048), nullable=False)
     notes = Column('notes', VARCHAR(length=2048), nullable=False)
-    currency_guid = Column('currency', VARCHAR(length=32), ForeignKey('commodities.guid'),nullable=False)
+    currency_guid = Column('currency', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
     active = Column('active', INTEGER(), nullable=False)
     tax_override = Column('tax_override', INTEGER(), nullable=False)
 
@@ -274,7 +282,7 @@ class Vendor(DeclarativeBaseGuid):
 
     # relation definitions
     taxtable = relation('Taxtable')
-    currency= relation('Commodity')
+    currency = relation('Commodity')
     term = relation('Billterm')
 
 
@@ -315,8 +323,8 @@ class TaxtableEntry(DeclarativeBase):
     # column definitions
     id = Column('id', INTEGER(), primary_key=True, nullable=False)
     taxtable_guid = Column('taxtable', VARCHAR(length=32),
-                      ForeignKey('taxtables.guid'), nullable=False)
-    account_guid = Column('account', VARCHAR(length=32), ForeignKey('accounts.guid'),nullable=False)
+                           ForeignKey('taxtables.guid'), nullable=False)
+    account_guid = Column('account', VARCHAR(length=32), ForeignKey('accounts.guid'), nullable=False)
     _amount_num = Column('amount_num', BIGINT(), nullable=False)
     _amount_denom = Column('amount_denom', BIGINT(), nullable=False)
     amount = hybrid_property_gncnumeric(_amount_num, _amount_denom)
