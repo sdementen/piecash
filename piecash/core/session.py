@@ -81,7 +81,7 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
 
     # drop FK
     if not keep_foreign_keys:
-        for n, tbl in DeclarativeBase.metadata.tables.iteritems():
+        for n, tbl in DeclarativeBase.metadata.tables.items():
             for fk in tbl.foreign_keys:
                 event.listen(tbl,
                              "before_drop",

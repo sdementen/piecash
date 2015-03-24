@@ -3,11 +3,13 @@
 # @brief Creates a basic set of accounts and a couple of transactions
 # @ingroup python_bindings_examples
 from decimal import Decimal
+import os
+import tempfile
 
 from piecash import create_book, Account, Transaction, Split, Commodity
 from piecash.core.factories import create_currency_from_ISO
 
-FILE_1 = "/tmp/example.gnucash"
+FILE_1 = os.path.join(tempfile.gettempdir(), "example.gnucash")
 
 with create_book(FILE_1, overwrite=True) as book:
     root_acct = book.root_account
