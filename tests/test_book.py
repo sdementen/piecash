@@ -1,125 +1,106 @@
+import glob
 import os
 
 import pytest
 from sqlalchemy import create_engine
+
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.orm import Session
-from sqlalchemy_utils import database_exists, drop_database
 
-from piecash import create_book, Account, GnucashException, Book
+from piecash import create_book, Account, GnucashException, Book, open_book
 
-test_folder = os.path.dirname(os.path.realpath(__file__))
-db_sqlite = os.path.join(test_folder, "fooze.sqlite")
-db_postgres_uri = "postgresql://postgres:@localhost:5432/foo"
-db_sqlite_uri = "sqlite:///{}".format(db_sqlite)
+from test_helper import file_template, file_for_test
+from test_helper import new_book, new_book_USD, db_sqlite_uri, db_sqlite, book_uri
+from piecash.core import Version
 
-databases_to_check = [None, db_sqlite_uri]
-if os.environ.get("TRAVIS", False):
-    databases_to_check.append(db_postgres_uri)
-
-@pytest.yield_fixture(params=databases_to_check)
-def s(request):
-    name = request.param
-
-    if name and database_exists(name):
-        drop_database(name)
-    b = create_book(uri_conn=name)
-    yield b
-    b.session.close()
-
-@pytest.yield_fixture(params=databases_to_check)
-def s_USD(request):
-    name = request.param
-
-    if name and database_exists(name):
-        drop_database(name)
-    b = create_book(uri_conn=name, currency="USD")
-    yield b
-    b.session.close()
 
 class TestBook_create_book(object):
-    def test_create_default(self, s):
+    def test_create_default(self, new_book):
+        assert isinstance(new_book, Book)
+        assert isinstance(new_book.session, Session)
+        assert new_book.uri is not None
+        assert new_book.session.bind.name in ["sqlite", "postgresql"]
+        assert repr(new_book.query(Version).filter_by(table_name='commodities').one())=="Version<commodities=1>"
 
-        assert isinstance(s, Book)
-        assert isinstance(s.session, Session)
-        assert s.uri is not None
-        assert s.session.bind.name in ["sqlite", "postgresql"]
-
-        EUR = s.commodities[0]
+        EUR = new_book.commodities[0]
         assert EUR.mnemonic == "EUR"
         assert EUR.namespace == "CURRENCY"
 
         # no std account
-        assert len(s.accounts) == 0
+        assert len(new_book.accounts) == 0
         # two root accounts
-        root_accs = s.query(Account).all()
+        root_accs = new_book.query(Account).all()
         assert all([acc.type == "ROOT" for acc in root_accs])
         assert len(root_accs) == 2
 
         # no slots
-        assert len(s.slots) == 0
+        assert len(new_book.slots) == 0
 
-    def test_create_save_cancel_flush(self, s):
+    def test_create_save_cancel_flush(self, new_book):
 
-        EUR = s.commodities[0]
+        EUR = new_book.commodities[0]
         EUR.mnemonic = "foo"
         assert EUR.mnemonic == "foo"
-        s.cancel()
+        new_book.cancel()
         assert EUR.mnemonic == "EUR"
 
         EUR.mnemonic = "foo"
         assert EUR.mnemonic == "foo"
-        s.flush()
+        new_book.flush()
         assert EUR.mnemonic == "foo"
-        s.cancel()
+        new_book.cancel()
         assert EUR.mnemonic == "EUR"
 
         EUR.mnemonic = "foo"
-        s.save()
+        new_book.save()
         assert EUR.mnemonic == "foo"
 
-    def test_create_USD_book(self, s_USD):
-        CUR = s_USD.commodities[0]
+    def test_create_USD_book(self, new_book_USD):
+        CUR = new_book_USD.commodities[0]
         assert CUR.mnemonic == "USD"
         assert CUR.namespace == "CURRENCY"
 
     def test_create_specific_currency(self):
-        s = create_book(currency="USD")
-        CUR = s.commodities[0]
+        b = create_book(currency="USD")
+        CUR = b.commodities[0]
         assert CUR.mnemonic == "USD"
         assert CUR.namespace == "CURRENCY"
 
-        s = create_book(currency="CHF")
-        CUR = s.commodities[0]
+        b = create_book(currency="CHF")
+        CUR = b.commodities[0]
         assert CUR.mnemonic == "CHF"
         assert CUR.namespace == "CURRENCY"
 
         with pytest.raises(ValueError):
-            s = create_book(currency="ZIE")
+            b = create_book(currency="ZIE")
 
     def test_create_named_sqlite_book(self):
         # remove file if left from previous test
         if os.path.exists(db_sqlite):
             os.remove(db_sqlite)
 
+        # assert error if both sqlite_file and uri_conn are defined
+        with pytest.raises(ValueError):
+            b = create_book(db_sqlite, db_sqlite_uri)
+
         # assert creation of file
-        s = create_book(db_sqlite)
+        b = create_book(db_sqlite)
         assert os.path.exists(db_sqlite)
         t = os.path.getmtime(db_sqlite)
 
         # ensure error if no overwrite
         with pytest.raises(GnucashException):
-            s = create_book(db_sqlite)
+            b = create_book(db_sqlite)
         assert os.path.getmtime(db_sqlite) == t
         with pytest.raises(GnucashException):
-            s = create_book(uri_conn="sqlite:///{}".format(db_sqlite))
+            b = create_book(uri_conn="sqlite:///{}".format(db_sqlite))
         assert os.path.getmtime(db_sqlite) == t
         with pytest.raises(GnucashException):
-            s = create_book(db_sqlite, overwrite=False)
+            b = create_book(db_sqlite, overwrite=False)
         assert os.path.getmtime(db_sqlite) == t
 
         # if overwrite, DB is recreated
-        s = create_book(db_sqlite, overwrite=True)
+        b = create_book(db_sqlite, overwrite=True)
         assert os.path.getmtime(db_sqlite) > t
 
         # clean test
@@ -127,8 +108,8 @@ class TestBook_create_book(object):
 
     def test_create_with_FK(self):
         # create and keep FK
-        s = create_book(uri_conn=db_sqlite_uri, keep_foreign_keys=True, overwrite=True)
-        s.session.close()
+        b = create_book(uri_conn=db_sqlite_uri, keep_foreign_keys=True, overwrite=True)
+        b.session.close()
 
         insp = Inspector.from_engine(create_engine(db_sqlite_uri))
         fk_total = []
@@ -138,10 +119,94 @@ class TestBook_create_book(object):
 
     def test_create_without_FK(self):
         # create without FK
-        s = create_book(uri_conn=db_sqlite_uri, keep_foreign_keys=False, overwrite=True, echo=True)
-        s.session.close()
+        b = create_book(uri_conn=db_sqlite_uri, keep_foreign_keys=False, overwrite=True, echo=True)
+        b.session.close()
 
         insp = Inspector.from_engine(create_engine(db_sqlite_uri))
         for tbl in insp.get_table_names():
             fk = insp.get_foreign_keys(tbl)
             assert len(fk) == 0
+
+
+class TestBook_open_book(object):
+    def test_open_noarg(self):
+        with pytest.raises(ValueError):
+            open_book()
+
+    def test_open_default(self, book_uri):
+        # open book that does not exists
+        with pytest.raises(GnucashException):
+            b = open_book(uri_conn=book_uri)
+
+        # create book
+        with create_book(uri_conn=book_uri):
+            pass
+
+        # assert error if both sqlite_file and uri_conn are defined on open_book
+        with pytest.raises(ValueError):
+            b = open_book(db_sqlite, db_sqlite_uri)
+
+        # open book that exists
+        with open_book(uri_conn=book_uri) as b:
+            # try to save (raise as RO per default)
+            with pytest.raises(GnucashException):
+                b.save()
+
+            # read default currency (to check reading)
+            assert b.default_currency.mnemonic == "EUR"
+
+    def test_open_RW_backup(self, book_uri):
+        # create book
+        with create_book(uri_conn=book_uri) as b:
+            engine_type = b.session.bind.name
+
+        # open book with readonly = False (ie RW)
+        if engine_type == "postgres":
+            # raise an exception as try to do a backup on postgres which is not supported yet
+            with pytest.raises(GnucashException):
+                b = open_book(uri_conn=book_uri, readonly=False)
+
+        elif engine_type == "sqlite":
+            # delete all potential existing backup files
+            url = book_uri[len("sqlite:///"):]
+            for fn in glob.glob("{}.[0-9]*.gnucash".format(url)):
+                os.remove(fn)
+
+            # open file in RW without a backup creation
+            with open_book(uri_conn=book_uri, readonly=False, do_backup=False) as b:
+                pass
+
+            # check no backup file creation
+            assert len(glob.glob("{}.[0-9]*.gnucash".format(url))) == 0
+
+            # open file in RW without a backup creation
+            with open_book(uri_conn=book_uri, readonly=False) as b:
+                pass
+
+            # check backup file creation
+            assert len(glob.glob("{}.[0-9]*.gnucash".format(url))) == 1
+
+    def test_open_lock(self, book_uri):
+        # create book and set a lock
+        with create_book(uri_conn=book_uri) as b:
+            b.session.create_lock()
+            b.save()
+
+        # try to open locked book
+        with pytest.raises(GnucashException):
+            b = open_book(uri_conn=book_uri)
+
+        # open book specifying open_if_lock as True
+        with open_book(uri_conn=book_uri, open_if_lock=True) as b:
+            pass
+
+        # open book specifying open_if_lock as True and RW to delete lock
+        with open_book\
+                        (uri_conn=book_uri, open_if_lock=True, readonly=False, do_backup=False) as b:
+            b.session.delete_lock()
+            b.save()
+
+        # open book specifying open_if_lock as False as lock has been removed
+        with open_book(uri_conn=book_uri, open_if_lock=False) as b:
+            pass
+

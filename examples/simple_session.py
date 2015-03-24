@@ -23,7 +23,7 @@ with create_book(FILE_2) as book:
 
 # open the new file, try to open it a second time, detect the lock
 # using the session as context manager automatically release the lock and close the session
-with open_book(FILE_2,acquire_lock=True) as book:
+with open_book(FILE_2) as book:
     try:
         book_2 = open_book(FILE_2)
     except GnucashException as backend_exception:

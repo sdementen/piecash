@@ -49,7 +49,7 @@ class Version(DeclarativeBase):
 def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False, keep_foreign_keys=False, **kwargs):
     """Create a new empty GnuCash book. If both sqlite_file and uri_conn are None, then an "in memory" sqlite book is created.
 
-    :param str sqlite_file: a path to an sqlite3 file
+    :param str sqlite_file: a path to an sqlite3 file (only used if uri_conn is None)
     :param str uri_conn: a sqlalchemy connection string
     :param str currency: the ISO symbol of the default currency of the book
     :param bool overwrite: True if book should be deleted and recreated if it exists already
@@ -61,6 +61,9 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
     :raises GnucashException: if document already exists and overwrite is False
     """
     from sqlalchemy_utils.functions import database_exists, create_database, drop_database
+
+    if sqlite_file and uri_conn:
+        raise ValueError("Only one of 'sqlite_file' or 'uri_conn' argument can be defined")
 
     if uri_conn is None:
         if sqlite_file:
@@ -121,7 +124,7 @@ def open_book(sqlite_file=None,
               **kwargs):
     """Open an existing GnuCash book
 
-    :param str sqlite_file: a path to an sqlite3 file
+    :param str sqlite_file: a path to an sqlite3 file (only used if uri_conn is None)
     :param str uri_conn: a sqlalchemy connection string
     :param bool readonly: open the file as readonly (useful to play with and avoid any unwanted save)
     :param bool open_if_lock: open the file even if it is locked by another user
@@ -135,6 +138,9 @@ def open_book(sqlite_file=None,
     :raises GnucashException: if there is a lock on the file and open_if_lock is False
 
     """
+    if sqlite_file and uri_conn:
+        raise ValueError("Only one of 'sqlite_file' or 'uri_conn' argument can be defined")
+
     if uri_conn is None:
         if sqlite_file:
             uri_conn = "sqlite:///{}".format(sqlite_file)
