@@ -8,7 +8,7 @@ from sqlalchemy.sql.ddl import DropConstraint
 from sqlalchemy_utils import database_exists
 
 from .book import Book
-from ..sa_extra import create_piecash_engine, DeclarativeBase, get_foreign_keys, Session
+from ..sa_extra import create_piecash_engine, DeclarativeBase, Session
 from .._common import GnucashException
 
 
@@ -33,7 +33,7 @@ class Version(DeclarativeBase):
     __table_args__ = {}
 
     # column definitions
-    #: The name of the table
+    # : The name of the table
     table_name = Column('table_name', VARCHAR(length=50), primary_key=True, nullable=False)
     #: The version for the table
     table_version = Column('table_version', INTEGER(), nullable=False)
@@ -44,7 +44,6 @@ class Version(DeclarativeBase):
 
     def __repr__(self):
         return "Version<{}={}>".format(self.table_name, self.table_version)
-
 
 
 def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False, keep_foreign_keys=False, **kwargs):
@@ -80,16 +79,17 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
 
     engine = create_piecash_engine(uri_conn, **kwargs)
 
+    # drop FK
+    if not keep_foreign_keys:
+        for n, tbl in DeclarativeBase.metadata.tables.iteritems():
+            for fk in tbl.foreign_keys:
+                event.listen(tbl,
+                             "before_drop",
+                             DropConstraint(fk.constraint))
+
     # create all (tables, fk, ...)
     DeclarativeBase.metadata.create_all(engine)
 
-    # remove all foreign keys
-    if not keep_foreign_keys:
-        for fk in get_foreign_keys(DeclarativeBase.metadata, engine):
-            if fk.name:
-                engine.execute(DropConstraint(fk))
-
-    # start session to create initial objects
     s = Session(bind=engine)
 
     # create all rows in version table
@@ -162,7 +162,6 @@ def open_book(sqlite_file=None,
 
         shutil.copyfile(url, url_backup)
 
-
     locks = list(engine.execute(gnclock.select()))
 
     # ensure the file is not locked by GnuCash itself
@@ -203,7 +202,7 @@ def adapt_session(session, book, readonly):
     # def new_flush(*args, **kwargs):
     # if session.dirty or session.new or session.deleted:
     # session.rollback()
-    #         raise GnucashException("You cannot change the DB, it is locked !")
+    # raise GnucashException("You cannot change the DB, it is locked !")
 
     # add logic to make session readonly
     def readonly_commit(*args, **kwargs):
