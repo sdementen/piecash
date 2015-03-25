@@ -22,7 +22,7 @@ else:
 
 db_sqlite = os.path.join(test_folder, "fooze.sqlite")
 db_postgres_uri = "postgresql://postgres:@localhost:5432/foo"
-db_mysql_uri = "mysql://travis:@localhost/foo"
+db_mysql_uri = "mysql+pymysql://travis:@localhost/foo"
 db_sqlite_uri = "sqlite:///{}".format(db_sqlite)
 
 databases_to_check = [None, db_sqlite_uri]
