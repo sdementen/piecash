@@ -21,12 +21,19 @@ else:
         return execfile(fname, {})
 
 db_sqlite = os.path.join(test_folder, "fooze.sqlite")
-db_postgres_uri = "postgresql://postgres:@localhost:5432/foo"
+if os.environ.get("TRAVIS", False):
+    pg_password = ''
+else:
+    pg_password = os.environ.get("PG_PASSWORD")
+db_postgres_uri = "postgresql://postgres:{pwd}@localhost:5432/foo".format(pwd=pg_password)
 db_mysql_uri = "mysql+pymysql://travis:@localhost/foo"
 db_sqlite_uri = "sqlite:///{}".format(db_sqlite)
 
 databases_to_check = [None, db_sqlite_uri]
 if os.environ.get("TRAVIS", False):
+    databases_to_check.append(db_postgres_uri)
+    databases_to_check.append(db_mysql_uri)
+elif os.environ.get("PIECASH_DBSERVER_TEST", False):
     databases_to_check.append(db_postgres_uri)
     databases_to_check.append(db_mysql_uri)
 
@@ -47,7 +54,7 @@ def new_book(request):
 
     if name and database_exists(name):
         drop_database(name)
-    b = create_book(uri_conn=name)
+    b = create_book(uri_conn=name, keep_foreign_keys=False, echo=True)
     yield b
     b.session.close()
     if name and database_exists(name):

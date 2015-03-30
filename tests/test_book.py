@@ -8,19 +8,19 @@ from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.orm import Session
 
 from piecash import create_book, Account, GnucashException, Book, open_book
-
-from test_helper import file_template, file_for_test
-from test_helper import new_book, new_book_USD, db_sqlite_uri, db_sqlite, book_uri
+from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri
 from piecash.core import Version
 
+# dummy line to avoid removing unused symbols
+a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri
 
 class TestBook_create_book(object):
     def test_create_default(self, new_book):
         assert isinstance(new_book, Book)
         assert isinstance(new_book.session, Session)
         assert new_book.uri is not None
-        assert new_book.session.bind.name in ["sqlite", "postgresql"]
-        assert repr(new_book.query(Version).filter_by(table_name='commodities').one())=="Version<commodities=1>"
+        assert new_book.session.bind.name in ["sqlite", "postgresql", "mysql"]
+        assert repr(new_book.query(Version).filter_by(table_name='commodities').one()) == "Version<commodities=1>"
 
         EUR = new_book.commodities[0]
         assert EUR.mnemonic == "EUR"
@@ -37,7 +37,6 @@ class TestBook_create_book(object):
         assert len(new_book.slots) == 0
 
     def test_create_save_cancel_flush(self, new_book):
-
         EUR = new_book.commodities[0]
         EUR.mnemonic = "foo"
         assert EUR.mnemonic == "foo"
@@ -201,7 +200,7 @@ class TestBook_open_book(object):
             pass
 
         # open book specifying open_if_lock as True and RW to delete lock
-        with open_book\
+        with open_book \
                         (uri_conn=book_uri, open_if_lock=True, readonly=False, do_backup=False) as b:
             b.session.delete_lock()
             b.save()
@@ -210,3 +209,33 @@ class TestBook_open_book(object):
         with open_book(uri_conn=book_uri, open_if_lock=False) as b:
             pass
 
+
+class TestBook_access_book(object):
+    def test_book_options(self, new_book):
+        assert new_book.use_trading_accounts == False
+        assert new_book.use_split_action_field == False
+        assert new_book.RO_threshold_day == 0
+
+        assert len(new_book.slots) == 0
+
+        new_book.use_trading_accounts = True
+        assert new_book["options"].value == {'Accounts': {'Use Trading Accounts': 't'}}
+
+        new_book.use_split_action_field = True
+        assert new_book["options"].value == {
+            'Accounts': {'Use Split Action Field for Number': 't', 'Use Trading Accounts': 't'}}
+
+        new_book.RO_threshold_day = 50
+        assert new_book["options"].value == {'Accounts': {'Day Threshold for Read-Only Transactions (red line)': 50.0,
+                                                          'Use Split Action Field for Number': 't',
+                                                          'Use Trading Accounts': 't'}}
+
+        new_book.RO_threshold_day = 0
+        assert new_book["options"].value == {'Accounts': {'Day Threshold for Read-Only Transactions (red line)': 0.0,
+                                                          'Use Split Action Field for Number': 't',
+                                                          'Use Trading Accounts': 't'}}
+
+        new_book.use_split_action_field = False
+        assert new_book["options"].value == {'Accounts': {'Day Threshold for Read-Only Transactions (red line)': 0.0,
+                                                          'Use Split Action Field for Number': 'f',
+                                                          'Use Trading Accounts': 't'}}

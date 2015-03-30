@@ -3,8 +3,8 @@ import os
 import shutil
 import socket
 
-from sqlalchemy import event, Column, VARCHAR, INTEGER, Table
-from sqlalchemy.sql.ddl import DropConstraint
+from sqlalchemy import event, Column, VARCHAR, INTEGER, Table, PrimaryKeyConstraint, Index
+from sqlalchemy.sql.ddl import DropConstraint, DropIndex
 from sqlalchemy_utils import database_exists
 
 from .book import Book
@@ -82,14 +82,24 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
 
     engine = create_piecash_engine(uri_conn, **kwargs)
 
-    # drop FK
+    # drop constraints if we de not want to keep them (keep_foreign_keys=False), the default
     if not keep_foreign_keys:
         for n, tbl in DeclarativeBase.metadata.tables.items():
-            for cstr in tbl.constraints:
+            # drop index constraints
+            for idx in tbl.indexes:
                 event.listen(tbl,
+                             "after_create",
+                             DropIndex(idx),
+                             once=True)
+            # drop FK constraints
+            for cstr in tbl.constraints:
+                if isinstance(cstr, PrimaryKeyConstraint): continue
+                else:
+                    event.listen(tbl,
                              "before_drop",
-                             DropConstraint(cstr))
-
+                             DropConstraint(cstr),
+                                 once=True)
+    #
     # create all (tables, fk, ...)
     DeclarativeBase.metadata.create_all(engine)
 

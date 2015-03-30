@@ -11,7 +11,6 @@ from .commodity import Commodity
 
 def option(name, to_gnc, from_gnc, default=None):
     def getter(self):
-        """Return True if the book has 'Use Trading Accounts' enabled"""
         try:
             return from_gnc(self.book[name].value)
         except KeyError:
@@ -102,7 +101,7 @@ class Book(DeclarativeBaseGuid):
 
     use_split_action_field = option("options/Accounts/Use Split Action Field for Number",
                                     from_gnc=lambda v: v == 't',
-                                    to_gnc=lambda v: 't',
+                                    to_gnc=lambda v: 't' if v else 'f',
                                     default=False)
 
     RO_threshold_day = option("options/Accounts/Day Threshold for Read-Only Transactions (red line)",

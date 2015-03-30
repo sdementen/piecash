@@ -1,7 +1,7 @@
 from __future__ import division
 import datetime
 
-from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT, UniqueConstraint
+from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT, Index, UniqueConstraint
 from sqlalchemy.orm import relation
 
 from .._common import GnucashException, hybrid_property_gncnumeric
@@ -101,8 +101,13 @@ class Commodity(DeclarativeBaseGuid):
     """
     __tablename__ = 'commodities'
 
-    __table_args__ = (UniqueConstraint('namespace', 'mnemonic', name='_unique_cdty'),
-                     )
+    __table_args__ = (Index('_unique_cdty',
+                            'namespace', 'mnemonic',
+                            unique=True,
+                            mysql_length={'namespace': 200,
+                                          'mnemonic': 10},
+                            ),
+    )
 
     # column definitions
     namespace = Column('namespace', VARCHAR(length=2048), nullable=False)
