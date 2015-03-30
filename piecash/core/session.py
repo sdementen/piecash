@@ -118,9 +118,9 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
     # create commodities and initial accounts
     from .account import Account
 
-    CUR = b.currencies(mnemonic=currency)
     b.root_account = Account(name="Root Account", type="ROOT", commodity=None, book=b)
     b.root_template = Account(name="Template Root", type="ROOT", commodity=None, book=b)
+    CUR = b.currencies(mnemonic=currency)
     b.save()
 
     return b

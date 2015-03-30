@@ -218,6 +218,9 @@ class TestBook_access_book(object):
 
         assert len(new_book.slots) == 0
 
+        with pytest.raises(KeyError):
+            new_book["options"]
+
         new_book.use_trading_accounts = True
         assert new_book["options"].value == {'Accounts': {'Use Trading Accounts': 't'}}
 
@@ -239,3 +242,70 @@ class TestBook_access_book(object):
         assert new_book["options"].value == {'Accounts': {'Day Threshold for Read-Only Transactions (red line)': 0.0,
                                                           'Use Split Action Field for Number': 'f',
                                                           'Use Trading Accounts': 't'}}
+
+        del new_book["options"]
+        with pytest.raises(KeyError):
+            new_book["options"]
+
+        assert new_book.control_mode == []
+
+    def test_book_trading_accounts(self, new_book):
+        assert len(new_book.accounts) == 0
+        assert len(new_book.currencies) == 1
+
+        # get (and create on the fly) the trading account for the default currency
+        cur = new_book.default_currency
+        ncur = new_book.currencies(mnemonic="USD")
+        ta = new_book.trading_account(ncur)
+        assert len(new_book.currencies) == 2
+        assert len(new_book.accounts) == 3
+        acc = new_book.root_account.children[0]
+        assert acc.name=="Trading"
+        assert acc.commodity==cur
+        acc = acc.children[0]
+        assert acc.name== cur.namespace
+        assert acc.commodity==cur
+        acc = acc.children[0]
+        assert acc.name== ncur.mnemonic
+        assert acc.commodity== ncur
+
+        ncur = new_book.currencies(mnemonic="CAD")
+        ta = new_book.trading_account(ncur)
+        assert len(new_book.accounts) == 4
+        assert len(new_book.currencies) == 3
+
+        ncur = new_book.currencies(mnemonic="USD")
+        ta = new_book.trading_account(ncur)
+        assert len(new_book.accounts) == 4
+        assert len(new_book.currencies) == 3
+
+    def test_book_transactions(self, new_book):
+        ncur = new_book.currencies(mnemonic="CAD")
+        assert len(new_book.currencies) == 2
+        assert not new_book.is_saved
+        new_book.cancel()
+        assert new_book.is_saved
+        assert len(new_book.currencies) == 1
+        nncur = new_book.currencies(mnemonic="USD")
+        assert not new_book.is_saved
+        assert len(new_book.currencies) == 2
+        new_book.save()
+        assert new_book.is_saved
+        assert len(new_book.currencies) == 2
+        new_book.delete(nncur)
+        assert not new_book.is_saved
+        assert len(new_book.currencies) == 2
+        assert not new_book.is_saved
+        new_book.flush()
+        assert not new_book.is_saved
+        assert len(new_book.currencies) == 1
+        new_book.save()
+        assert new_book.is_saved
+        assert len(new_book.currencies) == 1
+        nncur = new_book.currencies(mnemonic="USD")
+        assert len(new_book.currencies) == 2
+        assert not new_book.is_saved
+
+
+
+

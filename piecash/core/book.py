@@ -171,6 +171,7 @@ class Book(DeclarativeBaseGuid):
                            placeholder=False,
                            commodity=cdty,
                            parent=nspc)
+        self.flush()
         return tacc
 
 
@@ -201,7 +202,7 @@ class Book(DeclarativeBaseGuid):
     def is_saved(self):
         """Save the changes to the file/DB (=commit transaction)
         """
-        self.session.is_saved
+        return self.session.is_saved
 
 
     # add context manager that close the session when leaving
@@ -286,6 +287,7 @@ class Book(DeclarativeBaseGuid):
         def fallback(mnemonic):
             cur = factories.create_currency_from_ISO(isocode=mnemonic)
             self.add(cur)
+            self.flush()
             return cur
 
         cl = CallableList(self.session.query(Commodity).filter_by(namespace="CURRENCY"))
