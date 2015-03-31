@@ -168,8 +168,6 @@ def open_book(sqlite_file=None,
     if not readonly and do_backup:
         if engine.name != "sqlite":
             raise GnucashException("Cannot do a backup for engine '{}'. Do yourself a backup and then specify do_backup=False".format(engine.name))
-        if not uri_conn.startswith("sqlite:///"):
-            raise GnucashException("Cannot create a backup for URI '{}'".format(uri_conn))
 
         url = uri_conn[len("sqlite:///"):]
         url_backup = url + ".{:%Y%m%d%H%M%S}.gnucash".format(datetime.datetime.now())

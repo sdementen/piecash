@@ -161,7 +161,7 @@ class TestBook_open_book(object):
             engine_type = b.session.bind.name
 
         # open book with readonly = False (ie RW)
-        if engine_type == "postgres":
+        if engine_type != "sqlite":
             # raise an exception as try to do a backup on postgres which is not supported yet
             with pytest.raises(GnucashException):
                 b = open_book(uri_conn=book_uri, readonly=False)
