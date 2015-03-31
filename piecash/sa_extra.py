@@ -108,8 +108,6 @@ class _Date(types.TypeDecorator):
             return types.Date()
 
 
-
-
 def mapped_to_slot_property(col, slot_name, slot_transform=lambda x: x):
     """Assume the attribute in the class as the same name as the table column with "_" prepended"""
     col_name = "_{}".format(col.name)

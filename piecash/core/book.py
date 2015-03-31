@@ -2,6 +2,7 @@ import warnings
 
 from sqlalchemy import Column, VARCHAR, ForeignKey
 from sqlalchemy.orm import relation
+from sqlalchemy.orm.exc import NoResultFound
 
 from .._declbase import DeclarativeBaseGuid
 from .._common import CallableList
@@ -17,8 +18,11 @@ def option(name, to_gnc, from_gnc, default=None):
             return default
 
     def setter(self, value):
-        if value == default and name in self.book:
-            del self.book[name]
+        if value == default:
+            try:
+                del self[name]
+            except KeyError:
+                pass
         else:
             self.book[name] = to_gnc(value)
 
@@ -152,7 +156,7 @@ class Book(DeclarativeBaseGuid):
         except KeyError:
             trading = Account(name="Trading",
                               type="TRADING",
-                              placeholder=True,
+                              placeholder=1,
                               commodity=self.default_currency,
                               parent=self.root_account)
         try:
@@ -160,7 +164,7 @@ class Book(DeclarativeBaseGuid):
         except KeyError:
             nspc = Account(name=namespace,
                            type="TRADING",
-                           placeholder=True,
+                           placeholder=1,
                            commodity=self.default_currency,
                            parent=trading)
         try:
@@ -168,7 +172,7 @@ class Book(DeclarativeBaseGuid):
         except KeyError:
             tacc = Account(name=mnemonic,
                            type="TRADING",
-                           placeholder=False,
+                           placeholder=0,
                            commodity=cdty,
                            parent=nspc)
         self.flush()
@@ -242,7 +246,11 @@ class Book(DeclarativeBaseGuid):
             object: the unique object if it exists, raises exceptions otherwise
         """
         if kwargs:
-            return self.session.query(cls).filter_by(**kwargs).one()
+            try:
+                return self.session.query(cls).filter_by(**kwargs).one()
+            except NoResultFound:
+                raise ValueError("Could not find a {}({})".format(cls.__name__,
+                                                                  kwargs))
         else:
             return self.session.query(cls)
 

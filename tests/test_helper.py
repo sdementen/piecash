@@ -54,7 +54,7 @@ def new_book(request):
 
     if name and database_exists(name):
         drop_database(name)
-    b = create_book(uri_conn=name, keep_foreign_keys=False, echo=True)
+    b = create_book(uri_conn=name, keep_foreign_keys=False)
     yield b
     b.session.close()
     if name and database_exists(name):

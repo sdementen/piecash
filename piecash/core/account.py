@@ -123,7 +123,8 @@ class Account(DeclarativeBaseGuid):
     description = Column('description', VARCHAR(length=2048))
     hidden = Column('hidden', INTEGER())
     _placeholder = Column('placeholder', INTEGER())
-    placeholder = mapped_to_slot_property(_placeholder, slot_name="placeholder",
+    placeholder = mapped_to_slot_property(_placeholder,
+                                          slot_name="placeholder",
                                           slot_transform=lambda v: "true" if v else None)
 
     # relation definitions

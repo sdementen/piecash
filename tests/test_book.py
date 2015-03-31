@@ -3,16 +3,17 @@ import os
 
 import pytest
 from sqlalchemy import create_engine
-
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.orm import Session
 
-from piecash import create_book, Account, GnucashException, Book, open_book
-from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri
+from piecash import create_book, Account, GnucashException, Book, open_book, Commodity
 from piecash.core import Version
+from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri
+
 
 # dummy line to avoid removing unused symbols
 a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri
+
 
 class TestBook_create_book(object):
     def test_create_default(self, new_book):
@@ -216,6 +217,14 @@ class TestBook_access_book(object):
         assert new_book.use_split_action_field == False
         assert new_book.RO_threshold_day == 0
 
+        new_book.use_trading_accounts = False
+        new_book.use_split_action_field = False
+        new_book.RO_threshold_day = 0
+
+        assert new_book.use_trading_accounts == False
+        assert new_book.use_split_action_field == False
+        assert new_book.RO_threshold_day == 0
+
         assert len(new_book.slots) == 0
 
         with pytest.raises(KeyError):
@@ -234,14 +243,11 @@ class TestBook_access_book(object):
                                                           'Use Trading Accounts': 't'}}
 
         new_book.RO_threshold_day = 0
-        assert new_book["options"].value == {'Accounts': {'Day Threshold for Read-Only Transactions (red line)': 0.0,
-                                                          'Use Split Action Field for Number': 't',
+        assert new_book["options"].value == {'Accounts': {'Use Split Action Field for Number': 't',
                                                           'Use Trading Accounts': 't'}}
 
         new_book.use_split_action_field = False
-        assert new_book["options"].value == {'Accounts': {'Day Threshold for Read-Only Transactions (red line)': 0.0,
-                                                          'Use Split Action Field for Number': 'f',
-                                                          'Use Trading Accounts': 't'}}
+        assert new_book["options"].value == {'Accounts': {'Use Trading Accounts': 't'}}
 
         del new_book["options"]
         with pytest.raises(KeyError):
@@ -254,20 +260,21 @@ class TestBook_access_book(object):
         assert len(new_book.currencies) == 1
 
         # get (and create on the fly) the trading account for the default currency
-        cur = new_book.default_currency
         ncur = new_book.currencies(mnemonic="USD")
+        cur = new_book.default_currency
+
         ta = new_book.trading_account(ncur)
         assert len(new_book.currencies) == 2
         assert len(new_book.accounts) == 3
         acc = new_book.root_account.children[0]
-        assert acc.name=="Trading"
-        assert acc.commodity==cur
+        assert acc.name == "Trading"
+        assert acc.commodity == cur
         acc = acc.children[0]
-        assert acc.name== cur.namespace
-        assert acc.commodity==cur
+        assert acc.name == cur.namespace
+        assert acc.commodity == cur
         acc = acc.children[0]
-        assert acc.name== ncur.mnemonic
-        assert acc.commodity== ncur
+        assert acc.name == ncur.mnemonic
+        assert acc.commodity == ncur
 
         ncur = new_book.currencies(mnemonic="CAD")
         ta = new_book.trading_account(ncur)
@@ -306,6 +313,20 @@ class TestBook_access_book(object):
         assert len(new_book.currencies) == 2
         assert not new_book.is_saved
 
+    def test_book_getters(self, new_book):
+        cur = new_book.currencies[0]
+        assert cur == new_book.get(Commodity, mnemonic=cur.mnemonic)
 
+        with pytest.raises(ValueError):
+            new_book.get(Commodity, mnemonic="FOO")
 
+        with pytest.raises(ValueError):
+            new_book.get(Commodity, mnemonic="CAD")
 
+        assert new_book.get(Commodity).all() == [cur]
+
+        assert new_book.accounts == []
+        assert new_book.transactions == []
+        assert new_book.commodities == [cur]
+        assert new_book.currencies == [cur]
+        assert new_book.prices == []
