@@ -60,13 +60,14 @@ def new_book(request):
     if name and database_exists(name):
         drop_database(name)
 
+
 @pytest.yield_fixture(params=databases_to_check)
 def new_book_USD(request):
     name = request.param
 
     if name and database_exists(name):
         drop_database(name)
-    b = create_book(uri_conn=name, currency="USD")
+    b = create_book(uri_conn=name, currency="USD", keep_foreign_keys=False)
     yield b
     b.session.close()
     if name and database_exists(name):

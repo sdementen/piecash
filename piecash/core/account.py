@@ -1,7 +1,9 @@
+from __future__ import unicode_literals
 import uuid
 
-from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER
+from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER, Index
 from sqlalchemy.orm import relation, validates
+from enum import Enum
 
 from .._declbase import DeclarativeBaseGuid
 from .._common import CallableList
@@ -17,6 +19,23 @@ trading_types = {'TRADING'}
 equity_types = {"EQUITY"}
 # : the different types of accounts
 ACCOUNT_TYPES = equity_types | income_types | expense_types | asset_types | liability_types | root_types | trading_types
+
+class AccountType(Enum):
+    root = "ROOT"
+    receivable = "RECEIVABLE"
+    mutual = "MUTUAL"
+    cash = "CASH"
+    asset = "ASSET"
+    bank = "BANK"
+    stock = "STOCK"
+    credit = "CREDIT"
+    liability = "LIABILITY"
+    payable = "PAYABLE"
+    income = "INCOME"
+    expense = "EXPENSE"
+    trading = "TRADING"
+    equity = "EQUITY"
+
 
 # types that are compatible with other types
 incexp_types = income_types | expense_types
@@ -148,12 +167,6 @@ class Account(DeclarativeBaseGuid):
                     cascade='all, delete-orphan',
                     collection_class=CallableList,
                     )
-    # root_book = relation('Book',
-    #                 back_populates='root_account',
-    #                 foreign_keys=[Book.root_account_guid],
-    #                 cascade='all, delete-orphan',
-    #                 uselist=False,
-    #                 )
     budget_amounts = relation('BudgetAmount',
                               back_populates='account',
                               cascade='all, delete-orphan',
@@ -178,6 +191,8 @@ class Account(DeclarativeBaseGuid):
                  code=None,
                  book=None):
         book = book or (commodity and commodity.book) or (parent and parent.book)
+        if not book:
+            raise ValueError("Could not find a book to attach the account to")
         book.add(self)
 
         self.name = name
@@ -208,7 +223,12 @@ class Account(DeclarativeBaseGuid):
                 if acc.name == self.name and acc != self:
                     raise ValueError("{} has two children with the same name {} : {} and {}".format(self.parent, self.name,
                                                                                                     self, acc))
-
+        else:
+            if self.type in root_types:
+                if self.name not in ['Template Root', 'Root Account']:
+                    raise ValueError("{} is a root account but has a name = '{}'".format(self, self.name))
+            else:
+                raise ValueError("{} has no parent but is not a root account".format(self))
 
     @validates('commodity')
     def observe_commodity(self, key, value):
