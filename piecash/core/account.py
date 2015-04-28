@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 import uuid
 
 from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER, Index
@@ -269,6 +268,6 @@ class Account(DeclarativeBaseGuid):
 
     def __repr__(self):
         if self.commodity:
-            return "Account<{}[{}]>".format(self.fullname, self.commodity.mnemonic)
+            return u"Account<{}[{}]>".format(self.fullname, self.commodity.mnemonic)
         else:
-            return "Account<{}>".format(self.fullname)
+            return u"Account<{}>".format(self.fullname)
