@@ -259,7 +259,7 @@ setup_dict = dict(
     ],
     packages=find_packages(exclude=(TESTS_DIRECTORY, DATA_DIRECTORY)),
     install_requires=[
-                         'SQLAlchemy!=0.9.9,<1.0.0',
+                         'SQLAlchemy<=0.9.8',
                          'enum34',
                          'SQLAlchemy-Utils',
                          'pytz',
@@ -272,7 +272,7 @@ setup_dict = dict(
         'mock',
         'py',
     ],
-    scripts=['scripts/piecash_ledger.py','scripts/piecash_toqif.py'],
+    scripts=['scripts/piecash_ledger.py', 'scripts/piecash_toqif.py'],
     cmdclass={'test': TestAllCommand},
     zip_safe=False,  # don't use eggs
 )
