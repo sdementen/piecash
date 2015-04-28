@@ -261,7 +261,7 @@ setup_dict = dict(
     install_requires=[
                          'SQLAlchemy<=0.9.8',
                          'enum34',
-                         'SQLAlchemy-Utils',
+                         'SQLAlchemy-Utils<=0.28.2',
                          'pytz',
                          'tzlocal',
                          'future',

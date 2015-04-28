@@ -3,4 +3,4 @@ tzlocal
 future
 enum34
 SQLAlchemy<=0.9.8
-SQLAlchemy-Utils
+SQLAlchemy-Utils<=0.28.2
