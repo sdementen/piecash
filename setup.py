@@ -259,9 +259,9 @@ setup_dict = dict(
     ],
     packages=find_packages(exclude=(TESTS_DIRECTORY, DATA_DIRECTORY)),
     install_requires=[
-                         'SQLAlchemy!=0.9.9',
+                         'SQLAlchemy<=0.9.8',
+                         'SQLAlchemy-Utils<=0.28.2',
                          'enum34',
-                         'SQLAlchemy-Utils',
                          'pytz',
                          'tzlocal',
                          'future',
