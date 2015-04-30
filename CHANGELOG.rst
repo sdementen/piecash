@@ -4,7 +4,7 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
-- Empty
+- fix version requirement for SA (<0.9.9) and SA-utils
 
 Version 0.7.5 (2015-03-14)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
