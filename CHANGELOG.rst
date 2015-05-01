@@ -1,8 +1,8 @@
 What's new
 ==========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.7.6 (2015-05-01)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - fix version requirement for SA (<0.9.9) and SA-utils
 
