@@ -2,6 +2,7 @@ import warnings
 
 from sqlalchemy import Column, VARCHAR, ForeignKey
 from sqlalchemy.orm import relation
+from sqlalchemy.orm.exc import NoResultFound
 
 from .._declbase import DeclarativeBaseGuid
 from .._common import CallableList
@@ -11,15 +12,17 @@ from .commodity import Commodity
 
 def option(name, to_gnc, from_gnc, default=None):
     def getter(self):
-        """Return True if the book has 'Use Trading Accounts' enabled"""
         try:
             return from_gnc(self.book[name].value)
         except KeyError:
             return default
 
     def setter(self, value):
-        if value == default and name in self.book:
-            del self.book[name]
+        if value == default:
+            try:
+                del self[name]
+            except KeyError:
+                pass
         else:
             self.book[name] = to_gnc(value)
 
@@ -102,7 +105,7 @@ class Book(DeclarativeBaseGuid):
 
     use_split_action_field = option("options/Accounts/Use Split Action Field for Number",
                                     from_gnc=lambda v: v == 't',
-                                    to_gnc=lambda v: 't',
+                                    to_gnc=lambda v: 't' if v else 'f',
                                     default=False)
 
     RO_threshold_day = option("options/Accounts/Day Threshold for Read-Only Transactions (red line)",
@@ -114,8 +117,8 @@ class Book(DeclarativeBaseGuid):
         self.root_account = root_account
         self.root_template = root_template
 
-    def __repr__(self):
-        return "<Book {}>".format(self.uri)
+    def __unirepr__(self):
+        return u"Book<{}>".format(self.uri)
 
 
     _control_mode = None
@@ -153,7 +156,7 @@ class Book(DeclarativeBaseGuid):
         except KeyError:
             trading = Account(name="Trading",
                               type="TRADING",
-                              placeholder=True,
+                              placeholder=1,
                               commodity=self.default_currency,
                               parent=self.root_account)
         try:
@@ -161,7 +164,7 @@ class Book(DeclarativeBaseGuid):
         except KeyError:
             nspc = Account(name=namespace,
                            type="TRADING",
-                           placeholder=True,
+                           placeholder=1,
                            commodity=self.default_currency,
                            parent=trading)
         try:
@@ -169,9 +172,10 @@ class Book(DeclarativeBaseGuid):
         except KeyError:
             tacc = Account(name=mnemonic,
                            type="TRADING",
-                           placeholder=False,
+                           placeholder=0,
                            commodity=cdty,
                            parent=nspc)
+        # self.flush()
         return tacc
 
 
@@ -202,7 +206,7 @@ class Book(DeclarativeBaseGuid):
     def is_saved(self):
         """Save the changes to the file/DB (=commit transaction)
         """
-        self.session.is_saved
+        return self.session.is_saved
 
 
     # add context manager that close the session when leaving
@@ -242,7 +246,11 @@ class Book(DeclarativeBaseGuid):
             object: the unique object if it exists, raises exceptions otherwise
         """
         if kwargs:
-            return self.session.query(cls).filter_by(**kwargs).one()
+            try:
+                return self.session.query(cls).filter_by(**kwargs).one()
+            except NoResultFound:
+                raise ValueError("Could not find a {}({})".format(cls.__name__,
+                                                                  kwargs))
         else:
             return self.session.query(cls)
 
@@ -287,6 +295,7 @@ class Book(DeclarativeBaseGuid):
         def fallback(mnemonic):
             cur = factories.create_currency_from_ISO(isocode=mnemonic)
             self.add(cur)
+            # self.flush()
             return cur
 
         cl = CallableList(self.session.query(Commodity).filter_by(namespace="CURRENCY"))

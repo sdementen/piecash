@@ -1,7 +1,6 @@
 from decimal import Decimal
 
-from sqlalchemy import Column, VARCHAR, INTEGER, cast, Float, DECIMAL
-from sqlalchemy.ext.compiler import compiles
+from sqlalchemy import Column, VARCHAR, INTEGER, cast, Float
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from .sa_extra import DeclarativeBase, _Date, long
@@ -26,7 +25,7 @@ class Recurrence(DeclarativeBase):
 
     # column definitions
     id = Column('id', INTEGER(), primary_key=True, nullable=False)
-    obj_guid = Column('obj_guid', VARCHAR(length=32),nullable=False)
+    obj_guid = Column('obj_guid', VARCHAR(length=32), nullable=False)
     recurrence_mult = Column('recurrence_mult', INTEGER(), nullable=False)
     recurrence_period_type = Column('recurrence_period_type', VARCHAR(length=2048), nullable=False)
     recurrence_period_start = Column('recurrence_period_start', _Date(), nullable=False)
@@ -34,10 +33,9 @@ class Recurrence(DeclarativeBase):
 
     # relation definitions
     # added from the DeclarativeBaseGUID object (as linked from different objects like the slots)
-    def __repr__(self):
-        return "{}*{} from {} [{}]".format(self.recurrence_period_type,self.recurrence_mult,
-                                           self.recurrence_period_start, self.recurrence_weekend_adjust)
-
+    def __unirepr__(self):
+        return u"{}*{} from {} [{}]".format(self.recurrence_period_type, self.recurrence_mult,
+                                            self.recurrence_period_start, self.recurrence_weekend_adjust)
 
 
 class Address(object):
@@ -51,7 +49,8 @@ class Address(object):
         return tuple(self)
 
     def __eq__(self, other):
-        return isinstance(other, Address) and all(getattr(other, fld) == getattr(self, fld) for fld in Address._address_fields)
+        return isinstance(other, Address) and all(
+            getattr(other, fld) == getattr(self, fld) for fld in Address._address_fields)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -67,6 +66,7 @@ def hybrid_property_gncnumeric(num_col, denom_col):
     """
     num_name, denom_name = "_{}".format(num_col.name), "_{}".format(denom_col.name)
     name = num_col.name.split("_")[0]
+
     def fset(self, d):
         if d is None:
             num, denom = None, None

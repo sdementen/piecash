@@ -15,46 +15,6 @@ from .book import Book
 from .account import Account
 
 
-"""
-Examples of transaction and splits (with value and quantity) for several transactions,
-some mono-currency (in default or foreign currency), some multi-currency
-
-Commodity<CURRENCY:EUR>    salary
-    [Commodity<CURRENCY:EUR>] -1000 / -1000 for Account<Income>
-    [Commodity<CURRENCY:EUR>] 1000 / 1000 for Account<Assets:Current Assets:Checking Account>
-Commodity<CURRENCY:EUR>    transfert to US account
-    [Commodity<CURRENCY:EUR>] -400 / -400 for Account<Assets:Current Assets:Checking Account>
-    [Commodity<CURRENCY:USD>] 400 / 448.15 for Account<Assets:Current Assets:CheckAcc USD>
-    [Commodity<CURRENCY:USD>] -400 / -448.15 for Account<Trading:CURRENCY:USD>
-    [Commodity<CURRENCY:EUR>] 400 / 400 for Account<Trading:CURRENCY:EUR>
-Commodity<CURRENCY:EUR>    other transfer + expense
-    [Commodity<CURRENCY:EUR>] -210 / -210 for Account<Assets:Current Assets:Checking Account>
-    [Commodity<CURRENCY:USD>] 182.85 / 213.21 for Account<Assets:Current Assets:CheckAcc USD>
-    [Commodity<CURRENCY:USD>] -182.85 / -213.21 for Account<Trading:CURRENCY:USD>
-    [Commodity<CURRENCY:EUR>] 182.85 / 182.85 for Account<Trading:CURRENCY:EUR>
-    [Commodity<CURRENCY:EUR>] 17.15 / 17.15 for Account<Expenses>
-    [Commodity<CURRENCY:EUR>] 10 / 10 for Account<Imbalance-EUR>
-Commodity<CURRENCY:USD>    bonus
-    [Commodity<CURRENCY:USD>] -150 / -150 for Account<Income:income in usd>
-    [Commodity<CURRENCY:USD>] 150 / 150 for Account<Assets:Current Assets:CheckAcc USD>
-Commodity<CURRENCY:USD>    retransfer
-    [Commodity<CURRENCY:USD>] -100 / -100 for Account<Assets:Current Assets:CheckAcc USD>
-    [Commodity<CURRENCY:EUR>] 100 / 90 for Account<Assets:Current Assets:Checking Account>
-    [Commodity<CURRENCY:EUR>] -100 / -90 for Account<Trading:CURRENCY:EUR>
-    [Commodity<CURRENCY:USD>] 100 / 100 for Account<Trading:CURRENCY:USD>
-Commodity<CURRENCY:CAD>    cross CAD to USD transfer
-    [Commodity<CURRENCY:CAD>] 30 / 30 for Account<Assets:Current Assets:CheckAcc CAD>
-    [Commodity<CURRENCY:USD>] -30 / -26.27 for Account<Assets:Current Assets:CheckAcc USD>
-    [Commodity<CURRENCY:USD>] 30 / 26.27 for Account<Trading:CURRENCY:USD>
-    [Commodity<CURRENCY:CAD>] -30 / -30 for Account<Trading:CURRENCY:CAD>
-Commodity<CURRENCY:USD>    cross CAD to USD transfer (initiated from USD account)
-    [Commodity<CURRENCY:USD>] -26.27 / -26.27 for Account<Assets:Current Assets:CheckAcc USD>
-    [Commodity<CURRENCY:CAD>] 26.27 / 30 for Account<Assets:Current Assets:CheckAcc CAD>
-    [Commodity<CURRENCY:CAD>] -26.27 / -30 for Account<Trading:CURRENCY:CAD>
-    [Commodity<CURRENCY:USD>] 26.27 / 26.27 for Account<Trading:CURRENCY:USD>
-    """
-
-
 class Split(DeclarativeBaseGuid):
     """
     A GnuCash Split.
@@ -125,7 +85,7 @@ class Split(DeclarativeBaseGuid):
         self.reconcile_state = reconcile_state
         self.lot = lot
 
-    def __repr__(self):
+    def __unirepr__(self):
         try:
             cur = self.transaction.currency.mnemonic
             acc = self.account
@@ -135,22 +95,22 @@ class Split(DeclarativeBaseGuid):
                 sched_xaction = self["sched-xaction"]
                 credit = sched_xaction["credit-formula"].value
                 debit = sched_xaction["debit-formula"].value
-                return "<SplitTemplate {} {} {}>".format(sched_xaction["account"].value,
+                return u"SplitTemplate<{} {} {}>".format(sched_xaction["account"].value,
                                                          "credit={}".format(credit) if credit else "",
                                                          "debit={}".format(debit) if debit else "",
 
                 )
             elif cur == com:
                 # case of same currency split
-                return "<Split {} {} {}>".format(acc,
+                return u"Split<{} {} {}>".format(acc,
                                                  self.value, cur)
             else:
                 # case of non currency split
-                return "<Split {} {} {} [{} {}]>".format(acc,
+                return u"Split<{} {} {} [{} {}]>".format(acc,
                                                          self.value, cur,
                                                          self.quantity, com)
         except AttributeError:
-            return "<Split {}>".format(self.account)
+            return u"Split<{}>".format(self.account)
 
     def object_to_validate(self, change):
         yield self
@@ -236,8 +196,8 @@ class Transaction(DeclarativeBaseGuid):
         if splits:
             self.splits = splits
 
-    def __repr__(self):
-        return "<Transaction[{}] '{}' on {:%Y-%m-%d}{}>".format(self.currency.mnemonic,
+    def __unirepr__(self):
+        return u"Transaction<[{}] '{}' on {:%Y-%m-%d}{}>".format(self.currency.mnemonic,
                                                                 self.description,
                                                                 self.post_date,
                                                                 " (from sch tx)" if self.scheduled_transaction else "")
@@ -369,8 +329,8 @@ class ScheduledTransaction(DeclarativeBaseGuid):
                           uselist=False,
     )
 
-    def __repr__(self):
-        return "<ScheduledTransaction '{}' {}>".format(self.name, self.recurrence)
+    def __unirepr__(self):
+        return u"ScheduledTransaction<'{}' {}>".format(self.name, self.recurrence)
 
 
 class Lot(DeclarativeBaseGuid):
