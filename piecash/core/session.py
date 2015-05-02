@@ -3,12 +3,12 @@ import os
 import shutil
 import socket
 
-from sqlalchemy import event, Column, VARCHAR, INTEGER, Table
-from sqlalchemy.sql.ddl import DropConstraint
+from sqlalchemy import event, Column, VARCHAR, INTEGER, Table, PrimaryKeyConstraint, Index
+from sqlalchemy.sql.ddl import DropConstraint, DropIndex
 from sqlalchemy_utils import database_exists
 
 from .book import Book
-from ..sa_extra import create_piecash_engine, DeclarativeBase, get_foreign_keys, Session
+from ..sa_extra import create_piecash_engine, DeclarativeBase, Session
 from .._common import GnucashException
 
 
@@ -33,7 +33,7 @@ class Version(DeclarativeBase):
     __table_args__ = {}
 
     # column definitions
-    #: The name of the table
+    # : The name of the table
     table_name = Column('table_name', VARCHAR(length=50), primary_key=True, nullable=False)
     #: The version for the table
     table_version = Column('table_version', INTEGER(), nullable=False)
@@ -42,15 +42,14 @@ class Version(DeclarativeBase):
         self.table_name = table_name
         self.table_version = table_version
 
-    def __repr__(self):
-        return "Version<{}={}>".format(self.table_name, self.table_version)
-
+    def __unirepr__(self):
+        return u"Version<{}={}>".format(self.table_name, self.table_version)
 
 
 def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False, keep_foreign_keys=False, **kwargs):
     """Create a new empty GnuCash book. If both sqlite_file and uri_conn are None, then an "in memory" sqlite book is created.
 
-    :param str sqlite_file: a path to an sqlite3 file
+    :param str sqlite_file: a path to an sqlite3 file (only used if uri_conn is None)
     :param str uri_conn: a sqlalchemy connection string
     :param str currency: the ISO symbol of the default currency of the book
     :param bool overwrite: True if book should be deleted and recreated if it exists already
@@ -62,6 +61,9 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
     :raises GnucashException: if document already exists and overwrite is False
     """
     from sqlalchemy_utils.functions import database_exists, create_database, drop_database
+
+    if sqlite_file and uri_conn:
+        raise ValueError("Only one of 'sqlite_file' or 'uri_conn' argument can be defined")
 
     if uri_conn is None:
         if sqlite_file:
@@ -80,16 +82,27 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
 
     engine = create_piecash_engine(uri_conn, **kwargs)
 
+    # drop constraints if we de not want to keep them (keep_foreign_keys=False), the default
+    if not keep_foreign_keys:
+        for n, tbl in DeclarativeBase.metadata.tables.items():
+            # drop index constraints
+            for idx in tbl.indexes:
+                event.listen(tbl,
+                             "after_create",
+                             DropIndex(idx),
+                             once=True)
+            # drop FK constraints
+            for cstr in tbl.constraints:
+                if isinstance(cstr, PrimaryKeyConstraint): continue
+                else:
+                    event.listen(tbl,
+                             "before_drop",
+                             DropConstraint(cstr),
+                                 once=True)
+    #
     # create all (tables, fk, ...)
     DeclarativeBase.metadata.create_all(engine)
 
-    # remove all foreign keys
-    if not keep_foreign_keys:
-        for fk in get_foreign_keys(DeclarativeBase.metadata, engine):
-            if fk.name:
-                engine.execute(DropConstraint(fk))
-
-    # start session to create initial objects
     s = Session(bind=engine)
 
     # create all rows in version table
@@ -105,9 +118,9 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
     # create commodities and initial accounts
     from .account import Account
 
-    CUR = b.currencies(mnemonic=currency)
     b.root_account = Account(name="Root Account", type="ROOT", commodity=None, book=b)
     b.root_template = Account(name="Template Root", type="ROOT", commodity=None, book=b)
+    CUR = b.currencies(mnemonic=currency)
     b.save()
 
     return b
@@ -115,16 +128,14 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
 
 def open_book(sqlite_file=None,
               uri_conn=None,
-              acquire_lock=True,
               readonly=True,
               open_if_lock=False,
               do_backup=True,
               **kwargs):
     """Open an existing GnuCash book
 
-    :param str sqlite_file: a path to an sqlite3 file
+    :param str sqlite_file: a path to an sqlite3 file (only used if uri_conn is None)
     :param str uri_conn: a sqlalchemy connection string
-    :param bool acquire_lock: acquire a lock on the file
     :param bool readonly: open the file as readonly (useful to play with and avoid any unwanted save)
     :param bool open_if_lock: open the file even if it is locked by another user
         (using open_if_lock=True with readonly=False is not recommended)
@@ -137,6 +148,9 @@ def open_book(sqlite_file=None,
     :raises GnucashException: if there is a lock on the file and open_if_lock is False
 
     """
+    if sqlite_file and uri_conn:
+        raise ValueError("Only one of 'sqlite_file' or 'uri_conn' argument can be defined")
+
     if uri_conn is None:
         if sqlite_file:
             uri_conn = "sqlite:///{}".format(sqlite_file)
@@ -154,14 +168,11 @@ def open_book(sqlite_file=None,
     if not readonly and do_backup:
         if engine.name != "sqlite":
             raise GnucashException("Cannot do a backup for engine '{}'. Do yourself a backup and then specify do_backup=False".format(engine.name))
-        if not uri_conn.startswith("sqlite:///"):
-            raise GnucashException("Cannot create a backup for URI '{}'".format(uri_conn))
 
         url = uri_conn[len("sqlite:///"):]
         url_backup = url + ".{:%Y%m%d%H%M%S}.gnucash".format(datetime.datetime.now())
 
         shutil.copyfile(url, url_backup)
-
 
     locks = list(engine.execute(gnclock.select()))
 
@@ -199,11 +210,12 @@ def adapt_session(session, book, readonly):
     # link session and book together
     book.session = session
     session.book = book
+    book.uri = session.bind.url
 
     # def new_flush(*args, **kwargs):
     # if session.dirty or session.new or session.deleted:
     # session.rollback()
-    #         raise GnucashException("You cannot change the DB, it is locked !")
+    # raise GnucashException("You cannot change the DB, it is locked !")
 
     # add logic to make session readonly
     def readonly_commit(*args, **kwargs):

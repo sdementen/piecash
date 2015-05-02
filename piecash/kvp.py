@@ -172,8 +172,8 @@ class Slot(DeclarativeBase):
         if value is not None:
             self.value = value
 
-    def __repr__(self):
-        return "<{} {}={}>".format(self.__class__.__name__, self.name, self.value)
+    def __unirepr__(self):
+        return u"<{} {}={}>".format(self.__class__.__name__, self.name, self.value)
 
 
 class SlotSimple(Slot):

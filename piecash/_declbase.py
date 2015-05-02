@@ -1,4 +1,5 @@
 import uuid
+import unicodedata
 
 from sqlalchemy import Column, VARCHAR, event, inspect
 from sqlalchemy.orm import relation, foreign, object_session
@@ -36,5 +37,4 @@ class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):
                     s.expunge(value)
                 else:
                     s.delete(value)
-
 

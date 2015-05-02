@@ -1,5 +1,8 @@
 import os.path
 import sys
+import pytest
+from sqlalchemy_utils import database_exists, drop_database
+from piecash import create_book
 
 test_folder = os.path.dirname(os.path.realpath(__file__))
 book_folder = os.path.join(test_folder, "..", "gnucash_books")
@@ -16,3 +19,56 @@ if sys.version_info.major==3:
 else:
     def run_file(fname):
         return execfile(fname, {})
+
+db_sqlite = os.path.join(test_folder, "fooze.sqlite")
+if os.environ.get("TRAVIS", False):
+    pg_password = ''
+else:
+    pg_password = os.environ.get("PG_PASSWORD")
+db_postgres_uri = "postgresql://postgres:{pwd}@localhost:5432/foo".format(pwd=pg_password)
+db_mysql_uri = "mysql+pymysql://travis:@localhost/foo"
+db_sqlite_uri = "sqlite:///{}".format(db_sqlite)
+
+databases_to_check = [None, db_sqlite_uri]
+if os.environ.get("TRAVIS", False):
+    databases_to_check.append(db_postgres_uri)
+    databases_to_check.append(db_mysql_uri)
+elif os.environ.get("PIECASH_DBSERVER_TEST", False):
+    databases_to_check.append(db_postgres_uri)
+    databases_to_check.append(db_mysql_uri)
+
+@pytest.yield_fixture(params=databases_to_check[1:])
+def book_uri(request):
+    name = request.param
+
+    if name and database_exists(name):
+        drop_database(name)
+    yield name
+
+    if name and database_exists(name):
+        drop_database(name)
+
+@pytest.yield_fixture(params=databases_to_check)
+def new_book(request):
+    name = request.param
+
+    if name and database_exists(name):
+        drop_database(name)
+    b = create_book(uri_conn=name, keep_foreign_keys=False)
+    yield b
+    b.session.close()
+    if name and database_exists(name):
+        drop_database(name)
+
+
+@pytest.yield_fixture(params=databases_to_check)
+def new_book_USD(request):
+    name = request.param
+
+    if name and database_exists(name):
+        drop_database(name)
+    b = create_book(uri_conn=name, currency="USD", keep_foreign_keys=False)
+    yield b
+    b.session.close()
+    if name and database_exists(name):
+        drop_database(name)

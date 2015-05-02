@@ -1,7 +1,7 @@
 from __future__ import division
 import datetime
 
-from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT, UniqueConstraint
+from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT, Index, UniqueConstraint
 from sqlalchemy.orm import relation
 
 from .._common import GnucashException, hybrid_property_gncnumeric
@@ -70,8 +70,8 @@ class Price(DeclarativeBaseGuid):
         self.type = type
         self.source = source
 
-    def __repr__(self):
-        return "<Price {:%Y-%m-%d} : {} {}/{}>".format(self.date,
+    def __unirepr__(self):
+        return u"Price<{:%Y-%m-%d} : {} {}/{}>".format(self.date,
                                                        self.value,
                                                        self.currency.mnemonic,
                                                        self.commodity.mnemonic)
@@ -101,8 +101,13 @@ class Commodity(DeclarativeBaseGuid):
     """
     __tablename__ = 'commodities'
 
-    __table_args__ = (UniqueConstraint('namespace', 'mnemonic', name='_unique_cdty'),
-                     )
+    __table_args__ = (Index('_unique_cdty',
+                            'namespace', 'mnemonic',
+                            unique=True,
+                            mysql_length={'namespace': 200,
+                                          'mnemonic': 10},
+                            ),
+    )
 
     # column definitions
     namespace = Column('namespace', VARCHAR(length=2048), nullable=False)
@@ -179,8 +184,8 @@ class Commodity(DeclarativeBaseGuid):
         self.quote_source = quote_source
         self.quote_tz = quote_tz
 
-    def __repr__(self):
-        return "Commodity<{}:{}>".format(self.namespace, self.mnemonic)
+    def __unirepr__(self):
+        return u"Commodity<{}:{}>".format(self.namespace, self.mnemonic)
 
     def update_prices(self, start_date=None):
         """
