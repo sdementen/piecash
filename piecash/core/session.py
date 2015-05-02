@@ -42,8 +42,8 @@ class Version(DeclarativeBase):
         self.table_name = table_name
         self.table_version = table_version
 
-    def __repr__(self):
-        return "Version<{}={}>".format(self.table_name, self.table_version)
+    def __unirepr__(self):
+        return u"Version<{}={}>".format(self.table_name, self.table_version)
 
 
 def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False, keep_foreign_keys=False, **kwargs):

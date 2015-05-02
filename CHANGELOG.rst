@@ -1,6 +1,13 @@
 What's new
 ==========
 
+In development
+~~~~~~~~~~~~~~
+
+- get 100% coverage on book and account module
+- fix repr and str representations of all objects to be compatible py2 and py3
+
+
 Version 0.7.6 (2015-05-01)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 

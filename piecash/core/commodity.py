@@ -70,8 +70,8 @@ class Price(DeclarativeBaseGuid):
         self.type = type
         self.source = source
 
-    def __repr__(self):
-        return "<Price {:%Y-%m-%d} : {} {}/{}>".format(self.date,
+    def __unirepr__(self):
+        return u"Price<{:%Y-%m-%d} : {} {}/{}>".format(self.date,
                                                        self.value,
                                                        self.currency.mnemonic,
                                                        self.commodity.mnemonic)
@@ -184,8 +184,8 @@ class Commodity(DeclarativeBaseGuid):
         self.quote_source = quote_source
         self.quote_tz = quote_tz
 
-    def __repr__(self):
-        return "Commodity<{}:{}>".format(self.namespace, self.mnemonic)
+    def __unirepr__(self):
+        return u"Commodity<{}:{}>".format(self.namespace, self.mnemonic)
 
     def update_prices(self, start_date=None):
         """

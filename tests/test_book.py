@@ -264,6 +264,7 @@ class TestBook_access_book(object):
         cur = new_book.default_currency
 
         ta = new_book.trading_account(ncur)
+        new_book.flush()
         assert len(new_book.currencies) == 2
         assert len(new_book.accounts) == 3
         acc = new_book.root_account.children[0]
@@ -278,6 +279,7 @@ class TestBook_access_book(object):
 
         ncur = new_book.currencies(mnemonic="CAD")
         ta = new_book.trading_account(ncur)
+        new_book.flush()
         assert len(new_book.accounts) == 4
         assert len(new_book.currencies) == 3
 
@@ -288,12 +290,14 @@ class TestBook_access_book(object):
 
     def test_book_transactions(self, new_book):
         ncur = new_book.currencies(mnemonic="CAD")
+        new_book.flush()
         assert len(new_book.currencies) == 2
         assert not new_book.is_saved
         new_book.cancel()
         assert new_book.is_saved
         assert len(new_book.currencies) == 1
         nncur = new_book.currencies(mnemonic="USD")
+        new_book.flush()
         assert not new_book.is_saved
         assert len(new_book.currencies) == 2
         new_book.save()
@@ -310,6 +314,7 @@ class TestBook_access_book(object):
         assert new_book.is_saved
         assert len(new_book.currencies) == 1
         nncur = new_book.currencies(mnemonic="USD")
+        new_book.flush()
         assert len(new_book.currencies) == 2
         assert not new_book.is_saved
 

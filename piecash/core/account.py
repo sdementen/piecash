@@ -266,8 +266,8 @@ class Account(DeclarativeBaseGuid):
     def is_template(self):
         return self.commodity.namespace == 'template'
 
-    def __repr__(self):
+    def __unirepr__(self):
         if self.commodity:
-            return u"Account<{}[{}]>".format(self.fullname, self.commodity.mnemonic)
+            return u"Account<{0.fullname}[{0.commodity.mnemonic}]>".format(self)
         else:
-            return u"Account<{}>".format(self.fullname)
+            return u"Account<{0.fullname}>".format(self)

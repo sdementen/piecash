@@ -117,8 +117,8 @@ class Book(DeclarativeBaseGuid):
         self.root_account = root_account
         self.root_template = root_template
 
-    def __repr__(self):
-        return "<Book {}>".format(self.uri)
+    def __unirepr__(self):
+        return u"Book<{}>".format(self.uri)
 
 
     _control_mode = None
@@ -175,7 +175,7 @@ class Book(DeclarativeBaseGuid):
                            placeholder=0,
                            commodity=cdty,
                            parent=nspc)
-        self.flush()
+        # self.flush()
         return tacc
 
 
@@ -295,7 +295,7 @@ class Book(DeclarativeBaseGuid):
         def fallback(mnemonic):
             cur = factories.create_currency_from_ISO(isocode=mnemonic)
             self.add(cur)
-            self.flush()
+            # self.flush()
             return cur
 
         cl = CallableList(self.session.query(Commodity).filter_by(namespace="CURRENCY"))
