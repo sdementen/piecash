@@ -12,6 +12,7 @@ from sqlalchemy.orm import sessionmaker, object_session
 import tzlocal
 import pytz
 from sqlalchemy.orm.base import instance_state
+import unicodedata
 
 
 if sys.version > '3':
@@ -50,6 +51,24 @@ class DeclarativeBase(object):
 
     def object_beforechange(self):
         return instance_state(self).committed_state
+
+
+    if sys.version > '3':
+        def __str__(self):
+            return self.__unirepr__()
+
+        def __repr__(self):
+            return self.__unirepr__()
+
+    else:
+        def __str__(self):
+            return unicodedata.normalize('NFKD', self.__unirepr__()).encode('ascii', 'ignore')
+
+        def __repr__(self):
+            return self.__unirepr__().encode('ascii', errors='backslashreplace')
+
+    def __unicode__(self):
+        return self.__unirepr__()
 
 
 tz = tzlocal.get_localzone()
@@ -106,8 +125,6 @@ class _Date(types.TypeDecorator):
             )
         else:
             return types.Date()
-
-
 
 
 def mapped_to_slot_property(col, slot_name, slot_transform=lambda x: x):

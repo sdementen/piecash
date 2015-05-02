@@ -4,7 +4,14 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
-- Empty
+- get 100% coverage on book and account module
+- fix repr and str representations of all objects to be compatible py2 and py3
+
+
+Version 0.7.6 (2015-05-01)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- fix version requirement for SA (<0.9.9) and SA-utils
 
 Version 0.7.5 (2015-03-14)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

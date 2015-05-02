@@ -33,7 +33,7 @@ def book_readonly_lock(request):
     shutil.copyfile(file_template, file_for_test)
 
     # default session is readonly
-    book = open_book(file_for_test, acquire_lock=True)
+    book = open_book(file_for_test)
 
     def close_s():
         book.session.close()

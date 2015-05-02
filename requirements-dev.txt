@@ -5,6 +5,8 @@
 pytest==2.5.1
 py==1.4.19
 tox
+psycopg2
+PyMySQL
 
 # Linting
 flake8==2.1.0
