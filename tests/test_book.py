@@ -14,7 +14,6 @@ from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_u
 # dummy line to avoid removing unused symbols
 a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri
 
-
 class TestBook_create_book(object):
     def test_create_default(self, new_book):
         assert isinstance(new_book, Book)

@@ -47,21 +47,43 @@ class Version(DeclarativeBase):
         return u"Version<{}={}>".format(self.table_name, self.table_version)
 
 
-def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False, keep_foreign_keys=False, **kwargs):
-    """Create a new empty GnuCash book. If both sqlite_file and uri_conn are None, then an "in memory" sqlite book is created.
+def build_uri(sqlite_file=None,
+              uri_conn=None,
+              db_type=None,
+              db_user=None,
+              db_password=None,
+              db_name=None,
+              db_host=None,
+              db_port=None, ):
+    """Create the connection string in function of some choices.
 
     :param str sqlite_file: a path to an sqlite3 file (only used if uri_conn is None)
     :param str uri_conn: a sqlalchemy connection string
-    :param str currency: the ISO symbol of the default currency of the book
-    :param bool overwrite: True if book should be deleted and recreated if it exists already
-    :param bool keep_foreign_keys: True if the foreign keys should be kept (may not work at all with GnuCash)
+    :param str db_type: type of database in ["postgres","mysql"]
+    :param str db_user: username of database
+    :param str db_password: password for the use of database
+    :param str db_name: name of database
+    :param str db_host: host of database
+    :param str db_port: port of database
 
-    :return: the document as a gnucash session
-    :rtype: :class:`GncSession`
-
-    :raises GnucashException: if document already exists and overwrite is False
+    :return: the connection string
+    :rtype: str
     """
-    from sqlalchemy_utils.functions import database_exists, create_database, drop_database
+    db_config = (db_type, db_host, db_port, db_name, db_user, db_password)
+    db_config_isdefined = map(lambda x: x is not None, db_config[:-1])
+    if any(db_config_isdefined):
+        if not all(db_config_isdefined):
+            raise ValueError("When using db_* arguments, all must be specified : {}".format(db_config))
+
+        uri_conn = {"postgres": "postgresql://{username}:{password}@{host}:{port}/{name}",
+                    "mysql": "mysql+pymysql://{username}:{password}@{host}:{port}/{name}?charset=utf8",
+        }[db_type].format(username=db_user, password=db_password,
+                          host=db_host, port=db_port,
+                          name=db_name)
+
+    # db_postgres_uri = "postgresql://postgres:{pwd}@localhost:5432/foo".format(pwd=pg_password)
+    # db_mysql_uri = "mysql+pymysql://travis:@localhost/foo?charset=utf8"
+    # db_sqlite_uri = "sqlite:///{}".format(db_sqlite)
 
     if sqlite_file and uri_conn:
         raise ValueError("Only one of 'sqlite_file' or 'uri_conn' argument can be defined")
@@ -71,6 +93,44 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
             uri_conn = "sqlite:///{}".format(sqlite_file)
         else:
             uri_conn = "sqlite:///:memory:"
+
+    return uri_conn
+
+
+def create_book(sqlite_file=None,
+                uri_conn=None,
+                currency="EUR",
+                overwrite=False,
+                keep_foreign_keys=False,
+                db_type=None,
+                db_user=None,
+                db_password=None,
+                db_name=None,
+                db_host=None,
+                db_port=None,
+                **kwargs):
+    """Create a new empty GnuCash book. If both sqlite_file and uri_conn are None, then an "in memory" sqlite book is created.
+
+    :param str sqlite_file: a path to an sqlite3 file (only used if uri_conn is None)
+    :param str uri_conn: a sqlalchemy connection string
+    :param str currency: the ISO symbol of the default currency of the book
+    :param bool overwrite: True if book should be deleted and recreated if it exists already
+    :param bool keep_foreign_keys: True if the foreign keys should be kept (may not work at all with GnuCash)
+    :param str db_type: type of database in ["postgres","mysql"]
+    :param str db_user: username of database
+    :param str db_password: password for the use of database
+    :param str db_name: name of database
+    :param str db_host: host of database
+    :param str db_port: port of database
+
+    :return: the document as a gnucash session
+    :rtype: :class:`GncSession`
+
+    :raises GnucashException: if document already exists and overwrite is False
+    """
+    from sqlalchemy_utils.functions import database_exists, create_database, drop_database
+
+    uri_conn = build_uri(sqlite_file, uri_conn, db_type, db_user, db_password, db_name, db_host, db_port)
 
     # create database (if DB is not a sqlite in memory)
     if uri_conn != "sqlite:///:memory:":
@@ -133,6 +193,12 @@ def open_book(sqlite_file=None,
               readonly=True,
               open_if_lock=False,
               do_backup=True,
+              db_type=None,
+              db_user=None,
+              db_password=None,
+              db_name=None,
+              db_host=None,
+              db_port=None,
               **kwargs):
     """Open an existing GnuCash book
 
@@ -150,14 +216,7 @@ def open_book(sqlite_file=None,
     :raises GnucashException: if there is a lock on the file and open_if_lock is False
 
     """
-    if sqlite_file and uri_conn:
-        raise ValueError("Only one of 'sqlite_file' or 'uri_conn' argument can be defined")
-
-    if uri_conn is None:
-        if sqlite_file:
-            uri_conn = "sqlite:///{}".format(sqlite_file)
-        else:
-            raise ValueError("One sqlite_file and uri_conn arguments should be given.")
+    uri_conn = build_uri(sqlite_file, uri_conn, db_type, db_user, db_password, db_name, db_host, db_port)
 
     # create database (if not sqlite in memory
     if not database_exists(uri_conn):
