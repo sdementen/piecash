@@ -2,6 +2,13 @@ What's new
 ==========
 
 
+Version 0.8.1 (2015-05-03)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- get 100% coverage on transaction module (except for scheduled transactions)
+- account.full_name returns now unicode string
+
+
 Version 0.8.0 (2015-05-02)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 

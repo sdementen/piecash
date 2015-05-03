@@ -1,9 +1,10 @@
+from collections import OrderedDict, defaultdict
 import datetime
 import os
 import shutil
 import socket
 
-from sqlalchemy import event, Column, VARCHAR, INTEGER, Table, PrimaryKeyConstraint, Index
+from sqlalchemy import event, Column, VARCHAR, INTEGER, Table, PrimaryKeyConstraint
 from sqlalchemy.sql.ddl import DropConstraint, DropIndex
 from sqlalchemy_utils import database_exists
 
@@ -93,11 +94,12 @@ def create_book(sqlite_file=None, uri_conn=None, currency="EUR", overwrite=False
                              once=True)
             # drop FK constraints
             for cstr in tbl.constraints:
-                if isinstance(cstr, PrimaryKeyConstraint): continue
+                if isinstance(cstr, PrimaryKeyConstraint):
+                    continue
                 else:
                     event.listen(tbl,
-                             "before_drop",
-                             DropConstraint(cstr),
+                                 "before_drop",
+                                 DropConstraint(cstr),
                                  once=True)
     #
     # create all (tables, fk, ...)
@@ -167,7 +169,9 @@ def open_book(sqlite_file=None,
     # backup database if readonly=False and do_backup=True
     if not readonly and do_backup:
         if engine.name != "sqlite":
-            raise GnucashException("Cannot do a backup for engine '{}'. Do yourself a backup and then specify do_backup=False".format(engine.name))
+            raise GnucashException(
+                "Cannot do a backup for engine '{}'. Do yourself a backup and then specify do_backup=False".format(
+                    engine.name))
 
         url = uri_conn[len("sqlite:///"):]
         url_backup = url + ".{:%Y%m%d%H%M%S}.gnucash".format(datetime.datetime.now())
@@ -260,17 +264,27 @@ def adapt_session(session, book, readonly):
 @event.listens_for(Session, 'before_flush')
 def validate_book(session, flush_context, instances):
     # identify object to validate
-    txs = set()
+    txs = OrderedDict()
     for change, l in {"dirty": session.dirty,
                       "new": session.new,
                       "deleted": session.deleted}.items():
         for o in l:
             for o_to_validate in o.object_to_validate(change):
-                txs.add(o_to_validate)
-    # txs = txs.union(o for o in session.new if isinstance(o, Transaction))
-    txs.discard(None)
+                txs[o_to_validate] = None
 
-    # for each transaction, validate the transaction
+    # remove None from the keys in the dictionary (if it ever gets included)
+    txs.pop(None, None)  # txs.discard(None)
+
+    # sort object from local to global (ensure Split checked before Transaction)
+    from . import Account, Transaction, Split
+
+    txs = list(txs)
+    txs.sort(key=lambda x: defaultdict(lambda: 20, {Account: 10,
+                                                    Transaction: 5,
+                                                    Split: 3,
+    })[type(x)])
+
+    # for each object, validate it
     for tx in txs:
         tx.validate()
 

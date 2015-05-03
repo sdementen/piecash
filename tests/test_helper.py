@@ -1,8 +1,9 @@
+# -*- coding: latin-1 -*-
 import os.path
 import sys
 import pytest
 from sqlalchemy_utils import database_exists, drop_database
-from piecash import create_book
+from piecash import create_book, Account, Commodity
 
 test_folder = os.path.dirname(os.path.realpath(__file__))
 book_folder = os.path.join(test_folder, "..", "gnucash_books")
@@ -68,6 +69,28 @@ def new_book_USD(request):
     if name and database_exists(name):
         drop_database(name)
     b = create_book(uri_conn=name, currency="USD", keep_foreign_keys=False)
+    yield b
+    b.session.close()
+    if name and database_exists(name):
+        drop_database(name)
+
+@pytest.yield_fixture(params=databases_to_check)
+def book_basic(request):
+    name = request.param
+
+    if name and database_exists(name):
+        drop_database(name)
+    # create new book
+    b = create_book(uri_conn=name, currency="EUR", keep_foreign_keys=False)
+    # create some accounts
+    curr = b.currencies[0]
+    cdty = Commodity(namespace=u"échange",mnemonic=u"ïoà", fullname=u"Example of unicode déta")
+    a = Account(name="asset", type="ASSET", commodity=curr, parent=b.root_account)
+    Account(name="broker", type="STOCK", commodity=cdty, parent=a)
+    Account(name="exp", type="EXPENSE", commodity=curr, parent=b.root_account)
+    Account(name="inc", type="INCOME", commodity=curr, parent=b.root_account)
+
+    b.flush()
     yield b
     b.session.close()
     if name and database_exists(name):

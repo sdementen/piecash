@@ -1,15 +1,55 @@
 from __future__ import print_function
 from decimal import Decimal
-import datetime
+from datetime import datetime
 import decimal
 import inspect
 from sqlalchemy.orm import object_session
 
 from piecash import open_book, Budget
 from piecash._common import Recurrence
-from piecash import create_book, Account, Transaction, Split
+from piecash import create_book, Account, Transaction, Split, Commodity
 
 
+b = create_book("mytest.gnucash", currency="EUR", keep_foreign_keys=False, overwrite=True)
+# create some accounts
+curr = b.currencies[0]
+cdty = Commodity(namespace="échange",mnemonic="ïoà", fullname="Example of unicode déta")
+a = Account(name="asset", type="ASSET", commodity=curr, parent=b.root_account)
+Account(name="broker", type="STOCK", commodity=cdty, parent=a)
+Account(name="exp", type="EXPENSE", commodity=curr, parent=b.root_account)
+Account(name="inc", type="INCOME", commodity=curr, parent=b.root_account)
+b.flush()
+EUR = b.commodities(namespace="CURRENCY")
+racc = b.root_account
+a = b.accounts(name="asset")
+s = b.accounts(name="broker")
+b.book.use_trading_accounts=True
+tr = Transaction(currency=EUR, description="buy stock", notes="on St-Eugène day",
+                 post_date=datetime(2014, 1, 2),
+                 enter_date=datetime(2014, 1, 3),
+                 splits=[
+                     Split(account=a, value=100, memo="mémo asset"),
+                     Split(account=s, value=-90, memo="mémo brok"),
+                 ])
+sp = tr.splits(account=s)
+print(sp)
+sp.quantity=-15
+# adjust balance
+Split(account=a, value=-10, memo="missing exp", transaction=tr)
+b.flush()
+sp.quantity=-14
+b.flush()
+# print (tr.splits)
+sp.quantity=-12
+b.flush()
+# print (tr.splits)
+sp.quantity=-13
+b.flush()
+sp.quantity=-13
+b.flush()
+print (tr.splits)
+
+fdsfdsfd
 # b1 = create_book("foo.gnucash",overwrite=True,echo=True)
 # b1.save()
 b1 = open_book("foo.gnucash", readonly=False, echo=True, do_backup=False)
