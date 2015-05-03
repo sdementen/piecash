@@ -268,6 +268,6 @@ class Account(DeclarativeBaseGuid):
 
     def __unirepr__(self):
         if self.commodity:
-            return u"Account<{0.fullname}[{0.commodity.mnemonic}]>".format(self)
+            return u"Account<{acc.fullname}[{acc.commodity.mnemonic}]>".format(acc=self)
         else:
-            return u"Account<{0.fullname}>".format(self)
+            return u"Account<{acc.fullname}>".format(acc=self)

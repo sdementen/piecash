@@ -1,7 +1,6 @@
 import uuid
-import unicodedata
 
-from sqlalchemy import Column, VARCHAR, event, inspect
+from sqlalchemy import Column, VARCHAR, event
 from sqlalchemy.orm import relation, foreign, object_session
 
 from .kvp import DictWrapper, Slot

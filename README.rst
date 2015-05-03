@@ -3,14 +3,15 @@ piecash
 
 |build-status| |docs|
 
-Piecash provides a simple and pythonic interface to GnuCash files stored in SQL (sqlite3 and Postgres, not tested in MySQL).
+Piecash provides a simple and pythonic interface to GnuCash files stored in SQL (sqlite3, Postgres and MySQL).
 
 :Documentation: http://piecash.readthedocs.org.
 :Google group: https://groups.google.com/d/forum/piecash (piecash@googlegroups.com)
 :Github: https://github.com/sdementen/piecash
+:PyPI: https://pypi.python.org/pypi/piecash
 
 
-It is a pure python package, tested on python 2.7 and 3.4, that can be used as an alternative to:
+It is a pure python package, tested on python 2.7 and 3.3/3.4, that can be used as an alternative to:
 
 - the official python bindings (as long as no advanced book modifications and/or engine calculations are needed).
   This is specially useful on Windows where the official python bindings may be tricky to install or if you want to work with

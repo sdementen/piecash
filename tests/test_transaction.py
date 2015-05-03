@@ -1,4 +1,4 @@
-# -*- coding: latin-1 -*-
+# coding=utf-8
 from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
@@ -24,12 +24,12 @@ class TestTransaction_create_transaction(object):
         a = book_basic.accounts(name="asset")
         e = book_basic.accounts(name="exp")
 
-        tr = Transaction(currency=EUR, description=u"wire from Hélène", notes=u"on St-Eugène day",
+        tr = Transaction(currency=EUR, description=u"wire from HÃ©lÃ¨ne", notes=u"on St-EugÃ¨ne day",
                          post_date=datetime(2014, 1, 1),
                          enter_date=datetime(2014, 1, 1),
                          splits=[
-                             Split(account=a, value=100, memo=u"mémo asset"),
-                             Split(account=e, value=-10, memo=u"mémo exp"),
+                             Split(account=a, value=100, memo=u"mÃ©mo asset"),
+                             Split(account=e, value=-10, memo=u"mÃ©mo exp"),
                          ])
         # check issue with balance
         with pytest.raises(GncImbalanceError):
@@ -59,12 +59,12 @@ class TestTransaction_create_transaction(object):
         a = book_basic.accounts(name="asset")
         s = book_basic.accounts(name="broker")
 
-        tr = Transaction(currency=EUR, description="buy stock", notes=u"on St-Eugène day",
+        tr = Transaction(currency=EUR, description="buy stock", notes=u"on St-EugÃ¨ne day",
                          post_date=datetime(2014, 1, 2),
                          enter_date=datetime(2014, 1, 3),
                          splits=[
-                             Split(account=a, value=100, memo=u"mémo asset"),
-                             Split(account=s, value=-90, memo=u"mémo brok"),
+                             Split(account=a, value=100, memo=u"mÃ©mo asset"),
+                             Split(account=s, value=-90, memo=u"mÃ©mo brok"),
                          ])
 
         # check issue with quantity for broker split not defined
@@ -112,12 +112,12 @@ class TestTransaction_create_transaction(object):
         a = book_basic.accounts(name="asset")
         s = book_basic.accounts(name="broker")
 
-        tr = Transaction(currency=s.commodity, description="buy stock", notes=u"on St-Eugène day",
+        tr = Transaction(currency=s.commodity, description="buy stock", notes=u"on St-EugÃ¨ne day",
                          post_date=datetime(2014, 1, 2),
                          enter_date=datetime(2014, 1, 3),
                          splits=[
-                             Split(account=a, value=100, quantity=10, memo=u"mémo asset"),
-                             Split(account=s, value=-100, quantity=-10, memo=u"mémo brok"),
+                             Split(account=a, value=100, quantity=10, memo=u"mÃ©mo asset"),
+                             Split(account=s, value=-100, quantity=-10, memo=u"mÃ©mo brok"),
                          ])
         # raise error as Transaction has a non CURRENCY commodity
         with pytest.raises(GncValidationError):
@@ -129,12 +129,12 @@ class TestTransaction_create_transaction(object):
         a = book_basic.accounts(name="asset")
         s = book_basic.accounts(name="broker")
 
-        tr = Transaction(currency=EUR, description="buy stock", notes=u"on St-Eugène day",
+        tr = Transaction(currency=EUR, description="buy stock", notes=u"on St-EugÃ¨ne day",
                          post_date=datetime(2014, 1, 2),
                          enter_date=datetime(2014, 1, 3),
                          splits=[
-                             Split(account=a, value=100, memo=u"mémo asset"),
-                             Split(account=s, value=-100, quantity=-15, memo=u"mémo brok"),
+                             Split(account=a, value=100, memo=u"mÃ©mo asset"),
+                             Split(account=s, value=-100, quantity=-15, memo=u"mÃ©mo brok"),
                          ])
         book_basic.book.use_trading_accounts = True
         book_basic.flush()
@@ -153,7 +153,7 @@ class TestTransaction_create_transaction(object):
         assert all([v == 0 for k, v in d.items() if k != "cur"])
 
         # change existing quantity
-        sp = tr.splits(memo=u"mémo brok")
+        sp = tr.splits(memo=u"mÃ©mo brok")
         sp.quantity += 1
         book_basic.flush()
 
@@ -173,14 +173,14 @@ class TestTransaction_lots(object):
         racc = book_basic.root_account
         a = book_basic.accounts(name="asset")
         s = book_basic.accounts(name="broker")
-        l = Lot(title=u"test mé", account=s, notes=u"ïlya")
+        l = Lot(title=u"test mÃ©", account=s, notes=u"Ã¯lya")
         for i, am in enumerate([45, -35, -20]):
-            tr = Transaction(currency=EUR, description="trade stock", notes=u"àçö",
+            tr = Transaction(currency=EUR, description="trade stock", notes=u"Ã Ã§Ã¶",
                              post_date=datetime(2014, 1, 1 + i),
                              enter_date=datetime(2014, 1, 1 + i),
                              splits=[
-                                 Split(account=a, value=am * 10, memo=u"mémo asset"),
-                                 Split(account=s, value=-am * 10, quantity=-am, memo=u"mémo brok", lot=l),
+                                 Split(account=a, value=am * 10, memo=u"mÃ©mo asset"),
+                                 Split(account=s, value=-am * 10, quantity=-am, memo=u"mÃ©mo brok", lot=l),
                              ])
         book_basic.flush()
 
@@ -191,16 +191,16 @@ class TestTransaction_lots(object):
         s = book_basic.accounts(name="broker")
         sp = []
         for i, am in enumerate([45, -35, -20]):
-            tr = Transaction(currency=EUR, description="trade stock", notes=u"àçö",
+            tr = Transaction(currency=EUR, description="trade stock", notes=u"Ã Ã§Ã¶",
                              post_date=datetime(2014, 1, 1 + i),
                              enter_date=datetime(2014, 1, 1 + i),
                              splits=[
-                                 Split(account=a, value=am * 10, memo=u"mémo asset"),
-                                 Split(account=s, value=-am * 10, quantity=-am, memo=u"mémo brok"),
+                                 Split(account=a, value=am * 10, memo=u"mÃ©mo asset"),
+                                 Split(account=s, value=-am * 10, quantity=-am, memo=u"mÃ©mo brok"),
                              ])
             sp.append(tr.splits(account=s))
 
-        l = Lot(title=u"test mé", account=s, notes=u"ïlya", splits=sp)
+        l = Lot(title=u"test mÃ©", account=s, notes=u"Ã¯lya", splits=sp)
         book_basic.flush()
 
     def test_create_closedlot_addsplits(self, book_basic):
@@ -208,16 +208,16 @@ class TestTransaction_lots(object):
         racc = book_basic.root_account
         a = book_basic.accounts(name="asset")
         s = book_basic.accounts(name="broker")
-        l = Lot(title=u"test mé", account=s, notes=u"ïlya")
+        l = Lot(title=u"test mÃ©", account=s, notes=u"Ã¯lya")
         l.is_closed = 1
         # raise valueerror as lot is closed
         with pytest.raises(ValueError):
-            tr = Transaction(currency=EUR, description="trade stock", notes=u"àçö",
+            tr = Transaction(currency=EUR, description="trade stock", notes=u"Ã Ã§Ã¶",
                              post_date=datetime(2014, 1, 1),
                              enter_date=datetime(2014, 1, 1),
                              splits=[
-                                 Split(account=a, value= 10, memo=u"mémo asset"),
-                                 Split(account=s, value=- 10, quantity=-2, memo=u"mémo brok", lot=l),
+                                 Split(account=a, value= 10, memo=u"mÃ©mo asset"),
+                                 Split(account=s, value=- 10, quantity=-2, memo=u"mÃ©mo brok", lot=l),
                              ])
 
     def test_create_simplelot_inconsistentaccounts(self, book_basic):
@@ -225,14 +225,14 @@ class TestTransaction_lots(object):
         racc = book_basic.root_account
         a = book_basic.accounts(name="asset")
         s = book_basic.accounts(name="broker")
-        l = Lot(title=u"test mé", account=a, notes=u"ïlya")
+        l = Lot(title=u"test mÃ©", account=a, notes=u"Ã¯lya")
         # raise valueerror as split account not the same as lot account
-        tr = Transaction(currency=EUR, description="trade stock", notes=u"àçö",
+        tr = Transaction(currency=EUR, description="trade stock", notes=u"Ã Ã§Ã¶",
                          post_date=datetime(2014, 1, 1),
                          enter_date=datetime(2014, 1, 1),
                          splits=[
-                             Split(account=a, value= 10, memo=u"mémo asset"),
-                             Split(account=s, value=- 10, quantity=-2, memo=u"mémo brok", lot=l),
+                             Split(account=a, value= 10, memo=u"mÃ©mo asset"),
+                             Split(account=s, value=- 10, quantity=-2, memo=u"mÃ©mo brok", lot=l),
                          ])
 
         with pytest.raises(ValueError):
