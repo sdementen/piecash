@@ -66,8 +66,8 @@ class Split(DeclarativeBaseGuid):
 
     def __init__(self,
                  account=None,
-                 value=0,
-                 quantity=0,
+                 value=None,
+                 quantity=None,
                  transaction=None,
                  memo="",
                  action="",
@@ -118,17 +118,18 @@ class Split(DeclarativeBaseGuid):
         yield self.lot
 
     def validate(self):
+        old = self.object_beforechange()
+        if '_quantity_num' in old or '_value_num' in old:
+            self.transaction._recalculate_balance = True
+
         # if single currency, assign value to quantity
         if self.transaction.currency == self.account.commodity:
             self.quantity = self.value
         else:
             if self.quantity is None:
                 raise GncValidationError("The split quantity is not defined while the split is on a commodity different from the transaction")
-
-        # not needed as check done anyway at transaction level
-        # # check that account is not a placeholder
-        # if self.account.placeholder != 0:
-        #     raise GncValidationError("You cannot change a split linked to account {} as the latter is a placeholder.".format(self.account))
+            if self.quantity.is_signed()!=self.value.is_signed():
+                raise GncValidationError("The split quantity has not the same sign as the split value")
 
         self._quantity_denom_basis = self.account.commodity_scu
         self._value_denom_basis = self.transaction.currency.fraction
@@ -185,6 +186,9 @@ class Transaction(DeclarativeBaseGuid):
                  post_date=None,
                  num="",
     ):
+        assert enter_date is None or isinstance(enter_date, datetime.datetime), "enter_date should be a datetime object"
+        assert post_date is None or isinstance(post_date, datetime.datetime), "post_date should be a datetime object"
+
         self.currency = currency
         self.description = description
         self.enter_date = enter_date if enter_date else datetime.datetime.today()
@@ -221,7 +225,8 @@ class Transaction(DeclarativeBaseGuid):
             raise GncValidationError("You cannot change the currency of a transaction once it has been set")
 
         # validate the splits
-        if "splits" in old:
+        if hasattr(self, "_recalculate_balance"):
+            del self._recalculate_balance
             value_imbalance, quantity_imbalances = self.calculate_imbalances()
             if value_imbalance:
                 # raise exception instead of creating an imbalance entry as probably an error
@@ -249,8 +254,10 @@ class Transaction(DeclarativeBaseGuid):
         trading_splits =defaultdict(list)
         trading_target_value = defaultdict(Decimal)
         trading_target_quantity = defaultdict(Decimal)
+
         for sp in self.splits:
             cdty = sp.account.commodity
+
             if sp.account.type == "TRADING":
                 trading_splits[cdty].append(sp)
             else:
@@ -365,12 +372,14 @@ class Lot(DeclarativeBaseGuid):
                  title,
                  account,
                  notes="",
-                 splits=None):
+                 splits=None,
+                 is_closed=0):
         self.title = title
         self.account = account
         self.notes = notes
         if splits:
             self.splits[:] = splits
+        self.is_closed = is_closed
 
     @validates("splits", "account")
     def check_no_change_if_lot_is_close(self, key, value):
@@ -386,3 +395,6 @@ class Lot(DeclarativeBaseGuid):
         for sp in self.splits:
             if sp.account != self.account:
                 raise ValueError("Split {} is not in the same commodity of the lot {}".format(sp, self))
+
+    def __unirepr__(self):
+        return u"Lot<'{}' on {}>".format(self.title, self.account.name)

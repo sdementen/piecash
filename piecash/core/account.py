@@ -244,11 +244,11 @@ class Account(DeclarativeBaseGuid):
         if self.parent:
             pfn = self.parent.fullname
             if pfn:
-                return "{}:{}".format(pfn, self.name)
+                return u"{}:{}".format(pfn, self.name)
             else:
                 return self.name
         else:
-            return ""
+            return u""
 
 
     def get_balance(self):
