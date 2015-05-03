@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import uuid
 
 from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER, Index

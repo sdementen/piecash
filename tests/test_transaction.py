@@ -1,4 +1,5 @@
 # coding=utf-8
+from __future__ import unicode_literals
 from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
@@ -7,9 +8,6 @@ import pytest
 
 from piecash import Transaction, Split, GncImbalanceError, GncValidationError, Lot
 from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic
-
-
-
 
 
 # dummy line to avoid removing unused symbols
