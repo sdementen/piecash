@@ -11,6 +11,7 @@ from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_u
 
 
 
+
 # dummy line to avoid removing unused symbols
 
 a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic
@@ -167,18 +168,73 @@ class TestTransaction_create_transaction(object):
 
 
 class TestTransaction_lots(object):
-    def test_create_simpletlot(self, book_basic):
+    def test_create_simpletlot_addsplits(self, book_basic):
+        EUR = book_basic.commodities(namespace="CURRENCY")
+        racc = book_basic.root_account
+        a = book_basic.accounts(name="asset")
+        s = book_basic.accounts(name="broker")
+        l = Lot(title=u"test mé", account=s, notes=u"ïlya")
+        for i, am in enumerate([45, -35, -20]):
+            tr = Transaction(currency=EUR, description="trade stock", notes=u"àçö",
+                             post_date=datetime(2014, 1, 1 + i),
+                             enter_date=datetime(2014, 1, 1 + i),
+                             splits=[
+                                 Split(account=a, value=am * 10, memo=u"mémo asset"),
+                                 Split(account=s, value=-am * 10, quantity=-am, memo=u"mémo brok", lot=l),
+                             ])
+        book_basic.flush()
+
+    def test_create_simpletlot_initialsplits(self, book_basic):
+        EUR = book_basic.commodities(namespace="CURRENCY")
+        racc = book_basic.root_account
+        a = book_basic.accounts(name="asset")
+        s = book_basic.accounts(name="broker")
+        sp = []
+        for i, am in enumerate([45, -35, -20]):
+            tr = Transaction(currency=EUR, description="trade stock", notes=u"àçö",
+                             post_date=datetime(2014, 1, 1 + i),
+                             enter_date=datetime(2014, 1, 1 + i),
+                             splits=[
+                                 Split(account=a, value=am * 10, memo=u"mémo asset"),
+                                 Split(account=s, value=-am * 10, quantity=-am, memo=u"mémo brok"),
+                             ])
+            sp.append(tr.splits(account=s))
+
+        l = Lot(title=u"test mé", account=s, notes=u"ïlya", splits=sp)
+        book_basic.flush()
+
+    def test_create_closedlot_addsplits(self, book_basic):
+        EUR = book_basic.commodities(namespace="CURRENCY")
+        racc = book_basic.root_account
+        a = book_basic.accounts(name="asset")
+        s = book_basic.accounts(name="broker")
+        l = Lot(title=u"test mé", account=s, notes=u"ïlya")
+        l.is_closed = 1
+        # raise valueerror as lot is closed
+        with pytest.raises(ValueError):
+            tr = Transaction(currency=EUR, description="trade stock", notes=u"àçö",
+                             post_date=datetime(2014, 1, 1),
+                             enter_date=datetime(2014, 1, 1),
+                             splits=[
+                                 Split(account=a, value= 10, memo=u"mémo asset"),
+                                 Split(account=s, value=- 10, quantity=-2, memo=u"mémo brok", lot=l),
+                             ])
+
+    def test_create_simplelot_inconsistentaccounts(self, book_basic):
         EUR = book_basic.commodities(namespace="CURRENCY")
         racc = book_basic.root_account
         a = book_basic.accounts(name="asset")
         s = book_basic.accounts(name="broker")
         l = Lot(title=u"test mé", account=a, notes=u"ïlya")
-        for i, am in enumerate([45, -35, -20]):
-            tr = Transaction(currency=EUR, description="trade stock", notes=u"àçö",
-                             post_date=datetime(2014, 1, 1+i),
-                             enter_date=datetime(2014, 1, 1+i),
-                             splits=[
-                                 Split(account=a, value=am*10, memo=u"mémo asset"),
-                                 Split(account=s, value=-am*10, quantity=-am, memo=u"mémo brok", lot=l),
-                             ])
+        # raise valueerror as split account not the same as lot account
+        tr = Transaction(currency=EUR, description="trade stock", notes=u"àçö",
+                         post_date=datetime(2014, 1, 1),
+                         enter_date=datetime(2014, 1, 1),
+                         splits=[
+                             Split(account=a, value= 10, memo=u"mémo asset"),
+                             Split(account=s, value=- 10, quantity=-2, memo=u"mémo brok", lot=l),
+                         ])
+
+        with pytest.raises(ValueError):
+            book_basic.flush()
 

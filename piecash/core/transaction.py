@@ -372,12 +372,14 @@ class Lot(DeclarativeBaseGuid):
                  title,
                  account,
                  notes="",
-                 splits=None):
+                 splits=None,
+                 is_closed=0):
         self.title = title
         self.account = account
         self.notes = notes
         if splits:
             self.splits[:] = splits
+        self.is_closed = is_closed
 
     @validates("splits", "account")
     def check_no_change_if_lot_is_close(self, key, value):
@@ -394,4 +396,5 @@ class Lot(DeclarativeBaseGuid):
             if sp.account != self.account:
                 raise ValueError("Split {} is not in the same commodity of the lot {}".format(sp, self))
 
-
+    def __unirepr__(self):
+        return u"Lot<'{}' on {}>".format(self.title, self.account.name)
