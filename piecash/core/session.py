@@ -218,6 +218,9 @@ def open_book(sqlite_file=None,
     """
     uri_conn = build_uri(sqlite_file, uri_conn, db_type, db_user, db_password, db_name, db_host, db_port)
 
+    if uri_conn == "sqlite:///:memory:":
+        raise ValueError("An in memory sqlite gnucash databook cannot be opened, it should be created")
+
     # create database (if not sqlite in memory
     if not database_exists(uri_conn):
         raise GnucashException("Database '{}' does not exist (please use create_book to create " \

@@ -207,7 +207,7 @@ Session = sessionmaker(autoflush=False)
 
 
 def create_piecash_engine(uri_conn, **kwargs):
-    eng = create_engine(uri_conn,**kwargs)
+    eng = create_engine(uri_conn, **kwargs)
 
     if eng.name == "sqlite":
         # add proper isolation code for sqlite engine
