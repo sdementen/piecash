@@ -27,7 +27,7 @@ if os.environ.get("TRAVIS", False):
 else:
     pg_password = os.environ.get("PG_PASSWORD")
 db_postgres_uri = "postgresql://postgres:{pwd}@localhost:5432/foo".format(pwd=pg_password)
-db_mysql_uri = "mysql+pymysql://travis:@localhost/foo"
+db_mysql_uri = "mysql+pymysql://travis:@localhost/foo?charset=utf8"
 db_sqlite_uri = "sqlite:///{}".format(db_sqlite)
 
 databases_to_check = [None, db_sqlite_uri]
