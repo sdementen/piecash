@@ -46,7 +46,7 @@ class Address(object):
             setattr(self, fld, val)
 
     def __composite_values__(self):
-        return tuple(self)
+        return (getattr(self, fld) for fld in Address._address_fields)
 
     def __eq__(self, other):
         return isinstance(other, Address) and all(

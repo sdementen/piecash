@@ -8,9 +8,16 @@ from sqlalchemy.orm import object_session
 from piecash import open_book, Budget
 from piecash._common import Recurrence
 from piecash import create_book, Account, Transaction, Split, Commodity
+from piecash.business import Customer
 
 
 b = create_book("mytest.gnucash", currency="EUR", keep_foreign_keys=False, overwrite=True)
+b.add(Customer(name="foo",currency= b.currencies(mnemonic="EUR")))
+b.add(Customer(name="john",currency= b.currencies(mnemonic="EUR")))
+b.add(Customer(name="baz",currency= b.currencies(mnemonic="EUR")))
+b.save()
+print(b.customers[0].tax_included)
+fdsfdsfds
 # create some accounts
 curr = b.currencies[0]
 cdty = Commodity(namespace="échange",mnemonic="ïoà", fullname="Example of unicode déta")
