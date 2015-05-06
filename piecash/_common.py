@@ -39,11 +39,17 @@ class Recurrence(DeclarativeBase):
 
 
 class Address(object):
-    _address_fields = "addr1 addr2 addr3 addr4 email fax name phone".split()
+    _address_fields = ['name', 'addr1', 'addr2', 'addr3', 'addr4', 'email', 'fax', 'phone']
 
-    def __init__(self, *args):
-        for fld, val in zip(Address._address_fields, args):
-            setattr(self, fld, val)
+    def __init__(self, name, addr1="", addr2="", addr3="", addr4="", email="", fax="", phone=""):
+        self.name = name
+        self.addr1 = addr1
+        self.addr2 = addr2
+        self.addr3 = addr3
+        self.addr4 = addr4
+        self.email = email
+        self.fax = fax
+        self.phone = phone
 
     def __composite_values__(self):
         return (getattr(self, fld) for fld in Address._address_fields)

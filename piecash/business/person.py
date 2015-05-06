@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from sqlalchemy import Column, VARCHAR, INTEGER, BIGINT, ForeignKey
+from sqlalchemy import Column, VARCHAR, INTEGER, BIGINT, ForeignKey, types
 from sqlalchemy.orm import composite, relation
 from sqlalchemy_utils.types import choice
 
@@ -14,6 +14,19 @@ TaxIncludedType = [
     (3, "use global")
 ]
 
+class ChoiceType(types.TypeDecorator):
+
+    impl = types.INTEGER()
+
+    def __init__(self, choices, **kw):
+        self.choices = dict(choices)
+        super(ChoiceType, self).__init__(**kw)
+
+    def process_bind_param(self, value, dialect):
+        return [k for k, v in self.choices.iteritems() if v == value][0]
+
+    def process_result_value(self, value, dialect):
+        return self.choices[value]
 
 class Customer(DeclarativeBaseGuid):
     __tablename__ = 'customers'
@@ -42,8 +55,8 @@ class Customer(DeclarativeBaseGuid):
     addr_phone = Column('addr_phone', VARCHAR(length=128))
     addr_fax = Column('addr_fax', VARCHAR(length=128))
     addr_email = Column('addr_email', VARCHAR(length=256))
-    addr = composite(Address, addr_addr1, addr_addr2, addr_addr3, addr_addr4,
-                     addr_email, addr_fax, addr_name, addr_phone)
+    addr = composite(Address, addr_name, addr_addr1, addr_addr2, addr_addr3, addr_addr4,
+                     addr_email, addr_fax, addr_phone)
 
     shipaddr_name = Column('shipaddr_name', VARCHAR(length=1024))
     shipaddr_addr1 = Column('shipaddr_addr1', VARCHAR(length=1024))
@@ -53,11 +66,11 @@ class Customer(DeclarativeBaseGuid):
     shipaddr_phone = Column('shipaddr_phone', VARCHAR(length=128))
     shipaddr_fax = Column('shipaddr_fax', VARCHAR(length=128))
     shipaddr_email = Column('shipaddr_email', VARCHAR(length=256))
-    shipaddr = composite(Address, shipaddr_addr1, shipaddr_addr2, shipaddr_addr3, shipaddr_addr4,
-                         shipaddr_email, shipaddr_fax, shipaddr_name, shipaddr_phone)
+    shipaddr = composite(Address, shipaddr_name, shipaddr_addr1, shipaddr_addr2, shipaddr_addr3, shipaddr_addr4,
+                         shipaddr_email, shipaddr_fax, shipaddr_phone)
 
     term_guid = Column('terms', VARCHAR(length=32), ForeignKey('billterms.guid'))
-    tax_included = Column('tax_included', choice.ChoiceType(TaxIncludedType, impl=INTEGER()))
+    tax_included = Column('tax_included', ChoiceType(TaxIncludedType))
     taxtable_guid = Column('taxtable', VARCHAR(length=32), ForeignKey('taxtables.guid'))
 
     # relation definitions
@@ -73,6 +86,8 @@ class Customer(DeclarativeBaseGuid):
                  tax_override=0,
                  credit=Decimal(0),
                  discount=Decimal(0),
+                 address=None,
+                 shipping_address=None,
                  tax_included="use global"):
         self.name = name
         self.currency = currency
@@ -82,8 +97,12 @@ class Customer(DeclarativeBaseGuid):
         self.discount=discount
         self.tax_included = tax_included
         self.tax_override = tax_override
-        self.addr = Address(*[""]*8)
-        self.shipaddr = Address(*[""]*8)
+        if address is None:
+            address=Address(name=name)
+        self.addr = address
+        if shipping_address is None:
+            shipping_address=Address("")
+        self.shipaddr = shipping_address
 
     def object_to_validate(self, change):
         yield self
@@ -128,8 +147,8 @@ class Employee(DeclarativeBaseGuid):
     addr_phone = Column('addr_phone', VARCHAR(length=128))
     addr_fax = Column('addr_fax', VARCHAR(length=128))
     addr_email = Column('addr_email', VARCHAR(length=256))
-    addr = composite(Address, addr_addr1, addr_addr2, addr_addr3, addr_addr4,
-                     addr_email, addr_fax, addr_name, addr_phone)
+    addr = composite(Address, addr_name, addr_addr1, addr_addr2, addr_addr3, addr_addr4,
+                     addr_email, addr_fax, addr_phone)
 
     # relation definitions
     currency = relation('Commodity')
@@ -157,8 +176,8 @@ class Vendor(DeclarativeBaseGuid):
     addr_phone = Column('addr_phone', VARCHAR(length=128))
     addr_fax = Column('addr_fax', VARCHAR(length=128))
     addr_email = Column('addr_email', VARCHAR(length=256))
-    addr = composite(Address, addr_addr1, addr_addr2, addr_addr3, addr_addr4,
-                     addr_email, addr_fax, addr_name, addr_phone)
+    addr = composite(Address, addr_name, addr_addr1, addr_addr2, addr_addr3, addr_addr4,
+                     addr_email, addr_fax, addr_phone)
     term_guid = Column('terms', VARCHAR(length=32), ForeignKey('billterms.guid'))
     tax_inc = Column('tax_inc', VARCHAR(length=2048))
     tax_table_guid = Column('tax_table', VARCHAR(length=32), ForeignKey('taxtables.guid'))
