@@ -1,22 +1,24 @@
-from __future__ import print_function
+# coding=utf-8
+from __future__ import print_function, unicode_literals
 from decimal import Decimal
 from datetime import datetime
 import decimal
 import inspect
 from sqlalchemy.orm import object_session
 
-from piecash import open_book, Budget
+from piecash import open_book, Budget,Address
 from piecash._common import Recurrence
 from piecash import create_book, Account, Transaction, Split, Commodity
 from piecash.business import Customer
 
 
-b = create_book("mytest.gnucash", currency="EUR", keep_foreign_keys=False, overwrite=True)
-b.add(Customer(name="foo",currency= b.currencies(mnemonic="EUR")))
+b = create_book("foo.sqlite", currency="EUR", keep_foreign_keys=False, overwrite=True)
+b.add(Customer(name="foo",currency= b.currencies(mnemonic="EUR"), address=Address(name="foo", addr1="a1",addr4="a4", fax="fax",email="email",phone="phoen")))
 b.add(Customer(name="john",currency= b.currencies(mnemonic="EUR")))
 b.add(Customer(name="baz",currency= b.currencies(mnemonic="EUR")))
+b.add(Customer(name="dsdsbaz",currency= b.currencies(mnemonic="EUR")))
 b.save()
-print(b.customers[0].tax_included)
+print(b.customers)
 fdsfdsfds
 # create some accounts
 curr = b.currencies[0]

@@ -108,15 +108,11 @@ class Customer(DeclarativeBaseGuid):
         yield self
 
     def validate(self):
-        try:
-            cnt = self.book["counters/gncCustomer"].value + 1
-        except KeyError:
-            cnt = 1
+        self.book.counter_customer = cnt = self.book.counter_customer + 1
         self.id = "{:06d}".format(cnt)
-        self.book["counters/gncCustomer"] = cnt
 
     def __unirepr__(self):
-        return u"Customer<{}>".format(self.name)
+        return u"Customer<{}:{}>".format(self.id, self.name)
 
 
 class Employee(DeclarativeBaseGuid):

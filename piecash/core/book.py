@@ -113,6 +113,11 @@ class Book(DeclarativeBaseGuid):
                               to_gnc=lambda v: float(v),
                               default=0)
 
+    counter_customer = option("counters/gncCustomer",
+                              from_gnc=lambda v: int(v),
+                              to_gnc=lambda v: int(v),
+                              default=0)
+
     def __init__(self, root_account=None, root_template=None):
         self.root_account = root_account
         self.root_template = root_template
