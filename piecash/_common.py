@@ -38,30 +38,6 @@ class Recurrence(DeclarativeBase):
                                             self.recurrence_period_start, self.recurrence_weekend_adjust)
 
 
-class Address(object):
-    _address_fields = ['name', 'addr1', 'addr2', 'addr3', 'addr4', 'email', 'fax', 'phone']
-
-    def __init__(self, name, addr1="", addr2="", addr3="", addr4="", email="", fax="", phone=""):
-        self.name = name
-        self.addr1 = addr1
-        self.addr2 = addr2
-        self.addr3 = addr3
-        self.addr4 = addr4
-        self.email = email
-        self.fax = fax
-        self.phone = phone
-
-    def __composite_values__(self):
-        return (getattr(self, fld) for fld in Address._address_fields)
-
-    def __eq__(self, other):
-        return isinstance(other, Address) and all(
-            getattr(other, fld) == getattr(self, fld) for fld in Address._address_fields)
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-
 def hybrid_property_gncnumeric(num_col, denom_col):
     """Return an hybrid_property handling a Decimal represented by a numerator and a denominator column.
     It assumes the python field related to the sqlcolumn is named as _sqlcolumn.

@@ -1,5 +1,37 @@
 # coding=utf-8
 from __future__ import print_function, unicode_literals
+
+if True:
+    from piecash import create_book, Customer, Address
+
+    # create a book (in memory)
+    b = create_book(currency="EUR")
+    # get the currency
+    eur = b.default_currency
+
+    # create a customer
+    c1 = Customer(name="Mickey", currency=eur, address=Address(addr1="Sesame street 1", email="mickey@example.com"))
+    # the customer has not yet an ID
+    b.add(c1)
+
+    # flush the book
+    b.flush()
+
+    # the customer gets its ID
+    print(c1)
+
+    # or create a customer directly in a book (by specifying the book argument)
+    c2 = Customer(name="Mickey", currency=eur, address=Address(addr1="Sesame street 1", email="mickey@example.com"),
+                  book=b)
+
+    # the customer gets immediately its ID
+    c2
+
+    # the counter of the ID is accessible as
+    b.counter_customer
+
+
+fdsdsffds
 from decimal import Decimal
 from datetime import datetime
 import decimal
@@ -13,7 +45,8 @@ from piecash.business import Customer
 
 
 b = create_book("foo.sqlite", currency="EUR", keep_foreign_keys=False, overwrite=True)
-b.add(Customer(name="foo",currency= b.currencies(mnemonic="EUR"), address=Address(name="foo", addr1="a1",addr4="a4", fax="fax",email="email",phone="phoen")))
+c=Customer(book=b,name="foo",currency= b.currencies(mnemonic="EUR"), address=Address(name="foo", addr1="a1",addr4="a4", fax="fax",email="email",phone="phoen"))
+print(c.addr_addr1)
 b.add(Customer(name="john",currency= b.currencies(mnemonic="EUR")))
 b.add(Customer(name="baz",currency= b.currencies(mnemonic="EUR")))
 b.add(Customer(name="dsdsbaz",currency= b.currencies(mnemonic="EUR")))

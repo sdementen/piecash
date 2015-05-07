@@ -2,9 +2,8 @@ from decimal import Decimal
 
 from sqlalchemy import Column, VARCHAR, INTEGER, BIGINT, ForeignKey, types
 from sqlalchemy.orm import composite, relation
-from sqlalchemy_utils.types import choice
 
-from piecash._common import hybrid_property_gncnumeric, Address
+from piecash._common import hybrid_property_gncnumeric
 from piecash._declbase import DeclarativeBaseGuid
 
 
@@ -14,8 +13,8 @@ TaxIncludedType = [
     (3, "use global")
 ]
 
-class ChoiceType(types.TypeDecorator):
 
+class ChoiceType(types.TypeDecorator):
     impl = types.INTEGER()
 
     def __init__(self, choices, **kw):
@@ -23,12 +22,65 @@ class ChoiceType(types.TypeDecorator):
         super(ChoiceType, self).__init__(**kw)
 
     def process_bind_param(self, value, dialect):
-        return [k for k, v in self.choices.iteritems() if v == value][0]
+        return [k for k, v in self.choices.items() if v == value][0]
 
     def process_result_value(self, value, dialect):
         return self.choices[value]
 
+class Address(object):
+    """An Address object encapsulates information regarding an address in GnuCash.
+
+    Attributes:
+        name (str): self explanatory
+        addr1 (str): self explanatory
+        addr2 (str): self explanatory
+        addr3 (str): self explanatory
+        addr4 (str): self explanatory
+        email (str): self explanatory
+        fax (str): self explanatory
+        phone (str): self explanatory
+    """
+    _address_fields = ['name', 'addr1', 'addr2', 'addr3', 'addr4', 'email', 'fax', 'phone']
+
+    def __init__(self, name="", addr1="", addr2="", addr3="", addr4="", email="", fax="", phone=""):
+        self.name = name
+        self.addr1 = addr1
+        self.addr2 = addr2
+        self.addr3 = addr3
+        self.addr4 = addr4
+        self.email = email
+        self.fax = fax
+        self.phone = phone
+
+    def __composite_values__(self):
+        return (getattr(self, fld) for fld in Address._address_fields)
+
+    def __eq__(self, other):
+        return isinstance(other, Address) and all(
+            getattr(other, fld) == getattr(self, fld) for fld in Address._address_fields)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 class Customer(DeclarativeBaseGuid):
+    """
+    A GnuCash Customer
+
+    Attributes:
+        name (str): name of the Customer
+        id (str): autonumber id with 5 digits (initialised to book.counter_customer + 1)
+        notes (str): notes
+        active (int): 1 if the customer is active, 0 otherwise
+        discount (:class:`decimal.Decimal`): see Gnucash documentation
+        credit (:class:`decimal.Decimal`): see Gnucash documentation
+        currency (:class:`piecash.core.commodity.Commodity`): the commodity of the customer
+        tax_override (int): 1 if tax override, 0 otherwise
+        address (:class:`Address`): the address of the customer
+        shipping_address (:class:`Address`): the shipping address of the customer
+        tax_included (str): 'yes', 'no', 'use global'
+        taxtable (:class:`piecash.business.tax.TaxTable`): tax table of the customer
+        term (:class:`piecash.business.invoice.Billterm`): bill term of the customer
+    """
     __tablename__ = 'customers'
 
     __table_args__ = {}
@@ -55,7 +107,7 @@ class Customer(DeclarativeBaseGuid):
     addr_phone = Column('addr_phone', VARCHAR(length=128))
     addr_fax = Column('addr_fax', VARCHAR(length=128))
     addr_email = Column('addr_email', VARCHAR(length=256))
-    addr = composite(Address, addr_name, addr_addr1, addr_addr2, addr_addr3, addr_addr4,
+    address = composite(Address, addr_name, addr_addr1, addr_addr2, addr_addr3, addr_addr4,
                      addr_email, addr_fax, addr_phone)
 
     shipaddr_name = Column('shipaddr_name', VARCHAR(length=1024))
@@ -66,7 +118,7 @@ class Customer(DeclarativeBaseGuid):
     shipaddr_phone = Column('shipaddr_phone', VARCHAR(length=128))
     shipaddr_fax = Column('shipaddr_fax', VARCHAR(length=128))
     shipaddr_email = Column('shipaddr_email', VARCHAR(length=256))
-    shipaddr = composite(Address, shipaddr_name, shipaddr_addr1, shipaddr_addr2, shipaddr_addr3, shipaddr_addr4,
+    shipping_address = composite(Address, shipaddr_name, shipaddr_addr1, shipaddr_addr2, shipaddr_addr3, shipaddr_addr4,
                          shipaddr_email, shipaddr_fax, shipaddr_phone)
 
     term_guid = Column('terms', VARCHAR(length=32), ForeignKey('billterms.guid'))
@@ -88,28 +140,37 @@ class Customer(DeclarativeBaseGuid):
                  discount=Decimal(0),
                  address=None,
                  shipping_address=None,
-                 tax_included="use global"):
+                 tax_included="use global",
+                 book=None):
         self.name = name
         self.currency = currency
         self.notes = notes
         self.active = active
         self.credit = credit
-        self.discount=discount
+        self.discount = discount
         self.tax_included = tax_included
         self.tax_override = tax_override
         if address is None:
-            address=Address(name=name)
-        self.addr = address
+            address = Address(name=name)
+        self.address = address
         if shipping_address is None:
-            shipping_address=Address("")
-        self.shipaddr = shipping_address
+            shipping_address = Address("")
+        self.shipping_address = shipping_address
+        if book:
+            book.add(self)
+            self._assign_id()
+
+    def _assign_id(self):
+        self.book.counter_customer = cnt = self.book.counter_customer + 1
+        self.id = "{:06d}".format(cnt)
+
 
     def object_to_validate(self, change):
         yield self
 
     def validate(self):
-        self.book.counter_customer = cnt = self.book.counter_customer + 1
-        self.id = "{:06d}".format(cnt)
+        if not self.id:
+            self._assign_id()
 
     def __unirepr__(self):
         return u"Customer<{}:{}>".format(self.id, self.name)
@@ -182,3 +243,5 @@ class Vendor(DeclarativeBaseGuid):
     taxtable = relation('Taxtable')
     currency = relation('Commodity')
     term = relation('Billterm')
+
+

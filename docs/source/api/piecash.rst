@@ -6,6 +6,7 @@ Subpackages
 
 .. toctree::
 
+    piecash.business
     piecash.core
 
 Submodules
@@ -16,7 +17,6 @@ Submodules
    piecash._common
    piecash._declbase
    piecash.budget
-   piecash.business
    piecash.kvp
    piecash.ledger
    piecash.metadata

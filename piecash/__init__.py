@@ -7,7 +7,7 @@ __author__ = metadata.authors[0]
 __license__ = metadata.license
 __copyright__ = metadata.copyright
 
-from ._common import GncNoActiveSession, GnucashException, GncValidationError, GncImbalanceError, Address
+from ._common import GncNoActiveSession, GnucashException, GncValidationError, GncImbalanceError
 from .core import (Book,
                    Account, ACCOUNT_TYPES,
                    Transaction, Split, ScheduledTransaction, Lot,
@@ -16,7 +16,7 @@ from .core import (Book,
                    factories,
 )
 from .business import Invoice, Employee, Job  # must import as Transaction has a relation to it
-from .business import Vendor, Customer, Employee
+from .business import Vendor, Customer, Employee, Address
 from .budget import Budget, BudgetAmount
 from .kvp import slot
 from .ledger import ledger
