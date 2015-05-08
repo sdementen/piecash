@@ -8,9 +8,9 @@ from piecash._declbase import DeclarativeBaseGuid
 
 
 TaxIncludedType = [
-    (1, "yes"),
-    (2, "no"),
-    (3, "use global")
+    (1, "YES"),
+    (2, "NO"),
+    (3, "USEGLOBAL")
 ]
 
 
@@ -22,10 +22,15 @@ class ChoiceType(types.TypeDecorator):
         super(ChoiceType, self).__init__(**kw)
 
     def process_bind_param(self, value, dialect):
-        return [k for k, v in self.choices.items() if v == value][0]
+        try:
+            return [k for k, v in self.choices.items() if v == value][0]
+        except IndexError:
+            # print("Value '{}' is not in [{}]".format(", ".join(self.choices.values())))
+            raise ValueError("Value '{}' is not in choices [{}]".format(value, ", ".join(self.choices.values())))
 
     def process_result_value(self, value, dialect):
         return self.choices[value]
+
 
 class Address(object):
     """An Address object encapsulates information regarding an address in GnuCash.
@@ -62,6 +67,7 @@ class Address(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+
 class Customer(DeclarativeBaseGuid):
     """
     A GnuCash Customer
@@ -73,7 +79,7 @@ class Customer(DeclarativeBaseGuid):
         active (int): 1 if the customer is active, 0 otherwise
         discount (:class:`decimal.Decimal`): see Gnucash documentation
         credit (:class:`decimal.Decimal`): see Gnucash documentation
-        currency (:class:`piecash.core.commodity.Commodity`): the commodity of the customer
+        currency (:class:`piecash.core.commodity.Commodity`): the currency of the customer
         tax_override (int): 1 if tax override, 0 otherwise
         address (:class:`Address`): the address of the customer
         shipping_address (:class:`Address`): the shipping address of the customer
@@ -108,7 +114,7 @@ class Customer(DeclarativeBaseGuid):
     addr_fax = Column('addr_fax', VARCHAR(length=128))
     addr_email = Column('addr_email', VARCHAR(length=256))
     address = composite(Address, addr_name, addr_addr1, addr_addr2, addr_addr3, addr_addr4,
-                     addr_email, addr_fax, addr_phone)
+                        addr_email, addr_fax, addr_phone)
 
     shipaddr_name = Column('shipaddr_name', VARCHAR(length=1024))
     shipaddr_addr1 = Column('shipaddr_addr1', VARCHAR(length=1024))
@@ -119,7 +125,7 @@ class Customer(DeclarativeBaseGuid):
     shipaddr_fax = Column('shipaddr_fax', VARCHAR(length=128))
     shipaddr_email = Column('shipaddr_email', VARCHAR(length=256))
     shipping_address = composite(Address, shipaddr_name, shipaddr_addr1, shipaddr_addr2, shipaddr_addr3, shipaddr_addr4,
-                         shipaddr_email, shipaddr_fax, shipaddr_phone)
+                                 shipaddr_email, shipaddr_fax, shipaddr_phone)
 
     term_guid = Column('terms', VARCHAR(length=32), ForeignKey('billterms.guid'))
     tax_included = Column('tax_included', ChoiceType(TaxIncludedType))
@@ -133,6 +139,7 @@ class Customer(DeclarativeBaseGuid):
     def __init__(self,
                  name,
                  currency,
+                 id=None,
                  notes="",
                  active=1,
                  tax_override=0,
@@ -140,7 +147,7 @@ class Customer(DeclarativeBaseGuid):
                  discount=Decimal(0),
                  address=None,
                  shipping_address=None,
-                 tax_included="use global",
+                 tax_included="USEGLOBAL",
                  book=None):
         self.name = name
         self.currency = currency
@@ -156,9 +163,12 @@ class Customer(DeclarativeBaseGuid):
         if shipping_address is None:
             shipping_address = Address("")
         self.shipping_address = shipping_address
-        if book:
+
+        if book and id is None:
             book.add(self)
             self._assign_id()
+        elif id is not None:
+            self.id = str(id)
 
     def _assign_id(self):
         self.book.counter_customer = cnt = self.book.counter_customer + 1
@@ -177,12 +187,27 @@ class Customer(DeclarativeBaseGuid):
 
 
 class Employee(DeclarativeBaseGuid):
+    """
+    A GnuCash Employee
+
+    Attributes:
+        name (str): name of the Customer
+        id (str): autonumber id with 5 digits (initialised to book.counter_employee + 1)
+        language (str): language
+        active (int): 1 if the employee is active, 0 otherwise
+        workday (:class:`decimal.Decimal`): see Gnucash documentation
+        rate (:class:`decimal.Decimal`): see Gnucash documentation
+        currency (:class:`piecash.core.commodity.Commodity`): the currency of the employee
+        address (:class:`Address`): the address of the employee
+        creditcard_account (:class:`piecash.core.account.Account`): credit card account for the employee
+
+    """
     __tablename__ = 'employees'
 
     __table_args__ = {}
 
     # column definitions
-    username = Column('username', VARCHAR(length=2048), nullable=False)
+    name = Column('username', VARCHAR(length=2048), nullable=False)
     id = Column('id', VARCHAR(length=2048), nullable=False)
     language = Column('language', VARCHAR(length=2048), nullable=False)
     acl = Column('acl', VARCHAR(length=2048), nullable=False)
@@ -209,10 +234,69 @@ class Employee(DeclarativeBaseGuid):
 
     # relation definitions
     currency = relation('Commodity')
-    credit_account = relation('Account')
+    creditcard_account = relation('Account')
+
+    def __init__(self,
+                 name,
+                 currency,
+                 creditcard_account=None,
+                 id=None,
+                 active=1,
+                 language="",
+                 workday=Decimal(0),
+                 rate=Decimal(0),
+                 address=None,
+                 book=None):
+        self.name = name
+        self.currency = currency
+        self.active = active
+        self.workday = workday
+        self.rate = rate
+        self.language = language
+        self.creditcard_account = creditcard_account
+        if address is None:
+            address = Address(name=name)
+        self.address = address
+
+        if book and id is None:
+            book.add(self)
+            self._assign_id()
+        elif id is not None:
+            self.id = str(id)
+
+    def _assign_id(self):
+        self.book.counter_employee = cnt = self.book.counter_employee + 1
+        self.id = "{:06d}".format(cnt)
+
+
+    def object_to_validate(self, change):
+        yield self
+
+    def validate(self):
+        if not self.id:
+            self._assign_id()
+
+    def __unirepr__(self):
+        return u"Employee<{}:{}>".format(self.id, self.name)
+
 
 
 class Vendor(DeclarativeBaseGuid):
+    """
+    A GnuCash Vendor
+
+    Attributes:
+        name (str): name of the Customer
+        id (str): autonumber id with 5 digits (initialised to book.counter_vendor + 1)
+        notes (str): notes
+        active (int): 1 if the vendor is active, 0 otherwise
+        currency (:class:`piecash.core.commodity.Commodity`): the currency of the vendor
+        tax_override (int): 1 if tax override, 0 otherwise
+        address (:class:`Address`): the address of the vendor
+        tax_included (str): 'yes', 'no', 'use global'
+        taxtable (:class:`piecash.business.tax.TaxTable`): tax table of the vendor
+        term (:class:`piecash.business.invoice.Billterm`): bill term of the vendor
+    """
     __tablename__ = 'vendors'
 
     __table_args__ = {}
@@ -236,7 +320,7 @@ class Vendor(DeclarativeBaseGuid):
     addr = composite(Address, addr_name, addr_addr1, addr_addr2, addr_addr3, addr_addr4,
                      addr_email, addr_fax, addr_phone)
     term_guid = Column('terms', VARCHAR(length=32), ForeignKey('billterms.guid'))
-    tax_inc = Column('tax_inc', VARCHAR(length=2048))
+    tax_included = Column('tax_inc', VARCHAR(length=2048))
     tax_table_guid = Column('tax_table', VARCHAR(length=32), ForeignKey('taxtables.guid'))
 
     # relation definitions
@@ -245,3 +329,47 @@ class Vendor(DeclarativeBaseGuid):
     term = relation('Billterm')
 
 
+    def __init__(self,
+                 name,
+                 currency,
+                 id=None,
+                 notes="",
+                 active=1,
+                 tax_override=0,
+                 credit=Decimal(0),
+                 discount=Decimal(0),
+                 address=None,
+                 tax_included="USEGLOBAL",
+                 book=None):
+        self.name = name
+        self.currency = currency
+        self.notes = notes
+        self.active = active
+        self.credit = credit
+        self.discount = discount
+        self.tax_included = tax_included
+        self.tax_override = tax_override
+        if address is None:
+            address = Address(name=name)
+        self.address = address
+
+        if book and id is None:
+            book.add(self)
+            self._assign_id()
+        elif id is not None:
+            self.id = str(id)
+
+    def _assign_id(self):
+        self.book.counter_vendor = cnt = self.book.counter_vendor + 1
+        self.id = "{:06d}".format(cnt)
+
+
+    def object_to_validate(self, change):
+        yield self
+
+    def validate(self):
+        if not self.id:
+            self._assign_id()
+
+    def __unirepr__(self):
+        return u"Vendor<{}:{}>".format(self.id, self.name)

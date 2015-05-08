@@ -5,7 +5,7 @@ What's new
 In dev
 ~~~~~~
 
-- implementing support for creating Customer objects
+- implementing support for creating Customer, Vendor and Employee objects
 
 Version 0.8.1 (2015-05-03)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

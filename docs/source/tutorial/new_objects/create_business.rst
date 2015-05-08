@@ -38,3 +38,4 @@ To create a new customer (a :class:`piecash.business.person.Customer`):
     # the counter of the ID is accessible as
     b.counter_customer
 
+Similar functions are available to create new vendors (:class:`piecash.business.person.Vendor`) or employees (:class:`piecash.business.person.Employee`)

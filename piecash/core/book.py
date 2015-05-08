@@ -342,6 +342,16 @@ class Book(DeclarativeBaseGuid):
         return CallableList(self.session.query(Customer))
 
     @property
+    def customers(self):
+        """
+        gives easy access to all commodities in the book through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.business.people.Vendor`
+        """
+        from ..business import Vendor
+
+        return CallableList(self.session.query(Vendor))
+
+    @property
     def query(self):
         """
         proxy for the query function of the underlying sqlalchemy session

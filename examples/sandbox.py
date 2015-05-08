@@ -1,8 +1,8 @@
 # coding=utf-8
 from __future__ import print_function, unicode_literals
 
-if True:
-    from piecash import create_book, Customer, Address
+if False:
+    from piecash import create_book, Customer, Address, Vendor
 
     # create a book (in memory)
     b = create_book(currency="EUR")
@@ -31,7 +31,7 @@ if True:
     b.counter_customer
 
 
-fdsdsffds
+    fdsdsffds
 from decimal import Decimal
 from datetime import datetime
 import decimal
@@ -40,18 +40,20 @@ from sqlalchemy.orm import object_session
 
 from piecash import open_book, Budget,Address
 from piecash._common import Recurrence
-from piecash import create_book, Account, Transaction, Split, Commodity
+from piecash import create_book, Account, Transaction, Split, Commodity, Vendor
 from piecash.business import Customer
 
 
 b = create_book("foo.sqlite", currency="EUR", keep_foreign_keys=False, overwrite=True)
 c=Customer(book=b,name="foo",currency= b.currencies(mnemonic="EUR"), address=Address(name="foo", addr1="a1",addr4="a4", fax="fax",email="email",phone="phoen"))
 print(c.addr_addr1)
-b.add(Customer(name="john",currency= b.currencies(mnemonic="EUR")))
+b.add(Customer(name="john",id=456, currency= b.currencies(mnemonic="EUR")))
 b.add(Customer(name="baz",currency= b.currencies(mnemonic="EUR")))
-b.add(Customer(name="dsdsbaz",currency= b.currencies(mnemonic="EUR")))
+b.add(Customer(name="dsdsbaz",tax_included="YES",currency= b.currencies(mnemonic="EUR")))
+b.add(Vendor(name="dsdsbaz",tax_included="YES",currency= b.currencies(mnemonic="EUR")))
 b.save()
 print(b.customers)
+print(b.vendors)
 fdsfdsfds
 # create some accounts
 curr = b.currencies[0]
