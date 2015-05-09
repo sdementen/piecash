@@ -153,7 +153,10 @@ class Customer(DeclarativeBaseGuid):
             book.add(self)
             self._assign_id()
         elif id is not None:
-            self.id = str(id)
+            if isinstance(id, int):
+                self.id = str(id)
+            else:
+                self.id = id
 
     def _assign_id(self):
         self.book.counter_customer = cnt = self.book.counter_customer + 1
@@ -249,7 +252,10 @@ class Employee(DeclarativeBaseGuid):
             book.add(self)
             self._assign_id()
         elif id is not None:
-            self.id = str(id)
+            if isinstance(id, int):
+                self.id = str(id)
+            else:
+                self.id = id
 
     def _assign_id(self):
         self.book.counter_employee = cnt = self.book.counter_employee + 1
@@ -345,7 +351,10 @@ class Vendor(DeclarativeBaseGuid):
             book.add(self)
             self._assign_id()
         elif id is not None:
-            self.id = str(id)
+            if isinstance(id, int):
+                self.id = str(id)
+            else:
+                self.id = id
 
     def _assign_id(self):
         self.book.counter_vendor = cnt = self.book.counter_vendor + 1
