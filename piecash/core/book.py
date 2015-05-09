@@ -342,7 +342,7 @@ class Book(DeclarativeBaseGuid):
         return CallableList(self.session.query(Customer))
 
     @property
-    def customers(self):
+    def vendors(self):
         """
         gives easy access to all commodities in the book through a :class:`piecash.model_common.CallableList`
         of :class:`piecash.business.people.Vendor`
@@ -350,6 +350,26 @@ class Book(DeclarativeBaseGuid):
         from ..business import Vendor
 
         return CallableList(self.session.query(Vendor))
+
+    @property
+    def employees(self):
+        """
+        gives easy access to all commodities in the book through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.business.people.Employee`
+        """
+        from ..business import Employee
+
+        return CallableList(self.session.query(Employee))
+
+    @property
+    def taxtables(self):
+        """
+        gives easy access to all commodities in the book through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.business.tax.Taxtable`
+        """
+        from ..business import Taxtable
+
+        return CallableList(self.session.query(Taxtable))
 
     @property
     def query(self):

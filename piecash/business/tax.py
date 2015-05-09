@@ -1,11 +1,11 @@
 import uuid
+
 from sqlalchemy import Column, VARCHAR, BIGINT, INTEGER, ForeignKey
 from sqlalchemy.orm import relation
-from piecash._common import CallableList, hybrid_property_gncnumeric
-from piecash._declbase import DeclarativeBaseGuid
-from piecash.sa_extra import DeclarativeBase
 
-__author__ = 'sdementen'
+from .._common import hybrid_property_gncnumeric, CallableList
+from .._declbase import DeclarativeBaseGuid, DeclarativeBase
+from ..sa_extra import ChoiceType
 
 
 class Taxtable(DeclarativeBaseGuid):
@@ -37,6 +37,20 @@ class Taxtable(DeclarativeBaseGuid):
     )
 
 
+    def __init__(self, name, entries=None):
+        self.name = name
+        self.refcount = 0
+        self.invisible = 0
+        if entries is not None:
+            self.entries[:] = entries
+
+    def __unirepr__(self):
+        if self.entries:
+            return u"TaxTable<{}:{}>".format(self.name, [te.__unirepr__() for te in self.entries])
+        else:
+            return u"TaxTable<{}>".format(self.name)
+
+
 class TaxtableEntry(DeclarativeBase):
     __tablename__ = 'taxtable_entries'
 
@@ -50,8 +64,18 @@ class TaxtableEntry(DeclarativeBase):
     _amount_num = Column('amount_num', BIGINT(), nullable=False)
     _amount_denom = Column('amount_denom', BIGINT(), nullable=False)
     amount = hybrid_property_gncnumeric(_amount_num, _amount_denom)
-    type = Column('type', INTEGER(), nullable=False)
+    type = Column('type', ChoiceType({1: "value", 2: "percentage"}), nullable=False)
 
     # relation definitions
     taxtable = relation('Taxtable', back_populates='entries')
     account = relation('Account')
+
+    def __init__(self, type, amount, account, taxtable=None):
+        self.type = type
+        self.amount = amount
+        self.account = account
+        if taxtable:
+            self.taxtable = taxtable
+
+    def __unirepr__(self):
+        return u"TaxEntry<{} {} in {}>".format(self.amount, self.type, self.account.name)

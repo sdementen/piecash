@@ -2,10 +2,10 @@ What's new
 ==========
 
 
-In dev
-~~~~~~
+Version 0.8.2 (2015-05-09)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- implementing support for creating Customer, Vendor and Employee objects
+- implementing support for creating Customer, Vendor and Employee objects as well as taxtables
 
 Version 0.8.1 (2015-05-03)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

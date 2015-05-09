@@ -228,3 +228,21 @@ def create_piecash_engine(uri_conn, **kwargs):
             pass
 
     return eng
+
+
+class ChoiceType(types.TypeDecorator):
+    impl = types.INTEGER()
+
+    def __init__(self, choices, **kw):
+        self.choices = dict(choices)
+        super(ChoiceType, self).__init__(**kw)
+
+    def process_bind_param(self, value, dialect):
+        try:
+            return [k for k, v in self.choices.items() if v == value][0]
+        except IndexError:
+            # print("Value '{}' is not in [{}]".format(", ".join(self.choices.values())))
+            raise ValueError("Value '{}' is not in choices [{}]".format(value, ", ".join(self.choices.values())))
+
+    def process_result_value(self, value, dialect):
+        return self.choices[value]

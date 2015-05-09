@@ -1,10 +1,11 @@
 from decimal import Decimal
 
-from sqlalchemy import Column, VARCHAR, INTEGER, BIGINT, ForeignKey, types
+from sqlalchemy import Column, VARCHAR, INTEGER, BIGINT, ForeignKey
 from sqlalchemy.orm import composite, relation
 
-from piecash._common import hybrid_property_gncnumeric
-from piecash._declbase import DeclarativeBaseGuid
+from .._common import hybrid_property_gncnumeric
+from .._declbase import DeclarativeBaseGuid
+from ..sa_extra import ChoiceType
 
 
 TaxIncludedType = [
@@ -12,24 +13,6 @@ TaxIncludedType = [
     (2, "NO"),
     (3, "USEGLOBAL")
 ]
-
-
-class ChoiceType(types.TypeDecorator):
-    impl = types.INTEGER()
-
-    def __init__(self, choices, **kw):
-        self.choices = dict(choices)
-        super(ChoiceType, self).__init__(**kw)
-
-    def process_bind_param(self, value, dialect):
-        try:
-            return [k for k, v in self.choices.items() if v == value][0]
-        except IndexError:
-            # print("Value '{}' is not in [{}]".format(", ".join(self.choices.values())))
-            raise ValueError("Value '{}' is not in choices [{}]".format(value, ", ".join(self.choices.values())))
-
-    def process_result_value(self, value, dialect):
-        return self.choices[value]
 
 
 class Address(object):
@@ -145,6 +128,7 @@ class Customer(DeclarativeBaseGuid):
                  tax_override=0,
                  credit=Decimal(0),
                  discount=Decimal(0),
+                 taxtable=None,
                  address=None,
                  shipping_address=None,
                  tax_included="USEGLOBAL",
@@ -156,6 +140,7 @@ class Customer(DeclarativeBaseGuid):
         self.credit = credit
         self.discount = discount
         self.tax_included = tax_included
+        self.taxtable = taxtable
         self.tax_override = tax_override
         if address is None:
             address = Address(name=name)
@@ -191,7 +176,7 @@ class Employee(DeclarativeBaseGuid):
     A GnuCash Employee
 
     Attributes:
-        name (str): name of the Customer
+        name (str): name of the Employee
         id (str): autonumber id with 5 digits (initialised to book.counter_employee + 1)
         language (str): language
         active (int): 1 if the employee is active, 0 otherwise
@@ -229,8 +214,8 @@ class Employee(DeclarativeBaseGuid):
     addr_phone = Column('addr_phone', VARCHAR(length=128))
     addr_fax = Column('addr_fax', VARCHAR(length=128))
     addr_email = Column('addr_email', VARCHAR(length=256))
-    addr = composite(Address, addr_name, addr_addr1, addr_addr2, addr_addr3, addr_addr4,
-                     addr_email, addr_fax, addr_phone)
+    address = composite(Address, addr_name, addr_addr1, addr_addr2, addr_addr3, addr_addr4,
+                        addr_email, addr_fax, addr_phone)
 
     # relation definitions
     currency = relation('Commodity')
@@ -242,6 +227,7 @@ class Employee(DeclarativeBaseGuid):
                  creditcard_account=None,
                  id=None,
                  active=1,
+                 acl="",
                  language="",
                  workday=Decimal(0),
                  rate=Decimal(0),
@@ -252,6 +238,7 @@ class Employee(DeclarativeBaseGuid):
         self.active = active
         self.workday = workday
         self.rate = rate
+        self.acl = acl
         self.language = language
         self.creditcard_account = creditcard_account
         if address is None:
@@ -280,20 +267,19 @@ class Employee(DeclarativeBaseGuid):
         return u"Employee<{}:{}>".format(self.id, self.name)
 
 
-
 class Vendor(DeclarativeBaseGuid):
     """
     A GnuCash Vendor
 
     Attributes:
-        name (str): name of the Customer
+        name (str): name of the Vendor
         id (str): autonumber id with 5 digits (initialised to book.counter_vendor + 1)
         notes (str): notes
         active (int): 1 if the vendor is active, 0 otherwise
         currency (:class:`piecash.core.commodity.Commodity`): the currency of the vendor
         tax_override (int): 1 if tax override, 0 otherwise
         address (:class:`Address`): the address of the vendor
-        tax_included (str): 'yes', 'no', 'use global'
+        tax_included (str): 'YES', 'NO', 'USEGLOBAL'
         taxtable (:class:`piecash.business.tax.TaxTable`): tax table of the vendor
         term (:class:`piecash.business.invoice.Billterm`): bill term of the vendor
     """
@@ -317,8 +303,8 @@ class Vendor(DeclarativeBaseGuid):
     addr_phone = Column('addr_phone', VARCHAR(length=128))
     addr_fax = Column('addr_fax', VARCHAR(length=128))
     addr_email = Column('addr_email', VARCHAR(length=256))
-    addr = composite(Address, addr_name, addr_addr1, addr_addr2, addr_addr3, addr_addr4,
-                     addr_email, addr_fax, addr_phone)
+    address = composite(Address, addr_name, addr_addr1, addr_addr2, addr_addr3, addr_addr4,
+                        addr_email, addr_fax, addr_phone)
     term_guid = Column('terms', VARCHAR(length=32), ForeignKey('billterms.guid'))
     tax_included = Column('tax_inc', VARCHAR(length=2048))
     tax_table_guid = Column('tax_table', VARCHAR(length=32), ForeignKey('taxtables.guid'))
@@ -336,6 +322,7 @@ class Vendor(DeclarativeBaseGuid):
                  notes="",
                  active=1,
                  tax_override=0,
+                 taxtable=None,
                  credit=Decimal(0),
                  discount=Decimal(0),
                  address=None,
@@ -348,6 +335,7 @@ class Vendor(DeclarativeBaseGuid):
         self.credit = credit
         self.discount = discount
         self.tax_included = tax_included
+        self.taxtable = taxtable
         self.tax_override = tax_override
         if address is None:
             address = Address(name=name)
