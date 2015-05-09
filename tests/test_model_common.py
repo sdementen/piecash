@@ -7,7 +7,7 @@ import pytz
 from sqlalchemy import create_engine, Column, TEXT
 from sqlalchemy.orm import sessionmaker, composite
 
-from piecash._common import Address
+from piecash.business.person import Address
 import piecash._common as mc
 from piecash._declbase import DeclarativeBaseGuid
 from piecash.sa_extra import _Date, _DateTime
@@ -42,7 +42,7 @@ class TestModelCommon(object):
 
 
     def test_addr_composite(self):
-        flds = "addr1 addr2 addr3 addr4 email fax name phone".split()
+        flds = "name addr1 addr2 addr3 addr4 email fax phone".split()
         class B(DeclarativeBaseGuid):
             __tablename__ = "b_table"
             def __init__(self, **kwargs):
@@ -66,8 +66,6 @@ class TestModelCommon(object):
         assert a.addr.fax == "baz"
         s.add(a)
         s.flush()
-        # don't understand the working of composite ... not really critical
-        # assert a.addr.fax == "baz"
 
     def test_date(self):
         class C(DeclarativeBaseGuid):
