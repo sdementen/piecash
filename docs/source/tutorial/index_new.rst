@@ -8,3 +8,5 @@ Tutorial : creating new objects
 .. include:: new_objects/create_commodity.rst
 
 .. include:: new_objects/create_transaction.rst
+
+.. include:: new_objects/create_business.rst

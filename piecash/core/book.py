@@ -74,7 +74,15 @@ class Book(DeclarativeBaseGuid):
         use_trading_accounts (bool): true if option "Use trading accounts" is enabled
         use_split_action_field (bool): true if option "Use Split Action Field for Number" is enabled
         RO_threshold_day (int): value of Day Threshold for Read-Only Transactions (red line)
-        control_mode (list(str)) : list of allowed non-standard operations from "allow-root-subaccounts",
+        control_mode (list(str)) : list of allowed non-standard operations like : "allow-root-subaccounts"
+        counter_customer (int) : counter for :class:`piecash.business.person.Customer` id (link to slot "counters/gncCustomer")
+        counter_vendor (int) : counter for :class:`piecash.business.person.Vendor` id (link to slot "counters/gncVendor")
+        counter_employee (int) : counter for :class:`piecash.business.person.Employee` id (link to slot "counters/gncEmployee")
+        counter_invoice (int) : counter for :class:`piecash.business.invoice.Invoice` id (link to slot "counters/gncInvoice")
+        counter_job (int) : counter for :class:`piecash.business.invoice.Job` id (link to slot "counters/gncJob")
+        counter_bill (int) : counter for :class:`piecash.business.invoice.Bill` id (link to slot "counters/gncBill")
+        counter_exp_voucher (int) : counter for :class:`piecash.business.invoice.Invoice` id (link to slot "counters/gncExpVoucher")
+        counter_order (int) : counter for :class:`piecash.business.invoice.Order` id (link to slot "counters/gncOrder")
     """
     __tablename__ = 'books'
 
@@ -113,6 +121,16 @@ class Book(DeclarativeBaseGuid):
                               to_gnc=lambda v: float(v),
                               default=0)
 
+    counter_customer = option("counters/gncCustomer", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
+    counter_vendor = option("counters/gncVendor", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
+    counter_employee = option("counters/gncEmployee", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
+    counter_invoice = option("counters/gncInvoice", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
+    counter_job = option("counters/gncJob", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
+    counter_bill = option("counters/gncBill", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
+    counter_exp_voucher = option("counters/gncExpVoucher", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
+    counter_order = option("counters/gncOrder", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
+
+
     def __init__(self, root_account=None, root_template=None):
         self.root_account = root_account
         self.root_template = root_template
@@ -122,6 +140,7 @@ class Book(DeclarativeBaseGuid):
 
 
     _control_mode = None
+
     @property
     def control_mode(self):
         if self._control_mode is None:
@@ -311,6 +330,46 @@ class Book(DeclarativeBaseGuid):
         from .commodity import Price
 
         return CallableList(self.session.query(Price))
+
+    @property
+    def customers(self):
+        """
+        gives easy access to all commodities in the book through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.business.people.Customer`
+        """
+        from ..business import Customer
+
+        return CallableList(self.session.query(Customer))
+
+    @property
+    def vendors(self):
+        """
+        gives easy access to all commodities in the book through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.business.people.Vendor`
+        """
+        from ..business import Vendor
+
+        return CallableList(self.session.query(Vendor))
+
+    @property
+    def employees(self):
+        """
+        gives easy access to all commodities in the book through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.business.people.Employee`
+        """
+        from ..business import Employee
+
+        return CallableList(self.session.query(Employee))
+
+    @property
+    def taxtables(self):
+        """
+        gives easy access to all commodities in the book through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.business.tax.Taxtable`
+        """
+        from ..business import Taxtable
+
+        return CallableList(self.session.query(Taxtable))
 
     @property
     def query(self):

@@ -3,7 +3,7 @@ import os.path
 import sys
 import pytest
 from sqlalchemy_utils import database_exists, drop_database
-from piecash import create_book, Account, Commodity
+from piecash import create_book, Account, Commodity, Employee, Customer, Vendor
 
 test_folder = os.path.dirname(os.path.realpath(__file__))
 book_folder = os.path.join(test_folder, "..", "gnucash_books")
@@ -53,6 +53,10 @@ elif os.environ.get("PIECASH_DBSERVER_TEST", False):
 else:
     db_config.pop("mysql")
     db_config.pop("postgres")
+
+@pytest.yield_fixture(params=[Customer, Vendor, Employee])
+def Person(request):
+    yield  request.param
 
 @pytest.yield_fixture(params=db_config.items())
 def book_db_config(request):

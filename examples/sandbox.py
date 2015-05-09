@@ -1,16 +1,60 @@
-from __future__ import print_function
+# coding=utf-8
+from __future__ import print_function, unicode_literals
+
+if False:
+    from piecash import create_book, Customer, Address, Vendor
+
+    # create a book (in memory)
+    b = create_book(currency="EUR")
+    # get the currency
+    eur = b.default_currency
+
+    # create a customer
+    c1 = Customer(name="Mickey", currency=eur, address=Address(addr1="Sesame street 1", email="mickey@example.com"))
+    # the customer has not yet an ID
+    b.add(c1)
+
+    # flush the book
+    b.flush()
+
+    # the customer gets its ID
+    print(c1)
+
+    # or create a customer directly in a book (by specifying the book argument)
+    c2 = Customer(name="Mickey", currency=eur, address=Address(addr1="Sesame street 1", email="mickey@example.com"),
+                  book=b)
+
+    # the customer gets immediately its ID
+    c2
+
+    # the counter of the ID is accessible as
+    b.counter_customer
+
+
+    fdsdsffds
 from decimal import Decimal
 from datetime import datetime
 import decimal
 import inspect
 from sqlalchemy.orm import object_session
 
-from piecash import open_book, Budget
+from piecash import open_book, Budget,Address
 from piecash._common import Recurrence
-from piecash import create_book, Account, Transaction, Split, Commodity
+from piecash import create_book, Account, Transaction, Split, Commodity, Vendor
+from piecash.business import Customer
 
 
-b = create_book("mytest.gnucash", currency="EUR", keep_foreign_keys=False, overwrite=True)
+b = create_book("foo.sqlite", currency="EUR", keep_foreign_keys=False, overwrite=True)
+c=Customer(book=b,name="foo",currency= b.currencies(mnemonic="EUR"), address=Address(name="foo", addr1="a1",addr4="a4", fax="fax",email="email",phone="phoen"))
+print(c.addr_addr1)
+b.add(Customer(name="john",id=456, currency= b.currencies(mnemonic="EUR")))
+b.add(Customer(name="baz",currency= b.currencies(mnemonic="EUR")))
+b.add(Customer(name="dsdsbaz",tax_included="YES",currency= b.currencies(mnemonic="EUR")))
+b.add(Vendor(name="dsdsbaz",tax_included="YES",currency= b.currencies(mnemonic="EUR")))
+b.save()
+print(b.customers)
+print(b.vendors)
+fdsfdsfds
 # create some accounts
 curr = b.currencies[0]
 cdty = Commodity(namespace="échange",mnemonic="ïoà", fullname="Example of unicode déta")

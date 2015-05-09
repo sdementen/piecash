@@ -15,7 +15,9 @@ from .core import (Book,
                    create_book, open_book,
                    factories,
 )
-from .business import Invoice, Employee, Customer, Job, Vendor  # must import as Transaction has a relation to it
+from .business import Invoice, Employee, Job  # must import as Transaction has a relation to it
+from .business import Vendor, Customer, Employee, Address
+from .business import Taxtable, TaxtableEntry
 from .budget import Budget, BudgetAmount
 from .kvp import slot
 from .ledger import ledger
