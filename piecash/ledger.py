@@ -10,7 +10,7 @@ def ledger(tr):
     """Return a ledger-cli alike representation of the transaction"""
     s = ["{:%Y/%m/%d} * {}\n".format(tr.post_date, tr.description)]
     if tr.notes:
-        s.append(";{}\n".format(tr.notes))
+        s.append("\t;{}\n".format(tr.notes))
     for split in tr.splits:
         s.append("\t{:40} ".format(split.account.fullname))
         if split.account.commodity != tr.currency:
