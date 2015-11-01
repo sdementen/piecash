@@ -15,7 +15,7 @@ unsuffix = True
 message = Bump version {version}
 
 [prepare]
-suffix = dev
+unsuffix = True
 message = Prepare version {version} for next development cycle
 
 [changelog]
