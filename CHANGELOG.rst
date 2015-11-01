@@ -1,8 +1,8 @@
 What's new
 ==========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.8.3 (2015-11-01)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - fix issue #8 re enum34
 - updated sqlalchemy dep to use latest 0.9 series
