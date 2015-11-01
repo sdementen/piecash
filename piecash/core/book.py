@@ -8,25 +8,7 @@ from .._declbase import DeclarativeBaseGuid
 from .._common import CallableList
 from . import factories
 from .commodity import Commodity
-
-
-def option(name, to_gnc, from_gnc, default=None):
-    def getter(self):
-        try:
-            return from_gnc(self.book[name].value)
-        except KeyError:
-            return default
-
-    def setter(self, value):
-        if value == default:
-            try:
-                del self[name]
-            except KeyError:
-                pass
-        else:
-            self.book[name] = to_gnc(value)
-
-    return property(getter, setter)
+from piecash.sa_extra import kvp_attribute
 
 
 class Book(DeclarativeBaseGuid):
@@ -106,29 +88,29 @@ class Book(DeclarativeBaseGuid):
     session = None
 
     # link options to KVP
-    use_trading_accounts = option("options/Accounts/Use Trading Accounts",
+    use_trading_accounts = kvp_attribute("options/Accounts/Use Trading Accounts",
                                   from_gnc=lambda v: v == 't',
                                   to_gnc=lambda v: 't',
                                   default=False)
 
-    use_split_action_field = option("options/Accounts/Use Split Action Field for Number",
+    use_split_action_field = kvp_attribute("options/Accounts/Use Split Action Field for Number",
                                     from_gnc=lambda v: v == 't',
                                     to_gnc=lambda v: 't' if v else 'f',
                                     default=False)
 
-    RO_threshold_day = option("options/Accounts/Day Threshold for Read-Only Transactions (red line)",
+    RO_threshold_day = kvp_attribute("options/Accounts/Day Threshold for Read-Only Transactions (red line)",
                               from_gnc=lambda v: int(v),
                               to_gnc=lambda v: float(v),
                               default=0)
 
-    counter_customer = option("counters/gncCustomer", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
-    counter_vendor = option("counters/gncVendor", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
-    counter_employee = option("counters/gncEmployee", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
-    counter_invoice = option("counters/gncInvoice", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
-    counter_job = option("counters/gncJob", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
-    counter_bill = option("counters/gncBill", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
-    counter_exp_voucher = option("counters/gncExpVoucher", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
-    counter_order = option("counters/gncOrder", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
+    counter_customer = kvp_attribute("counters/gncCustomer", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
+    counter_vendor = kvp_attribute("counters/gncVendor", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
+    counter_employee = kvp_attribute("counters/gncEmployee", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
+    counter_invoice = kvp_attribute("counters/gncInvoice", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
+    counter_job = kvp_attribute("counters/gncJob", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
+    counter_bill = kvp_attribute("counters/gncBill", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
+    counter_exp_voucher = kvp_attribute("counters/gncExpVoucher", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
+    counter_order = kvp_attribute("counters/gncOrder", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
 
 
     def __init__(self, root_account=None, root_template=None):
