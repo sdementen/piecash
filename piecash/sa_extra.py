@@ -1,19 +1,24 @@
 from __future__ import print_function
-from __future__ import division
+from __future__ import division, unicode_literals
+from pprint import pprint, pformat
 import sys
 import datetime
+import unicodedata
 
-from sqlalchemy import types, Table, MetaData, ForeignKeyConstraint, event, create_engine
+from sqlalchemy import types, Table, MetaData, ForeignKeyConstraint, event, create_engine, inspect
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import sessionmaker, object_session
+from sqlalchemy.orm import sessionmaker, object_session, RelationshipProperty, CompositeProperty, \
+    ColumnProperty, Mapper
+from sqlalchemy.orm.attributes import InstrumentedAttribute
+from sqlalchemy.orm.state import AttributeState
 import tzlocal
 import pytz
 from sqlalchemy.orm.base import instance_state
-import unicodedata
 
+# import yaml
 
 if sys.version > '3':
     long = int
@@ -24,7 +29,8 @@ else:
 
 def __init__blocked(self, *args, **kwargs):
     raise NotImplementedError("Objects of type {} cannot be created from scratch "
-                                  "(only read)".format(self.__class__.__name__))
+                              "(only read)".format(self.__class__.__name__))
+
 
 @as_declarative(constructor=__init__blocked)
 class DeclarativeBase(object):
@@ -52,6 +58,100 @@ class DeclarativeBase(object):
     def object_beforechange(self):
         return instance_state(self).committed_state
 
+    def __format__(self, format_spec):
+        if format_spec != "expl":
+            return format(str(self), format_spec)
+
+        def fmt_relation(k):
+            return "{} = {!r} [{!r}]\n".format(k, getattr(self, k), getattr(self, k.replace("_guid","")))
+
+        def fmt_field(k):
+            return "{} = {!r}\n".format(k, getattr(self, map_sql_orm[k]))
+
+        i = inspect(self.__class__)
+        # print(list(i.attrs))
+        print(list(i.all_orm_descriptors))
+        print(yaml.dump({k:getattr(self,k.key) for k in i.all_orm_descriptors if isinstance(k, InstrumentedAttribute)}))
+        fefrezrez
+        print([k.key for k in i.mapper.column_attrs]+[k.key for k in i.attrs])
+        # print(self.as_dict())
+        for k in dir(self):
+            if k.startswith("_") or k=="metadata":
+                continue
+            attr = getattr(self, k)
+            if isinstance(attr, classmethod):
+                ko
+            attr_type = type(attr)
+            if isinstance(attr, (int, str, datetime.datetime)):
+                print("==>",i.attrs[k])
+            print(k, type(attr))
+        # print(dir(self))
+        fdsfdsfds
+        map_sql_orm=({c.columns[0].name:c.key for c in i.mapper.column_attrs})
+
+        cols = [col.name for col in self.__table__.columns]
+
+        res = ""
+        for col in cols:
+            if "_guid" in col:
+                res += fmt_relation(col)
+            else:
+                res += fmt_field(col)
+        res += "slots = {}\n".format(pformat(self.slots))
+        return res
+        print(cols)
+        fdsfds
+        fields = []
+        relations = []
+        pk = None
+        # print(list(inspect(self).attrs))
+        # print(self.__class__.__dict__)
+        # fdsfds
+        # print(inspect(self.__class__).all_orm_descriptors.keys())
+        # fdfdsqfdsq
+        for k in inspect(self.__class__).all_orm_descriptors:
+            if isinstance(k, Mapper):continue
+            print(k, type(k), dir(k))
+            if isinstance(k, hybrid_property):
+                print(k)
+            elif k.key.startswith("_"):
+                continue
+
+            if isinstance(k, RelationshipProperty):
+                # skip relationships as we get them from foreign_keys
+                pass
+            elif isinstance(k, CompositeProperty):
+                # skip composite (like Address)
+                pass
+            elif isinstance(k, ColumnProperty):
+                assert len(k.columns) == 1
+                sql_col = k.columns[0]
+                if sql_col.primary_key:
+                    pk = k.key
+                elif sql_col.foreign_keys:
+                    relations.append((k.key, k.key.split("_")[0]))
+                else:
+                    fields.append(k.key)
+            elif isinstance(k, InstrumentedAttribute):
+                pass
+            elif isinstance(k, hybrid_property):
+                print(k.fget(self))
+                # print(k.key, k.value)
+                # fields.append(k.key)
+            else:
+                raise ValueError("Unknown type of property '{}' for key '{}'".format(type(k), k))
+
+        def fmt(k):
+            if isinstance(k, tuple):
+                return "{} = {!r} [{}]\n".format(k[1], getattr(self, k[1]), getattr(self, k[0]))
+            elif k:
+                return "{} = {!r}\n".format(k, getattr(self, k))
+            else:
+                return ""
+
+        res = fmt_field(pk) + "".join(map(fmt_field, fields)) + "".join(map(fmt_field, relations)) + fmt_field("slots")
+
+        return res
 
     if sys.version > '3':
         def __str__(self):
@@ -101,7 +201,8 @@ class _DateTime(types.TypeDecorator):
 
     def process_bind_param(self, value, engine):
         if value is not None:
-            assert isinstance(value, datetime.datetime), "value {} is not of type datetime.datetime but type {}".format(value,type(value))
+            assert isinstance(value, datetime.datetime), "value {} is not of type datetime.datetime but type {}".format(
+                value, type(value))
             if value.tzinfo is None:
                 value = tz.localize(value)
             return value.astimezone(utc)
@@ -153,6 +254,7 @@ def mapped_to_slot_property(col, slot_name, slot_transform=lambda x: x):
         expr=expr,
     )
 
+
 def pure_slot_property(slot_name, slot_transform=lambda x: x):
     """
     Create a property (class must have slots) that maps to a slot
@@ -161,6 +263,7 @@ def pure_slot_property(slot_name, slot_transform=lambda x: x):
     :param slot_transform: transformation to operate before assigning value
     :return:
     """
+
     def fget(self):
         # return None if the slot does not exist. alternative could be to raise an exception
         try:
@@ -180,6 +283,24 @@ def pure_slot_property(slot_name, slot_transform=lambda x: x):
         fget=fget,
         fset=fset,
     )
+
+def kvp_attribute(name, to_gnc, from_gnc, default=None):
+    def getter(self):
+        try:
+            return from_gnc(self[name].value)
+        except KeyError:
+            return default
+
+    def setter(self, value):
+        if value == default:
+            try:
+                del self[name]
+            except KeyError:
+                pass
+        else:
+            self[name] = to_gnc(value)
+
+    return property(getter, setter)
 
 
 def get_foreign_keys(metadata, engine):
@@ -246,3 +367,5 @@ class ChoiceType(types.TypeDecorator):
 
     def process_result_value(self, value, dialect):
         return self.choices[value]
+
+

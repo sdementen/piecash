@@ -122,6 +122,9 @@ class Invoice(DeclarativeBaseGuid):
     post_txn = relation('Transaction')
 
 
+    def __unirepr__(self):
+        return u"Invoice<{}>".format(self.id)
+
 class Job(DeclarativeBaseGuid):
     __tablename__ = 'jobs'
 

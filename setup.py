@@ -222,6 +222,9 @@ python_version_specific_requires = []
 if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 3):
     python_version_specific_requires.append('argparse')
 
+if sys.version_info < (3, 4):
+    python_version_specific_requires.append('enum34')
+
 
 # See here for more options:
 # <http://pythonhosted.org/setuptools/setuptools.html>
@@ -259,9 +262,8 @@ setup_dict = dict(
     ],
     packages=find_packages(exclude=(TESTS_DIRECTORY, DATA_DIRECTORY)),
     install_requires=[
-                         'SQLAlchemy<=0.9.8',
-                         'SQLAlchemy-Utils<=0.28.2',
-                         'enum34',
+                         'SQLAlchemy<=0.9.10',
+                         'SQLAlchemy-Utils', #<=0.28.2',
                          'pytz',
                          'tzlocal',
                          'future',

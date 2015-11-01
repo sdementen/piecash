@@ -173,7 +173,7 @@ class Slot(DeclarativeBase):
             self.value = value
 
     def __unirepr__(self):
-        return u"<{} {}={}>".format(self.__class__.__name__, self.name, self.value)
+        return u"<{} {}={!r}>".format(self.__class__.__name__, self.name, self.value)
 
 
 class SlotSimple(Slot):
@@ -286,6 +286,7 @@ class SlotGUID(SlotFrame):
     _mapping_name_class = {
         'from-sched-xaction': 'piecash.core.transaction.ScheduledTransaction',
         'account': 'piecash.core.account.Account',
+        'invoice-guid':'piecash.business.invoice.Invoice'
         }
 
 
