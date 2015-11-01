@@ -207,8 +207,9 @@ class TestAllCommand(TestCommand):
     def finalize_options(self):
         TestCommand.finalize_options(self)
         # These are fake, and just set to appease distutils and setuptools.
-        self.test_suite = True
-        self.test_args = []
+        if sys.version_info < (3, 5):
+            self.test_suite = True
+            self.test_args = []
 
     def run_tests(self):
         raise SystemExit(_test())
@@ -262,8 +263,8 @@ setup_dict = dict(
     ],
     packages=find_packages(exclude=(TESTS_DIRECTORY, DATA_DIRECTORY)),
     install_requires=[
-                         'SQLAlchemy<=0.9.10',
-                         'SQLAlchemy-Utils', #<=0.28.2',
+                         'SQLAlchemy<1.0,!=0.9.9',
+                         'SQLAlchemy-Utils<=0.30',
                          'pytz',
                          'tzlocal',
                          'future',
