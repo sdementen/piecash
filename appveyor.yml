@@ -70,6 +70,9 @@ install:
   # the parent CMD process).
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
 
+  # set HOME path for PYPI upload
+  - "set HOME=%USERPROFILE%"
+
   # Check that we have the expected version and architecture for Python
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
@@ -99,7 +102,7 @@ after_test:
   - "%CMD_IN_ENV% python setup.py bdist_wheel"
   - "%CMD_IN_ENV% python setup.py bdist_wininst"
   - "%CMD_IN_ENV% python setup.py bdist_msi"
-  - "%CMD_IN_ENV% pyinstaller scripts/piecash_ledger.py"
+  - "%CMD_IN_ENV% pyinstaller --onefile scripts/piecash_ledger.py"
   - ps: "ls dist"
 
 artifacts:
@@ -107,13 +110,13 @@ artifacts:
   - path: dist\*
     name: packages
 
-  - path: dist\piecash_ledger|*
+  - path: dist\piecash_ledger\*
     name: scriptexe
 
 deploy_script:
   - "echo [pypi] > %USERPROFILE%\\.pypirc"
   - "echo username: %pypi_user% >> %USERPROFILE%\\.pypirc"
   - "echo password: %pypi_pwd% >> %USERPROFILE%\\.pypirc"
-  - "set HOME=%USERPROFILE%"
+  - "echo %HOME%"
   - python setup.py sdist bdist_wheel upload
 
