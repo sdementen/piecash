@@ -28,3 +28,6 @@ Paver==1.2.1
 colorama==0.2.7
 bumpr
 requests
+
+setuptools==18.4
+mock==1.3.0
