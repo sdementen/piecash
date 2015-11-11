@@ -118,5 +118,5 @@ deploy_script:
   - "echo username: %pypi_user% >> %USERPROFILE%\\.pypirc"
   - "echo password: %pypi_pwd% >> %USERPROFILE%\\.pypirc"
   - "echo %HOME%"
-  - python setup.py sdist bdist_wheel upload
+  - "%CMD_IN_ENV% python setup.py sdist bdist_wheel upload"
 
