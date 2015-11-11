@@ -114,9 +114,14 @@ artifacts:
     name: scriptexe
 
 deploy_script:
-  - "echo [pypi] > %USERPROFILE%\\.pypirc"
+  - "echo [distutils] > %USERPROFILE%\\.pypirc"
+  - "echo index-servers = >> %USERPROFILE%\\.pypirc"
+  - "echo   pypi >> %USERPROFILE%\\.pypirc"
+  - "echo >> %USERPROFILE%\\.pypirc"
+  - "echo [pypi] >> %USERPROFILE%\\.pypirc"
   - "echo username: %pypi_user% >> %USERPROFILE%\\.pypirc"
   - "echo password: %pypi_pwd% >> %USERPROFILE%\\.pypirc"
   - "echo %HOME%"
+  - "type %USERPROFILE%\\.pypirc"
   - "%CMD_IN_ENV% python setup.py sdist bdist_wheel upload"
 
