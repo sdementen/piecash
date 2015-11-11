@@ -104,12 +104,12 @@ after_test:
 
 artifacts:
   # Archive the generated packages in the ci.appveyor.com build report.
-  - path: dist\*
+  - path: dist\**
 
 
-#deploy_script:
-#  - "echo [pypi] > %USERPROFILE%\\.pypirc"
-#  - "echo username: %pypi_user% >> %USERPROFILE%\\.pypirc"
-#  - "echo password: %pypi_pwd% >> %USERPROFILE%\\.pypirc"
-#  - python setup.py sdist bdist_wheel upload
+deploy_script:
+  - "echo [pypi] > %USERPROFILE%\\.pypirc"
+  - "echo username: %pypi_user% >> %USERPROFILE%\\.pypirc"
+  - "echo password: %pypi_pwd% >> %USERPROFILE%\\.pypirc"
+  - python setup.py sdist bdist_wheel upload
 
