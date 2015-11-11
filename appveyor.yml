@@ -85,6 +85,7 @@ install:
   - "%CMD_IN_ENV% pip install -r requirements-dev.txt"
 
 
+
 build_script:
   # Build the compiled extension
   - "%CMD_IN_ENV% python setup.py build"
@@ -98,6 +99,7 @@ after_test:
   - "%CMD_IN_ENV% python setup.py bdist_wheel"
   - "%CMD_IN_ENV% python setup.py bdist_wininst"
   - "%CMD_IN_ENV% python setup.py bdist_msi"
+  - "%CMD_IN_ENV% pyinstaller scripts/piecash_ledger.py"
   - ps: "ls dist"
 
 artifacts:

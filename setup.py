@@ -5,6 +5,8 @@ import os
 import sys
 import imp
 import subprocess
+import platform
+
 
 # # Python 2.6 subprocess.check_output compatibility. Thanks Greg Hewgill!
 if 'check_output' not in dir(subprocess):
@@ -275,6 +277,7 @@ setup_dict = dict(
         'mock',
         'py',
     ],
+    # console=['scripts/piecash_ledger.py','scripts/piecash_toqif.py'],
     scripts=['scripts/piecash_ledger.py','scripts/piecash_toqif.py'],
     cmdclass={'test': TestAllCommand},
     zip_safe=False,  # don't use eggs

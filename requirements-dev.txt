@@ -32,3 +32,4 @@ requests
 setuptools==18.4
 mock==1.3.0
 wheel==0.26.0
+pyinstaller
