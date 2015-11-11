@@ -207,7 +207,7 @@ class TestAllCommand(TestCommand):
     def finalize_options(self):
         TestCommand.finalize_options(self)
         # These are fake, and just set to appease distutils and setuptools.
-        if sys.version_info < (3, 5):
+        if sys.version_info < (3, 0):
             self.test_suite = True
             self.test_args = []
 
