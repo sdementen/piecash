@@ -85,7 +85,7 @@ class TestIntegration_EmptyBook(object):
             assert k in book
             if isinstance(v, datetime.datetime):
                 # check string format as the date in piecash is localized
-                assert "{:%Y%m%d%h%M%s}".format(book[k].value) == "{:%Y%m%d%h%M%s}".format(v)
+                assert "{:%Y%m%d%h%M%S}".format(book[k].value) == "{:%Y%m%d%h%M%S}".format(v)
             else:
                 assert book[k].value == v
 
