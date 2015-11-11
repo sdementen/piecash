@@ -1,7 +1,7 @@
 piecash
 =======
 
-|build-status| |docs|
+|build-status| |appveyor-status| |docs|
 
 Piecash provides a simple and pythonic interface to GnuCash files stored in SQL (sqlite3, Postgres and MySQL).
 
@@ -56,6 +56,11 @@ The project has reached beta stage.
     :alt: build status
     :scale: 100%
     :target: https://travis-ci.org/sdementen/piecash
+
+.. |appveyor-status| image:: https://ci.appveyor.com/api/projects/status/af7mb3pwv31i6ltv/branch/master?svg=true
+    :alt: appveyor status
+    :scale: 100%
+    :target: https://ci.appveyor.com/project/sdementen/piecash
 
 .. |docs| image:: https://readthedocs.org/projects/piecash/badge/?version=master
     :alt: Documentation Status
