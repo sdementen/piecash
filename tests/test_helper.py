@@ -70,6 +70,7 @@ def book_db_config(request):
 
     yield db_config
 
+
     if sql_backend!="sqlite_in_mem"  and database_exists(name):
         drop_database(name)
 

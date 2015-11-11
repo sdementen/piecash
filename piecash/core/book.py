@@ -215,6 +215,9 @@ class Book(DeclarativeBaseGuid):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def close(self):
         """Close a session. Any changes not yet saved are rolled back. Any lock on the file/DB is released.
         """
         session = self.session
@@ -224,6 +227,7 @@ class Book(DeclarativeBaseGuid):
         # # remove the lock
         # session.delete_lock()
         session.close()
+
 
     # add general getters for gnucash classes
     def get(self, cls, **kwargs):

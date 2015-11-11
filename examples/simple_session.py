@@ -25,7 +25,8 @@ with create_book(FILE_2) as book:
 # using the session as context manager automatically release the lock and close the session
 with open_book(FILE_2) as book:
     try:
-        book_2 = open_book(FILE_2)
+        with open_book(FILE_2) as book_2:
+            pass
     except GnucashException as backend_exception:
         print("OK", backend_exception)
 

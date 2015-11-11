@@ -28,9 +28,14 @@ def realbook_session(request):
     shutil.copyfile(file_template_full, file_for_test_full)
 
     # default book is readonly
+
     s = open_book(file_for_test_full)
 
-    request.addfinalizer(lambda: os.remove(file_for_test_full))
+    @request.addfinalizer
+    def finalizer():
+        s.close()
+        os.remove(file_for_test_full)
+
     return s
 
 class TestIntegration_ExampleScripts(object):

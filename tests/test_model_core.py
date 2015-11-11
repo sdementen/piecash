@@ -25,8 +25,13 @@ def session_readonly(request):
     # default session is readonly
     s = open_book(file_for_test)
 
-    request.addfinalizer(lambda: os.remove(file_for_test))
+    @request.addfinalizer
+    def close_s():
+        s.close()
+        os.remove(file_for_test)
+
     return s
+
 
 @pytest.fixture
 def book_readonly_lock(request):
@@ -35,10 +40,11 @@ def book_readonly_lock(request):
     # default session is readonly
     book = open_book(file_for_test)
 
+    @request.addfinalizer
     def close_s():
-        book.session.close()
+        book.close()
         os.remove(file_for_test)
-    request.addfinalizer(close_s)
+
     return book
 
 
@@ -49,7 +55,7 @@ class TestModelCore_EmptyBook(object):
 
         assert set(account_names) == {(u'Template Root',),
                                       (u'Root Account',),
-        }
+                                      }
 
     def test_transactions(self, session):
         # no transactions in an empty gnucash file
@@ -77,7 +83,7 @@ class TestModelCore_EmptyBook(object):
                                  (u'slots', 3), (u'transactions', 3), (u'splits', 4), (u'lots', 2), (u'entries', 3),
                                  (u'billterms', 2), (u'invoices', 3), (u'commodities', 1), (u'schedxactions', 1),
                                  (u'prices', 2), (u'customers', 2), (u'employees', 2),
-        }
+                                 }
 
     def test_readonly_true(self, session_readonly):
         # control exception when adding object to readonly gnucash db
@@ -97,7 +103,6 @@ class TestModelCore_EmptyBook(object):
         with pytest.raises(GnucashException):
             sa_session_readonly.commit()
 
-
     def test_readonly_false(self, session):
         v = Version(table_name="fo", table_version="ok")
         session.add(v)
@@ -107,7 +112,6 @@ class TestModelCore_EmptyBook(object):
         # test that lock is not taken in readonly session
         locks = list(book_readonly_lock.session.execute(gnclock.select()))
         assert len(locks) == 0
-
 
 # class TestModelCore_CreateObjects(object):
 #     def test_accounts(self, session):

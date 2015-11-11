@@ -19,9 +19,9 @@ class TestSession_create_book(object):
                     type="ASSET")
         assert str(b.uri) == build_uri(**book_db_config)
         b.save()
-        b.session.close()
+        b.close()
 
         # reopen the DB except if sqlite_file is None
         if book_db_config.get("sqlite_file", True):
-            b = open_book(**book_db_config)
-            assert b.accounts(name="léviö").commodity == b.currencies(mnemonic="SEK")
+            with open_book(**book_db_config) as b:
+                assert b.accounts(name="léviö").commodity == b.currencies(mnemonic="SEK")
