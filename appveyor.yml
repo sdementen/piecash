@@ -86,7 +86,7 @@ install:
   # set HOME path for PYPI upload
   - "set HOME=%USERPROFILE%"
 
-  - "echo 127.0.0.1:5432:foo:postgres:Password12! > %USERPROFILE%\\.pgpass"
+  - "echo *:*:*:*:Password12! > %USERPROFILE%\\.pgpass"
   - cat %USERPROFILE%\\.pgpass
   - "SET PGUSER=postgres"
   - "SET PGPASSWORD=Password12!"
