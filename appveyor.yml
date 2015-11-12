@@ -89,8 +89,8 @@ install:
   - "echo 127.0.0.1:5432:foo:postgres:Password12! > %USERPROFILE%\\.pgpass"
   - cat %USERPROFILE%\\.pgpass
   - "SET PGUSER=postgres"
-  - SET PGPASSWORD="Password12!"
-  - "SET PATH=C:\\Program Files\\PostgreSQL\\9.3\\bin\\;%PATH%"
+  - "SET PGPASSWORD=Password12!"
+  - "SET PATH=C:\\Program Files\\PostgreSQL\\9.4\\bin\\;%PATH%"
   - "createdb foo"
 
 
