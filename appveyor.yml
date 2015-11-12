@@ -125,7 +125,9 @@ after_test:
   #- "%CMD_IN_ENV% python setup.py bdist_wheel"
   #- "%CMD_IN_ENV% python setup.py bdist_wininst"
   #- "%CMD_IN_ENV% python setup.py bdist_msi"
-  - "%CMD_IN_ENV% pyinstaller --onefile scripts/piecash_ledger.py"
+  - "if DEFINED PYTHON_PYPI ( %CMD_IN_ENV% pyinstaller --onefile scripts/piecash_ledger.py)"
+  - "if DEFINED PYTHON_PYPI ( %CMD_IN_ENV% pyinstaller --onefile scripts/piecash_prices.py)"
+  - "if DEFINED PYTHON_PYPI ( %CMD_IN_ENV% pyinstaller scripts/piecash_toqif.py)"
   - ps: "ls dist"
 
 artifacts:

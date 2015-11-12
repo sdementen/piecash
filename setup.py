@@ -279,7 +279,7 @@ setup_dict = dict(
         'py',
     ],
     # console=['scripts/piecash_ledger.py','scripts/piecash_toqif.py'],
-    scripts=['scripts/piecash_ledger.py','scripts/piecash_toqif.py'],
+    scripts=['scripts/piecash_ledger.py','scripts/piecash_toqif.py','scripts/piecash_prices.py'],
     cmdclass={'test': TestAllCommand},
     zip_safe=False,  # don't use eggs
 )
