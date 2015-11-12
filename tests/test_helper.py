@@ -26,6 +26,7 @@ if os.environ.get("TRAVIS", False):
     pg_password = ''
 else:
     pg_password = os.environ.get("PG_PASSWORD")
+
 db_postgres_uri = "postgresql://postgres:{pwd}@localhost:5432/foo".format(pwd=pg_password)
 db_mysql_uri = "mysql+pymysql://travis:@localhost/foo?charset=utf8"
 db_sqlite_uri = "sqlite:///{}".format(db_sqlite)
@@ -43,7 +44,7 @@ db_config = {
 
 
 databases_to_check = [None, db_sqlite_uri]
-if os.environ.get("TRAVIS", False):
+if os.environ.get("TRAVIS", False) or os.environ.get("APPVEYOR", False):
     databases_to_check.append(db_postgres_uri)
     databases_to_check.append(db_mysql_uri)
 elif os.environ.get("PIECASH_DBSERVER_TEST", False):
