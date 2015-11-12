@@ -19,7 +19,7 @@ environment:
     - PYTHON: "C:\\Python27"
       PYTHON_VERSION: "2.7.x" # currently 2.7.9
       PYTHON_ARCH: "32"
-      PYTHON_PYPI: "yes"
+      PYTHON_PYPI: true
 
     - PYTHON: "C:\\Python33"
       PYTHON_VERSION: "3.3.x" # currently 3.3.5
@@ -132,12 +132,4 @@ deploy_script:
   - "echo password: %pypi_pwd% >> %USERPROFILE%\\.pypirc"
   - "echo %HOME%"
   - "type %USERPROFILE%\\.pypirc"
-  - IF "%PYTHON_PYPI%"=="yes" (
-      "%CMD_IN_ENV% python setup.py sdist upload"
-    )
-
-deploy:
-  provider: Environment
-  on:
-    branch: master                 # release from master branch only
-    appveyor_repo_tag: true        # deploy on tag push only
+#  - "%CMD_IN_ENV% python setup.py sdist upload"
