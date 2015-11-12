@@ -4,7 +4,10 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
-- Empty
+- use AppVeyor for Windows continuous integration
+- fix bugs in tests suite where files were not properly closed
+- add Book.close function to close properly files
+- depend on enum-compat instead of directly enum34
 
 Version 0.8.3 (2015-11-01)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
