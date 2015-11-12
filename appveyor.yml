@@ -86,10 +86,10 @@ install:
   # set HOME path for PYPI upload
   - "set HOME=%USERPROFILE%"
 
-  - "echo localhost:5432:foo:postgres: > %USERPROFILE%\\.pgpass"
+  - "echo localhost:5432:foo:postgres:Password12! > %USERPROFILE%\\.pgpass"
 
   - "SET PGUSER=postgres"
-#  - "SET PGPASSWORD="
+  - SET PGPASSWORD="Password12!"
   - "SET PATH=C:\\Program Files\\PostgreSQL\\9.3\\bin\\;%PATH%"
   - "createdb foo"
 
