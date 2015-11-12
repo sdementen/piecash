@@ -225,8 +225,8 @@ python_version_specific_requires = []
 if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 3):
     python_version_specific_requires.append('argparse')
 
-if sys.version_info < (3, 4):
-    python_version_specific_requires.append('enum34')
+# if sys.version_info < (3, 4):
+#     python_version_specific_requires.append('enum-compat')
 
 
 # See here for more options:
@@ -268,6 +268,7 @@ setup_dict = dict(
                          'SQLAlchemy<1.0,!=0.9.9',
                          'SQLAlchemy-Utils<=0.30',
                          'pytz',
+                         'enum-compat',
                          'tzlocal',
                          'future',
                      ] + python_version_specific_requires,
