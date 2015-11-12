@@ -91,7 +91,6 @@ install:
   - "SET PGUSER=postgres"
   - "SET PGPASSWORD=Password12!"
   - "SET PATH=C:\\Program Files\\PostgreSQL\\9.4\\bin\\;%PATH%"
-  - "createdb foo"
 
 
   - '"C:\\Program Files\\MySql\\MySQL Server 5.6\\bin\\mysql" -e "create database foo;" --user=travis'
@@ -118,6 +117,7 @@ build_script:
 
 test_script:
   # Run the project tests
+  - "createdb foo"
   - "%CMD_IN_ENV% python setup.py test"
 
 after_test:
