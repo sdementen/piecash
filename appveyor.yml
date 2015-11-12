@@ -19,6 +19,7 @@ environment:
     - PYTHON: "C:\\Python27"
       PYTHON_VERSION: "2.7.x" # currently 2.7.9
       PYTHON_ARCH: "32"
+      PYTHON_PYPI: "yes"
 
     - PYTHON: "C:\\Python33"
       PYTHON_VERSION: "3.3.x" # currently 3.3.5
@@ -26,6 +27,10 @@ environment:
 
     - PYTHON: "C:\\Python34"
       PYTHON_VERSION: "3.4.x" # currently 3.4.3
+      PYTHON_ARCH: "32"
+
+    - PYTHON: "C:\\Python35"
+      PYTHON_VERSION: "3.5.x" # currently 3.5
       PYTHON_ARCH: "32"
 
     - PYTHON: "C:\\Python27-x64"
@@ -40,6 +45,11 @@ environment:
 
     - PYTHON: "C:\\Python34-x64"
       PYTHON_VERSION: "3.4.x" # currently 3.4.3
+      PYTHON_ARCH: "64"
+      WINDOWS_SDK_VERSION: "v7.1"
+
+    - PYTHON: "C:\\Python35-x64"
+      PYTHON_VERSION: "3.5.x" # currently 3.5
       PYTHON_ARCH: "64"
       WINDOWS_SDK_VERSION: "v7.1"
 
@@ -99,9 +109,9 @@ test_script:
 
 after_test:
   # If tests are successful, create binary packages for the project.
-  - "%CMD_IN_ENV% python setup.py bdist_wheel"
-  - "%CMD_IN_ENV% python setup.py bdist_wininst"
-  - "%CMD_IN_ENV% python setup.py bdist_msi"
+  #- "%CMD_IN_ENV% python setup.py bdist_wheel"
+  #- "%CMD_IN_ENV% python setup.py bdist_wininst"
+  #- "%CMD_IN_ENV% python setup.py bdist_msi"
   - "%CMD_IN_ENV% pyinstaller --onefile scripts/piecash_ledger.py"
   - ps: "ls dist"
 
@@ -122,5 +132,11 @@ deploy_script:
   - "echo password: %pypi_pwd% >> %USERPROFILE%\\.pypirc"
   - "echo %HOME%"
   - "type %USERPROFILE%\\.pypirc"
-  - "%CMD_IN_ENV% python setup.py sdist bdist_wheel upload"
+  - IF "%PYTHON_PYPI%"=="yes" (
+      "%CMD_IN_ENV% python setup.py sdist upload"
+    )
 
+deploy:
+  on:
+    branch: master                 # release from master branch only
+    appveyor_repo_tag: true        # deploy on tag push only
