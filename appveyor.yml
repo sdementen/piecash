@@ -125,10 +125,12 @@ after_test:
   #- "%CMD_IN_ENV% python setup.py bdist_wheel"
   #- "%CMD_IN_ENV% python setup.py bdist_wininst"
   #- "%CMD_IN_ENV% python setup.py bdist_msi"
-  - "if DEFINED PYTHON_PYPI ( %CMD_IN_ENV% pyinstaller --onefile scripts/piecash_ledger.py)"
-  - "if DEFINED PYTHON_PYPI ( %CMD_IN_ENV% pyinstaller --onefile scripts/piecash_prices.py)"
-  - "if DEFINED PYTHON_PYPI ( %CMD_IN_ENV% pyinstaller scripts/piecash_toqif.py)"
-  - ps: "ls dist"
+  - "if DEFINED PYTHON_PYPI ( 
+        %CMD_IN_ENV% pyinstaller --onefile scripts/piecash_ledger.py
+        %CMD_IN_ENV% pyinstaller --onefile scripts/piecash_prices.py
+        %CMD_IN_ENV% pyinstaller scripts/piecash_toqif.py
+        %CMD_IN_ENV% dir dist
+     )"
 
 artifacts:
   # Archive the generated packages in the ci.appveyor.com build report.
