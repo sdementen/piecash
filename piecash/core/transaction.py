@@ -210,7 +210,7 @@ class Transaction(DeclarativeBaseGuid):
 
     def validate(self):
         old = self.object_beforechange()
-        print "****", old
+
         if self.currency.namespace != "CURRENCY":
             raise GncValidationError("You are assigning a non currency commodity to a transaction")
 
