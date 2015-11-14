@@ -1,11 +1,9 @@
-from builtins import object
 import decimal
 import datetime
 from importlib import import_module
 import uuid
 
 from enum import Enum
-from past.types import basestring
 from sqlalchemy import Column, VARCHAR, INTEGER, REAL, BIGINT, types, event
 from sqlalchemy.orm import relation, foreign, object_session, backref
 
@@ -214,7 +212,7 @@ SlotInt = define_simpleslot(postfix="Int",
                             col_default=0,
 )
 SlotString = define_simpleslot(postfix="String",
-                               pytype=(basestring,),
+                               pytype=(str,),
                                KVPtype=KVP_Type.KVP_TYPE_STRING,
                                field="string_val",
                                col_type=VARCHAR(length=4096),
