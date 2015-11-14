@@ -3,6 +3,7 @@
 
 # Testing
 pytest==2.8.2
+pytest-cov==2.2.0
 py==1.4.30
 tox==2.2.1
 
