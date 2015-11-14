@@ -54,6 +54,12 @@ class TestCommodity_create_commodity(object):
         assert cdty.base_currency.mnemonic=="EUR"
 
 
+def is_inmemory_sqlite(book_basic):
+    # print book_basic.uri, book_basic.uri.get_dialect(), book_basic.uri.database, type(book_basic.uri), dir(book_basic.uri)
+    # print "sqlite" in book_basic.uri and ":memory:" in book_basic.uri
+    # fdsfdssfd
+    return book_basic.uri.database==":memory:"
+
 class TestCommodity_create_prices(object):
     def test_create_basicprice(self, book_basic):
         EUR = book_basic.commodities(namespace="CURRENCY")
@@ -84,12 +90,14 @@ class TestCommodity_create_prices(object):
         with pytest.raises(NoResultFound):
             USD.prices.filter_by(value=Decimal('0.123')).one()
 
-    def test_update_prices(self,book_basic):
+    def test_update_currency_prices(self,book_basic):
+        if not is_inmemory_sqlite(book_basic):
+            print("skipping test for {}".format(book_basic))
+            return
         USD = book_basic.currencies(mnemonic="USD")
-        # book_basic.flush()
-        USD.update_prices()
         USD.update_prices()
 
+        # TODO: should be only 7 but bug in update_prices
         assert len(list(USD.prices))<7
         assert USD.prices.first().commodity is USD
         assert USD.guid is None
@@ -102,7 +110,27 @@ class TestCommodity_create_prices(object):
         assert CAD.guid is None
         book_basic.flush()
 
+        # redo update prices which should not bring new prices
+        l = len(list(USD.prices))
+        USD.update_prices()
+        assert len(list(USD.prices))==l
+
         assert len(book_basic.prices)<14
+
+    def test_update_stock_prices(self,book_basic):
+        if not is_inmemory_sqlite(book_basic):
+            print("skipping test for {}".format(book_basic))
+            return
+        cdty = Commodity(mnemonic="AAPL", namespace="NASDAQ",fullname="Apple",book=book_basic)
+        cdty["quoted_currency"]="USD"
+        assert cdty.get("quoted_currency")=="USD"
+        cdty.update_prices()
+
+        assert len(list(cdty.prices))<7
+        cdty.update_prices()
+
+        assert len(list(cdty.prices))<14
+
 
     def test_price_update_on_commodity_no_book(self, book_basic):
         cdty = Commodity(namespace="AMEX",mnemonic="APPLE",fullname="Apple")

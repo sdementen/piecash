@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 from __future__ import division
 import datetime
 
+from decimal import Decimal
 from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT, Index, UniqueConstraint
 from sqlalchemy.orm import relation
 from sqlalchemy.orm.exc import NoResultFound
@@ -144,7 +145,7 @@ class Commodity(DeclarativeBaseGuid):
                 # return currency
             else:
                 raise GnucashException("The commodity has no information about its base currency. "
-                                       "Update the cusip field to a string with 'currency=MNEMONIC' to have proper behavior")
+                                       "Add a kvp item named 'quoted_currency' with the mnemonic of the currency to have proper behavior")
 
 
     # relation definitions
@@ -213,7 +214,8 @@ class Commodity(DeclarativeBaseGuid):
         if self.book is None:
             raise GncPriceError("Cannot update price for a commodity not attached to a book")
 
-        last_price = self.prices.order_by(-Price.date).first()
+        # TODO: fix as returning None
+        last_price = self.prices.order_by(-Price.date).limit(1).first()
 
         if start_date is None:
             start_date = datetime.datetime.today().date() + datetime.timedelta(days=-7)
@@ -253,7 +255,7 @@ class Commodity(DeclarativeBaseGuid):
                 Price(commodity=self,
                       currency=default_currency,
                       date=datetime.datetime.strptime(day, "%Y-%m-%d"),
-                      value=close,
+                      value=Decimal(close),
                       type='last')
 
 
