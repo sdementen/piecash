@@ -15,7 +15,7 @@ from .sa_extra import _DateTime, DeclarativeBase, _Date
 if sys.version > '3':
     str_unicode = str
 else:
-    str_unicode = unicode
+    str_unicode = basestring
 
 
 class KVP_Type(Enum):
