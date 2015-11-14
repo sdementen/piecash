@@ -5,8 +5,7 @@ import uuid
 
 from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, event, INTEGER
 from sqlalchemy.orm import relation, validates, foreign
-from sqlalchemy.orm.base import instance_state
-
+from sqlalchemy.orm.base import instance_state, NEVER_SET
 from .._common import GncValidationError, hybrid_property_gncnumeric, Recurrence
 from .._declbase import DeclarativeBaseGuid
 from .._common import CallableList, GncImbalanceError
@@ -211,7 +210,7 @@ class Transaction(DeclarativeBaseGuid):
 
     def validate(self):
         old = self.object_beforechange()
-
+        print "****", old
         if self.currency.namespace != "CURRENCY":
             raise GncValidationError("You are assigning a non currency commodity to a transaction")
 
@@ -221,7 +220,7 @@ class Transaction(DeclarativeBaseGuid):
                 raise GncValidationError("Account '{}' used in the transaction is a placeholder".format(sp.account))
 
         # check same currency
-        if "currency" in old and old["currency"] is not None:
+        if "currency" in old and old["currency"] is not NEVER_SET:
             raise GncValidationError("You cannot change the currency of a transaction once it has been set")
 
         # validate the splits
