@@ -4,6 +4,10 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
+
+Version 0.8.4 (2015-11-14)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 - use AppVeyor for Windows continuous integration and for .exe freezing
 - fix bugs in tests suite where files were not properly closed
 - add Book.close function to close properly files
