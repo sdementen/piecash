@@ -222,11 +222,8 @@ python_version_specific_requires = []
 
 # as of Python >= 2.7 and >= 3.2, the argparse module is maintained within
 # the Python standard library, otherwise we install it as a separate package
-if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 3):
-    python_version_specific_requires.append('argparse')
-
-# if sys.version_info < (3, 4):
-#     python_version_specific_requires.append('enum-compat')
+# if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 3):
+#     python_version_specific_requires.append('argparse')
 
 
 # See here for more options:
@@ -265,17 +262,15 @@ setup_dict = dict(
     ],
     packages=find_packages(exclude=(TESTS_DIRECTORY, DATA_DIRECTORY)),
     install_requires=[
-                         'SQLAlchemy<1.0,!=0.9.9',
-                         'SQLAlchemy-Utils<=0.30',
+                         'SQLAlchemy==1.0',
+                         'SQLAlchemy-Utils==0.31',
                          'pytz',
                          'enum-compat',
                          'tzlocal',
-                         'future',
                      ] + python_version_specific_requires,
     # Allow tests to be run with `python setup.py test'.
     tests_require=[
         'pytest',
-        'mock',
         'py',
     ],
     # console=['scripts/piecash_ledger.py','scripts/piecash_toqif.py'],

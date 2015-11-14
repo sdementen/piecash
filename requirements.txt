@@ -1,6 +1,6 @@
-pytz
-tzlocal
-future
-enum-compat
-SQLAlchemy==0.9.10
-SQLAlchemy-Utils==0.30.0
+enum-compat==0.0.2
+pytz==2015.7
+six==1.10.0
+SQLAlchemy==1.0.9
+SQLAlchemy-Utils==0.31.3
+tzlocal==1.2
