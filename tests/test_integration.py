@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 from __future__ import division
-from builtins import object
 import datetime
 from importlib import import_module
 import os
