@@ -4,6 +4,7 @@ import datetime
 
 from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT, Index, UniqueConstraint
 from sqlalchemy.orm import relation
+from sqlalchemy.orm.exc import NoResultFound
 
 from .._common import GnucashException, hybrid_property_gncnumeric
 from .._declbase import DeclarativeBaseGuid
@@ -122,23 +123,25 @@ class Commodity(DeclarativeBaseGuid):
 
     @property
     def base_currency(self):
-
-        s = self.get_session()
-        if s is None:
+        b = self.book
+        if b is None:
             raise GnucashException("The commodity should be link to a session to have a 'base_currency'")
 
         if self.namespace == "CURRENCY":
             # get the base currency as first commodity in DB
-            return s.query(Commodity).first()
+            return b.query(Commodity).filter_by(namespace="CURRENCY").first()
         else:
-            # retrieve currency from cusip field or from the web (as fallback)
+            # retrieve currency from quoted_currency kvp
+            # TODO: recover from the web (as fallback)
             mnemonic = self.get("quoted_currency", None)
             if mnemonic:
-                currency = s.query(Commodity).filter_by(namespace="CURRENCY", mnemonic=mnemonic).first()
-                if not currency:
-                    currency = s.book.create_currency_from_ISO(mnemonic)
-                    s.add(currency)
-                return currency
+                return b.currencies(mnemonic=mnemonic)
+                # try:
+                #     currency = s.query(Commodity).filter_by(namespace="CURRENCY", mnemonic=mnemonic).one()
+                # except NoResultFound:
+                #     currency = s.book.create_currency_from_ISO(mnemonic)
+                #     s.add(currency)
+                # return currency
             else:
                 raise GnucashException("The commodity has no information about its base currency. "
                                        "Update the cusip field to a string with 'currency=MNEMONIC' to have proper behavior")
@@ -158,7 +161,6 @@ class Commodity(DeclarativeBaseGuid):
                       back_populates='commodity',
                       foreign_keys=[Price.commodity_guid],
                       cascade='all, delete-orphan',
-                      collection_class=CallableList,
                       lazy="dynamic",
     )
 
@@ -171,10 +173,14 @@ class Commodity(DeclarativeBaseGuid):
                  cusip="",
                  quote_flag=0,
                  quote_source=None,
-                 quote_tz=None):
+                 quote_tz=None,
+                 book=None):
 
         if quote_source == None:
             quote_source = "currency" if namespace == "CURRENCY" else "yahoo"
+
+        if book is not None:
+            book.session.add(self)
 
         self.namespace = namespace
         self.mnemonic = mnemonic
@@ -204,8 +210,10 @@ class Commodity(DeclarativeBaseGuid):
 
         .. todo:: add some frequency to retrieve prices only every X (week, month, ...)
         """
+        if self.book is None:
+            raise GncPriceError("Cannot update price for a commodity not attached to a book")
 
-        last_price = self.prices.order_by(-Price.date).limit(1).first()
+        last_price = self.prices.order_by(-Price.date).first()
 
         if start_date is None:
             start_date = datetime.datetime.today().date() + datetime.timedelta(days=-7)
@@ -216,8 +224,9 @@ class Commodity(DeclarativeBaseGuid):
 
         if self.namespace == "CURRENCY":
             # get reference currency (from book.root_account)
-            default_currency = self.base_currency
-            if default_currency == self:
+            try:
+                default_currency = self.base_currency
+            except GnucashException:
                 raise GncPriceError("Cannot update exchange rate for base currency")
 
             # through Quandl for exchange rates
