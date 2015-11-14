@@ -214,7 +214,12 @@ class Commodity(DeclarativeBaseGuid):
         if self.book is None:
             raise GncPriceError("Cannot update price for a commodity not attached to a book")
 
-        # TODO: fix as returning None
+        # check all prices have been flushed
+        # if not the case, the count below is not the same
+        if self.prices.count()!=self.prices.order_by(Price.date).count():
+            raise GncPriceError("You need to flush the data before calling update_prices")
+
+        # get last_price updated
         last_price = self.prices.order_by(-Price.date).limit(1).first()
 
         if start_date is None:
@@ -257,5 +262,4 @@ class Commodity(DeclarativeBaseGuid):
                       date=datetime.datetime.strptime(day, "%Y-%m-%d"),
                       value=Decimal(close),
                       type='last')
-
 
