@@ -3,6 +3,7 @@ import datetime
 from importlib import import_module
 import uuid
 
+import sys
 from enum import Enum
 from sqlalchemy import Column, VARCHAR, INTEGER, REAL, BIGINT, types, event
 from sqlalchemy.orm import relation, foreign, object_session, backref
@@ -10,6 +11,11 @@ from sqlalchemy.orm import relation, foreign, object_session, backref
 from ._common import hybrid_property_gncnumeric
 from ._common import CallableList
 from .sa_extra import _DateTime, DeclarativeBase, _Date
+
+if sys.version > '3':
+    str_unicode = str
+else:
+    str_unicode = unicode
 
 
 class KVP_Type(Enum):
@@ -212,7 +218,7 @@ SlotInt = define_simpleslot(postfix="Int",
                             col_default=0,
 )
 SlotString = define_simpleslot(postfix="String",
-                               pytype=(str,),
+                               pytype=(str_unicode,),
                                KVPtype=KVP_Type.KVP_TYPE_STRING,
                                field="string_val",
                                col_type=VARCHAR(length=4096),
