@@ -28,7 +28,7 @@ Scripts are also available to:
 
 - export to ledger-cli format (http://www.ledger-cli.org/)
 - export to QIF format
-
+- import/export prices (CSV format)
 
 A simple example of a piecash script:
 
