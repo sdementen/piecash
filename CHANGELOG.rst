@@ -4,6 +4,7 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
+- Empty
 
 Version 0.8.4 (2015-11-14)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
