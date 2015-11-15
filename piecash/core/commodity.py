@@ -137,12 +137,6 @@ class Commodity(DeclarativeBaseGuid):
             mnemonic = self.get("quoted_currency", None)
             if mnemonic:
                 return b.currencies(mnemonic=mnemonic)
-                # try:
-                #     currency = s.query(Commodity).filter_by(namespace="CURRENCY", mnemonic=mnemonic).one()
-                # except NoResultFound:
-                #     currency = s.book.create_currency_from_ISO(mnemonic)
-                #     s.add(currency)
-                # return currency
             else:
                 raise GnucashException("The commodity has no information about its base currency. "
                                        "Add a kvp item named 'quoted_currency' with the mnemonic of the currency to have proper behavior")
@@ -214,11 +208,6 @@ class Commodity(DeclarativeBaseGuid):
         if self.book is None:
             raise GncPriceError("Cannot update price for a commodity not attached to a book")
 
-        # check all prices have been flushed
-        # if not the case, the count below is not the same
-        if self.prices.count()!=self.prices.order_by(Price.date).count():
-            raise GncPriceError("You need to flush the data before calling update_prices")
-
         # get last_price updated
         last_price = self.prices.order_by(-Price.date).limit(1).first()
 
@@ -231,9 +220,8 @@ class Commodity(DeclarativeBaseGuid):
 
         if self.namespace == "CURRENCY":
             # get reference currency (from book.root_account)
-            try:
-                default_currency = self.base_currency
-            except GnucashException:
+            default_currency = self.base_currency
+            if default_currency==self:
                 raise GncPriceError("Cannot update exchange rate for base currency")
 
             # through Quandl for exchange rates
