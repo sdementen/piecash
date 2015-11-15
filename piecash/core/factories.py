@@ -32,10 +32,13 @@ def create_stock_accounts(cdty, broker_account, income_account=None, income_acco
     from .account import Account
 
     symbol = cdty.mnemonic
-    acc = Account(symbol, "STOCK", cdty, broker_account)
+    try:
+        acc = broker_account.children(name=symbol)
+    except KeyError:
+        acc = Account(symbol, "STOCK", cdty, broker_account)
+
     inc_accounts = []
     if income_account:
-        s = cdty.get_session()
         cur = cdty.base_currency
 
         for inc_acc in income_account_types.split("/"):
@@ -46,10 +49,14 @@ def create_stock_accounts(cdty, broker_account, income_account=None, income_acco
                 "I": "Interest Income",
             }[inc_acc]
             try:
-                div = income_account.children.get(name=sub_account_name)
+                sub_acc = income_account.children(name=sub_account_name)
             except KeyError:
-                div = Account(sub_account_name, "INCOME", cur.base_currency, income_account)
-            inc_accounts.append(Account(symbol, "INCOME", cur, div))
+                sub_acc = Account(sub_account_name, "INCOME", cur.base_currency, income_account)
+            try:
+                cdty_acc = sub_acc.children(name=symbol)
+            except KeyError:
+                cdty_acc = Account(symbol, "INCOME", cur, sub_acc)
+            inc_accounts.append(cdty_acc)
 
     return acc, inc_accounts
 
@@ -82,7 +89,7 @@ def create_currency_from_ISO(isocode, from_web=False):
                                  cusip=cur.cusip,
                                  namespace="CURRENCY",
                                  quote_flag=1,
-                )
+                                 )
                 break
         else:
             raise ValueError("Could not find the ISO code '{}' in the ISO table".format(isocode))
@@ -92,7 +99,7 @@ def create_currency_from_ISO(isocode, from_web=False):
         import requests
         from xml.etree import ElementTree
 
-        url = "http://www.currency-iso.org/dam/downloads/table_a1.xml"
+        url = "http://www.currency-iso.org/dam/downloads/lists/list_one.xml"
         table = requests.get(url)
 
         # parse it with elementree
@@ -122,11 +129,12 @@ def create_currency_from_ISO(isocode, from_web=False):
                          cusip=cusip,
                          namespace="CURRENCY",
                          quote_flag=1,
-        )
+                         )
     # self.gnc_session.add(cdty)
     return cdty
 
-def create_stock_from_symbol(symbol):
+
+def create_stock_from_symbol(symbol, book=None):
     """
     Factory function to create a new stock from its symbol. The ISO code of the quoted currency of the stock is
     stored in the slot "quoted_currency".
@@ -155,11 +163,14 @@ def create_stock_from_symbol(symbol):
                           fraction=10000,
                           namespace=symbol_info.StockExchange.upper(),
                           quote_flag=1,
-        )
+                          )
         stock["quoted_currency"] = symbol_info.Currency
+        if book:
+            book.session.add(stock)
         return stock
     else:
         raise GncCommodityError("Can't find information on symbol '{}'".format(symbol))
+
 
 def single_transaction(post_date,
                        enter_date,
