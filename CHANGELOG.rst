@@ -1,8 +1,8 @@
 What's new
 ==========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.9.1 (2015-11-15)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - fix bug with unicode on MySQL
 
