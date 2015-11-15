@@ -315,8 +315,6 @@ class SlotGUID(SlotFrame):
         assert isinstance(value, self.Class)
         self.guid_val = value.guid
 
-        #guid_val = Column('guid_val', VARCHAR(length=32))
-
 
 def get_all_subclasses(cls):
     all_subclasses = []

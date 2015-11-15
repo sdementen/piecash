@@ -47,7 +47,8 @@ class DeclarativeBase(object):
         but its transaction and its lot (if any). split.object_to_validate should yeild both split.transaction
         and split.lot
         """
-        yield None
+        return
+        yield
 
     def validate(self):
         """This must be reimplemented for object requiring validation
@@ -323,7 +324,7 @@ def get_foreign_keys(metadata, engine):
             yield constraint
 
 
-Session = sessionmaker(autoflush=False)
+Session = sessionmaker(autoflush=True)
 
 
 def create_piecash_engine(uri_conn, **kwargs):
