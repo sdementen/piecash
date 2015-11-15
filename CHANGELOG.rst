@@ -4,7 +4,11 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
-- Empty
+- ported to SQLAlchemy-1.0
+- set autoflush=true on the SA session
+- improved coverage above 90% for all modules
+- setup coveralls.io and requires.io
+- fix bugs discovered by improved testing
 
 Version 0.8.4 (2015-11-14)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

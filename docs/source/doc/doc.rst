@@ -2,7 +2,8 @@
 Documentation
 =============
 
-This project provides a simple and pythonic interface to GnuCash files stored in SQL (sqlite3 and Postgres, not tested in MySQL).
+This project provides a simple and pythonic interface to GnuCash files stored in SQL (sqlite3, Pandostgres and MySQL)
+for Linux and Windows (not tested on Mac OS).
 
 piecash is a pure python package, tested on python 2.7 and 3.4, that can be used as an alternative to:
 
@@ -15,7 +16,7 @@ piecash is built on the excellent SQLAlchemy library and does not require the in
 
 piecash allows you to:
 
-- create a GnuCash document from scratch or edit an existing one
+- create a GnuCash book from scratch or edit an existing one
 - create new accounts, transactions, etc or change (within some limits) existing objects.
 - read/browse all objects through an intuitive interface
 
