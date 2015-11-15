@@ -134,9 +134,10 @@ class TestTransaction_create_transaction(object):
                          ])
         book_basic.session.flush()
 
-        assert repr(tr) == "Transaction<[EUR] 'buy stock' on 2014-01-02>"
-        assert repr(tr.splits(account=s)) == repr("Split<Account<asset:broker[ïoà]> -100 EUR [-15 ïoà]>")
-        assert repr(tr.splits(account=a)) == "Split<Account<asset[EUR]> 100 EUR>"
+        assert "{}".format(tr) == "Transaction<[EUR] 'buy stock' on 2014-01-02>"
+        assert "{}".format(s) == "Account<asset:broker[ïoà]>"
+        assert "{}".format(tr.splits(account=s)) == "Split<Account<asset:broker[ïoà]> -100 EUR [-15 ïoà]>"
+        assert "{}".format(tr.splits(account=a)) == "Split<Account<asset[EUR]> 100 EUR>"
 
         # check sum of quantities are all balanced per commodity as values are
         d = defaultdict(lambda: Decimal(0))
