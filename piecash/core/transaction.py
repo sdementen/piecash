@@ -114,7 +114,8 @@ class Split(DeclarativeBaseGuid):
     def object_to_validate(self, change):
         yield self
         yield self.transaction
-        yield self.lot
+        if self.lot:
+            yield self.lot
 
     def validate(self):
         old = self.object_beforechange()
@@ -132,6 +133,7 @@ class Split(DeclarativeBaseGuid):
 
         self._quantity_denom_basis = self.account.commodity_scu
         self._value_denom_basis = self.transaction.currency.fraction
+
 
 class Transaction(DeclarativeBaseGuid):
     """

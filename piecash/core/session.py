@@ -335,7 +335,8 @@ def validate_book(session, flush_context, instances):
                 txs[o_to_validate] = None
 
     # remove None from the keys in the dictionary (if it ever gets included)
-    txs.pop(None, None)  # txs.discard(None)
+    assert None not in txs, "No object should return None to validate. fix the code"
+        # txs.pop(None, None)  # txs.discard(None)
 
     # sort object from local to global (ensure Split checked before Transaction)
     from . import Account, Transaction, Split
@@ -349,4 +350,3 @@ def validate_book(session, flush_context, instances):
     # for each object, validate it
     for tx in txs:
         tx.validate()
-
