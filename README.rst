@@ -1,7 +1,24 @@
 piecash
 =======
 
-|build-status| |appveyor-status| |docs|
+
+.. image:: https://travis-ci.org/sdementen/piecash.svg?branch=master
+    :target: https://travis-ci.org/sdementen/piecash
+
+.. image:: https://ci.appveyor.com/api/projects/status/af7mb3pwv31i6ltv/branch/master?svg=true
+    :target: https://ci.appveyor.com/project/sdementen/piecash
+
+.. image:: https://readthedocs.org/projects/piecash/badge/?version=master
+    :target: http://piecash.readthedocs.org
+
+.. image:: https://img.shields.io/pypi/v/piecash.svg
+    :target: https://pypi.python.org/pypi/piecash
+
+.. image:: https://img.shields.io/pypi/pyversions/piecash.svg
+    :target: https://pypi.python.org/pypi/piecash/
+
+.. image:: https://img.shields.io/pypi/dd/piecash.svg
+    :target: https://pypi.python.org/pypi/piecash/
 
 Piecash provides a simple and pythonic interface to GnuCash files stored in SQL (sqlite3, Postgres and MySQL).
 
@@ -50,20 +67,4 @@ The project has reached beta stage.
    1) Always do a backup of your gnucash file/DB before using piecash.
    2) Test first your script by opening your file in readonly mode (which is the default mode)
 
-
-
-.. |build-status| image:: https://travis-ci.org/sdementen/piecash.svg?branch=master
-    :alt: build status
-    :scale: 100%
-    :target: https://travis-ci.org/sdementen/piecash
-
-.. |appveyor-status| image:: https://ci.appveyor.com/api/projects/status/af7mb3pwv31i6ltv/branch/master?svg=true
-    :alt: appveyor status
-    :scale: 100%
-    :target: https://ci.appveyor.com/project/sdementen/piecash
-
-.. |docs| image:: https://readthedocs.org/projects/piecash/badge/?version=master
-    :alt: Documentation Status
-    :scale: 100%
-    :target: http://piecash.readthedocs.org
 
