@@ -4,7 +4,7 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
-- Empty
+- fix bug with unicode on MySQL
 
 Version 0.9.0 (2015-11-15)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
