@@ -5,8 +5,16 @@ python:
 - '2.7'
 services:
 - postgresql
-install: pip install -r requirements-dev.txt
-script: python setup.py test
+install:
+ - pip install -r requirements-dev.txt
+ - pip install coveralls
+
+script:
+ - coverage run --source=piecash setup.py test
+
+after_success:
+  coveralls
+
 deploy:
   provider: pypi
   user: sdementen
