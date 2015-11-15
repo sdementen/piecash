@@ -14,7 +14,7 @@ script:
 
 after_success:
   coveralls
-
+sudo: false
 deploy:
   provider: pypi
   user: sdementen
