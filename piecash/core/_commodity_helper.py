@@ -1,3 +1,4 @@
+import logging
 from collections import namedtuple
 import json
 
@@ -35,7 +36,12 @@ def quandl_fx(fx_mnemonic, base_mnemonic, start_date):
     PUBLIC_API_URL = 'http://www.quandl.com/api/v1/datasets/CURRFX/{}{}.json'.format(fx_mnemonic, base_mnemonic)
     text_result = requests.get(PUBLIC_API_URL, params={'request_source': 'python', 'request_version': 2,
                                                        'trim_start': "{:%Y-%m-%d}".format(start_date)}).text
-    query_result = json.loads(text_result)
+    try:
+        query_result = json.loads(text_result)
+    except ValueError:
+        logging.error("issue when retrieving info from quandl.com : '{}'".format(text_result))
+        return []
+
     rows = query_result["data"]
 
     qdl_result = namedtuple("QUANDL", ["date", "rate", "high", "low"])

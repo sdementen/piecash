@@ -103,15 +103,12 @@ class TestCommodity_create_prices(object):
         USD.update_prices()
 
         assert len(list(USD.prices)) < 7
-        assert USD.prices.first().commodity is USD
-        # assert USD.guid is None
+        assert (USD.prices.first() is None) or (USD.prices.first().commodity is USD)
 
         CAD = book_basic.currencies(mnemonic="CAD")
         CAD.update_prices()
         assert len(list(CAD.prices)) < 7
-        assert CAD.prices.first().commodity is CAD
-        # assert CAD.guid is None
-        # book_basic.flush()
+        assert (CAD.prices.first() is None) or (CAD.prices.first().commodity is CAD)
 
         # redo update prices which should not bring new prices
         l = len(list(USD.prices))
