@@ -1,12 +1,9 @@
 from decimal import Decimal
-
 from sqlalchemy import Column, VARCHAR, INTEGER, BIGINT, ForeignKey
-from sqlalchemy.orm import composite, relation
-
-from .._common import hybrid_property_gncnumeric
+from sqlalchemy.orm import composite, relation, relationship, foreign
+from .._common import hybrid_property_gncnumeric, CallableList
 from .._declbase import DeclarativeBaseGuid
 from ..sa_extra import ChoiceType
-
 
 TaxIncludedType = [
     (1, "YES"),
@@ -119,6 +116,15 @@ class Customer(DeclarativeBaseGuid):
     currency = relation('Commodity')
     term = relation('Billterm')
 
+    @classmethod
+    def __declare_last__(cls):
+        from .invoice import Job
+        cls.jobs = relation('Job',
+                            primaryjoin=cls.guid == foreign(Job.owner_guid),
+                            cascade='all, delete-orphan',
+                            collection_class=CallableList,
+                            )
+
     def __init__(self,
                  name,
                  currency,
@@ -150,25 +156,24 @@ class Customer(DeclarativeBaseGuid):
         self.shipping_address = shipping_address
 
         if book and id is None:
+            self._assign_id(book)
             book.add(self)
-            self._assign_id()
         elif id is not None:
             if isinstance(id, int):
                 self.id = str(id)
             else:
                 self.id = id
 
-    def _assign_id(self):
-        self.book.counter_customer = cnt = self.book.counter_customer + 1
+    def _assign_id(self, book):
+        book.counter_customer = cnt = book.counter_customer + 1
         self.id = "{:06d}".format(cnt)
-
 
     def object_to_validate(self, change):
         yield self
 
     def validate(self):
         if not self.id:
-            self._assign_id()
+            self._assign_id(self.book)
 
     def __unirepr__(self):
         return u"Customer<{}:{}>".format(self.id, self.name)
@@ -249,25 +254,24 @@ class Employee(DeclarativeBaseGuid):
         self.address = address
 
         if book and id is None:
+            self._assign_id(book)
             book.add(self)
-            self._assign_id()
         elif id is not None:
             if isinstance(id, int):
                 self.id = str(id)
             else:
                 self.id = id
 
-    def _assign_id(self):
-        self.book.counter_employee = cnt = self.book.counter_employee + 1
+    def _assign_id(self, book):
+        book.counter_employee = cnt = book.counter_employee + 1
         self.id = "{:06d}".format(cnt)
-
 
     def object_to_validate(self, change):
         yield self
 
     def validate(self):
         if not self.id:
-            self._assign_id()
+            self._assign_id(self.book)
 
     def __unirepr__(self):
         return u"Employee<{}:{}>".format(self.id, self.name)
@@ -320,7 +324,6 @@ class Vendor(DeclarativeBaseGuid):
     currency = relation('Commodity')
     term = relation('Billterm')
 
-
     def __init__(self,
                  name,
                  currency,
@@ -348,25 +351,24 @@ class Vendor(DeclarativeBaseGuid):
         self.address = address
 
         if book and id is None:
+            self._assign_id(book)
             book.add(self)
-            self._assign_id()
         elif id is not None:
             if isinstance(id, int):
                 self.id = str(id)
             else:
                 self.id = id
 
-    def _assign_id(self):
-        self.book.counter_vendor = cnt = self.book.counter_vendor + 1
+    def _assign_id(self, book):
+        book.counter_vendor = cnt = book.counter_vendor + 1
         self.id = "{:06d}".format(cnt)
-
 
     def object_to_validate(self, change):
         yield self
 
     def validate(self):
         if not self.id:
-            self._assign_id()
+            self._assign_id(self.book)
 
     def __unirepr__(self):
         return u"Vendor<{}:{}>".format(self.id, self.name)
