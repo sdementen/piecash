@@ -1,3 +1,5 @@
+# coding=utf-8
+from __future__ import unicode_literals
 from .._common import GnucashException
 from ._commodity_helper import run_yql
 from .commodity import GncCommodityError
