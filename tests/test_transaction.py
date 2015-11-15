@@ -3,12 +3,9 @@ from __future__ import unicode_literals
 from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
-
 import pytest
-
 from piecash import Transaction, Split, GncImbalanceError, GncValidationError, Lot
 from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic
-
 
 # dummy line to avoid removing unused symbols
 
@@ -127,6 +124,7 @@ class TestTransaction_create_transaction(object):
         a = book_basic.accounts(name="asset")
         s = book_basic.accounts(name="broker")
 
+        book_basic.use_trading_accounts = True
         tr = Transaction(currency=EUR, description="buy stock", notes=u"on St-Eugène day",
                          post_date=datetime(2014, 1, 2),
                          enter_date=datetime(2014, 1, 3),
@@ -134,12 +132,11 @@ class TestTransaction_create_transaction(object):
                              Split(account=a, value=100, memo=u"mémo asset"),
                              Split(account=s, value=-100, quantity=-15, memo=u"mémo brok"),
                          ])
-        book_basic.book.use_trading_accounts = True
-        book_basic.flush()
-        assert str(tr)
-        assert str(tr.splits)
-        assert repr(tr)
-        assert repr(tr.splits)
+        book_basic.session.flush()
+
+        assert repr(tr) == "Transaction<[EUR] 'buy stock' on 2014-01-02>"
+        assert repr(tr.splits(account=s)) == "Split<Account<asset:broker[ioa]> -100 EUR [-15 \\xefo\\xe0]>"
+        assert repr(tr.splits(account=a)) == "Split<Account<asset[EUR]> 100 EUR>"
 
         # check sum of quantities are all balanced per commodity as values are
         d = defaultdict(lambda: Decimal(0))
@@ -147,8 +144,9 @@ class TestTransaction_create_transaction(object):
             assert sp.quantity == sp.value or sp.account != a
             d[sp.account.commodity] += sp.quantity
             d["cur"] += sp.value
+
         assert d["cur"] == 0
-        assert all([v == 0 for k, v in d.items() if k != "cur"])
+        assert all([v == Decimal(0) for k, v in d.items() if k != "cur"])
 
         # change existing quantity
         sp = tr.splits(memo=u"mémo brok")
@@ -162,7 +160,7 @@ class TestTransaction_create_transaction(object):
             d[sp.account.commodity] += sp.quantity
             d["cur"] += sp.value
         assert d["cur"] == 0
-        assert all([v == 0 for k, v in d.items() if k != "cur"])
+        assert all([v == Decimal(0) for k, v in d.items() if k != "cur"])
 
 
 class TestTransaction_lots(object):
@@ -214,7 +212,7 @@ class TestTransaction_lots(object):
                              post_date=datetime(2014, 1, 1),
                              enter_date=datetime(2014, 1, 1),
                              splits=[
-                                 Split(account=a, value= 10, memo=u"mémo asset"),
+                                 Split(account=a, value=10, memo=u"mémo asset"),
                                  Split(account=s, value=- 10, quantity=-2, memo=u"mémo brok", lot=l),
                              ])
 
@@ -229,10 +227,9 @@ class TestTransaction_lots(object):
                          post_date=datetime(2014, 1, 1),
                          enter_date=datetime(2014, 1, 1),
                          splits=[
-                             Split(account=a, value= 10, memo=u"mémo asset"),
+                             Split(account=a, value=10, memo=u"mémo asset"),
                              Split(account=s, value=- 10, quantity=-2, memo=u"mémo brok", lot=l),
                          ])
 
         with pytest.raises(ValueError):
             book_basic.flush()
-

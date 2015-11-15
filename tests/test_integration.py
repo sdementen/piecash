@@ -118,7 +118,7 @@ class TestIntegration_EmptyBook(object):
         with pytest.raises(TypeError):
             b["a/b/c"] = True
 
-        assert {n for (n,) in book.session.query(Slot._name)} == {'a' ,'a/b','a/b/c','a/b/c/d','a/b/c/d/t','a/b/c/d/f'}
+        assert {n for (n,) in book.session.query(Slot._name)} == {'a' ,'a/b','a/b/c','a/b/c/d','a/b/c/d/f'}
 
 
         # delete some elements
@@ -147,7 +147,16 @@ class TestIntegration_EmptyBook(object):
         book.session.flush()
         assert {n for (n,) in book.session.query(Slot._name)} == set([])
 
+    def test_smart_slots(self,book):
+        book["account"] = book.root_account
+        assert book.slots[0].guid_val==book.root_account.guid
+        assert book["account"].value==book.root_account
 
+        with pytest.raises(ValueError):
+            book["weird"]=lambda x:x
+
+        with pytest.raises(ValueError):
+            book["unknown_guid"]=book.root_account
 
     def test_empty_gnucash_file(self, book):
         accs = book.accounts

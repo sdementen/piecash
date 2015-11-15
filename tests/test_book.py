@@ -304,10 +304,6 @@ class TestBook_access_book(object):
         assert len(new_book.currencies) == 2
         new_book.delete(nncur)
         assert not new_book.is_saved
-        assert len(new_book.currencies) == 2
-        assert not new_book.is_saved
-        new_book.flush()
-        assert not new_book.is_saved
         assert len(new_book.currencies) == 1
         new_book.save()
         assert new_book.is_saved

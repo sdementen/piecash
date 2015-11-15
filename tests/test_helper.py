@@ -129,17 +129,16 @@ def book_basic(request):
     if name and database_exists(name):
         drop_database(name)
     # create new book
-    b = create_book(uri_conn=name, currency="EUR", keep_foreign_keys=False)
-    # create some accounts
-    curr = b.currencies[0]
-    cdty = Commodity(namespace=u"échange", mnemonic=u"ïoà", fullname=u"Example of unicode déta")
-    a = Account(name="asset", type="ASSET", commodity=curr, parent=b.root_account)
-    Account(name="broker", type="STOCK", commodity=cdty, parent=a)
-    Account(name="exp", type="EXPENSE", commodity=curr, parent=b.root_account)
-    Account(name="inc", type="INCOME", commodity=curr, parent=b.root_account)
+    with create_book(uri_conn=name, currency="EUR", keep_foreign_keys=False) as b:
+        # create some accounts
+        curr = b.currencies[0]
+        cdty = Commodity(namespace=u"échange", mnemonic=u"ïoà", fullname=u"Example of unicode déta")
+        a = Account(name="asset", type="ASSET", commodity=curr, parent=b.root_account)
+        Account(name="broker", type="STOCK", commodity=cdty, parent=a)
+        Account(name="exp", type="EXPENSE", commodity=curr, parent=b.root_account)
+        Account(name="inc", type="INCOME", commodity=curr, parent=b.root_account)
 
-    b.flush()
-    yield b
-    b.session.close()
+        yield b
+
     if name and database_exists(name):
         drop_database(name)
