@@ -1,8 +1,8 @@
 What's new
 ==========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.9.0 (2015-11-15)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - ported to SQLAlchemy-1.0
 - set autoflush=true on the SA session
