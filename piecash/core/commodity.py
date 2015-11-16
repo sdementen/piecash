@@ -130,7 +130,7 @@ class Commodity(DeclarativeBaseGuid):
 
         if self.namespace == "CURRENCY":
             # get the base currency as first commodity in DB
-            return b.query(Commodity).filter_by(namespace="CURRENCY").first()
+            return b.default_currency
         else:
             # retrieve currency from quoted_currency kvp
             # TODO: recover from the web (as fallback)
