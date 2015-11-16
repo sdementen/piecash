@@ -12,7 +12,11 @@ def run_yql(yql, scalar=False):
     DATATABLES_URL = 'store://datatables.org/alltableswithkeys'
     PUBLIC_API_URL = 'http://query.yahooapis.com/v1/public/yql'
     text_result = requests.get(PUBLIC_API_URL, params={'q': yql, 'format': 'json', 'env': DATATABLES_URL}).text
-    query_result = json.loads(text_result)["query"]
+    try:
+        query_result = json.loads(text_result)["query"]
+    except ValueError:
+        logging.error("issue when retrieving info from yahooapis.com : '{}'".format(text_result))
+        return []
 
     if query_result["count"] == 0:
         # no results
