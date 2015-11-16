@@ -7,12 +7,10 @@ import pytest
 
 from piecash import Price, Commodity, GnucashException
 from piecash.core.commodity import GncPriceError
-from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, is_not_on_web
+from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, is_not_on_web,is_inmemory_sqlite
 
 
 # dummy line to avoid removing unused symbols
-from tests.test_helper import is_inmemory_sqlite
-
 a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic
 
 
