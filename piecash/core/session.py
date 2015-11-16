@@ -182,7 +182,7 @@ def create_book(sqlite_file=None,
 
     b.root_account = Account(name="Root Account", type="ROOT", commodity=None, book=b)
     b.root_template = Account(name="Template Root", type="ROOT", commodity=None, book=b)
-    CUR = b.currencies(mnemonic=currency)
+    b["default_currency"] = b.currencies(mnemonic=currency)
     b.save()
 
     return b

@@ -2,18 +2,17 @@
 from __future__ import print_function
 from __future__ import division
 import datetime
-from importlib import import_module
 import os
 from decimal import Decimal
-import pytest
 import shutil
+
+import pytest
 
 from piecash import create_book, Account, ACCOUNT_TYPES, open_book, Price
 from piecash._common import GnucashException
 from piecash.core.account import _is_parent_child_types_consistent, root_types
 from piecash.kvp import Slot
-
-from test_helper import file_template_full, file_for_test_full, test_folder, run_file
+from test_helper import file_template_full, file_for_test_full, run_file
 
 
 @pytest.fixture
@@ -37,6 +36,7 @@ def realbook_session(request):
 
     return s
 
+
 class TestIntegration_ExampleScripts(object):
     def test_simple_move_split(self):
         run_file("examples/simple_move_split.py")
@@ -55,6 +55,7 @@ class TestIntegration_ExampleScripts(object):
 
     def test_simple_sqlite_create(self):
         run_file("examples/simple_sqlite_create.py")
+
 
 class TestIntegration_EmptyBook(object):
     def test_slots_create_access(self, book):
@@ -90,52 +91,51 @@ class TestIntegration_EmptyBook(object):
 
     def test_slots_strings_access(self, book):
         b = book
-
+        del b["default_currency"]
         b["a/b/c/d/e"] = 1
         book.book.flush()
-        assert b["a"]["b"]["c"]["d"]["e"].value==1
+        assert b["a"]["b"]["c"]["d"]["e"].value == 1
 
-        b["a/b/c"] = {"d": {"t":"ok"}}
+        b["a/b/c"] = {"d": {"t": "ok"}}
 
         b["a/b/c/d/f"] = "2"
         book.book.flush()
-        assert len(b["a"]["b"]["c"]["d"].slots)==2
+        assert len(b["a"]["b"]["c"]["d"].slots) == 2
 
         b["a/b/c/d/f"] = "5"
         assert b["a"]["b/c"]["d"]["f"].value == "5"
 
         for k, v in b["a/b/c/d"].iteritems():
-            assert k=="f" or k=="t"
+            assert k == "f" or k == "t"
         print(b.slots)
-        assert b["a/b/c/d"].get("t", "hello")=="ok"
-        assert b["a/b/c/d"].get("not there", "hello")=="hello"
+        assert b["a/b/c/d"].get("t", "hello") == "ok"
+        assert b["a/b/c/d"].get("not there", "hello") == "hello"
 
         del b["a/b/c/d/t"]
-        assert repr(b["a"])=="<SlotFrame a={'b': {'c': {'d': {'f': '5'}}}}>"
+        assert repr(b["a"]) == "<SlotFrame a={'b': {'c': {'d': {'f': '5'}}}}>"
 
         with pytest.raises(TypeError):
             b["a/b/c/d/f"] = 4
         with pytest.raises(TypeError):
             b["a/b/c"] = True
 
-        assert {n for (n,) in book.session.query(Slot._name)} == {'a' ,'a/b','a/b/c','a/b/c/d','a/b/c/d/f'}
-
+        assert {n for (n,) in book.session.query(Slot._name)} == {'a', 'a/b', 'a/b/c', 'a/b/c/d', 'a/b/c/d/f'}
 
         # delete some elements
         del b["a"]["b"][:]
         book.flush()
-        assert {n for (n,) in book.session.query(Slot._name)} == {'a' ,'a/b'}
+        assert {n for (n,) in book.session.query(Slot._name)} == {'a', 'a/b'}
 
         book.flush()
-        assert len(b["a"].slots)==1
-        assert len(b["a/b"].slots)==0
+        assert len(b["a"].slots) == 1
+        assert len(b["a/b"].slots) == 0
 
         with pytest.raises(KeyError):
             b["a/b/c"]
 
         del b["a"]["b"]
         book.session.flush()
-        assert len(b["a"].slots)==0
+        assert len(b["a"].slots) == 0
 
         with pytest.raises(TypeError):
             b["a"] = b
@@ -147,16 +147,17 @@ class TestIntegration_EmptyBook(object):
         book.session.flush()
         assert {n for (n,) in book.session.query(Slot._name)} == set([])
 
-    def test_smart_slots(self,book):
+    def test_smart_slots(self, book):
+        del book["default_currency"]
         book["account"] = book.root_account
-        assert book.slots[0].guid_val==book.root_account.guid
-        assert book["account"].value==book.root_account
+        assert book.slots[0].guid_val == book.root_account.guid
+        assert book["account"].value == book.root_account
 
         with pytest.raises(ValueError):
-            book["weird"]=lambda x:x
+            book["weird"] = lambda x: x
 
         with pytest.raises(ValueError):
-            book["unknown_guid"]=book.root_account
+            book["unknown_guid"] = book.root_account
 
     def test_empty_gnucash_file(self, book):
         accs = book.accounts

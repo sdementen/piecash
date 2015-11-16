@@ -1,5 +1,6 @@
 # -*- coding: latin-1 -*-
 import os.path
+import os
 import sys
 import pytest
 from sqlalchemy_utils import database_exists, drop_database
@@ -142,3 +143,13 @@ def book_basic(request):
 
     if name and database_exists(name):
         drop_database(name)
+
+
+def is_inmemory_sqlite(book_basic):
+    # print book_basic.uri, book_basic.uri.get_dialect(), book_basic.uri.database, type(book_basic.uri), dir(book_basic.uri)
+    # print "sqlite" in book_basic.uri and ":memory:" in book_basic.uri
+    # fdsfdssfd
+    return book_basic.uri.database == ":memory:"
+
+def is_not_on_web():
+    return os.environ.get("DONOTGOONWEB",False)

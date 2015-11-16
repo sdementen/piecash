@@ -1,4 +1,5 @@
 import warnings
+import locale
 
 from sqlalchemy import Column, VARCHAR, ForeignKey
 from sqlalchemy.orm import relation
@@ -9,7 +10,6 @@ from .._common import CallableList
 from . import factories
 from .commodity import Commodity
 from piecash.sa_extra import kvp_attribute
-
 
 class Book(DeclarativeBaseGuid):
     """
@@ -131,7 +131,13 @@ class Book(DeclarativeBaseGuid):
 
     @property
     def default_currency(self):
-        return self.session.query(Commodity).first()
+        try:
+            return self["default_currency"].value
+        except KeyError:
+            if locale.getlocale() == (None,None):
+                locale.setlocale(locale.LC_ALL, '')
+            mnemonic = locale.localeconv()['int_curr_symbol']
+            return self.currencies(mnemonic=mnemonic)
 
     @property
     def book(self):

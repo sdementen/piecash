@@ -290,7 +290,8 @@ class SlotGUID(SlotFrame):
     _mapping_name_class = {
         'from-sched-xaction': 'piecash.core.transaction.ScheduledTransaction',
         'account': 'piecash.core.account.Account',
-        'invoice-guid':'piecash.business.invoice.Invoice'
+        'invoice-guid':'piecash.business.invoice.Invoice',
+        'default_currency':'piecash.core.commodity.Commodity',
         }
 
 

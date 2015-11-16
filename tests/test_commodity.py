@@ -1,14 +1,17 @@
 # coding=utf-8
 from __future__ import unicode_literals
-from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
+
 import pytest
-from piecash import Transaction, Split, GncImbalanceError, GncValidationError, Price, Commodity, GnucashException
+
+from piecash import Price, Commodity, GnucashException
 from piecash.core.commodity import GncPriceError
-from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic
+from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, is_not_on_web
+
 
 # dummy line to avoid removing unused symbols
+from tests.test_helper import is_inmemory_sqlite
 
 a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic
 
@@ -53,12 +56,6 @@ class TestCommodity_create_commodity(object):
         assert cdty.base_currency.mnemonic == "EUR"
 
 
-def is_inmemory_sqlite(book_basic):
-    # print book_basic.uri, book_basic.uri.get_dialect(), book_basic.uri.database, type(book_basic.uri), dir(book_basic.uri)
-    # print "sqlite" in book_basic.uri and ":memory:" in book_basic.uri
-    # fdsfdssfd
-    return book_basic.uri.database == ":memory:"
-
 
 class TestCommodity_create_prices(object):
     def test_create_basicprice(self, book_basic):
@@ -91,7 +88,7 @@ class TestCommodity_create_prices(object):
             USD.prices.filter_by(value=Decimal('0.123')).one()
 
     def test_update_currency_prices(self, book_basic):
-        if not is_inmemory_sqlite(book_basic):
+        if not is_inmemory_sqlite(book_basic) or is_not_on_web():
             print("skipping test for {}".format(book_basic))
             return
 
@@ -118,7 +115,7 @@ class TestCommodity_create_prices(object):
         assert len(book_basic.prices) < 14
 
     def test_update_stock_prices(self, book_basic):
-        if not is_inmemory_sqlite(book_basic):
+        if not is_inmemory_sqlite(book_basic) or is_not_on_web():
             print("skipping test for {}".format(book_basic))
             return
         cdty = Commodity(mnemonic="AAPL", namespace="NASDAQ", fullname="Apple", book=book_basic)
