@@ -1,11 +1,9 @@
 import warnings
 import locale
 from operator import attrgetter
-
 from sqlalchemy import Column, VARCHAR, ForeignKey
 from sqlalchemy.orm import relation, subqueryload, joinedload
 from sqlalchemy.orm.exc import NoResultFound
-
 from .._declbase import DeclarativeBaseGuid
 from .._common import CallableList
 from . import factories
@@ -13,6 +11,7 @@ from .account import Account
 from .transaction import Split, Transaction
 from .commodity import Commodity, Price, GncPriceError
 from piecash.sa_extra import kvp_attribute
+
 
 class Book(DeclarativeBaseGuid):
     """
@@ -83,7 +82,7 @@ class Book(DeclarativeBaseGuid):
     root_account = relation('Account',
                             # back_populates='root_book',
                             foreign_keys=[root_account_guid],
-    )
+                            )
     root_template = relation('Account',
                              foreign_keys=[root_template_guid])
 
@@ -92,19 +91,19 @@ class Book(DeclarativeBaseGuid):
 
     # link options to KVP
     use_trading_accounts = kvp_attribute("options/Accounts/Use Trading Accounts",
-                                  from_gnc=lambda v: v == 't',
-                                  to_gnc=lambda v: 't',
-                                  default=False)
+                                         from_gnc=lambda v: v == 't',
+                                         to_gnc=lambda v: 't',
+                                         default=False)
 
     use_split_action_field = kvp_attribute("options/Accounts/Use Split Action Field for Number",
-                                    from_gnc=lambda v: v == 't',
-                                    to_gnc=lambda v: 't' if v else 'f',
-                                    default=False)
+                                           from_gnc=lambda v: v == 't',
+                                           to_gnc=lambda v: 't' if v else 'f',
+                                           default=False)
 
     RO_threshold_day = kvp_attribute("options/Accounts/Day Threshold for Read-Only Transactions (red line)",
-                              from_gnc=lambda v: int(v),
-                              to_gnc=lambda v: float(v),
-                              default=0)
+                                     from_gnc=lambda v: int(v),
+                                     to_gnc=lambda v: float(v),
+                                     default=0)
 
     counter_customer = kvp_attribute("counters/gncCustomer", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
     counter_vendor = kvp_attribute("counters/gncVendor", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
@@ -115,14 +114,12 @@ class Book(DeclarativeBaseGuid):
     counter_exp_voucher = kvp_attribute("counters/gncExpVoucher", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
     counter_order = kvp_attribute("counters/gncOrder", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
 
-
     def __init__(self, root_account=None, root_template=None):
         self.root_account = root_account
         self.root_template = root_template
 
     def __unirepr__(self):
         return u"Book<{}>".format(self.uri)
-
 
     _control_mode = None
 
@@ -137,7 +134,7 @@ class Book(DeclarativeBaseGuid):
         try:
             return self["default_currency"].value
         except KeyError:
-            if locale.getlocale() == (None,None):
+            if locale.getlocale() == (None, None):
                 locale.setlocale(locale.LC_ALL, '')
             mnemonic = locale.localeconv()['int_curr_symbol'].strip()
             return self.currencies(mnemonic=mnemonic)
@@ -188,7 +185,6 @@ class Book(DeclarativeBaseGuid):
         # self.flush()
         return tacc
 
-
     # add session alike functions
     def add(self, obj):
         """Add an object to the book (to be used if object not linked in any way to the book)"""
@@ -218,7 +214,6 @@ class Book(DeclarativeBaseGuid):
         """
         return self.session.is_saved
 
-
     # add context manager that close the session when leaving
     def __enter__(self):
         return self
@@ -236,7 +231,6 @@ class Book(DeclarativeBaseGuid):
         # # remove the lock
         # session.delete_lock()
         session.close()
-
 
     # add general getters for gnucash classes
     def get(self, cls, **kwargs):
@@ -395,7 +389,7 @@ class Book(DeclarativeBaseGuid):
         accounts = self.session.query(Account).all()
 
         # preload list of commodities
-        commodities = self.session.query(Commodity).filter(Commodity.namespace<>"template").all()
+        commodities = self.session.query(Commodity).filter(Commodity.namespace <> "template").all()
 
         # preload list of transactions
         transactions = self.session.query(Transaction).all()
@@ -404,13 +398,13 @@ class Book(DeclarativeBaseGuid):
         splits = self.session.query(Split).all()
 
         # build dataframe
-        fields = ["guid","value","quantity",
-                  "transaction.post_date","transaction.currency.guid","transaction.currency.mnemonic",
-                  "account.fullname","account.commodity.guid", "account.commodity.mnemonic",
+        fields = ["guid", "value", "quantity",
+                  "transaction.post_date", "transaction.currency.guid", "transaction.currency.mnemonic",
+                  "account.fullname", "account.commodity.guid", "account.commodity.mnemonic",
                   ]
         fields_getter = map(attrgetter, fields)
         df_splits = pandas.DataFrame([map(lambda ag: ag(sp), fields_getter) for sp in splits], columns=fields)
-        df_splits = df_splits[df_splits["account.commodity.mnemonic"]<>"template"]
+        df_splits = df_splits[df_splits["account.commodity.mnemonic"] != "template"]
         df_splits = df_splits.set_index("guid").sort_values(by="transaction.post_date")
 
         return df_splits
@@ -424,13 +418,13 @@ class Book(DeclarativeBaseGuid):
         import pandas
 
         # preload list of commodities
-        commodities = self.session.query(Commodity).filter(Commodity.namespace<>"template").all()
+        commodities = self.session.query(Commodity).filter(Commodity.namespace <> "template").all()
 
         # load all prices
         prices = self.session.query(Price).filter_by().all()
-        fields = ["date", "type","value",
-                  "commodity.guid","commodity.mnemonic",
-                  "currency.guid","currency.mnemonic",]
+        fields = ["date", "type", "value",
+                  "commodity.guid", "commodity.mnemonic",
+                  "currency.guid", "currency.mnemonic", ]
         fields_getter = map(attrgetter, fields)
         df_prices = pandas.DataFrame([map(lambda ag: ag(pr), fields_getter) for pr in prices], columns=fields)
 
