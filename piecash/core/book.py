@@ -418,7 +418,7 @@ class Book(DeclarativeBaseGuid):
         import pandas
 
         # preload list of commodities
-        commodities = self.session.query(Commodity).filter(Commodity.namespace <> "template").all()
+        commodities = self.session.query(Commodity).filter(Commodity.namespace != "template").all()
 
         # load all prices
         prices = self.session.query(Price).filter_by().all()
