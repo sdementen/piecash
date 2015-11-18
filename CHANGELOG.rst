@@ -1,8 +1,8 @@
 What's new
 ==========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.10.0 (2015-11-18)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - first draft of splits_df and prices_df methods that bring the book data into pandas DataFrames
 - add an ipython notebook to show the new dataframes methods
