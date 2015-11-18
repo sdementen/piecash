@@ -1,11 +1,25 @@
 # coding=utf-8
-from __future__ import print_function, unicode_literals
+from __future__ import unicode_literals
+import pandas
 
-if False:
-    from piecash import create_book, Customer, Address, Vendor
+if True:
+    from piecash import create_book, open_book, Customer, Address, Vendor
 
     # create a book (in memory)
-    b = create_book(currency="EUR")
+    b = open_book("../gnucash_books/book_schtx.gnucash", open_if_lock=True)
+    print("============================================")
+    df_splits = b.splits_df()
+
+    print df_splits\
+        .groupby(["account.fullname", "transaction.post_date"])[["value", "quantity"]] \
+        .sum() \
+        .groupby(level=[0]) \
+        .cumsum()
+
+    # df_prices = b.prices_df()
+    # assert isinstance(df_prices, pandas.DataFrame)
+
+    fdsfdsfsd
     # get the currency
     eur = b.default_currency
 
@@ -16,9 +30,14 @@ if False:
 
     # flush the book
     b.flush()
-
+    sps = b.splits
+    print(sps)
+    for sp in sps:
+        print(sp.value)
     # the customer gets its ID
     print(c1)
+    print(b.splits_df())
+    fdsfds
 
     # or create a customer directly in a book (by specifying the book argument)
     c2 = Customer(name="Mickey", currency=eur, address=Address(addr1="Sesame street 1", email="mickey@example.com"),
@@ -30,34 +49,32 @@ if False:
     # the counter of the ID is accessible as
     b.counter_customer
 
-
     fdsdsffds
 from decimal import Decimal
 from datetime import datetime
 import decimal
 import inspect
 from sqlalchemy.orm import object_session
-
-from piecash import open_book, Budget,Address
+from piecash import open_book, Budget, Address
 from piecash._common import Recurrence
 from piecash import create_book, Account, Transaction, Split, Commodity, Vendor
 from piecash.business import Customer
 
-
 b = create_book("foo.sqlite", currency="EUR", keep_foreign_keys=False, overwrite=True)
-c=Customer(book=b,name="foo",currency= b.currencies(mnemonic="EUR"), address=Address(name="foo", addr1="a1",addr4="a4", fax="fax",email="email",phone="phoen"))
+c = Customer(book=b, name="foo", currency=b.currencies(mnemonic="EUR"),
+             address=Address(name="foo", addr1="a1", addr4="a4", fax="fax", email="email", phone="phoen"))
 print(c.addr_addr1)
-b.add(Customer(name="john",id=456, currency= b.currencies(mnemonic="EUR")))
-b.add(Customer(name="baz",currency= b.currencies(mnemonic="EUR")))
-b.add(Customer(name="dsdsbaz",tax_included="YES",currency= b.currencies(mnemonic="EUR")))
-b.add(Vendor(name="dsdsbaz",tax_included="YES",currency= b.currencies(mnemonic="EUR")))
+b.add(Customer(name="john", id=456, currency=b.currencies(mnemonic="EUR")))
+b.add(Customer(name="baz", currency=b.currencies(mnemonic="EUR")))
+b.add(Customer(name="dsdsbaz", tax_included="YES", currency=b.currencies(mnemonic="EUR")))
+b.add(Vendor(name="dsdsbaz", tax_included="YES", currency=b.currencies(mnemonic="EUR")))
 b.save()
 print(b.customers)
 print(b.vendors)
 fdsfdsfds
 # create some accounts
 curr = b.currencies[0]
-cdty = Commodity(namespace="échange",mnemonic="ïoà", fullname="Example of unicode déta")
+cdty = Commodity(namespace="échange", mnemonic="ïoà", fullname="Example of unicode déta")
 a = Account(name="asset", type="ASSET", commodity=curr, parent=b.root_account)
 Account(name="broker", type="STOCK", commodity=cdty, parent=a)
 Account(name="exp", type="EXPENSE", commodity=curr, parent=b.root_account)
@@ -67,7 +84,7 @@ EUR = b.commodities(namespace="CURRENCY")
 racc = b.root_account
 a = b.accounts(name="asset")
 s = b.accounts(name="broker")
-b.book.use_trading_accounts=True
+b.book.use_trading_accounts = True
 tr = Transaction(currency=EUR, description="buy stock", notes="on St-Eugène day",
                  post_date=datetime(2014, 1, 2),
                  enter_date=datetime(2014, 1, 3),
@@ -77,19 +94,19 @@ tr = Transaction(currency=EUR, description="buy stock", notes="on St-Eugène day
                  ])
 sp = tr.splits(account=s)
 print(sp)
-sp.quantity=-15
+sp.quantity = -15
 # adjust balance
 Split(account=a, value=-10, memo="missing exp", transaction=tr)
 b.flush()
-sp.quantity=-14
+sp.quantity = -14
 b.flush()
 # print (tr.splits)
-sp.quantity=-12
+sp.quantity = -12
 b.flush()
 # print (tr.splits)
-sp.quantity=-13
+sp.quantity = -13
 b.flush()
-sp.quantity=-13
+sp.quantity = -13
 b.flush()
 print (tr.splits)
 
@@ -101,10 +118,10 @@ b2 = open_book("foo.gnucash", readonly=False, echo=True, do_backup=False)
 # a1 = Account("Acc 1", "ASSET", b1.default_currency, parent=b1.root_account)
 # b1.flush()
 # b1.save()
-a= b2.accounts[0].name
+a = b2.accounts[0].name
 # b2["fooo"] = b2.accounts[0].name
-b2.accounts[0].name="hello you2"
-b1.accounts[0].name="hello me1"
+b2.accounts[0].name = "hello you2"
+b1.accounts[0].name = "hello me1"
 b1.flush()
 b1.save()
 b2.flush()
@@ -112,15 +129,12 @@ b2.save()
 print(a, b1.accounts[0].name, b2.accounts[0].name)
 fdsffds
 
-
-
-
 # create a book (in memory)
 from piecash.core import factories
 from piecash.ledger import ledger
 
 b = create_book(currency="EUR")
-b.control_mode=["allow-root-subaccounts"]
+b.control_mode = ["allow-root-subaccounts"]
 # get the EUR and create the USD currencies
 c1 = b.default_currency
 # create two accounts
@@ -132,18 +146,17 @@ print(b.currencies(mnemonic="USD"))
 a2 = Account("Acc 2", "ROOT", c1, parent=a1)
 print(a2)
 b.save()
-a1.name="foo"
+a1.name = "foo"
 b.save()
-tr=Transaction(b.default_currency,
-               splits=[
-                   Split(account=a1, value=100, quantity=10),
-                   Split(account=a2, value=-100, quantity=20)
-               ])
+tr = Transaction(b.default_currency,
+                 splits=[
+                     Split(account=a1, value=100, quantity=10),
+                     Split(account=a2, value=-100, quantity=20)
+                 ])
 b.save()
 # del tr.splits[0]
 # b.save()
 print(ledger(b))
-
 
 fdsfds
 # create a transaction from a1 to a2
@@ -407,7 +420,6 @@ with open_book("simple_sample.gnucash", acquire_lock=False, open_if_lock=True) a
 
 fsdsfsd
 
-
 # with create_book("test_simple_transaction.gnucash",overwrite=True) as s:
 with create_book(currency="EUR") as s:
     EUR = s.commodities.get(mnemonic="EUR")
@@ -477,7 +489,7 @@ dsqsdqdqs
 # fdfdsfsd
 
 with open_book("trading_accounts.gnucash", readonly=False, open_if_lock=True, acquire_lock=True) as s:
-    for tr in s.transactions:  #.get(description="other transfer + expense")
+    for tr in s.transactions:  # .get(description="other transfer + expense")
         print("{}\t{}".format(tr.currency, tr.description))
         # print tr.get_imbalances()
         for sp in tr.splits:
@@ -511,8 +523,6 @@ with open_book("trading_accounts.gnucash", readonly=False, open_if_lock=True, ac
     # del tr.splits[-1]
     # print tr.get_imbalances()
 fdfsdfds
-
-
 
 # s = create_book(postgres_conn="postgres://user:passwd@localhost/gnucash_book1", overwrite=True)
 # s = create_book("test.gnucash",overwrite=True)
@@ -573,7 +583,7 @@ with open_book("sample1.gnucash", readonly=False, open_if_lock=True) as s1, open
     p = Price(currency=eur,
               commodity=eur,
               value=Decimal("4234.342"),
-    )
+              )
     s1.session.add(p)
     print(p.value)
     print(p.value_denom)
