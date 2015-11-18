@@ -6,6 +6,8 @@ In development
 
 - first draft of splits_df and prices_df methods that bring the book data into pandas DataFrames
 - add an ipython notebook to show the new dataframes methods
+- save default_currency of a book in a slot (when book created by piecash) or use locale to retrieve the default_currency
+- improve error handling for quandl queries (currency exchange rates)
 
 Version 0.9.1 (2015-11-15)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
