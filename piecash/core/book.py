@@ -389,7 +389,7 @@ class Book(DeclarativeBaseGuid):
         accounts = self.session.query(Account).all()
 
         # preload list of commodities
-        commodities = self.session.query(Commodity).filter(Commodity.namespace <> "template").all()
+        commodities = self.session.query(Commodity).filter(Commodity.namespace != "template").all()
 
         # preload list of transactions
         transactions = self.session.query(Transaction).all()
