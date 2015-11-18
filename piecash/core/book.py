@@ -1,14 +1,17 @@
 import warnings
 import locale
+from operator import attrgetter
 
 from sqlalchemy import Column, VARCHAR, ForeignKey
-from sqlalchemy.orm import relation
+from sqlalchemy.orm import relation, subqueryload, joinedload
 from sqlalchemy.orm.exc import NoResultFound
 
 from .._declbase import DeclarativeBaseGuid
 from .._common import CallableList
 from . import factories
-from .commodity import Commodity
+from .account import Account
+from .transaction import Split, Transaction
+from .commodity import Commodity, Price, GncPriceError
 from piecash.sa_extra import kvp_attribute
 
 class Book(DeclarativeBaseGuid):
@@ -136,7 +139,7 @@ class Book(DeclarativeBaseGuid):
         except KeyError:
             if locale.getlocale() == (None,None):
                 locale.setlocale(locale.LC_ALL, '')
-            mnemonic = locale.localeconv()['int_curr_symbol']
+            mnemonic = locale.localeconv()['int_curr_symbol'].strip()
             return self.currencies(mnemonic=mnemonic)
 
     @property
@@ -276,6 +279,16 @@ class Book(DeclarativeBaseGuid):
         return CallableList(self.session.query(Transaction))
 
     @property
+    def splits(self):
+        """
+        gives easy access to all splits in the book through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.core.transaction.Split`
+        """
+        from .transaction import Split
+
+        return CallableList(self.session.query(Split))
+
+    @property
     def accounts(self):
         """
         gives easy access to all accounts in the book through a :class:`piecash.model_common.CallableList`
@@ -369,3 +382,56 @@ class Book(DeclarativeBaseGuid):
         proxy for the query function of the underlying sqlalchemy session
         """
         return self.session.query
+
+    def splits_df(self):
+        """
+        Return a pandas DataFrame with all splits (:class:`piecash.core.commodity.Split`) from the book
+
+        :return: :class:`pandas.DataFrame`
+        """
+        import pandas
+
+        # preload list of accounts
+        accounts = self.session.query(Account).all()
+
+        # preload list of commodities
+        commodities = self.session.query(Commodity).filter(Commodity.namespace<>"template").all()
+
+        # preload list of transactions
+        transactions = self.session.query(Transaction).all()
+
+        # load all splits
+        splits = self.session.query(Split).all()
+
+        # build dataframe
+        fields = ["guid","value","quantity",
+                  "transaction.post_date","transaction.currency.guid","transaction.currency.mnemonic",
+                  "account.fullname","account.commodity.guid", "account.commodity.mnemonic",
+                  ]
+        fields_getter = map(attrgetter, fields)
+        df_splits = pandas.DataFrame([map(lambda ag: ag(sp), fields_getter) for sp in splits], columns=fields)
+        df_splits = df_splits[df_splits["account.commodity.mnemonic"]<>"template"]
+        df_splits = df_splits.set_index("guid").sort_values(by="transaction.post_date")
+
+        return df_splits
+
+    def prices_df(self):
+        """
+        Return a pandas DataFrame with all prices (:class:`piecash.core.commodity.Price`) from the book
+
+        :return: :class:`pandas.DataFrame`
+        """
+        import pandas
+
+        # preload list of commodities
+        commodities = self.session.query(Commodity).filter(Commodity.namespace<>"template").all()
+
+        # load all prices
+        prices = self.session.query(Price).filter_by().all()
+        fields = ["date", "type","value",
+                  "commodity.guid","commodity.mnemonic",
+                  "currency.guid","currency.mnemonic",]
+        fields_getter = map(attrgetter, fields)
+        df_prices = pandas.DataFrame([map(lambda ag: ag(pr), fields_getter) for pr in prices], columns=fields)
+
+        return df_prices
