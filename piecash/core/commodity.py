@@ -138,8 +138,9 @@ class Commodity(DeclarativeBaseGuid):
             if mnemonic:
                 return b.currencies(mnemonic=mnemonic)
             else:
-                raise GnucashException("The commodity has no information about its base currency. "
-                                       "Add a kvp item named 'quoted_currency' with the mnemonic of the currency to have proper behavior")
+                raise GnucashException("The commodity '{}' has no information about its base currency. "
+                                       "Add a kvp item named 'quoted_currency' with the mnemonic of the "
+                                       "currency to have proper behavior".format(self.mnemonic))
 
 
     # relation definitions

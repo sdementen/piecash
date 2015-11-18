@@ -2,7 +2,6 @@ from collections import defaultdict
 from decimal import Decimal
 import datetime
 import uuid
-
 from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, event, INTEGER
 from sqlalchemy.orm import relation, validates, foreign
 from sqlalchemy.orm.base import instance_state, NEVER_SET
@@ -10,8 +9,6 @@ from .._common import GncValidationError, hybrid_property_gncnumeric, Recurrence
 from .._declbase import DeclarativeBaseGuid
 from .._common import CallableList, GncImbalanceError
 from ..sa_extra import _Date, _DateTime, Session, mapped_to_slot_property, pure_slot_property
-from .book import Book
-from .account import Account
 
 
 class Split(DeclarativeBaseGuid):
@@ -73,7 +70,7 @@ class Split(DeclarativeBaseGuid):
                  reconcile_date=None,
                  reconcile_state="n",
                  lot=None,
-    ):
+                 ):
         self.transaction = transaction
         self.account = account
         self.value = value
@@ -98,7 +95,7 @@ class Split(DeclarativeBaseGuid):
                                                          "credit={}".format(credit) if credit else "",
                                                          "debit={}".format(debit) if debit else "",
 
-                )
+                                                         )
             elif cur == com:
                 # case of same currency split
                 return u"Split<{} {} {}>".format(acc,
@@ -128,7 +125,7 @@ class Split(DeclarativeBaseGuid):
         else:
             if self.quantity is None:
                 raise GncValidationError("The split quantity is not defined while the split is on a commodity different from the transaction")
-            if self.quantity.is_signed()!=self.value.is_signed():
+            if self.quantity.is_signed() != self.value.is_signed():
                 raise GncValidationError("The split quantity has not the same sign as the split value")
 
         self._quantity_denom_basis = self.account.commodity_scu
@@ -170,13 +167,12 @@ class Transaction(DeclarativeBaseGuid):
     # relation definitions
     currency = relation('Commodity',
                         back_populates='transactions',
-    )
+                        )
     splits = relation('Split',
                       back_populates="transaction",
                       cascade='all, delete-orphan',
                       collection_class=CallableList,
-    )
-
+                      )
 
     def __init__(self,
                  currency,
@@ -186,7 +182,7 @@ class Transaction(DeclarativeBaseGuid):
                  enter_date=None,
                  post_date=None,
                  num="",
-    ):
+                 ):
         assert enter_date is None or isinstance(enter_date, datetime.datetime), "enter_date should be a datetime object"
         assert post_date is None or isinstance(post_date, datetime.datetime), "post_date should be a datetime object"
 
@@ -203,9 +199,9 @@ class Transaction(DeclarativeBaseGuid):
 
     def __unirepr__(self):
         return u"Transaction<[{}] '{}' on {:%Y-%m-%d}{}>".format(self.currency.mnemonic,
-                                                                self.description,
-                                                                self.post_date,
-                                                                " (from sch tx)" if self.scheduled_transaction else "")
+                                                                 self.description,
+                                                                 self.post_date,
+                                                                 " (from sch tx)" if self.scheduled_transaction else "")
 
     def object_to_validate(self, change):
         yield self
@@ -239,8 +235,8 @@ class Transaction(DeclarativeBaseGuid):
 
     def calculate_imbalances(self):
         """Calculate value and quantity imbalances of a transaction"""
-        value_imbalance = Decimal(0) # hold imbalance on split.value
-        quantity_imbalances = defaultdict(Decimal) # hold imbalance on split.quantity per cdty
+        value_imbalance = Decimal(0)  # hold imbalance on split.value
+        quantity_imbalances = defaultdict(Decimal)  # hold imbalance on split.quantity per cdty
 
         # collect imbalance information
         for sp in self.splits:
@@ -251,8 +247,8 @@ class Transaction(DeclarativeBaseGuid):
 
     def normalize_trading_accounts(self):
         # collect imbalance information
-        classic_splits =defaultdict(list)
-        trading_splits =defaultdict(list)
+        classic_splits = defaultdict(list)
+        trading_splits = defaultdict(list)
         trading_target_value = defaultdict(Decimal)
         trading_target_quantity = defaultdict(Decimal)
 
@@ -288,7 +284,8 @@ class Transaction(DeclarativeBaseGuid):
                            value=-v,
                            quantity=-q,
                            transaction=self,
-                )
+                           )
+
 
 class ScheduledTransaction(DeclarativeBaseGuid):
     """
@@ -335,7 +332,7 @@ class ScheduledTransaction(DeclarativeBaseGuid):
                           primaryjoin=guid == foreign(Recurrence.obj_guid),
                           cascade='all, delete-orphan',
                           uselist=False,
-    )
+                          )
 
     def __unirepr__(self):
         return u"ScheduledTransaction<'{}' {}>".format(self.name, self.recurrence)
@@ -367,7 +364,7 @@ class Lot(DeclarativeBaseGuid):
     splits = relation('Split',
                       back_populates='lot',
                       collection_class=CallableList,
-    )
+                      )
 
     def __init__(self,
                  title,
