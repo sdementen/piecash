@@ -4,7 +4,8 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
-- Empty
+- first draft of splits_df and prices_df methods that bring the book data into pandas DataFrames
+- add an ipython notebook to show the new dataframes methods
 
 Version 0.9.1 (2015-11-15)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
