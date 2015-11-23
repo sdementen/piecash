@@ -5,9 +5,7 @@ import datetime
 import os
 from decimal import Decimal
 import shutil
-
 import pytest
-
 from piecash import create_book, Account, ACCOUNT_TYPES, open_book, Price
 from piecash._common import GnucashException
 from piecash.core.account import _is_parent_child_types_consistent, root_types
@@ -66,6 +64,7 @@ class TestIntegration_EmptyBook(object):
             "vdate": datetime.datetime.now().date(),
             "vtime": datetime.datetime.now(),
             "vnum": Decimal('4.53'),
+            "vlist": ["stri", 4, dict(foo=23)],
             "vdct": {
                 "spl": 2.3,
                 "vfr": {
@@ -91,7 +90,7 @@ class TestIntegration_EmptyBook(object):
 
     def test_slots_strings_access(self, book):
         b = book
-        del b["default_currency"]
+        del b["default-currency"]
         b["a/b/c/d/e"] = 1
         book.book.flush()
         assert b["a"]["b"]["c"]["d"]["e"].value == 1
@@ -148,7 +147,7 @@ class TestIntegration_EmptyBook(object):
         assert {n for (n,) in book.session.query(Slot._name)} == set([])
 
     def test_smart_slots(self, book):
-        del book["default_currency"]
+        del book["default-currency"]
         book["account"] = book.root_account
         assert book.slots[0].guid_val == book.root_account.guid
         assert book["account"].value == book.root_account
@@ -226,7 +225,6 @@ class TestIntegration_EmptyBook(object):
         with pytest.raises(ValueError):
             book.save()
 
-
     def test_example(self, realbook_session):
         book = realbook_session
 
@@ -238,7 +236,7 @@ class TestIntegration_EmptyBook(object):
                                                price.date,
                                                float(price.value_num) / price.value_denom,
                                                price.currency.mnemonic,
-            ))
+                                               ))
 
         for account in book.accounts:
             print(account)
