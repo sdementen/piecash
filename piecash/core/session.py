@@ -3,15 +3,12 @@ import datetime
 import os
 import shutil
 import socket
-
 from sqlalchemy import event, Column, VARCHAR, INTEGER, Table, PrimaryKeyConstraint
 from sqlalchemy.sql.ddl import DropConstraint, DropIndex
 from sqlalchemy_utils import database_exists
-
 from .book import Book
 from ..sa_extra import create_piecash_engine, DeclarativeBase, Session
 from .._common import GnucashException
-
 
 version_supported = {u'Gnucash-Resave': 19920, u'invoices': 3, u'books': 1, u'accounts': 1, u'slots': 3,
                      u'taxtables': 2, u'lots': 2, u'orders': 1, u'vendors': 1, u'customers': 2, u'jobs': 1,
@@ -23,7 +20,7 @@ version_supported = {u'Gnucash-Resave': 19920, u'invoices': 3, u'books': 1, u'ac
 gnclock = Table(u'gnclock', DeclarativeBase.metadata,
                 Column('hostname', VARCHAR(length=255)),
                 Column('pid', INTEGER()),
-)
+                )
 
 
 class Version(DeclarativeBase):
@@ -77,9 +74,9 @@ def build_uri(sqlite_file=None,
 
         uri_conn = {"postgres": "postgresql://{username}:{password}@{host}:{port}/{name}",
                     "mysql": "mysql+pymysql://{username}:{password}@{host}:{port}/{name}?charset=utf8",
-        }[db_type].format(username=db_user, password=db_password,
-                          host=db_host, port=db_port,
-                          name=db_name)
+                    }[db_type].format(username=db_user, password=db_password,
+                                      host=db_host, port=db_port,
+                                      name=db_name)
 
     # db_postgres_uri = "postgresql://postgres:{pwd}@localhost:5432/foo".format(pwd=pg_password)
     # db_mysql_uri = "mysql+pymysql://travis:@localhost/foo?charset=utf8"
@@ -182,7 +179,7 @@ def create_book(sqlite_file=None,
 
     b.root_account = Account(name="Root Account", type="ROOT", commodity=None, book=b)
     b.root_template = Account(name="Template Root", type="ROOT", commodity=None, book=b)
-    b["default_currency"] = b.currencies(mnemonic=currency)
+    b["default-currency"] = b.currencies(mnemonic=currency)
     b.save()
 
     return b
@@ -336,7 +333,7 @@ def validate_book(session, flush_context, instances):
 
     # remove None from the keys in the dictionary (if it ever gets included)
     assert None not in txs, "No object should return None to validate. fix the code"
-        # txs.pop(None, None)  # txs.discard(None)
+    # txs.pop(None, None)  # txs.discard(None)
 
     # sort object from local to global (ensure Split checked before Transaction)
     from . import Account, Transaction, Split
@@ -345,7 +342,7 @@ def validate_book(session, flush_context, instances):
     txs.sort(key=lambda x: defaultdict(lambda: 20, {Account: 10,
                                                     Transaction: 5,
                                                     Split: 3,
-    })[type(x)])
+                                                    })[type(x)])
 
     # for each object, validate it
     for tx in txs:

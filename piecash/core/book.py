@@ -132,7 +132,7 @@ class Book(DeclarativeBaseGuid):
     @property
     def default_currency(self):
         try:
-            return self["default_currency"].value
+            return self["default-currency"].value
         except KeyError:
             if locale.getlocale() == (None, None):
                 locale.setlocale(locale.LC_ALL, '')
