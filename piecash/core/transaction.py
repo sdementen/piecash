@@ -35,8 +35,9 @@ class Split(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
-    transaction_guid = Column('tx_guid', VARCHAR(length=32), ForeignKey('transactions.guid'), nullable=False,
-                              index=True)
+    # the transaction_guid is not mandatory at construction time because it can be set through a tr.splits.append(...) operation
+    # however, in the validation of the object, we raise an error if there is no transaction set at that time
+    transaction_guid = Column('tx_guid', VARCHAR(length=32), ForeignKey('transactions.guid'), index=True)
     account_guid = Column('account_guid', VARCHAR(length=32), ForeignKey('accounts.guid'), nullable=False, index=True)
     memo = Column('memo', VARCHAR(length=2048), nullable=False)
     action = Column('action', VARCHAR(length=2048), nullable=False)
@@ -61,8 +62,8 @@ class Split(DeclarativeBaseGuid):
     transaction = relation('Transaction', back_populates='splits')
 
     def __init__(self,
-                 account=None,
-                 value=None,
+                 account,
+                 value,
                  quantity=None,
                  transaction=None,
                  memo="",
@@ -74,7 +75,7 @@ class Split(DeclarativeBaseGuid):
         self.transaction = transaction
         self.account = account
         self.value = value
-        self.quantity = quantity
+        self.quantity = value if quantity is None else quantity
         self.memo = memo
         self.action = action
         self.reconcile_date = reconcile_date
@@ -120,6 +121,8 @@ class Split(DeclarativeBaseGuid):
             self.transaction._recalculate_balance = True
 
         # if single currency, assign value to quantity
+        if self.transaction_guid is None:
+            raise GncValidationError("The split is not linked to a transaction")
         if self.transaction.currency == self.account.commodity:
             self.quantity = self.value
         else:
