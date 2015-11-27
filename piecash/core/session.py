@@ -320,9 +320,10 @@ def adapt_session(session, book, readonly):
         doc="True if nothing has yet been changed (False otherwise)")
 
 
-@event.listens_for(Session, 'before_flush')
-def validate_book(session, flush_context, instances):
+@event.listens_for(Session, 'before_commit')
+def validate_book(session):
     # identify object to validate
+    session.flush()
     txs = OrderedDict()
     for change, l in {"dirty": session.dirty,
                       "new": session.new,
