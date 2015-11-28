@@ -32,8 +32,8 @@ class TestBusinessPerson_create_Person(object):
         # adding the person to the book does not per se set the id
         book_basic.add(c)
         assert c.id is None
-        # but flushing will trigger validation that set the id if still to None
-        book_basic.flush()
+        # but validation sets the id if still to None
+        book_basic.validate()
         assert c.id == "000001"
 
     def test_create_person_noid_inbook(self, book_basic, Person):

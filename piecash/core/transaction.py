@@ -111,12 +111,13 @@ class Split(DeclarativeBaseGuid):
 
     def object_to_validate(self, change):
         yield self
-        yield self.transaction
+        if self.transaction:
+            yield self.transaction
         if self.lot:
             yield self.lot
 
     def validate(self):
-        old = self.object_beforechange()
+        old = self.get_all_changes()
         if '_quantity_num' in old or '_value_num' in old:
             self.transaction._recalculate_balance = True
 
@@ -210,7 +211,7 @@ class Transaction(DeclarativeBaseGuid):
         yield self
 
     def validate(self):
-        old = self.object_beforechange()
+        old = self.get_all_changes()
 
         if self.currency.namespace != "CURRENCY":
             raise GncValidationError("You are assigning a non currency commodity to a transaction")

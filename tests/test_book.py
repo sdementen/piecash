@@ -118,7 +118,7 @@ class TestBook_create_book(object):
 
     def test_create_without_FK(self):
         # create without FK
-        b = create_book(uri_conn=db_sqlite_uri, keep_foreign_keys=False, overwrite=True, echo=True)
+        b = create_book(uri_conn=db_sqlite_uri, keep_foreign_keys=False, overwrite=True)
         b.session.close()
 
         insp = Inspector.from_engine(create_engine(db_sqlite_uri))

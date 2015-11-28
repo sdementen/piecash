@@ -4,9 +4,12 @@ from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
 import pytest
+import tzlocal
+
 from piecash import Transaction, Split, GncImbalanceError, GncValidationError, Lot, GnucashException, Commodity
 from piecash.core import factories
 from piecash.core.factories import create_stock_accounts
+from piecash.sa_extra import tz
 from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, is_not_on_web
 
 # dummy line to avoid removing unused symbols
@@ -14,7 +17,7 @@ from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_u
 a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic
 
 
-class TestFactories(object):
+class TestFactoriesCommodities(object):
     def test_create_stock_accounts_simple(self, book_basic):
         with pytest.raises(GnucashException):
             factories.create_stock_accounts(book_basic.default_currency,
@@ -33,45 +36,43 @@ class TestFactories(object):
         income = book_basic.accounts(name="inc")
 
         appl = Commodity(namespace="NMS", mnemonic="AAPL", fullname="Apple")
-        appl["quoted_currency"]="USD"
+        appl["quoted_currency"] = "USD"
         acc, inc_accounts = factories.create_stock_accounts(appl,
                                                             broker_account=broker,
                                                             income_account=income,
                                                             income_account_types="D")
-        assert len(inc_accounts)==1
+        assert len(inc_accounts) == 1
 
         acc, inc_accounts = factories.create_stock_accounts(appl,
                                                             broker_account=broker,
                                                             income_account=income,
                                                             income_account_types="CL")
-        assert len(inc_accounts)==1
+        assert len(inc_accounts) == 1
         acc, inc_accounts = factories.create_stock_accounts(appl,
                                                             broker_account=broker,
                                                             income_account=income,
                                                             income_account_types="CS")
-        assert len(inc_accounts)==1
+        assert len(inc_accounts) == 1
         acc, inc_accounts = factories.create_stock_accounts(appl,
                                                             broker_account=broker,
                                                             income_account=income,
                                                             income_account_types="I")
-        assert len(inc_accounts)==1
+        assert len(inc_accounts) == 1
         acc, inc_accounts = factories.create_stock_accounts(appl,
                                                             broker_account=broker,
                                                             income_account=income,
                                                             income_account_types="D/CL/CS/I")
-        assert len(income.children)==4
-        assert sorted(income.children,key=lambda x:x.guid) == sorted([_acc.parent for _acc in inc_accounts],key=lambda x:x.guid)
+        assert len(income.children) == 4
+        assert sorted(income.children, key=lambda x: x.guid) == sorted([_acc.parent for _acc in inc_accounts], key=lambda x: x.guid)
         assert broker.children == [acc]
-
 
     def test_create_stock_from_symbol(self, book_basic):
         if is_not_on_web():
             return
         factories.create_stock_from_symbol("AAPL", book_basic)
 
-
     def test_create_currency_from_ISO(self, book_basic):
-        assert factories.create_currency_from_ISO("CAD").fullname=="Canadian Dollar"
+        assert factories.create_currency_from_ISO("CAD").fullname == "Canadian Dollar"
 
         with pytest.raises(ValueError):
             factories.create_currency_from_ISO("EFR").fullname
@@ -79,4 +80,54 @@ class TestFactories(object):
     def test_create_currency_from_ISO_web(self, book_basic):
         if is_not_on_web():
             return
-        assert factories.create_currency_from_ISO("CAD", from_web=True).fullname=="Canadian Dollar"
+        assert factories.create_currency_from_ISO("CAD", from_web=True).fullname == "Canadian Dollar"
+
+
+class TestFactoriesTransactions(object):
+    def test_single_transaction(self, book_basic):
+        today = datetime.today()
+        factories.single_transaction(today,
+                                     today,
+                                     "my test",
+                                     Decimal(100),
+                                     from_account=book_basic.accounts(name="inc"),
+                                     to_account=book_basic.accounts(name="asset"))
+        book_basic.save()
+        tr = book_basic.transactions(description="my test")
+        assert len(tr.splits) == 2
+        sp1, sp2 = tr.splits
+        if sp1.value > 0:
+            sp2, sp1 = sp1, sp2
+        # sp1 has negative value
+        assert sp1.account == book_basic.accounts(name="inc")
+        assert sp2.account == book_basic.accounts(name="asset")
+        assert sp1.value == -sp2.value
+        assert sp1.quantity == sp1.value
+        assert tr.post_date == tzlocal.get_localzone().localize(today).replace(microsecond=0)
+        assert tr.enter_date == tzlocal.get_localzone().localize(today).replace(microsecond=0)
+
+    def test_single_transaction_tz(self, book_basic):
+        today = tzlocal.get_localzone().localize(datetime.today())
+        factories.single_transaction(today,
+                                     today,
+                                     "my test",
+                                     Decimal(100),
+                                     from_account=book_basic.accounts(name="inc"),
+                                     to_account=book_basic.accounts(name="asset"))
+        book_basic.save()
+        tr = book_basic.transactions(description="my test")
+        assert tr.post_date == today.replace(microsecond=0)
+        assert tr.enter_date == today.replace(microsecond=0)
+
+    def test_single_transaction_rollback(self, book_basic):
+        today = tzlocal.get_localzone().localize(datetime.today())
+        factories.single_transaction(today,
+                                     today,
+                                     "my test",
+                                     Decimal(100),
+                                     from_account=book_basic.accounts(name="inc"),
+                                     to_account=book_basic.accounts(name="asset"))
+        book_basic.validate()
+        assert len(book_basic.transactions) == 1
+        book_basic.cancel()
+        assert len(book_basic.transactions) == 0

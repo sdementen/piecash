@@ -2,6 +2,7 @@
 import pytest
 
 from piecash import Account, Commodity
+from piecash.core.session import validate_book
 from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri
 
 
@@ -19,14 +20,14 @@ class TestAccount_create_account(object):
         acc = Account(name="test account", type="ASSET", commodity=EUR)
         new_book.add(acc)
         with pytest.raises(ValueError):
-            new_book.flush()
+            new_book.validate()
         new_book.cancel()
 
         # create an account without parent that is ROOT but with wrong name
         acc = Account(name="test account", type="ROOT", commodity=EUR)
         new_book.add(acc)
         with pytest.raises(ValueError):
-            new_book.flush()
+            new_book.validate()
         new_book.cancel()
 
         # create an account without parent that is ROOT with correct name

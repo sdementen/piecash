@@ -4,7 +4,6 @@ from pprint import pprint, pformat
 import sys
 import datetime
 import unicodedata
-
 from sqlalchemy import types, Table, MetaData, ForeignKeyConstraint, event, create_engine, inspect
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.ext.compiler import compiles
@@ -55,8 +54,8 @@ class DeclarativeBase(object):
         """
         raise NotImplementedError(self)
 
-    def object_beforechange(self):
-        return instance_state(self).committed_state
+    def get_all_changes(self):
+        return self.book.session._all_changes[id(self)]
 
     if sys.version > '3':
         def __str__(self):
@@ -189,6 +188,7 @@ def pure_slot_property(slot_name, slot_transform=lambda x: x):
         fset=fset,
     )
 
+
 def kvp_attribute(name, to_gnc, from_gnc, default=None):
     def getter(self):
         try:
@@ -272,5 +272,3 @@ class ChoiceType(types.TypeDecorator):
 
     def process_result_value(self, value, dialect):
         return self.choices[value]
-
-
