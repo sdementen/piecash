@@ -1,12 +1,13 @@
 from __future__ import division
+
 import uuid
 
 from sqlalchemy import Column, VARCHAR, INTEGER, BIGINT, ForeignKey
-from sqlalchemy.orm import relation, backref, foreign
+from sqlalchemy.orm import relation, foreign
 
-from .sa_extra import DeclarativeBase
-from ._declbase import DeclarativeBaseGuid
 from ._common import hybrid_property_gncnumeric, Recurrence, CallableList
+from ._declbase import DeclarativeBaseGuid
+from .sa_extra import DeclarativeBase
 
 
 class Budget(DeclarativeBaseGuid):

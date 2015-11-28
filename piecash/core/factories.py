@@ -1,8 +1,9 @@
 # coding=utf-8
 from __future__ import unicode_literals
-from .._common import GnucashException
+
 from ._commodity_helper import run_yql
 from .commodity import GncCommodityError
+from .._common import GnucashException
 
 
 def create_stock_accounts(cdty, broker_account, income_account=None, income_account_types="D/CL/I"):

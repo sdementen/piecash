@@ -1,9 +1,10 @@
 # -*- coding: latin-1 -*-
-import os.path
 import os
 import sys
+
 import pytest
 from sqlalchemy_utils import database_exists, drop_database
+
 from piecash import create_book, Account, Commodity, Employee, Customer, Vendor
 
 test_folder = os.path.dirname(os.path.realpath(__file__))
@@ -30,14 +31,14 @@ LOCALSERVER = os.environ.get("PIECASH_DBSERVER_TEST", False)
 
 db_sqlite_uri = "sqlite:///{}".format(db_sqlite)
 databases_to_check = [None,
-                      db_sqlite_uri ]
+                      db_sqlite_uri]
 db_config = {
     "sqlite": dict(sqlite_file=db_sqlite),
     "sqlite_in_mem": dict(sqlite_file=None),
 }
 
 if TRAVIS or LOCALSERVER:
-    pg_password = os.environ.get("PG_PASSWORD","")
+    pg_password = os.environ.get("PG_PASSWORD", "")
     db_user = "travis"
     databases_to_check.append("postgresql://postgres:{pwd}@localhost:5432/foo".format(pwd=pg_password))
     databases_to_check.append("mysql+pymysql://travis:@localhost/foo?charset=utf8")
@@ -103,9 +104,10 @@ def new_book(request):
 
     if name and database_exists(name):
         drop_database(name)
-    b = create_book(uri_conn=name, keep_foreign_keys=False)
-    yield b
-    b.session.close()
+
+    with create_book(uri_conn=name, keep_foreign_keys=False) as b:
+        yield b
+
     if name and database_exists(name):
         drop_database(name)
 
@@ -116,9 +118,10 @@ def new_book_USD(request):
 
     if name and database_exists(name):
         drop_database(name)
-    b = create_book(uri_conn=name, currency="USD", keep_foreign_keys=False)
-    yield b
-    b.session.close()
+
+    with create_book(uri_conn=name, currency="USD", keep_foreign_keys=False) as b:
+        yield b
+
     if name and database_exists(name):
         drop_database(name)
 
@@ -151,5 +154,6 @@ def is_inmemory_sqlite(book_basic):
     # fdsfdssfd
     return book_basic.uri.database == ":memory:"
 
+
 def is_not_on_web():
-    return os.environ.get("DONOTGOONWEB",False)
+    return os.environ.get("DONOTGOONWEB", False)

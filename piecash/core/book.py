@@ -1,19 +1,20 @@
-import warnings
 import locale
-from collections import OrderedDict, defaultdict
+import warnings
+from collections import defaultdict
 from operator import attrgetter
+
 from sqlalchemy import Column, VARCHAR, ForeignKey
-from sqlalchemy.orm import relation, subqueryload, joinedload
+from sqlalchemy.orm import relation
 from sqlalchemy.orm.base import instance_state
 from sqlalchemy.orm.exc import NoResultFound
 
-from .._declbase import DeclarativeBaseGuid
-from .._common import CallableList
 from . import factories
 from .account import Account
+from .commodity import Commodity, Price
 from .transaction import Split, Transaction
-from .commodity import Commodity, Price, GncPriceError
-from piecash.sa_extra import kvp_attribute
+from .._common import CallableList
+from .._declbase import DeclarativeBaseGuid
+from ..sa_extra import kvp_attribute
 
 
 class Book(DeclarativeBaseGuid):
@@ -147,7 +148,6 @@ class Book(DeclarativeBaseGuid):
         warnings.warn("deprecated", DeprecationWarning)
         return self
 
-
     def validate(self):
         Book.validate_book(self.session)
 
@@ -161,7 +161,7 @@ class Book(DeclarativeBaseGuid):
                           "deleted": session.deleted}.items():
             for obj in l:
                 # retrieve the dictionnary of changes for the given obj
-                attrs = session._all_changes.setdefault(id(obj),{})
+                attrs = session._all_changes.setdefault(id(obj), {})
                 # add the change of state to the list of state changes
                 attrs.setdefault("STATE_CHANGES", []).append(change)
                 attrs.setdefault("OBJECT", obj)
@@ -196,7 +196,6 @@ class Book(DeclarativeBaseGuid):
         # for each object, validate it
         for tx in txs:
             tx.validate()
-
 
     _trading_accounts = None
 

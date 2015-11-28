@@ -2,7 +2,6 @@
 import pytest
 
 from piecash import Account, Commodity
-from piecash.core.session import validate_book
 from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri
 
 
@@ -46,7 +45,7 @@ class TestAccount_create_account(object):
         acc1 = Account(name="test account", type="ASSET", commodity=EUR, parent=racc)
         acc2 = Account(name="test account", type="ASSET", commodity=EUR, parent=racc)
         with pytest.raises(ValueError):
-            new_book.flush()
+            new_book.validate()
 
     def test_create_samenameanddifferentparent_accounts(self, new_book):
         EUR = new_book.commodities[0]
@@ -94,7 +93,7 @@ class TestAccount_create_account(object):
         # create account with unknown type
         with pytest.raises(ValueError):
             acc = Account(name="test account", type="FOO", commodity=EUR, parent=racc)
-            new_book.flush()
+            new_book.validate()
 
     def test_create_nobook_account(self, new_book):
         USD = Commodity(namespace="FOO", mnemonic="BAZ", fullname="cuz")
@@ -122,11 +121,11 @@ class TestAccount_create_account(object):
         # create root account should raise an exception
         acc = Account(name="subroot accout", type="ROOT", commodity=EUR, parent=racc)
         with pytest.raises(ValueError):
-            new_book.flush()
+            new_book.validate()
 
         # except if we add the control_mode 'allow-root-subaccounts' to the book
         new_book.control_mode.append("allow-root-subaccounts")
-        new_book.flush()
+        new_book.validate()
 
         assert len(new_book.accounts) == 1
 

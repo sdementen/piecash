@@ -3,13 +3,12 @@ import uuid
 from sqlalchemy import Column, INTEGER, BIGINT, VARCHAR, ForeignKey
 from sqlalchemy.orm import composite, relation
 
-
 # change of the __doc__ string as getting error in sphinx ==> should be reported to SA project
 composite.__doc__ = None  # composite.__doc__.replace(":ref:`mapper_composite`", "")
 
-from piecash.sa_extra import _DateTime
-from piecash._common import CallableList, hybrid_property_gncnumeric
-from piecash._declbase import DeclarativeBaseGuid
+from ..sa_extra import _DateTime
+from .._common import CallableList, hybrid_property_gncnumeric
+from .._declbase import DeclarativeBaseGuid
 
 
 class Billterm(DeclarativeBaseGuid):
@@ -37,11 +36,11 @@ class Billterm(DeclarativeBaseGuid):
                         back_populates='parent',
                         cascade='all, delete-orphan',
                         collection_class=CallableList,
-    )
+                        )
     parent = relation('Billterm',
                       back_populates='children',
                       remote_side=guid,
-    )
+                      )
 
 
 class Entry(DeclarativeBaseGuid):
@@ -112,7 +111,6 @@ class Invoice(DeclarativeBaseGuid):
     _charge_amt_denom = Column('charge_amt_denom', BIGINT())
     charge_amt = hybrid_property_gncnumeric(_charge_amt_num, _charge_amt_denom)
 
-
     # relation definitions
     # todo: check all relations and understanding of types...
     term = relation('Billterm')
@@ -121,9 +119,9 @@ class Invoice(DeclarativeBaseGuid):
     post_lot = relation('Lot')
     post_txn = relation('Transaction')
 
-
     def __unirepr__(self):
         return u"Invoice<{}>".format(self.id)
+
 
 class Job(DeclarativeBaseGuid):
     __tablename__ = 'jobs'
@@ -166,6 +164,4 @@ class Order(DeclarativeBaseGuid):
                        back_populates='order',
                        cascade='all, delete-orphan',
                        collection_class=CallableList,
-    )
-
-
+                       )

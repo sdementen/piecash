@@ -1,13 +1,15 @@
-import decimal
 import datetime
-from importlib import import_module
-import uuid
+import decimal
 import sys
+import uuid
+from importlib import import_module
+
 from enum import Enum
 from sqlalchemy import Column, VARCHAR, INTEGER, REAL, BIGINT, types, event
 from sqlalchemy.orm import relation, foreign, object_session, backref
-from ._common import hybrid_property_gncnumeric
+
 from ._common import CallableList
+from ._common import hybrid_property_gncnumeric
 from .sa_extra import _DateTime, DeclarativeBase, _Date
 
 if sys.version > '3':

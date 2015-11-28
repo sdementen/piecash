@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-import shutil
 import os
+import shutil
+
 import pytest
+
 from piecash import Transaction, Commodity, open_book, create_book, Account
-from piecash.kvp import Slot
 from piecash._common import GnucashException
 from piecash.core.session import Version, gnclock
+from piecash.kvp import Slot
 from test_helper import file_template, file_for_test
 
 

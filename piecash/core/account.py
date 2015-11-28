@@ -1,10 +1,13 @@
 from __future__ import unicode_literals
+
 import uuid
-from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER, Index
-from sqlalchemy.orm import relation, validates
+
 from enum import Enum
-from .._declbase import DeclarativeBaseGuid
+from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER
+from sqlalchemy.orm import relation, validates
+
 from .._common import CallableList
+from .._declbase import DeclarativeBaseGuid
 from ..sa_extra import mapped_to_slot_property
 
 root_types = {"ROOT"}

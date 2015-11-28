@@ -1,9 +1,12 @@
 # coding=utf-8
 from __future__ import unicode_literals
+
 from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
+
 import pytest
+
 from piecash import Transaction, Split, GncImbalanceError, GncValidationError, Lot
 from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic
 
@@ -46,7 +49,7 @@ class TestTransaction_create_transaction(object):
         racc = book_basic.root_account
         a = book_basic.accounts(name="asset")
         e = book_basic.accounts(name="exp")
-        s = Split(account=a,value=Decimal(1))
+        s = Split(account=a, value=Decimal(1))
         assert repr(s)
 
     def test_create_cdtytransaction(self, book_basic):

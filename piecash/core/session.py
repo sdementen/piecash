@@ -7,9 +7,10 @@ from collections import defaultdict
 from sqlalchemy import event, Column, VARCHAR, INTEGER, Table, PrimaryKeyConstraint
 from sqlalchemy.sql.ddl import DropConstraint, DropIndex
 from sqlalchemy_utils import database_exists
+
 from .book import Book
-from ..sa_extra import create_piecash_engine, DeclarativeBase, Session
 from .._common import GnucashException
+from ..sa_extra import create_piecash_engine, DeclarativeBase, Session
 
 version_supported = {u'Gnucash-Resave': 19920, u'invoices': 3, u'books': 1, u'accounts': 1, u'slots': 3,
                      u'taxtables': 2, u'lots': 2, u'orders': 1, u'vendors': 1, u'customers': 2, u'jobs': 1,

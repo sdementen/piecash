@@ -1,14 +1,16 @@
-from collections import defaultdict
-from decimal import Decimal
 import datetime
 import uuid
-from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, event, INTEGER
+from collections import defaultdict
+from decimal import Decimal
+
+from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, INTEGER
 from sqlalchemy.orm import relation, validates, foreign
-from sqlalchemy.orm.base import instance_state, NEVER_SET
+from sqlalchemy.orm.base import NEVER_SET
+
+from .._common import CallableList, GncImbalanceError
 from .._common import GncValidationError, hybrid_property_gncnumeric, Recurrence
 from .._declbase import DeclarativeBaseGuid
-from .._common import CallableList, GncImbalanceError
-from ..sa_extra import _Date, _DateTime, Session, mapped_to_slot_property, pure_slot_property
+from ..sa_extra import _Date, _DateTime, mapped_to_slot_property, pure_slot_property
 
 
 class Split(DeclarativeBaseGuid):

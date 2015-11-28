@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
 from __future__ import division
+from __future__ import print_function
+
 import datetime
 import os
-from decimal import Decimal
 import shutil
+from decimal import Decimal
+
 import pytest
+
 from piecash import create_book, Account, ACCOUNT_TYPES, open_book, Price
 from piecash._common import GnucashException
 from piecash.core.account import _is_parent_child_types_consistent, root_types

@@ -14,7 +14,7 @@ from .core import (Book,
                    Commodity, Price,
                    create_book, open_book,
                    factories,
-)
+                   )
 from .business import Invoice, Employee, Job  # must import as Transaction has a relation to it
 from .business import Vendor, Customer, Employee, Address
 from .business import Taxtable, TaxtableEntry

@@ -1,6 +1,8 @@
 from decimal import Decimal
+
 from sqlalchemy import Column, VARCHAR, INTEGER, BIGINT, ForeignKey
-from sqlalchemy.orm import composite, relation, relationship, foreign
+from sqlalchemy.orm import composite, relation, foreign
+
 from .._common import hybrid_property_gncnumeric, CallableList
 from .._declbase import DeclarativeBaseGuid
 from ..sa_extra import ChoiceType

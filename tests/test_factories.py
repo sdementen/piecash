@@ -1,15 +1,14 @@
 # coding=utf-8
 from __future__ import unicode_literals
-from collections import defaultdict
+
 from datetime import datetime
 from decimal import Decimal
+
 import pytest
 import tzlocal
 
-from piecash import Transaction, Split, GncImbalanceError, GncValidationError, Lot, GnucashException, Commodity
+from piecash import GnucashException, Commodity
 from piecash.core import factories
-from piecash.core.factories import create_stock_accounts
-from piecash.sa_extra import tz
 from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, is_not_on_web
 
 # dummy line to avoid removing unused symbols
