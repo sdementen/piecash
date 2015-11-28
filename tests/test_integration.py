@@ -200,7 +200,7 @@ class TestIntegration_EmptyBook(object):
                 if not _is_parent_child_types_consistent(acc_type1, acc_type2, []):
                     with pytest.raises(ValueError):
                         acc2 = Account(name=acc_type2, type=acc_type2, parent=acc1, commodity=None)
-                        book.flush()
+                        book.validate()
                     book.session.expunge(acc2)
                 else:
                     acc2 = Account(name=acc_type2, type=acc_type2, parent=acc1, commodity=None)
