@@ -161,7 +161,7 @@ class Book(DeclarativeBaseGuid):
                           "deleted": session.deleted}.items():
             for obj in l:
                 # retrieve the dictionnary of changes for the given obj
-                attrs = session._all_changes[id(obj)]
+                attrs = session._all_changes.setdefault(id(obj),{})
                 # add the change of state to the list of state changes
                 attrs.setdefault("STATE_CHANGES", []).append(change)
                 attrs.setdefault("OBJECT", obj)
@@ -170,7 +170,6 @@ class Book(DeclarativeBaseGuid):
                 for k, v in instance_state(obj).committed_state.items():
                     if k not in attrs:
                         attrs[k] = v
-
 
     @staticmethod
     def validate_book(session):

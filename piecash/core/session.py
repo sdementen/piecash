@@ -305,7 +305,7 @@ def adapt_session(session, book, readonly):
 
     # add logic to track if a session has been modified or not
     session._is_modified = False
-    session._all_changes = defaultdict(dict)
+    session._all_changes = {}
 
     @event.listens_for(session, 'after_flush')
     def receive_after_flush(session, flush_context):

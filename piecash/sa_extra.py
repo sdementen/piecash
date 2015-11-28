@@ -55,7 +55,10 @@ class DeclarativeBase(object):
         raise NotImplementedError(self)
 
     def get_all_changes(self):
-        return self.book.session._all_changes[id(self)]
+        try:
+            return self.book.session._all_changes[id(self)]
+        except KeyError:
+            return {}
 
     if sys.version > '3':
         def __str__(self):
