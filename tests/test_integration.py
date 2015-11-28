@@ -194,20 +194,32 @@ class TestIntegration_EmptyBook(object):
         # test compatibility between child account and parent account
         for acc_type1 in ACCOUNT_TYPES - root_types:
             acc1 = Account(name=acc_type1, type=acc_type1, parent=book.root_account, commodity=None)
-
             for acc_type2 in ACCOUNT_TYPES:
-
-                if not _is_parent_child_types_consistent(acc_type1, acc_type2, []):
-                    with pytest.raises(ValueError):
-                        acc2 = Account(name=acc_type2, type=acc_type2, parent=acc1, commodity=None)
-                        book.validate()
-                    book.session.expunge(acc2)
-                else:
+                if _is_parent_child_types_consistent(acc_type1, acc_type2, []):
                     acc2 = Account(name=acc_type2, type=acc_type2, parent=acc1, commodity=None)
 
         book.save()
 
         assert len(book.accounts) == 100
+
+    def test_add_account_incompatible(self, book):
+        # test compatibility between child account and parent account
+        for acc_type1 in ACCOUNT_TYPES - root_types:
+            acc1 = Account(name=acc_type1, type=acc_type1, parent=book.root_account, commodity=None)
+        book.save()
+
+        assert len(book.accounts) == 13
+        for acc_type1 in ACCOUNT_TYPES - root_types:
+            acc1 = book.accounts(name=acc_type1)
+            for acc_type2 in ACCOUNT_TYPES:
+                if not _is_parent_child_types_consistent(acc_type1, acc_type2, []):
+                    acc2 = Account(name=acc_type2, type=acc_type2, parent=acc1, commodity=None)
+                    with pytest.raises(ValueError):
+                        book.validate()
+                    book.cancel()
+        book.save()
+
+        assert len(book.accounts) == 13
 
     def test_add_account_names(self, book):
         # raise ValueError as acc1 and acc2 shares same parents with same name
