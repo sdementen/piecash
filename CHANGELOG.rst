@@ -1,8 +1,8 @@
 What's new
 ==========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.10.1 (2015-11-29)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - refactor the validation mechanism to work well with autoflush=True
 - add support to GLIST in KVP
