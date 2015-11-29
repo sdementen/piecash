@@ -4,7 +4,12 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
-- Empty
+- refactor the validation mechanism to work well with autoflush=True
+- add support to GLIST in KVP
+- add new matching rule for GUID slots
+- rename slot 'default_currency' to 'default-currency'
+- add tests for single_transaction factory
+- update ipython example with pandas dataframes
 
 Version 0.10.0 (2015-11-18)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
