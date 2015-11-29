@@ -131,13 +131,13 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
 
 html_theme = 'nature'
 html_theme = "sphinx_rtd_theme"
-html_theme = "default"
+html_theme = "classic"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    'sticky_navigation': True,
+    # 'sticky_navigation': True,
 }
 
 # The name for this set of Sphinx documents.  If None, it defaults to
