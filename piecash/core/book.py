@@ -1,16 +1,20 @@
-import warnings
 import locale
+import warnings
+from collections import defaultdict
 from operator import attrgetter
+
 from sqlalchemy import Column, VARCHAR, ForeignKey
-from sqlalchemy.orm import relation, subqueryload, joinedload
+from sqlalchemy.orm import relation
+from sqlalchemy.orm.base import instance_state
 from sqlalchemy.orm.exc import NoResultFound
-from .._declbase import DeclarativeBaseGuid
-from .._common import CallableList
+
 from . import factories
 from .account import Account
+from .commodity import Commodity, Price
 from .transaction import Split, Transaction
-from .commodity import Commodity, Price, GncPriceError
-from piecash.sa_extra import kvp_attribute
+from .._common import CallableList
+from .._declbase import DeclarativeBaseGuid
+from ..sa_extra import kvp_attribute
 
 
 class Book(DeclarativeBaseGuid):
@@ -132,7 +136,7 @@ class Book(DeclarativeBaseGuid):
     @property
     def default_currency(self):
         try:
-            return self["default_currency"].value
+            return self["default-currency"].value
         except KeyError:
             if locale.getlocale() == (None, None):
                 locale.setlocale(locale.LC_ALL, '')
@@ -143,6 +147,55 @@ class Book(DeclarativeBaseGuid):
     def book(self):
         warnings.warn("deprecated", DeprecationWarning)
         return self
+
+    def validate(self):
+        Book.validate_book(self.session)
+
+    @staticmethod
+    def track_dirty(session, flush_context, instances):
+        """
+        Record in session._all_changes the objects that have been modified before each flush
+        """
+        for change, l in {"dirty": session.dirty,
+                          "new": session.new,
+                          "deleted": session.deleted}.items():
+            for obj in l:
+                # retrieve the dictionnary of changes for the given obj
+                attrs = session._all_changes.setdefault(id(obj), {})
+                # add the change of state to the list of state changes
+                attrs.setdefault("STATE_CHANGES", []).append(change)
+                attrs.setdefault("OBJECT", obj)
+                # save old value of attr if not already saved
+                # (if a value is changed multiple time, we keep only the first "old value")
+                for k, v in instance_state(obj).committed_state.items():
+                    if k not in attrs:
+                        attrs[k] = v
+
+    @staticmethod
+    def validate_book(session):
+        session.flush()
+
+        # identify object to validate
+        txs = set()
+
+        # iterate on all explicitly changes objects to see
+        # if we need to add other objects for check
+        for attrs in session._all_changes.values():
+            obj = attrs["OBJECT"]
+            for o_to_validate in obj.object_to_validate(attrs["STATE_CHANGES"]):
+                txs.add(o_to_validate)
+
+        assert None not in txs, "No object should return None to validate. fix the code"
+
+        # sort object from local to global (ensure Split checked before Transaction)
+        from . import Account, Transaction, Split
+        sort_order = defaultdict(lambda: 20, {Account: 10, Transaction: 5, Split: 3, })
+        txs = list(txs)
+        txs.sort(key=lambda x: sort_order[type(x)])
+
+        # for each object, validate it
+        for tx in txs:
+            tx.validate()
 
     _trading_accounts = None
 

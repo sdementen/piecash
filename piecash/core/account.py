@@ -1,14 +1,14 @@
 from __future__ import unicode_literals
+
 import uuid
 
-from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER, Index
-from sqlalchemy.orm import relation, validates
 from enum import Enum
+from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER
+from sqlalchemy.orm import relation, validates
 
-from .._declbase import DeclarativeBaseGuid
 from .._common import CallableList
+from .._declbase import DeclarativeBaseGuid
 from ..sa_extra import mapped_to_slot_property
-
 
 root_types = {"ROOT"}
 asset_types = {'RECEIVABLE', 'MUTUAL', 'CASH', 'ASSET', 'BANK', 'STOCK'}
@@ -19,6 +19,7 @@ trading_types = {'TRADING'}
 equity_types = {"EQUITY"}
 # : the different types of accounts
 ACCOUNT_TYPES = equity_types | income_types | expense_types | asset_types | liability_types | root_types | trading_types
+
 
 class AccountType(Enum):
     root = "ROOT"
@@ -40,7 +41,6 @@ class AccountType(Enum):
 # types that are compatible with other types
 incexp_types = income_types | expense_types
 assetliab_types = asset_types | liability_types
-
 
 # types according to the sign of their balance
 positive_types = asset_types | expense_types | trading_types
@@ -136,7 +136,6 @@ class Account(DeclarativeBaseGuid):
 
         self._commodity_scu = value
 
-
     parent_guid = Column('parent_guid', VARCHAR(length=32), ForeignKey('accounts.guid'))
     code = Column('code', VARCHAR(length=2048))
     description = Column('description', VARCHAR(length=2048))
@@ -178,7 +177,6 @@ class Account(DeclarativeBaseGuid):
                                      uselist=False,
                                      )
 
-
     def __init__(self,
                  name,
                  type,
@@ -205,14 +203,13 @@ class Account(DeclarativeBaseGuid):
         self.code = code
         self.commodity_scu = commodity_scu
 
-
     def object_to_validate(self, change):
-        if change!="deleted":
+        if change[-1] != "deleted":
             yield self
 
     def validate(self):
         if self.type not in ACCOUNT_TYPES:
-                raise ValueError("Account_type '{}' is not in {}".format(self.type, ACCOUNT_TYPES))
+            raise ValueError("Account_type '{}' is not in {}".format(self.type, ACCOUNT_TYPES))
 
         if self.parent:
             if not _is_parent_child_types_consistent(self.parent.type, self.type, self.book.control_mode):
@@ -250,7 +247,6 @@ class Account(DeclarativeBaseGuid):
                 return self.name
         else:
             return u""
-
 
     def get_balance(self):
         """

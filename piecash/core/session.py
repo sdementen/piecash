@@ -1,17 +1,16 @@
-from collections import OrderedDict, defaultdict
 import datetime
 import os
 import shutil
 import socket
+from collections import defaultdict
 
 from sqlalchemy import event, Column, VARCHAR, INTEGER, Table, PrimaryKeyConstraint
 from sqlalchemy.sql.ddl import DropConstraint, DropIndex
 from sqlalchemy_utils import database_exists
 
 from .book import Book
-from ..sa_extra import create_piecash_engine, DeclarativeBase, Session
 from .._common import GnucashException
-
+from ..sa_extra import create_piecash_engine, DeclarativeBase, Session
 
 version_supported = {u'Gnucash-Resave': 19920, u'invoices': 3, u'books': 1, u'accounts': 1, u'slots': 3,
                      u'taxtables': 2, u'lots': 2, u'orders': 1, u'vendors': 1, u'customers': 2, u'jobs': 1,
@@ -23,7 +22,7 @@ version_supported = {u'Gnucash-Resave': 19920, u'invoices': 3, u'books': 1, u'ac
 gnclock = Table(u'gnclock', DeclarativeBase.metadata,
                 Column('hostname', VARCHAR(length=255)),
                 Column('pid', INTEGER()),
-)
+                )
 
 
 class Version(DeclarativeBase):
@@ -77,9 +76,9 @@ def build_uri(sqlite_file=None,
 
         uri_conn = {"postgres": "postgresql://{username}:{password}@{host}:{port}/{name}",
                     "mysql": "mysql+pymysql://{username}:{password}@{host}:{port}/{name}?charset=utf8",
-        }[db_type].format(username=db_user, password=db_password,
-                          host=db_host, port=db_port,
-                          name=db_name)
+                    }[db_type].format(username=db_user, password=db_password,
+                                      host=db_host, port=db_port,
+                                      name=db_name)
 
     # db_postgres_uri = "postgresql://postgres:{pwd}@localhost:5432/foo".format(pwd=pg_password)
     # db_mysql_uri = "mysql+pymysql://travis:@localhost/foo?charset=utf8"
@@ -182,7 +181,7 @@ def create_book(sqlite_file=None,
 
     b.root_account = Account(name="Root Account", type="ROOT", commodity=None, book=b)
     b.root_template = Account(name="Template Root", type="ROOT", commodity=None, book=b)
-    b["default_currency"] = b.currencies(mnemonic=currency)
+    b["default-currency"] = b.currencies(mnemonic=currency)
     b.save()
 
     return b
@@ -307,46 +306,24 @@ def adapt_session(session, book, readonly):
 
     # add logic to track if a session has been modified or not
     session._is_modified = False
+    session._all_changes = {}
 
     @event.listens_for(session, 'after_flush')
     def receive_after_flush(session, flush_context):
         session._is_modified = not session.is_saved
 
     @event.listens_for(session, 'after_commit')
-    @event.listens_for(session, 'after_begin')
     @event.listens_for(session, 'after_rollback')
     def init_session_status(session, *args, **kwargs):
         session._is_modified = False
+        session._all_changes.clear()
+
+    session.book.session_changes = defaultdict(list)
 
     session.__class__.is_saved = property(
         fget=lambda self: not (self._is_modified or self.dirty or self.deleted or self.new),
         doc="True if nothing has yet been changed (False otherwise)")
 
 
-@event.listens_for(Session, 'before_flush')
-def validate_book(session, flush_context, instances):
-    # identify object to validate
-    txs = OrderedDict()
-    for change, l in {"dirty": session.dirty,
-                      "new": session.new,
-                      "deleted": session.deleted}.items():
-        for o in l:
-            for o_to_validate in o.object_to_validate(change):
-                txs[o_to_validate] = None
-
-    # remove None from the keys in the dictionary (if it ever gets included)
-    assert None not in txs, "No object should return None to validate. fix the code"
-        # txs.pop(None, None)  # txs.discard(None)
-
-    # sort object from local to global (ensure Split checked before Transaction)
-    from . import Account, Transaction, Split
-
-    txs = list(txs)
-    txs.sort(key=lambda x: defaultdict(lambda: 20, {Account: 10,
-                                                    Transaction: 5,
-                                                    Split: 3,
-    })[type(x)])
-
-    # for each object, validate it
-    for tx in txs:
-        tx.validate()
+event.listen(Session, 'before_commit', Book.validate_book)
+event.listen(Session, 'before_flush', Book.track_dirty)

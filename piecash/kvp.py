@@ -1,15 +1,15 @@
-import decimal
 import datetime
-from importlib import import_module
-import uuid
-
+import decimal
 import sys
+import uuid
+from importlib import import_module
+
 from enum import Enum
 from sqlalchemy import Column, VARCHAR, INTEGER, REAL, BIGINT, types, event
 from sqlalchemy.orm import relation, foreign, object_session, backref
 
-from ._common import hybrid_property_gncnumeric
 from ._common import CallableList
+from ._common import hybrid_property_gncnumeric
 from .sa_extra import _DateTime, DeclarativeBase, _Date
 
 if sys.version > '3':
@@ -37,6 +37,7 @@ pytype_KVPtype = {
     float: KVP_Type.KVP_TYPE_DOUBLE,
     decimal.Decimal: KVP_Type.KVP_TYPE_NUMERIC,
     dict: KVP_Type.KVP_TYPE_FRAME,
+    list: KVP_Type.KVP_TYPE_GLIST,
     # to fill
 }
 
@@ -49,6 +50,7 @@ KVPtype_fields = {
     KVP_Type.KVP_TYPE_GDATE: 'gdate_val',
     KVP_Type.KVP_TYPE_NUMERIC: ('numeric_val_num', 'numeric_val_denom'),
     KVP_Type.KVP_TYPE_FRAME: 'guid',
+    KVP_Type.KVP_TYPE_GLIST: 'guid',
 }
 
 
@@ -74,7 +76,6 @@ class DictWrapper(object):
         else:
             return False
 
-
     def __getitem__(self, key):
         assert not isinstance(key, int), "You are accessing slots with an integer (={}) while a string is expected".format(key)
         keys = key.split("/", 1)
@@ -84,10 +85,10 @@ class DictWrapper(object):
                 break
         else:
             raise KeyError("No slot exists with name '{}'".format(key))
-        if len(keys)>1:
+        if len(keys) > 1:
             return sl[keys[1]]
         else:
-            return sl #.value
+            return sl  # .value
 
     def __setitem__(self, key, value):
         keys = key.split("/", 1)
@@ -97,18 +98,18 @@ class DictWrapper(object):
                 break
         else:
             # new key
-            if len(keys)>1:
+            if len(keys) > 1:
                 if isinstance(self, SlotFrame):
-                    sf = SlotFrame(name= self._name + "/" + key)
+                    sf = SlotFrame(name=self._name + "/" + key)
                 else:
-                    sf = SlotFrame(name= key)
+                    sf = SlotFrame(name=key)
                 sf[keys[1]] = value
                 self.slots.append(sf)
             else:
                 self.slots.append(slot(parent=self, name=key, value=value))
 
             return
-        if len(keys)>1:
+        if len(keys) > 1:
             sl[keys[1]] = value
             return
         # assign if type is correct
@@ -118,7 +119,7 @@ class DictWrapper(object):
             raise TypeError("Type of '{}' is not one of {}".format(value, sl._python_type))
 
     def __delitem__(self, key):
-        if isinstance(key,slice):
+        if isinstance(key, slice):
             # delete all
             del self.slots[key]
             return
@@ -128,11 +129,10 @@ class DictWrapper(object):
                 break
         else:
             raise KeyError("No slot exists with name '{}'".format(key))
-        if len(keys)>1:
+        if len(keys) > 1:
             del sl[keys[1]]
         else:
             del self.slots[i]
-
 
     def iteritems(self):
         for sl in self.slots:
@@ -154,6 +154,7 @@ class Slot(DeclarativeBase):
     id = Column('id', INTEGER(), primary_key=True, nullable=False)
     obj_guid = Column('obj_guid', VARCHAR(length=32), nullable=False, index=True)
     _name = Column('name', VARCHAR(length=4096), nullable=False)
+
     @property
     def name(self):
         if self._name:
@@ -169,7 +170,7 @@ class Slot(DeclarativeBase):
 
     __mapper_args__ = {
         'polymorphic_on': slot_type,
-        }
+    }
 
     def __init__(self, name, value=None):
         self.name = name
@@ -216,29 +217,28 @@ SlotInt = define_simpleslot(postfix="Int",
                             field="int64_val",
                             col_type=BIGINT(),
                             col_default=0,
-)
+                            )
 SlotString = define_simpleslot(postfix="String",
                                pytype=(str_unicode,),
                                KVPtype=KVP_Type.KVP_TYPE_STRING,
                                field="string_val",
                                col_type=VARCHAR(length=4096),
                                col_default=None,
-)
+                               )
 SlotDouble = define_simpleslot(postfix="Double",
                                pytype=(float,),
                                KVPtype=KVP_Type.KVP_TYPE_DOUBLE,
                                field="double_val",
                                col_type=REAL(),
                                col_default=0,
-)
+                               )
 SlotTime = define_simpleslot(postfix="Time",
                              pytype=(datetime.time,),
                              KVPtype=KVP_Type.KVP_TYPE_TIMESPEC,
                              field="timespec_val",
                              col_type=_DateTime(),
                              col_default=None,
-)
-
+                             )
 
 
 class SlotFrame(DictWrapper, Slot):
@@ -250,12 +250,12 @@ class SlotFrame(DictWrapper, Slot):
     guid_val = Column('guid_val', VARCHAR(length=32))
 
     slots = relation('Slot',
-                               primaryjoin=foreign(Slot.obj_guid) == guid_val,
-                               cascade='all, delete-orphan',
-                               collection_class=CallableList,
-                               single_parent=True,
-                               backref=backref("parent", remote_side=guid_val),
-                               )
+                     primaryjoin=foreign(Slot.obj_guid) == guid_val,
+                     cascade='all, delete-orphan',
+                     collection_class=CallableList,
+                     single_parent=True,
+                     backref=backref("parent", remote_side=guid_val),
+                     )
 
     @property
     def value(self):
@@ -266,6 +266,25 @@ class SlotFrame(DictWrapper, Slot):
     def value(self, value):
         self.slots = [slot(parent=self, name=k, value=v) for k, v in value.items()]
 
+    def __init__(self, **kwargs):
+        self.guid_val = uuid.uuid4().hex
+        super(SlotFrame, self).__init__(**kwargs)
+
+
+class SlotList(SlotFrame):
+    __mapper_args__ = {
+        'polymorphic_identity': KVP_Type.KVP_TYPE_GLIST
+    }
+    _python_type = (list,)
+
+    @property
+    def value(self):
+        # convert to dict
+        return [sl.value for sl in self.slots]
+
+    @value.setter
+    def value(self, value):
+        self.slots = [slot(parent=self, name=str(i), value=v) for i, v in enumerate(value)]
 
     def __init__(self, **kwargs):
         self.guid_val = uuid.uuid4().hex
@@ -280,6 +299,7 @@ def remove_slot(target, value, initiator):
     else:
         s.delete(value)
 
+
 class SlotGUID(SlotFrame):
     __mapper_args__ = {
         'polymorphic_identity': KVP_Type.KVP_TYPE_GUID
@@ -290,19 +310,25 @@ class SlotGUID(SlotFrame):
     _mapping_name_class = {
         'from-sched-xaction': 'piecash.core.transaction.ScheduledTransaction',
         'account': 'piecash.core.account.Account',
-        'invoice-guid':'piecash.business.invoice.Invoice',
-        'default_currency':'piecash.core.commodity.Commodity',
-        }
-
+        'invoice-guid': 'piecash.business.invoice.Invoice',
+        'peer_guid': 'piecash.core.transaction.Split',
+        'gains-split': 'piecash.core.transaction.Split',
+        'gains-source': 'piecash.core.transaction.Split',
+        'default-currency': 'piecash.core.commodity.Commodity',
+    }
 
     @property
     def Class(self):
         name, guid = self.name, self.guid_val
-        try:
-            class_module, class_name = self._mapping_name_class[name].rsplit('.', 1)
-        except KeyError:
-            raise ValueError("Smart retrieval of GUID slot with name '{}' is not yet supported."
-                             "Need to retrieve proper object type in kvp module (add in SlotGUID._mapping_name_class)".format(name))
+        if name.startswith('CURRENCY::'):
+            # handle capital gain account
+            class_to_retrieve = 'piecash.core.account.Account'
+        else:
+            class_to_retrieve = self._mapping_name_class.get(name, None)
+            if class_to_retrieve is None:
+                raise ValueError("Smart retrieval of GUID slot with name '{}' is not yet supported."
+                                 "Need to retrieve proper object type in kvp module (add in SlotGUID._mapping_name_class)".format(name))
+        class_module, class_name = class_to_retrieve.rsplit('.', 1)
         mod = import_module(class_module)
         Class = getattr(mod, class_name)
         return Class
@@ -339,7 +365,7 @@ def slot(parent, name, value):
         return SlotTime(name=name, value=value)
 
     for cls in get_all_subclasses(Slot):
-        if isinstance(value, cls._python_type) and cls!=SlotFrame:
+        if isinstance(value, cls._python_type) and cls != SlotFrame and cls != SlotList:
             return cls(name=name, value=value)
 
     if isinstance(value, dict):
@@ -347,7 +373,14 @@ def slot(parent, name, value):
         sf = SlotFrame(name=name)
         for k, v in value.items():
             sl = slot(parent=sf, name=k, value=v)
-            # sl.obj_guid = sf.guid_val
+            sl.parent = sf
+        return sf
+
+    if isinstance(value, list):
+        # transform a list to List/Slots
+        sf = SlotList(name=name)
+        for i, v in enumerate(value):
+            sl = slot(parent=sf, name=str(i), value=v)
             sl.parent = sf
         return sf
 
@@ -363,6 +396,7 @@ class SlotNumeric(Slot):
     _numeric_val_num = Column('numeric_val_num', BIGINT(), nullable=False, default=0)
     _numeric_val_denom = Column('numeric_val_denom', BIGINT(), nullable=False, default=1)
     value = hybrid_property_gncnumeric(_numeric_val_num, _numeric_val_denom)
+
 
 SlotDate = define_simpleslot(postfix="Date",
                              pytype=(datetime.date,),

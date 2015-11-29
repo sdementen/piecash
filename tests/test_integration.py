@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
 from __future__ import division
+from __future__ import print_function
+
 import datetime
 import os
-from decimal import Decimal
 import shutil
+from decimal import Decimal
 
 import pytest
 
@@ -66,6 +67,7 @@ class TestIntegration_EmptyBook(object):
             "vdate": datetime.datetime.now().date(),
             "vtime": datetime.datetime.now(),
             "vnum": Decimal('4.53'),
+            "vlist": ["stri", 4, dict(foo=23)],
             "vdct": {
                 "spl": 2.3,
                 "vfr": {
@@ -91,7 +93,7 @@ class TestIntegration_EmptyBook(object):
 
     def test_slots_strings_access(self, book):
         b = book
-        del b["default_currency"]
+        del b["default-currency"]
         b["a/b/c/d/e"] = 1
         book.book.flush()
         assert b["a"]["b"]["c"]["d"]["e"].value == 1
@@ -148,7 +150,7 @@ class TestIntegration_EmptyBook(object):
         assert {n for (n,) in book.session.query(Slot._name)} == set([])
 
     def test_smart_slots(self, book):
-        del book["default_currency"]
+        del book["default-currency"]
         book["account"] = book.root_account
         assert book.slots[0].guid_val == book.root_account.guid
         assert book["account"].value == book.root_account
@@ -195,20 +197,32 @@ class TestIntegration_EmptyBook(object):
         # test compatibility between child account and parent account
         for acc_type1 in ACCOUNT_TYPES - root_types:
             acc1 = Account(name=acc_type1, type=acc_type1, parent=book.root_account, commodity=None)
-
             for acc_type2 in ACCOUNT_TYPES:
-
-                if not _is_parent_child_types_consistent(acc_type1, acc_type2, []):
-                    with pytest.raises(ValueError):
-                        acc2 = Account(name=acc_type2, type=acc_type2, parent=acc1, commodity=None)
-                        book.flush()
-                    book.session.expunge(acc2)
-                else:
+                if _is_parent_child_types_consistent(acc_type1, acc_type2, []):
                     acc2 = Account(name=acc_type2, type=acc_type2, parent=acc1, commodity=None)
 
         book.save()
 
         assert len(book.accounts) == 100
+
+    def test_add_account_incompatible(self, book):
+        # test compatibility between child account and parent account
+        for acc_type1 in ACCOUNT_TYPES - root_types:
+            acc1 = Account(name=acc_type1, type=acc_type1, parent=book.root_account, commodity=None)
+        book.save()
+
+        assert len(book.accounts) == 13
+        for acc_type1 in ACCOUNT_TYPES - root_types:
+            acc1 = book.accounts(name=acc_type1)
+            for acc_type2 in ACCOUNT_TYPES:
+                if not _is_parent_child_types_consistent(acc_type1, acc_type2, []):
+                    acc2 = Account(name=acc_type2, type=acc_type2, parent=acc1, commodity=None)
+                    with pytest.raises(ValueError):
+                        book.validate()
+                    book.cancel()
+        book.save()
+
+        assert len(book.accounts) == 13
 
     def test_add_account_names(self, book):
         # raise ValueError as acc1 and acc2 shares same parents with same name
@@ -226,7 +240,6 @@ class TestIntegration_EmptyBook(object):
         with pytest.raises(ValueError):
             book.save()
 
-
     def test_example(self, realbook_session):
         book = realbook_session
 
@@ -238,7 +251,7 @@ class TestIntegration_EmptyBook(object):
                                                price.date,
                                                float(price.value_num) / price.value_denom,
                                                price.currency.mnemonic,
-            ))
+                                               ))
 
         for account in book.accounts:
             print(account)

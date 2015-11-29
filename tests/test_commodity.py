@@ -1,5 +1,6 @@
 # coding=utf-8
 from __future__ import unicode_literals
+
 from datetime import datetime
 from decimal import Decimal
 
@@ -7,8 +8,7 @@ import pytest
 
 from piecash import Price, Commodity, GnucashException
 from piecash.core.commodity import GncPriceError
-from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, is_not_on_web,is_inmemory_sqlite
-
+from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, is_not_on_web, is_inmemory_sqlite
 
 # dummy line to avoid removing unused symbols
 a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic
@@ -52,7 +52,6 @@ class TestCommodity_create_commodity(object):
         cdty = book_basic.currencies(mnemonic="USD")
 
         assert cdty.base_currency.mnemonic == "EUR"
-
 
 
 class TestCommodity_create_prices(object):

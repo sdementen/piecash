@@ -5,9 +5,9 @@ import pytz
 from sqlalchemy import create_engine, Column, TEXT
 from sqlalchemy.orm import sessionmaker, composite
 
-from piecash.business.person import Address
 import piecash._common as mc
 from piecash._declbase import DeclarativeBaseGuid
+from piecash.business.person import Address
 from piecash.sa_extra import _Date, _DateTime
 
 
@@ -28,6 +28,7 @@ class TestModelCommon(object):
     def test_guid_on_declarativebase(self):
         class A(DeclarativeBaseGuid):
             __tablename__ = "a_table"
+
             def __init__(self):
                 pass
 
@@ -38,15 +39,15 @@ class TestModelCommon(object):
         s.flush()
         assert a.guid
 
-
     def test_addr_composite(self):
         flds = "name addr1 addr2 addr3 addr4 email fax phone".split()
+
         class B(DeclarativeBaseGuid):
             __tablename__ = "b_table"
-            def __init__(self, **kwargs):
-                for k,v in kwargs.items():
-                    setattr(self, k, v)
 
+            def __init__(self, **kwargs):
+                for k, v in kwargs.items():
+                    setattr(self, k, v)
 
         l = []
         for fld in flds:
@@ -69,8 +70,9 @@ class TestModelCommon(object):
         class C(DeclarativeBaseGuid):
             __tablename__ = "c_table"
             day = Column(_Date)
+
             def __init__(self, day):
-                self.day=day
+                self.day = day
 
         s = session()
         a = C(day=datetime.date(2010, 4, 12))
@@ -84,8 +86,9 @@ class TestModelCommon(object):
         class C(DeclarativeBaseGuid):
             __tablename__ = "d_table"
             time = Column(_DateTime)
+
             def __init__(self, time):
-                self.time=time
+                self.time = time
 
         s = session()
         a = C(time=datetime.datetime(2010, 4, 12, 3, 4, 5, tzinfo=pytz.utc))

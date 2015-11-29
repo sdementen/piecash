@@ -1,14 +1,16 @@
-from collections import defaultdict
-from decimal import Decimal
 import datetime
 import uuid
-from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, event, INTEGER
+from collections import defaultdict
+from decimal import Decimal
+
+from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, INTEGER
 from sqlalchemy.orm import relation, validates, foreign
-from sqlalchemy.orm.base import instance_state, NEVER_SET
+from sqlalchemy.orm.base import NEVER_SET
+
+from .._common import CallableList, GncImbalanceError
 from .._common import GncValidationError, hybrid_property_gncnumeric, Recurrence
 from .._declbase import DeclarativeBaseGuid
-from .._common import CallableList, GncImbalanceError
-from ..sa_extra import _Date, _DateTime, Session, mapped_to_slot_property, pure_slot_property
+from ..sa_extra import _Date, _DateTime, mapped_to_slot_property, pure_slot_property
 
 
 class Split(DeclarativeBaseGuid):
@@ -35,8 +37,9 @@ class Split(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
-    transaction_guid = Column('tx_guid', VARCHAR(length=32), ForeignKey('transactions.guid'), nullable=False,
-                              index=True)
+    # the transaction_guid is not mandatory at construction time because it can be set through a tr.splits.append(...) operation
+    # however, in the validation of the object, we raise an error if there is no transaction set at that time
+    transaction_guid = Column('tx_guid', VARCHAR(length=32), ForeignKey('transactions.guid'), index=True)
     account_guid = Column('account_guid', VARCHAR(length=32), ForeignKey('accounts.guid'), nullable=False, index=True)
     memo = Column('memo', VARCHAR(length=2048), nullable=False)
     action = Column('action', VARCHAR(length=2048), nullable=False)
@@ -61,8 +64,8 @@ class Split(DeclarativeBaseGuid):
     transaction = relation('Transaction', back_populates='splits')
 
     def __init__(self,
-                 account=None,
-                 value=None,
+                 account,
+                 value,
                  quantity=None,
                  transaction=None,
                  memo="",
@@ -74,7 +77,7 @@ class Split(DeclarativeBaseGuid):
         self.transaction = transaction
         self.account = account
         self.value = value
-        self.quantity = quantity
+        self.quantity = value if quantity is None else quantity
         self.memo = memo
         self.action = action
         self.reconcile_date = reconcile_date
@@ -110,16 +113,19 @@ class Split(DeclarativeBaseGuid):
 
     def object_to_validate(self, change):
         yield self
-        yield self.transaction
+        if self.transaction:
+            yield self.transaction
         if self.lot:
             yield self.lot
 
     def validate(self):
-        old = self.object_beforechange()
+        old = self.get_all_changes()
         if '_quantity_num' in old or '_value_num' in old:
             self.transaction._recalculate_balance = True
 
         # if single currency, assign value to quantity
+        if self.transaction_guid is None:
+            raise GncValidationError("The split is not linked to a transaction")
         if self.transaction.currency == self.account.commodity:
             self.quantity = self.value
         else:
@@ -207,7 +213,7 @@ class Transaction(DeclarativeBaseGuid):
         yield self
 
     def validate(self):
-        old = self.object_beforechange()
+        old = self.get_all_changes()
 
         if self.currency.namespace != "CURRENCY":
             raise GncValidationError("You are assigning a non currency commodity to a transaction")

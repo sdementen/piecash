@@ -1,17 +1,17 @@
-from __future__ import unicode_literals
 from __future__ import division
+from __future__ import unicode_literals
+
 import datetime
-
 from decimal import Decimal
-from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT, Index, UniqueConstraint
-from sqlalchemy.orm import relation
-from sqlalchemy.orm.exc import NoResultFound
 
+from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT, Index
+from sqlalchemy.orm import relation
+
+from ._commodity_helper import run_yql, quandl_fx
+from .._common import CallableList
 from .._common import GnucashException, hybrid_property_gncnumeric
 from .._declbase import DeclarativeBaseGuid
-from .._common import CallableList
 from ..sa_extra import _DateTime
-from ._commodity_helper import run_yql, quandl_fx
 
 
 class GncCommodityError(GnucashException):
@@ -53,10 +53,10 @@ class Price(DeclarativeBaseGuid):
     commodity = relation('Commodity',
                          back_populates="prices",
                          foreign_keys=[commodity_guid],
-    )
+                         )
     currency = relation('Commodity',
                         foreign_keys=[currency_guid],
-    )
+                        )
 
     def __init__(self,
                  commodity,
@@ -110,7 +110,7 @@ class Commodity(DeclarativeBaseGuid):
                             mysql_length={'namespace': 200,
                                           'mnemonic': 10},
                             ),
-    )
+                      )
 
     # column definitions
     namespace = Column('namespace', VARCHAR(length=2048), nullable=False)
@@ -142,7 +142,6 @@ class Commodity(DeclarativeBaseGuid):
                                        "Add a kvp item named 'quoted_currency' with the mnemonic of the "
                                        "currency to have proper behavior".format(self.mnemonic))
 
-
     # relation definitions
     accounts = relation('Account',
                         back_populates='commodity',
@@ -152,14 +151,13 @@ class Commodity(DeclarativeBaseGuid):
                             back_populates='currency',
                             cascade='all, delete-orphan',
                             collection_class=CallableList,
-    )
+                            )
     prices = relation("Price",
                       back_populates='commodity',
                       foreign_keys=[Price.commodity_guid],
                       cascade='all, delete-orphan',
                       lazy="dynamic",
-    )
-
+                      )
 
     def __init__(self,
                  namespace,
@@ -222,7 +220,7 @@ class Commodity(DeclarativeBaseGuid):
         if self.namespace == "CURRENCY":
             # get reference currency (from book.root_account)
             default_currency = self.base_currency
-            if default_currency==self:
+            if default_currency == self:
                 raise GncPriceError("Cannot update exchange rate for base currency")
 
             # through Quandl for exchange rates
@@ -251,4 +249,3 @@ class Commodity(DeclarativeBaseGuid):
                       date=datetime.datetime.strptime(day, "%Y-%m-%d"),
                       value=Decimal(close),
                       type='last')
-

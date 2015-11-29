@@ -10,9 +10,9 @@ from piecash import create_book, Account, GnucashException, Book, open_book, Com
 from piecash.core import Version
 from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri
 
-
 # dummy line to avoid removing unused symbols
 a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri
+
 
 class TestBook_create_book(object):
     def test_create_default(self, new_book):
@@ -118,7 +118,7 @@ class TestBook_create_book(object):
 
     def test_create_without_FK(self):
         # create without FK
-        b = create_book(uri_conn=db_sqlite_uri, keep_foreign_keys=False, overwrite=True, echo=True)
+        b = create_book(uri_conn=db_sqlite_uri, keep_foreign_keys=False, overwrite=True)
         b.session.close()
 
         insp = Inspector.from_engine(create_engine(db_sqlite_uri))
@@ -201,7 +201,7 @@ class TestBook_open_book(object):
 
         # open book specifying open_if_lock as True and RW to delete lock
         with open_book \
-                        (uri_conn=book_uri, open_if_lock=True, readonly=False, do_backup=False) as b:
+                    (uri_conn=book_uri, open_if_lock=True, readonly=False, do_backup=False) as b:
             b.session.delete_lock()
             b.save()
 

@@ -1,9 +1,12 @@
 # coding=utf-8
 from __future__ import unicode_literals
+
 from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
+
 import pytest
+
 from piecash import Transaction, Split, GncImbalanceError, GncValidationError, Lot
 from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic
 
@@ -29,6 +32,7 @@ class TestTransaction_create_transaction(object):
         # check issue with balance
         with pytest.raises(GncImbalanceError):
             book_basic.flush()
+            book_basic.validate()
 
         # adjust balance
         Split(account=e, value=-90, memo="missing exp", transaction=tr)
@@ -45,7 +49,7 @@ class TestTransaction_create_transaction(object):
         racc = book_basic.root_account
         a = book_basic.accounts(name="asset")
         e = book_basic.accounts(name="exp")
-        s = Split(account=a)
+        s = Split(account=a, value=Decimal(1))
         assert repr(s)
 
     def test_create_cdtytransaction(self, book_basic):
@@ -64,24 +68,23 @@ class TestTransaction_create_transaction(object):
 
         # check issue with quantity for broker split not defined
         with pytest.raises(GncValidationError):
-            book_basic.flush()
+            book_basic.validate()
 
         sb = tr.splits(account=s)
         sb.quantity = 15
 
         # check issue with quantity not same sign as value
         with pytest.raises(GncValidationError):
-            book_basic.flush()
+            book_basic.validate()
 
         sb.quantity = -15
 
         # verify imbalance issue
         with pytest.raises(GncImbalanceError):
-            book_basic.flush()
+            book_basic.validate()
 
         # adjust balance
         Split(account=a, value=-10, memo="missing asset corr", transaction=tr)
-        book_basic.flush()
         book_basic.save()
         assert str(sb)
         assert str(sb)
@@ -89,7 +92,7 @@ class TestTransaction_create_transaction(object):
         # changing currency of an existing transaction is not allowed
         tr.currency = book_basic.currencies(mnemonic="USD")
         with pytest.raises(GncValidationError):
-            book_basic.flush()
+            book_basic.validate()
         book_basic.cancel()
 
         # check sum of quantities are not balanced per commodity but values are
@@ -116,7 +119,7 @@ class TestTransaction_create_transaction(object):
                          ])
         # raise error as Transaction has a non CURRENCY commodity
         with pytest.raises(GncValidationError):
-            book_basic.flush()
+            book_basic.validate()
 
     def test_create_cdtytransaction_tradingaccount(self, book_basic):
         EUR = book_basic.commodities(namespace="CURRENCY")
@@ -132,7 +135,7 @@ class TestTransaction_create_transaction(object):
                              Split(account=a, value=100, memo=u"mémo asset"),
                              Split(account=s, value=-100, quantity=-15, memo=u"mémo brok"),
                          ])
-        book_basic.session.flush()
+        book_basic.validate()
 
         assert "{}".format(tr) == "Transaction<[EUR] 'buy stock' on 2014-01-02>"
         assert "{}".format(s) == "Account<asset:broker[ïoà]>"
@@ -152,7 +155,7 @@ class TestTransaction_create_transaction(object):
         # change existing quantity
         sp = tr.splits(memo=u"mémo brok")
         sp.quantity += 1
-        book_basic.flush()
+        book_basic.validate()
 
         # check sum of quantities are all balanced per commodity as values are
         d = defaultdict(lambda: Decimal(0))
@@ -233,4 +236,4 @@ class TestTransaction_lots(object):
                          ])
 
         with pytest.raises(ValueError):
-            book_basic.flush()
+            book_basic.validate()

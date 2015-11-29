@@ -1,22 +1,19 @@
-from __future__ import print_function
 from __future__ import division, unicode_literals
-from pprint import pprint, pformat
-import sys
+from __future__ import print_function
+
 import datetime
+import logging
+import sys
 import unicodedata
 
-from sqlalchemy import types, Table, MetaData, ForeignKeyConstraint, event, create_engine, inspect
+import pytz
+import tzlocal
+from sqlalchemy import types, Table, MetaData, ForeignKeyConstraint, event, create_engine
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import sessionmaker, object_session, RelationshipProperty, CompositeProperty, \
-    ColumnProperty, Mapper
-from sqlalchemy.orm.attributes import InstrumentedAttribute
-from sqlalchemy.orm.state import AttributeState
-import tzlocal
-import pytz
-from sqlalchemy.orm.base import instance_state
+from sqlalchemy.orm import sessionmaker, object_session
 
 # import yaml
 
@@ -55,8 +52,11 @@ class DeclarativeBase(object):
         """
         raise NotImplementedError(self)
 
-    def object_beforechange(self):
-        return instance_state(self).committed_state
+    def get_all_changes(self):
+        try:
+            return self.book.session._all_changes[id(self)]
+        except KeyError:
+            return {}
 
     if sys.version > '3':
         def __str__(self):
@@ -110,6 +110,8 @@ class _DateTime(types.TypeDecorator):
                 value, type(value))
             if value.tzinfo is None:
                 value = tz.localize(value)
+            if value.microsecond != 0:
+                logging.warning("A datetime has been given with microseconds which are not saved in the database")
             return value.astimezone(utc)
 
     def process_result_value(self, value, engine):
@@ -188,6 +190,7 @@ def pure_slot_property(slot_name, slot_transform=lambda x: x):
         fget=fget,
         fset=fset,
     )
+
 
 def kvp_attribute(name, to_gnc, from_gnc, default=None):
     def getter(self):
@@ -272,5 +275,3 @@ class ChoiceType(types.TypeDecorator):
 
     def process_result_value(self, value, dialect):
         return self.choices[value]
-
-

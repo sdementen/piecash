@@ -1,6 +1,8 @@
 from decimal import Decimal
+
 from sqlalchemy import Column, VARCHAR, INTEGER, BIGINT, ForeignKey
-from sqlalchemy.orm import composite, relation, relationship, foreign
+from sqlalchemy.orm import composite, relation, foreign
+
 from .._common import hybrid_property_gncnumeric, CallableList
 from .._declbase import DeclarativeBaseGuid
 from ..sa_extra import ChoiceType
@@ -73,7 +75,8 @@ class Customer(DeclarativeBaseGuid):
 
     # column definitions
     name = Column('name', VARCHAR(length=2048), nullable=False)
-    id = Column('id', VARCHAR(length=2048), nullable=False)
+    # id is nullable as it is set during validation (happening after flush)
+    id = Column('id', VARCHAR(length=2048), nullable=True)
     notes = Column('notes', VARCHAR(length=2048), nullable=False)
     active = Column('active', INTEGER(), nullable=False)
     _discount_num = Column('discount_num', BIGINT())
@@ -201,7 +204,8 @@ class Employee(DeclarativeBaseGuid):
 
     # column definitions
     name = Column('username', VARCHAR(length=2048), nullable=False)
-    id = Column('id', VARCHAR(length=2048), nullable=False)
+    # id is nullable as it is set during validation (happening after flush)
+    id = Column('id', VARCHAR(length=2048), nullable=True)
     language = Column('language', VARCHAR(length=2048), nullable=False)
     acl = Column('acl', VARCHAR(length=2048), nullable=False)
     active = Column('active', INTEGER(), nullable=False)
@@ -299,7 +303,8 @@ class Vendor(DeclarativeBaseGuid):
 
     # column definitions
     name = Column('name', VARCHAR(length=2048), nullable=False)
-    id = Column('id', VARCHAR(length=2048), nullable=False)
+    # id is nullable as it is set during validation (happening after flush)
+    id = Column('id', VARCHAR(length=2048), nullable=True)
     notes = Column('notes', VARCHAR(length=2048), nullable=False)
     currency_guid = Column('currency', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
     active = Column('active', INTEGER(), nullable=False)

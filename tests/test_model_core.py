@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-import shutil
 import os
+import shutil
+
 import pytest
 
 from piecash import Transaction, Commodity, open_book, create_book, Account
-from piecash.kvp import Slot
 from piecash._common import GnucashException
 from piecash.core.session import Version, gnclock
-
+from piecash.kvp import Slot
 from test_helper import file_template, file_for_test
 
 
@@ -69,7 +69,7 @@ class TestModelCore_EmptyBook(object):
     def test_slots(self, session):
         # no slots in an empty gnucash file but the default_currency
         slots = session.query(Slot._name).all()
-        assert slots == [('default_currency',)]
+        assert slots == [('default-currency',)]
 
     def test_versions(self, session):
         # confirm versions of tables
@@ -111,4 +111,3 @@ class TestModelCore_EmptyBook(object):
         # test that lock is not taken in readonly session
         locks = list(book_readonly_lock.session.execute(gnclock.select()))
         assert len(locks) == 0
-

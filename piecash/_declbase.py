@@ -4,8 +4,8 @@ from sqlalchemy import Column, VARCHAR, event
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relation, foreign, object_session
 
-from .kvp import DictWrapper, Slot
 from ._common import CallableList
+from .kvp import DictWrapper, Slot
 from .sa_extra import DeclarativeBase
 
 
@@ -18,10 +18,10 @@ class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):
     @declared_attr
     def slots(cls):
         rel = relation('Slot',
-                             primaryjoin=foreign(Slot.obj_guid) == cls.guid,
-                             cascade='all, delete-orphan',
-                             collection_class=CallableList,
-        )
+                       primaryjoin=foreign(Slot.obj_guid) == cls.guid,
+                       cascade='all, delete-orphan',
+                       collection_class=CallableList,
+                       )
 
         return rel
 
@@ -41,4 +41,3 @@ class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):
                     s.expunge(value)
                 else:
                     s.delete(value)
-

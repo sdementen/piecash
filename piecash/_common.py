@@ -62,17 +62,14 @@ def hybrid_property_gncnumeric(num_col, denom_col):
             sign, digits, exp = d.as_tuple()
             denom = 10 ** max(-exp, 0)
 
-            # print num_name, denom,
             denom_basis = getattr(self, "{}_basis".format(denom_name), None)
             if denom_basis is not None:
-                # print "got a basis for ", self, denom_basis
                 denom = denom_basis
-            # print denom
+
             num = int(d * denom)
 
         setattr(self, num_name, num)
         setattr(self, denom_name, denom)
-
 
     def fget(self):
         num, denom = getattr(self, num_name), getattr(self, denom_name)
