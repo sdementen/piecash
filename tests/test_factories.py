@@ -84,7 +84,7 @@ class TestFactoriesCommodities(object):
 
 class TestFactoriesTransactions(object):
     def test_single_transaction(self, book_basic):
-        today = datetime.today()
+        today = datetime.today().replace(microsecond=0)
         factories.single_transaction(today,
                                      today,
                                      "my test",
@@ -102,11 +102,11 @@ class TestFactoriesTransactions(object):
         assert sp2.account == book_basic.accounts(name="asset")
         assert sp1.value == -sp2.value
         assert sp1.quantity == sp1.value
-        assert tr.post_date == tzlocal.get_localzone().localize(today).replace(microsecond=0)
-        assert tr.enter_date == tzlocal.get_localzone().localize(today).replace(microsecond=0)
+        assert tr.post_date == tzlocal.get_localzone().localize(today)
+        assert tr.enter_date == tzlocal.get_localzone().localize(today)
 
     def test_single_transaction_tz(self, book_basic):
-        today = tzlocal.get_localzone().localize(datetime.today())
+        today = tzlocal.get_localzone().localize(datetime.today()).replace(microsecond=0)
         factories.single_transaction(today,
                                      today,
                                      "my test",
@@ -115,8 +115,8 @@ class TestFactoriesTransactions(object):
                                      to_account=book_basic.accounts(name="asset"))
         book_basic.save()
         tr = book_basic.transactions(description="my test")
-        assert tr.post_date == today.replace(microsecond=0)
-        assert tr.enter_date == today.replace(microsecond=0)
+        assert tr.post_date == today
+        assert tr.enter_date == today
 
     def test_single_transaction_rollback(self, book_basic):
         today = tzlocal.get_localzone().localize(datetime.today())
