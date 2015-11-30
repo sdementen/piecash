@@ -20,6 +20,11 @@ Simple changes on a newly created book
 --------------------------------------
 .. literalinclude:: ../../../examples/simple_book.py
 
+Create a book with some accounts and add a transaction
+------------------------------------------------------
+.. literalinclude:: ../../../examples/simple_book_transaction_creation.py
+
+
 Filtered transaction reports
 ----------------------------
 .. literalinclude:: ../../../examples/filtered_transaction_report.py
