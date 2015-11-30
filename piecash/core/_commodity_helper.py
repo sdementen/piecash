@@ -47,9 +47,10 @@ def quandl_fx(fx_mnemonic, base_mnemonic, start_date):
         return []
     if "error" in query_result:
         logging.error("issue when retrieving info from quandl.com : '{}'".format(query_result["error"]))
-        raise ValueError("On update rates for {} / {} got error message from quandl:'{}'".format(
-            fx_mnemonic, base_mnemonic, query_result["error"]
-        ))
+        return []
+    if "errors" in query_result:
+        logging.error("issue when retrieving info from quandl.com : '{}'".format(query_result["errors"]))
+        return []
 
     rows = query_result["data"]
 
