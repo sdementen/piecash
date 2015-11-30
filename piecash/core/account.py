@@ -187,7 +187,8 @@ class Account(DeclarativeBaseGuid):
                  hidden=0,
                  placeholder=0,
                  code=None,
-                 book=None):
+                 book=None,
+                 children=None):
         book = book or (commodity and commodity.book) or (parent and parent.book)
         if not book:
             raise ValueError("Could not find a book to attach the account to")
@@ -202,6 +203,8 @@ class Account(DeclarativeBaseGuid):
         self.placeholder = placeholder
         self.code = code
         self.commodity_scu = commodity_scu
+        if children:
+            self.children[:] = children
 
     def object_to_validate(self, change):
         if change[-1] != "deleted":
