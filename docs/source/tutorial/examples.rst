@@ -24,6 +24,9 @@ Create a book with some accounts and add a transaction
 ------------------------------------------------------
 .. literalinclude:: ../../../examples/simple_book_transaction_creation.py
 
+Extract Split information as pandas DataFrame
+---------------------------------------------
+.. literalinclude:: ../../../examples/simple_extract_splits_to_pandas.py
 
 Filtered transaction reports
 ----------------------------
