@@ -215,6 +215,9 @@ class Transaction(DeclarativeBaseGuid):
     def validate(self):
         old = self.get_all_changes()
 
+        if old["STATE_CHANGES"][-1]=="deleted":
+            return
+
         if self.currency.namespace != "CURRENCY":
             raise GncValidationError("You are assigning a non currency commodity to a transaction")
 
