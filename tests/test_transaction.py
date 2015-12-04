@@ -8,11 +8,11 @@ from decimal import Decimal
 import pytest
 
 from piecash import Transaction, Split, GncImbalanceError, GncValidationError, Lot
-from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic
+from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, book_transactions
 
 # dummy line to avoid removing unused symbols
 
-a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic
+a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, book_transactions
 
 
 class TestTransaction_create_transaction(object):
@@ -237,3 +237,16 @@ class TestTransaction_lots(object):
 
         with pytest.raises(ValueError):
             book_basic.validate()
+
+
+class TestTransaction_delete(object):
+    def test_delete_existing_transaction(self, book_transactions):
+        l = len(book_transactions.transactions)
+        s = len(book_transactions.splits)
+        tr = book_transactions.transactions[0]
+        book_transactions.delete(tr)
+        book_transactions.save()
+        nl = len(book_transactions.transactions)
+        ns = len(book_transactions.splits)
+        assert nl == l - 1
+        assert ns == s - 2

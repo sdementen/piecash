@@ -1,11 +1,12 @@
 # -*- coding: latin-1 -*-
 import os
 import sys
+from datetime import datetime
 
 import pytest
 from sqlalchemy_utils import database_exists, drop_database
 
-from piecash import create_book, Account, Commodity, Employee, Customer, Vendor
+from piecash import create_book, Account, Commodity, Employee, Customer, Vendor, Transaction, Split
 
 test_folder = os.path.dirname(os.path.realpath(__file__))
 book_folder = os.path.join(test_folder, "..", "gnucash_books")
@@ -141,6 +142,45 @@ def book_basic(request):
         Account(name="broker", type="STOCK", commodity=cdty, parent=a)
         Account(name="exp", type="EXPENSE", commodity=curr, parent=b.root_account)
         Account(name="inc", type="INCOME", commodity=curr, parent=b.root_account)
+
+        yield b
+
+    if name and database_exists(name):
+        drop_database(name)
+
+
+@pytest.yield_fixture(params=databases_to_check)
+def book_transactions(request):
+    name = request.param
+
+    if name and database_exists(name):
+        drop_database(name)
+    # create new book
+    with create_book(uri_conn=name, currency="EUR", keep_foreign_keys=False) as b:
+        # create some accounts
+        curr = b.default_currency
+        cdty = Commodity(namespace=u"échange", mnemonic=u"ïoà", fullname=u"Example of unicode déta")
+        asset = Account(name="asset", type="ASSET", commodity=curr, parent=b.root_account)
+        stock = Account(name="broker", type="STOCK", commodity=cdty, parent=asset)
+        expense = Account(name="exp", type="EXPENSE", commodity=curr, parent=b.root_account)
+        income = Account(name="inc", type="INCOME", commodity=curr, parent=b.root_account)
+
+        tr1 = Transaction(post_date=datetime(2015, 10, 21),
+                          description="my revenue",
+                          currency=curr,
+                          splits=[
+                              Split(account=asset, value=(100, 1)),
+                              Split(account=income, value=(-100, 1)),
+                          ]
+                          )
+        tr2 = Transaction(post_date=datetime(2015, 10, 21),
+                          description="my expense",
+                          currency=curr,
+                          splits=[
+                              Split(account=asset, value=(-100, 1)),
+                              Split(account=expense, value=(100, 1)),
+                          ]
+                          )
 
         yield b
 
