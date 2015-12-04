@@ -194,7 +194,7 @@ class Transaction(DeclarativeBaseGuid):
 
         self.currency = currency
         self.description = description
-        self.enter_date = enter_date if enter_date else datetime.datetime.today()
+        self.enter_date = enter_date if enter_date else datetime.datetime.today().replace(microsecond=0)
         self.post_date = post_date if post_date \
             else datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
         self.num = num
@@ -215,7 +215,7 @@ class Transaction(DeclarativeBaseGuid):
     def validate(self):
         old = self.get_all_changes()
 
-        if old["STATE_CHANGES"][-1]=="deleted":
+        if old["STATE_CHANGES"][-1] == "deleted":
             return
 
         if self.currency.namespace != "CURRENCY":
