@@ -120,23 +120,44 @@ class Split(DeclarativeBaseGuid):
 
     def validate(self):
         old = self.get_all_changes()
+        if old["STATE_CHANGES"][-1] == "deleted":
+            return
+
         if '_quantity_num' in old or '_value_num' in old:
             self.transaction._recalculate_balance = True
 
-        # if single currency, assign value to quantity
         if self.transaction_guid is None:
             raise GncValidationError("The split is not linked to a transaction")
+
         if self.transaction.currency == self.account.commodity:
-            self.quantity = self.value
+            if self.quantity != self.value:
+               raise GncValidationError("The split has a quantity diffeerent from value "
+                                     "while the transaction currency and the account commodity is the same")
         else:
             if self.quantity is None:
                 raise GncValidationError("The split quantity is not defined while the split is on a commodity different from the transaction")
             if self.quantity.is_signed() != self.value.is_signed():
                 raise GncValidationError("The split quantity has not the same sign as the split value")
 
+        # everything is fine, let us normalise the value with respect to the currency/commodity precisions
         self._quantity_denom_basis = self.account.commodity_scu
         self._value_denom_basis = self.transaction.currency.fraction
 
+        if self.transaction.currency != self.account.commodity:
+            # let us also add a Price
+            # TODO: check if price already exist at that tme
+            from piecash import Price
+
+            Price(commodity=self.account.commodity,
+                  currency=self.transaction.currency,
+                  date=self.transaction.post_date,
+                  value=(self.value / self.quantity).quantize(Decimal("0.000001")),
+                  type="transaction",
+                  source="user:split-register")
+
+            # and an action if not yet defined
+            if self.action=="":
+                self.action = "Buy" if self.quantity.is_signed()>0 else "Sell"
 
 class Transaction(DeclarativeBaseGuid):
     """
