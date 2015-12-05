@@ -1,20 +1,21 @@
 language: python
 
 python:
-- '3.4'
-- '3.3'
 - '2.7'
+- '3.3'
+- '3.4'
 
 services:
 - postgresql
+- mysql
 
 install:
  - pip install -r requirements-dev.txt
- - pip install coveralls
+# - pip install coveralls
 
 script:
  - python setup.py test
- - coverage run --source=piecash setup.py test
+# - coverage run --source=piecash setup.py test
 
 after_success:
   coveralls
