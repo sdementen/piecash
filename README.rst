@@ -23,8 +23,8 @@ piecash
 .. image:: https://requires.io/github/sdementen/piecash/requirements.svg?branch=master
     :target: https://requires.io/github/sdementen/piecash/requirements/?branch=master
 
-.. image:: https://coveralls.io/repos/sdementen/piecash/badge.svg?branch=sqlalchemy-1.1-port&service=github
-    :target: https://coveralls.io/github/sdementen/piecash?branch=sqlalchemy-1.1-port
+.. image:: https://coveralls.io/repos/sdementen/piecash/badge.svg?branch=master&service=github
+    :target: https://coveralls.io/github/sdementen/piecash?branch=master
 
 
 Piecash provides a simple and pythonic interface to GnuCash files stored in SQL (sqlite3, Postgres and MySQL).
