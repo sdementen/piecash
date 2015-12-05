@@ -12,7 +12,7 @@ from . import factories
 from .account import Account
 from .commodity import Commodity, Price
 from .transaction import Split, Transaction
-from .._common import CallableList
+from .._common import CallableList, GnucashException
 from .._declbase import DeclarativeBaseGuid
 from ..sa_extra import kvp_attribute
 
@@ -437,7 +437,10 @@ class Book(DeclarativeBaseGuid):
 
         :return: :class:`pandas.DataFrame`
         """
-        import pandas
+        try:
+            import pandas
+        except ImportError:
+            raise GnucashException("pandas is required to output dataframes")
 
         # preload list of accounts
         accounts = self.session.query(Account).all()
@@ -470,7 +473,10 @@ class Book(DeclarativeBaseGuid):
 
         :return: :class:`pandas.DataFrame`
         """
-        import pandas
+        try:
+            import pandas
+        except ImportError:
+            raise GnucashException("pandas is required to output dataframes")
 
         # preload list of commodities
         commodities = self.session.query(Commodity).all()
