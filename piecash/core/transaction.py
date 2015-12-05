@@ -120,6 +120,7 @@ class Split(DeclarativeBaseGuid):
 
     def validate(self):
         old = self.get_all_changes()
+
         if old["STATE_CHANGES"][-1] == "deleted":
             return
 

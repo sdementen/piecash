@@ -339,8 +339,6 @@ class TestBook_access_book(object):
             if "guid" in col:
                 del df[col]
 
-        print()
-        print(df.to_string())
         df_to_string = """    value quantity     transaction.post_date transaction.currency.mnemonic account.fullname account.commodity.mnemonic
 0   -1000    -1000 2015-10-21 00:00:00+02:00                           EUR              inc                        EUR
 1    1000     1000 2015-10-21 00:00:00+02:00                           EUR            asset                        EUR

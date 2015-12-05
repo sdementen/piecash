@@ -243,7 +243,7 @@ class TestTransaction_delete(object):
     def test_delete_existing_transaction(self, book_transactions):
         l = len(book_transactions.transactions)
         s = len(book_transactions.splits)
-        tr = book_transactions.transactions[0]
+        tr = book_transactions.transactions(description="my revenue")
         book_transactions.delete(tr)
         book_transactions.save()
         nl = len(book_transactions.transactions)
