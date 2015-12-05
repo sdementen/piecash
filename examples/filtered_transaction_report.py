@@ -12,6 +12,9 @@ if __name__=='__main__':
 else:
     s = open_book(os.path.join("gnucash_books", "simple_sample.gnucash"), open_if_lock=True)
 
+# get default currency
+print(s.default_currency)
+
 regex_filter = re.compile("^/Rental/")
 
 # retrieve relevant transactions
