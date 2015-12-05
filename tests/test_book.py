@@ -352,7 +352,7 @@ class TestBook_access_book(object):
 4      80       80            2015-10-25                           EUR              exp                        EUR
 5    -200     -200            2015-10-29                           EUR            asset                        EUR
 6      15       15            2015-10-29                           EUR              exp                        EUR
-7     185        6            2015-10-29                           EUR     asset:broker                      Engie
+7     185        6            2015-10-29                           EUR     asset:broker               GnuCash Inc.
 8    -200     -200            2015-10-30                           EUR            asset                        EUR
 9     200      135            2015-10-30                           EUR    foreign asset                        USD
 10   -135     -135            2015-10-31                           USD    foreign asset                        USD
@@ -373,10 +373,10 @@ class TestBook_access_book(object):
 
         df_to_string = """   index        date         type      value commodity.mnemonic currency.mnemonic
 0      0  2015-10-31  transaction   0.627907                EUR               USD
-1      1  2015-10-29  transaction  30.833333              Engie               EUR
-2      2  2015-11-01      unknown       1.23              Engie               USD
-3      3  2015-11-02      unknown       2.34              Engie               EUR
-4      4  2015-11-04      unknown       1.27              Engie               USD
+1      1  2015-10-29  transaction  30.833333       GnuCash Inc.               EUR
+2      2  2015-11-01      unknown       1.23       GnuCash Inc.               USD
+3      3  2015-11-02      unknown       2.34       GnuCash Inc.               EUR
+4      4  2015-11-04      unknown       1.27       GnuCash Inc.               USD
 5      5  2015-10-30  transaction   1.481481                USD               EUR"""
 
         assert df.to_string() == df_to_string

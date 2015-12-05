@@ -158,7 +158,7 @@ def book_transactions(request):
         # create some accounts
         curr = b.default_currency
         other_curr = b.currencies(mnemonic="USD")
-        cdty = Commodity(namespace=u"BEL20", mnemonic=u"Engie", fullname=u"Engie stock")
+        cdty = Commodity(namespace=u"BEL20", mnemonic=u"GnuCash Inc.", fullname=u"GnuCash Inc. stock")
         asset = Account(name="asset", type="ASSET", commodity=curr, parent=b.root_account)
         foreign_asset = Account(name="foreign asset", type="ASSET", commodity=other_curr, parent=b.root_account)
         stock = Account(name="broker", type="STOCK", commodity=cdty, parent=asset)
