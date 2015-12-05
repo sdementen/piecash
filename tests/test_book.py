@@ -335,38 +335,48 @@ class TestBook_access_book(object):
 
     def test_splits_df(self, book_transactions):
         df = book_transactions.splits_df().reset_index()
+
+        # remove guid columns as not comparable from run to run
         for col in df.columns:
             if "guid" in col:
                 del df[col]
 
-        df_to_string = """    value quantity     transaction.post_date transaction.currency.mnemonic account.fullname account.commodity.mnemonic
-0   -1000    -1000 2015-10-21 00:00:00+02:00                           EUR              inc                        EUR
-1    1000     1000 2015-10-21 00:00:00+02:00                           EUR            asset                        EUR
-2    -100     -100 2015-10-25 00:00:00+02:00                           EUR            asset                        EUR
-3      20       20 2015-10-25 00:00:00+02:00                           EUR              exp                        EUR
-4      80       80 2015-10-25 00:00:00+02:00                           EUR              exp                        EUR
-5    -200     -200 2015-10-29 00:00:00+01:00                           EUR            asset                        EUR
-6      15       15 2015-10-29 00:00:00+01:00                           EUR              exp                        EUR
-7     185        6 2015-10-29 00:00:00+01:00                           EUR     asset:broker                      Engie
-8    -200     -200 2015-10-30 00:00:00+01:00                           EUR            asset                        EUR
-9     200      135 2015-10-30 00:00:00+01:00                           EUR    foreign asset                        USD
-10   -135     -135 2015-10-31 00:00:00+01:00                           USD    foreign asset                        USD
-11    135      215 2015-10-31 00:00:00+01:00                           USD            asset                        EUR"""
+        # converte datetime to date as different tzone in CI environments
+        df["transaction.post_date"] = df["transaction.post_date"].dt.date
+
+        df_to_string = """    value quantity transaction.post_date transaction.currency.mnemonic account.fullname account.commodity.mnemonic
+0   -1000    -1000            2015-10-21                           EUR              inc                        EUR
+1    1000     1000            2015-10-21                           EUR            asset                        EUR
+2    -100     -100            2015-10-25                           EUR            asset                        EUR
+3      20       20            2015-10-25                           EUR              exp                        EUR
+4      80       80            2015-10-25                           EUR              exp                        EUR
+5    -200     -200            2015-10-29                           EUR            asset                        EUR
+6      15       15            2015-10-29                           EUR              exp                        EUR
+7     185        6            2015-10-29                           EUR     asset:broker                      Engie
+8    -200     -200            2015-10-30                           EUR            asset                        EUR
+9     200      135            2015-10-30                           EUR    foreign asset                        USD
+10   -135     -135            2015-10-31                           USD    foreign asset                        USD
+11    135      215            2015-10-31                           USD            asset                        EUR"""
 
         assert df.to_string() == df_to_string
 
     def test_prices_df(self, book_transactions):
         df = book_transactions.prices_df().reset_index()
+
+        # remove guid columns as not comparable from run to run
         for col in df.columns:
             if "guid" in col:
                 del df[col]
 
-        df_to_string = """   index                      date         type      value commodity.mnemonic currency.mnemonic
-0      0 2015-10-31 00:00:00+01:00  transaction   0.627907                EUR               USD
-1      1 2015-10-29 00:00:00+01:00  transaction  30.833333              Engie               EUR
-2      2 2015-11-01 00:00:00+01:00      unknown       1.23              Engie               USD
-3      3 2015-11-02 00:00:00+01:00      unknown       2.34              Engie               EUR
-4      4 2015-11-04 00:00:00+01:00      unknown       1.27              Engie               USD
-5      5 2015-10-30 00:00:00+01:00  transaction   1.481481                USD               EUR"""
+        # converte datetime to date as different tzone in CI environments
+        df["date"] = df["date"].dt.date
+
+        df_to_string = """   index        date         type      value commodity.mnemonic currency.mnemonic
+0      0  2015-10-31  transaction   0.627907                EUR               USD
+1      1  2015-10-29  transaction  30.833333              Engie               EUR
+2      2  2015-11-01      unknown       1.23              Engie               USD
+3      3  2015-11-02      unknown       2.34              Engie               EUR
+4      4  2015-11-04      unknown       1.27              Engie               USD
+5      5  2015-10-30  transaction   1.481481                USD               EUR"""
 
         assert df.to_string() == df_to_string
