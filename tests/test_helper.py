@@ -2,11 +2,9 @@
 import os
 import sys
 from datetime import datetime
-
 import pytest
 from sqlalchemy_utils import database_exists, drop_database
-
-from piecash import create_book, Account, Commodity, Employee, Customer, Vendor, Transaction, Split
+from piecash import create_book, Account, Commodity, Employee, Customer, Vendor, Transaction, Split, Price
 
 test_folder = os.path.dirname(os.path.realpath(__file__))
 book_folder = os.path.join(test_folder, "..", "gnucash_books")
@@ -24,7 +22,7 @@ else:
     def run_file(fname):
         return execfile(fname, {})
 
-db_sqlite = os.path.join(test_folder, "fooze.sqlite")
+db_sqlite = os.path.join(test_folder, "foozbar.sqlite")
 
 TRAVIS = os.environ.get("TRAVIS", False)
 APPVEYOR = os.environ.get("APPVEYOR", False)
@@ -159,8 +157,10 @@ def book_transactions(request):
     with create_book(uri_conn=name, currency="EUR", keep_foreign_keys=False) as b:
         # create some accounts
         curr = b.default_currency
-        cdty = Commodity(namespace=u"échange", mnemonic=u"ïoà", fullname=u"Example of unicode déta")
+        other_curr = b.currencies(mnemonic="USD")
+        cdty = Commodity(namespace=u"BEL20", mnemonic=u"Engie", fullname=u"Engie stock")
         asset = Account(name="asset", type="ASSET", commodity=curr, parent=b.root_account)
+        foreign_asset = Account(name="foreign asset", type="ASSET", commodity=other_curr, parent=b.root_account)
         stock = Account(name="broker", type="STOCK", commodity=cdty, parent=asset)
         expense = Account(name="exp", type="EXPENSE", commodity=curr, parent=b.root_account)
         income = Account(name="inc", type="INCOME", commodity=curr, parent=b.root_account)
@@ -169,19 +169,61 @@ def book_transactions(request):
                           description="my revenue",
                           currency=curr,
                           splits=[
-                              Split(account=asset, value=(100, 1)),
-                              Split(account=income, value=(-100, 1)),
+                              Split(account=asset, value=(1000, 1)),
+                              Split(account=income, value=(-1000, 1)),
                           ]
                           )
-        tr2 = Transaction(post_date=datetime(2015, 10, 21),
+        tr2 = Transaction(post_date=datetime(2015, 10, 25),
                           description="my expense",
                           currency=curr,
                           splits=[
                               Split(account=asset, value=(-100, 1)),
-                              Split(account=expense, value=(100, 1)),
+                              Split(account=expense, value=(20, 1), memo="cost of X"),
+                              Split(account=expense, value=(80, 1), memo="cost of Y"),
                           ]
                           )
+        tr_stock = Transaction(post_date=datetime(2015, 10, 29),
+                               description="my purchase of stock",
+                               currency=curr,
+                               splits=[
+                                   Split(account=asset, value=(-200, 1)),
+                                   Split(account=expense, value=(15, 1), memo="transaction costs"),
+                                   Split(account=stock, value=(185, 1), quantity=(6, 1), memo="purchase of stock"),
+                               ]
+                               )
+        tr_to_foreign = Transaction(post_date=datetime(2015, 10, 30),
+                                    description="transfer to foreign asset",
+                                    currency=curr,
+                                    splits=[
+                                        Split(account=asset, value=(-200, 1)),
+                                        Split(account=foreign_asset, value=(200, 1), quantity=(135, 1)),
+                                    ]
+                                    )
+        tr_from_foreign = Transaction(post_date=datetime(2015, 10, 31),
+                                      description="transfer from foreign asset",
+                                      currency=other_curr,
+                                      splits=[
+                                          Split(account=asset, value=(135, 1), quantity=(215, 1)),
+                                          Split(account=foreign_asset, value=(-135, 1)),
+                                      ]
+                                      )
+        Price(commodity=cdty,
+              currency=other_curr,
+              date=datetime(2015, 11, 1),
+              value=(123, 100),
+              )
+        Price(commodity=cdty,
+              currency=other_curr,
+              date=datetime(2015, 11, 4),
+              value=(127, 100),
+              )
+        Price(commodity=cdty,
+              currency=curr,
+              date=datetime(2015, 11, 2),
+              value=(234, 100),
+              )
 
+        b.save()
         yield b
 
     if name and database_exists(name):
