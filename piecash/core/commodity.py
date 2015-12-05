@@ -63,8 +63,8 @@ class Price(DeclarativeBaseGuid):
                  currency,
                  date,
                  value,
-                 type=None,
-                 source="piecash"):
+                 type="unknown",
+                 source="user:price"):
         self.commodity = commodity
         self.currency = currency
         assert isinstance(date, datetime.datetime)
@@ -170,7 +170,7 @@ class Commodity(DeclarativeBaseGuid):
                  quote_tz=None,
                  book=None):
 
-        if quote_source == None:
+        if quote_source is None:
             quote_source = "currency" if namespace == "CURRENCY" else "yahoo"
 
         if book is not None:
