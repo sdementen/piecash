@@ -140,7 +140,7 @@ class Book(DeclarativeBaseGuid):
         except KeyError:
             if locale.getlocale() == (None, None):
                 locale.setlocale(locale.LC_ALL, '')
-            mnemonic = locale.localeconv()['int_curr_symbol'].strip()
+            mnemonic = locale.localeconv()['int_curr_symbol'].strip() or "EUR"
             def_curr = self["default-currency"] = self.currencies(mnemonic=mnemonic)
             return def_curr
 
