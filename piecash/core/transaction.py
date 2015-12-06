@@ -147,12 +147,22 @@ class Split(DeclarativeBaseGuid):
             # TODO: check if price already exist at that tme
             from piecash import Price
 
-            Price(commodity=self.account.commodity,
-                  currency=self.transaction.currency,
-                  date=self.transaction.post_date,
-                  value=(self.value / self.quantity).quantize(Decimal("0.000001")),
-                  type="transaction",
-                  source="user:split-register")
+            value = (self.value / self.quantity).quantize(Decimal("0.000001"))
+            try:
+                # find existing price if any
+                pr = self.book.prices(commodity=self.account.commodity,
+                                      currency=self.transaction.currency,
+                                      date=self.transaction.post_date,
+                                      type="transaction",
+                                      source="user:split-register")
+                pr.value = value
+            except KeyError:
+                pr = Price(commodity=self.account.commodity,
+                           currency=self.transaction.currency,
+                           date=self.transaction.post_date,
+                           value=value,
+                           type="transaction",
+                           source="user:split-register")
 
             # and an action if not yet defined
             if self.action == "":
