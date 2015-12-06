@@ -2,11 +2,9 @@ import datetime
 import uuid
 from collections import defaultdict
 from decimal import Decimal
-
 from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, INTEGER
 from sqlalchemy.orm import relation, validates, foreign
 from sqlalchemy.orm.base import NEVER_SET
-
 from .._common import CallableList, GncImbalanceError
 from .._common import GncValidationError, hybrid_property_gncnumeric, Recurrence
 from .._declbase import DeclarativeBaseGuid
@@ -132,8 +130,8 @@ class Split(DeclarativeBaseGuid):
 
         if self.transaction.currency == self.account.commodity:
             if self.quantity != self.value:
-               raise GncValidationError("The split has a quantity diffeerent from value "
-                                     "while the transaction currency and the account commodity is the same")
+                raise GncValidationError("The split has a quantity diffeerent from value "
+                                         "while the transaction currency and the account commodity is the same")
         else:
             if self.quantity is None:
                 raise GncValidationError("The split quantity is not defined while the split is on a commodity different from the transaction")
@@ -157,8 +155,9 @@ class Split(DeclarativeBaseGuid):
                   source="user:split-register")
 
             # and an action if not yet defined
-            if self.action=="":
-                self.action = "Buy" if self.quantity.is_signed()>0 else "Sell"
+            if self.action == "":
+                self.action = "Sell" if self.quantity.is_signed() else "Buy"
+
 
 class Transaction(DeclarativeBaseGuid):
     """
