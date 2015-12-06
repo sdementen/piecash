@@ -21,8 +21,28 @@ if 'check_output' not in dir(subprocess):
 
     subprocess.check_output = check_output
 
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Command
 from setuptools.command.test import test as TestCommand
+
+# from setuptools.command.test import test
+
+class PyTest(TestCommand):
+    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
+
+    def initialize_options(self):
+        TestCommand.initialize_options(self)
+        self.pytest_args = []
+
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        # self.test_args = []
+        # self.test_suite = True
+
+    def run_tests(self):
+        import pytest
+        errno = pytest.main(self.pytest_args)
+        sys.exit(errno)
+
 
 try:
     import colorama
@@ -178,45 +198,6 @@ def _lint():
     return retcode
 
 
-def _test():
-    """Run the unit tests.
-
-    :return: exit code
-    """
-    # Make sure to import pytest in this function. For the reason, see here:
-    # <http://pytest.org/latest/goodpractises.html#integration-with-setuptools-test-commands>  # NOPEP8
-    import pytest
-    # This runs the unit tests.
-    # It also runs doctest, but only on the modules in TESTS_DIRECTORY.
-    return pytest.main(PYTEST_FLAGS + [TESTS_DIRECTORY])
-
-
-def _test_all():
-    """Run lint and tests.
-
-    :return: exit code
-    """
-    return _lint() + _test()
-
-
-# The following code is to allow tests to be run with `python setup.py test'.
-# The main reason to make this possible is to allow tests to be run as part of
-# Setuptools' automatic run of 2to3 on the source code. The recommended way to
-# run tests is still `paver test_all'.
-# See <http://pythonhosted.org/setuptools/python3.html>
-# Code based on <http://pytest.org/latest/goodpractises.html#integration-with-setuptools-test-commands>  # NOPEP8
-class TestAllCommand(TestCommand):
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        # These are fake, and just set to appease distutils and setuptools.
-        if sys.version_info < (3, 0):
-            self.test_suite = True
-            self.test_args = []
-
-    def run_tests(self):
-        raise SystemExit(_test())
-
-
 # define install_requires for specific Python versions
 python_version_specific_requires = []
 
@@ -275,7 +256,8 @@ setup_dict = dict(
     ],
     # console=['scripts/piecash_ledger.py','scripts/piecash_toqif.py'],
     scripts=['scripts/piecash_ledger.py','scripts/piecash_toqif.py','scripts/piecash_prices.py'],
-    cmdclass={'test': TestAllCommand},
+    cmdclass = {'test': PyTest},
+    test_suite="tests",
     zip_safe=False,  # don't use eggs
 )
 
