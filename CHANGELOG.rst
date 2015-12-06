@@ -1,8 +1,8 @@
 What's new
 ==========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.10.2 (2015-12-06)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - add children argument to Account constructor
 - add a new example (used as answer to http://stackoverflow.com/questions/17055318/create-transaction-in-gnucash-in-response-to-an-email/ )
