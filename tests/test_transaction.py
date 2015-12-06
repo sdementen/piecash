@@ -1,12 +1,9 @@
 # coding=utf-8
 from __future__ import unicode_literals
-
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
-
 import pytest
-
 from piecash import Transaction, Split, GncImbalanceError, GncValidationError, Lot
 from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, book_transactions
 
@@ -239,7 +236,7 @@ class TestTransaction_lots(object):
             book_basic.validate()
 
 
-class TestTransaction_delete(object):
+class TestTransaction_changes(object):
     def test_delete_existing_transaction(self, book_transactions):
         l = len(book_transactions.transactions)
         s = len(book_transactions.splits)
@@ -250,3 +247,23 @@ class TestTransaction_delete(object):
         ns = len(book_transactions.splits)
         assert nl == l - 1
         assert ns == s - 2
+
+    def test_change_cdty_split_price(self, book_transactions):
+        tr = book_transactions.transactions(description="my purchase of stock")
+        sp = tr.splits(account=book_transactions.accounts(name="broker"))
+
+        assert len(book_transactions.prices) == 6
+
+        p = [p for p in book_transactions.prices if p.date.day == 29][0]
+        assert p.value == (sp.value / sp.quantity).quantize(Decimal("0.000001"))
+
+        # changing the quantity of the split should change the existing price
+        sp.quantity = (5, 1)
+        book_transactions.validate()
+        assert len(book_transactions.prices) == 6
+        assert p.value == (sp.value / sp.quantity).quantize(Decimal("0.000001"))
+
+        # changing the post date of the transaction of the split should create a new price
+        tr.post_date = datetime(2015, 1, 29)
+        book_transactions.validate()
+        assert len(book_transactions.prices) == 7
