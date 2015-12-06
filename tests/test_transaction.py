@@ -264,6 +264,6 @@ class TestTransaction_changes(object):
         assert p.value == (sp.value / sp.quantity).quantize(Decimal("0.000001"))
 
         # changing the post date of the transaction of the split should create a new price
-        tr.post_date = datetime(2015, 1, 29)
+        tr.post_date = datetime(2015, 1, 29, tzinfo=tr.post_date.tzinfo)
         book_transactions.validate()
         assert len(book_transactions.prices) == 7
