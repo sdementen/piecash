@@ -2,17 +2,15 @@ import locale
 import warnings
 from collections import defaultdict
 from operator import attrgetter
-
 from sqlalchemy import Column, VARCHAR, ForeignKey
-from sqlalchemy.orm import relation
+from sqlalchemy.orm import relation, aliased
 from sqlalchemy.orm.base import instance_state
 from sqlalchemy.orm.exc import NoResultFound
-
 from . import factories
 from .account import Account
 from .commodity import Commodity, Price
 from .transaction import Split, Transaction
-from .._common import CallableList
+from .._common import CallableList, GnucashException
 from .._declbase import DeclarativeBaseGuid
 from ..sa_extra import kvp_attribute
 
@@ -140,8 +138,9 @@ class Book(DeclarativeBaseGuid):
         except KeyError:
             if locale.getlocale() == (None, None):
                 locale.setlocale(locale.LC_ALL, '')
-            mnemonic = locale.localeconv()['int_curr_symbol'].strip()
-            return self.currencies(mnemonic=mnemonic)
+            mnemonic = locale.localeconv()['int_curr_symbol'].strip() or "EUR"
+            def_curr = self["default-currency"] = self.currencies(mnemonic=mnemonic)
+            return def_curr
 
     @property
     def book(self):
@@ -436,7 +435,10 @@ class Book(DeclarativeBaseGuid):
 
         :return: :class:`pandas.DataFrame`
         """
-        import pandas
+        try:
+            import pandas
+        except ImportError:
+            raise GnucashException("pandas is required to output dataframes")
 
         # preload list of accounts
         accounts = self.session.query(Account).all()
@@ -448,17 +450,19 @@ class Book(DeclarativeBaseGuid):
         transactions = self.session.query(Transaction).all()
 
         # load all splits
-        splits = self.session.query(Split).all()
+        splits = self.session.query(Split).join(Transaction) \
+            .order_by(Transaction.post_date, Split.value).all()
 
         # build dataframe
         fields = ["guid", "value", "quantity",
                   "transaction.post_date", "transaction.currency.guid", "transaction.currency.mnemonic",
                   "account.fullname", "account.commodity.guid", "account.commodity.mnemonic",
                   ]
-        fields_getter = map(attrgetter, fields)
-        df_splits = pandas.DataFrame([map(lambda ag: ag(sp), fields_getter) for sp in splits], columns=fields)
+        fields_getter = [attrgetter(fld) for fld in fields]
+        df_splits = pandas.DataFrame([[fg(sp) for fg in fields_getter]
+                                      for sp in splits], columns=fields)
         df_splits = df_splits[df_splits["account.commodity.mnemonic"] != "template"]
-        df_splits = df_splits.set_index("guid").sort_values(by="transaction.post_date")
+        df_splits = df_splits.set_index("guid")
 
         return df_splits
 
@@ -468,17 +472,26 @@ class Book(DeclarativeBaseGuid):
 
         :return: :class:`pandas.DataFrame`
         """
-        import pandas
+        try:
+            import pandas
+        except ImportError:
+            raise GnucashException("pandas is required to output dataframes")
 
         # preload list of commodities
-        commodities = self.session.query(Commodity).filter(Commodity.namespace != "template").all()
+        commodities = self.session.query(Commodity).all()
 
         # load all prices
-        prices = self.session.query(Price).filter_by().all()
+        Currency = aliased(Commodity)
+        prices = self.session.query(Price) \
+            .join(Commodity, Price.commodity) \
+            .join(Currency, Price.currency) \
+            .order_by(Commodity.mnemonic, Price.date, Currency.mnemonic).all()
+
         fields = ["date", "type", "value",
                   "commodity.guid", "commodity.mnemonic",
                   "currency.guid", "currency.mnemonic", ]
-        fields_getter = map(attrgetter, fields)
-        df_prices = pandas.DataFrame([map(lambda ag: ag(pr), fields_getter) for pr in prices], columns=fields)
+        fields_getter = [attrgetter(fld) for fld in fields]
+        df_prices = pandas.DataFrame([[fg(pr) for fg in fields_getter]
+                                      for pr in prices], columns=fields)
 
         return df_prices

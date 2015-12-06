@@ -2,11 +2,9 @@ import datetime
 import uuid
 from collections import defaultdict
 from decimal import Decimal
-
 from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, INTEGER
 from sqlalchemy.orm import relation, validates, foreign
 from sqlalchemy.orm.base import NEVER_SET
-
 from .._common import CallableList, GncImbalanceError
 from .._common import GncValidationError, hybrid_property_gncnumeric, Recurrence
 from .._declbase import DeclarativeBaseGuid
@@ -120,22 +118,55 @@ class Split(DeclarativeBaseGuid):
 
     def validate(self):
         old = self.get_all_changes()
+
+        if old["STATE_CHANGES"][-1] == "deleted":
+            return
+
         if '_quantity_num' in old or '_value_num' in old:
             self.transaction._recalculate_balance = True
 
-        # if single currency, assign value to quantity
         if self.transaction_guid is None:
             raise GncValidationError("The split is not linked to a transaction")
+
         if self.transaction.currency == self.account.commodity:
-            self.quantity = self.value
+            if self.quantity != self.value:
+                raise GncValidationError("The split has a quantity diffeerent from value "
+                                         "while the transaction currency and the account commodity is the same")
         else:
             if self.quantity is None:
                 raise GncValidationError("The split quantity is not defined while the split is on a commodity different from the transaction")
             if self.quantity.is_signed() != self.value.is_signed():
                 raise GncValidationError("The split quantity has not the same sign as the split value")
 
+        # everything is fine, let us normalise the value with respect to the currency/commodity precisions
         self._quantity_denom_basis = self.account.commodity_scu
         self._value_denom_basis = self.transaction.currency.fraction
+
+        if self.transaction.currency != self.account.commodity:
+            # let us also add a Price
+            # TODO: check if price already exist at that tme
+            from piecash import Price
+
+            value = (self.value / self.quantity).quantize(Decimal("0.000001"))
+            try:
+                # find existing price if any
+                pr = self.book.prices(commodity=self.account.commodity,
+                                      currency=self.transaction.currency,
+                                      date=self.transaction.post_date,
+                                      type="transaction",
+                                      source="user:split-register")
+                pr.value = value
+            except KeyError:
+                pr = Price(commodity=self.account.commodity,
+                           currency=self.transaction.currency,
+                           date=self.transaction.post_date,
+                           value=value,
+                           type="transaction",
+                           source="user:split-register")
+
+            # and an action if not yet defined
+            if self.action == "":
+                self.action = "Sell" if self.quantity.is_signed() else "Buy"
 
 
 class Transaction(DeclarativeBaseGuid):
@@ -194,7 +225,7 @@ class Transaction(DeclarativeBaseGuid):
 
         self.currency = currency
         self.description = description
-        self.enter_date = enter_date if enter_date else datetime.datetime.today()
+        self.enter_date = enter_date if enter_date else datetime.datetime.today().replace(microsecond=0)
         self.post_date = post_date if post_date \
             else datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
         self.num = num
@@ -214,6 +245,9 @@ class Transaction(DeclarativeBaseGuid):
 
     def validate(self):
         old = self.get_all_changes()
+
+        if old["STATE_CHANGES"][-1] == "deleted":
+            return
 
         if self.currency.namespace != "CURRENCY":
             raise GncValidationError("You are assigning a non currency commodity to a transaction")

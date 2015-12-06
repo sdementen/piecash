@@ -4,10 +4,22 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
+- Empty
+
+Version 0.10.2 (2015-12-06)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 - add children argument to Account constructor
 - add a new example (used as answer to http://stackoverflow.com/questions/17055318/create-transaction-in-gnucash-in-response-to-an-email/ )
 - add a new example showing how to export Split information to pandas DataFrames
 - fix an error handling in retrieving currency exchanges in quandl
+- fix py3 bugs in dataframe functions
+- fix type and source of Pricers to be compatible with GnuCash
+- add a Price when entering a commodity Split
+- set microsecond to 0 for all datetime
+- add pandas for requirements-dev
+- add tests for deletion of transaction and for dataframe functions
+
 
 
 Version 0.10.1 (2015-11-29)

@@ -56,7 +56,8 @@ class DeclarativeBase(object):
         try:
             return self.book.session._all_changes[id(self)]
         except KeyError:
-            return {}
+            return {"STATE_CHANGES": ["unchanged"],
+                    "OBJECT": self}
 
     if sys.version > '3':
         def __str__(self):
