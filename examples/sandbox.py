@@ -1,20 +1,226 @@
 # coding=utf-8
 from __future__ import unicode_literals
-import pandas
+import sys
+from piecash import open_book, Transaction, Split
+from piecash.kvp import Slot
+# from gnucash import Session, Account, Transaction, Split, GncNumeric
+# import gnucash
+from piecash import create_book, Account, Split, Transaction, Commodity, Price
+from datetime import datetime
+
+bookname = "/home/sdementen/Projects/piecash/tests/foozbar.sqlite"
+bookname = "/home/sdementen/Projects/piecash/gnucash_books/complex_example_piecash.gnucash"
+
+with create_book(bookname, currency="EUR", keep_foreign_keys=False, overwrite=True) as b:
+    # create some accounts
+    curr = b.default_currency
+    other_curr = b.currencies(mnemonic="USD")
+    cdty = Commodity(namespace=u"BEL20", mnemonic=u"GnuCash Inc.", fullname=u"GnuCash Inc. stock")
+    asset = Account(name="asset", type="ASSET", commodity=curr, parent=b.root_account)
+    foreign_asset = Account(name="foreign asset", type="ASSET", commodity=other_curr, parent=b.root_account)
+    stock = Account(name="broker", type="STOCK", commodity=cdty, parent=asset)
+    expense = Account(name="exp", type="EXPENSE", commodity=curr, parent=b.root_account)
+    income = Account(name="inc", type="INCOME", commodity=curr, parent=b.root_account)
+
+    tr1 = Transaction(post_date=datetime(2015, 10, 21),
+                      description="my revenue",
+                      currency=curr,
+                      splits=[
+                          Split(account=asset, value=(1000, 1)),
+                          Split(account=income, value=(-1000, 1)),
+                      ]
+                      )
+    tr2 = Transaction(post_date=datetime(2015, 10, 25),
+                      description="my expense",
+                      currency=curr,
+                      splits=[
+                          Split(account=asset, value=(-100, 1)),
+                          Split(account=expense, value=(20, 1), memo="cost of X"),
+                          Split(account=expense, value=(80, 1), memo="cost of Y"),
+                      ]
+                      )
+    tr_stock = Transaction(post_date=datetime(2015, 10, 29),
+                           description="my purchase of stock",
+                           currency=curr,
+                           splits=[
+                               Split(account=asset, value=(-200, 1)),
+                               Split(account=expense, value=(15, 1), memo="transaction costs"),
+                               Split(account=stock, value=(185, 1), quantity=(6, 1), memo="purchase of stock"),
+                           ]
+                           )
+    tr_to_foreign = Transaction(post_date=datetime(2015, 10, 30),
+                                description="transfer to foreign asset",
+                                currency=curr,
+                                splits=[
+                                    Split(account=asset, value=(-200, 1)),
+                                    Split(account=foreign_asset, value=(200, 1), quantity=(135, 1)),
+                                ]
+                                )
+    tr_from_foreign = Transaction(post_date=datetime(2015, 10, 31),
+                                  description="transfer from foreign asset",
+                                  currency=other_curr,
+                                  splits=[
+                                      Split(account=asset, value=(135, 1), quantity=(215, 1)),
+                                      Split(account=foreign_asset, value=(-135, 1)),
+                                  ]
+                                  )
+    Price(commodity=cdty,
+          currency=other_curr,
+          date=datetime(2015, 11, 1),
+          value=(123, 100),
+          )
+    Price(commodity=cdty,
+          currency=other_curr,
+          date=datetime(2015, 11, 4),
+          value=(127, 100),
+          )
+    Price(commodity=cdty,
+          currency=curr,
+          date=datetime(2015, 11, 2),
+          value=(234, 100),
+          )
+
+    b.save()
+
+    print(b.prices_df().to_string())
+    print(b.prices)
+
+fdsdfsfds
+with open_book(bookname, readonly=True, open_if_lock=True) as b:
+    for sp in b.splits:
+        print(sp.transaction.post_date, sp.transaction.enter_date, "=>", sp.slots)
+    for p in b.prices:
+        print(p._value_denom, p._value_num, p.slots)
+
+    print("\n".join(map(str, b.session.query(Slot).all())))
+dfdsffd
+
+if False:
+    sys.path.append("/home/sdementen/Apps/lib/python2.7/site-packages")
+
+
+    def lookup_account_by_path(parent, path):
+        acc = parent.lookup_by_name(path[0])
+        if acc.get_instance() == None:
+            raise Exception('Account path {} not found'.format(':'.join(path)))
+        if len(path) > 1:
+            return lookup_account_by_path(acc, path[1:])
+        return acc
+
+
+    def lookup_account(root, name):
+        path = name.split(':')
+        return lookup_account_by_path(root, path)
+
+
+    session = Session("/path/to/file.gnucash")  # , ignore_lock=True)
+    # or use URI string: ('mysql://USER:PASSWORD@HOST/DATABASE')
+
+    today = datetime.now()
+    book = session.book  # All actions are performed through the book object (or its children)
+    root = book.get_root_account()  # Parent of all accounts
+    currency = book.get_table().lookup('ISO4217', "USD")
+    tx = Transaction(book)
+    tx.BeginEdit()
+    tx.SetCurrency(currency)
+    tx.SetDateEnteredTS(today)
+    tx.SetDatePostedTS(today)  # or another datetime object for the transaction's "register date"
+    tx.SetDescription("Transaction Description!")
+    # tx.SetNum(int_variable) # if you need a transaction number
+    amount = 24
+    sp1 = Split(book)  # First half of transaction
+    sp1.SetParent(tx)
+    # The lookup string needs to match your account path exactly.
+    sp1.SetAccount(lookup_account(root, "Expenses:Some Expense Account"))
+    # amount is an int (no $ or .), so $5.23 becomes amount=523
+    sp1.SetValue(GncNumeric(amount, 100))  # Assuming you only have one split
+    # For multiple splits, you need to make sure the totals all balance out.
+    sp1.SetAmount(GncNumeric(amount, 100))
+    sp1.SetMemo("Split Memo!")  # optional
+
+    sp2 = Split(book)  # Need a balancing split
+    sp2.SetParent(tx)
+    sp2.SetAccount(lookup_account(root, "Assets:Current Assets:Checking"))
+    sp2.SetValue(sp1.GetValue().neg())
+    sp2.SetAmount(sp1.GetValue().neg())
+    sp2.SetMemo("Other Split Memo!")  # optional
+
+    tx.CommitEdit()  # Finish editing transaction
+    session.save()
+    session.end()
+
+    fdsfsfds
 
 if True:
-    from piecash import create_book, open_book, Customer, Address, Vendor
+
+    with create_book("../gnucash_books/example.gnucash", overwrite=True) as mybook:
+        mybook.root_account.children = [
+            Account(name="Expenses",
+                    type="EXPENSE",
+                    commodity=mybook.currencies(mnemonic="USD"),
+                    placeholder=True,
+                    children=[
+                        Account(name="Some Expense Account",
+                                type="EXPENSE",
+                                commodity=mybook.currencies(mnemonic="USD")),
+                    ]),
+            Account(name="Assets",
+                    type="ASSET",
+                    commodity=mybook.currencies(mnemonic="USD"),
+                    placeholder=True,
+                    children=[
+                        Account(name="Current Assets",
+                                type="BANK",
+                                commodity=mybook.currencies(mnemonic="USD"),
+                                placeholder=True,
+                                children=[
+                                    Account(name="Checking",
+                                            type="BANK",
+                                            commodity=mybook.currencies(mnemonic="USD"))
+                                ]),
+                    ]),
+        ]
+        mybook.save()
+
+    from piecash import open_book, Transaction, Split
+    from datetime import datetime
+    from decimal import Decimal
+
+    with open_book("../gnucash_books/example.gnucash",
+                   open_if_lock=True,
+                   readonly=False) as mybook:
+        today = datetime.now()
+        # retrieve the currency from the book
+        USD = mybook.currencies(mnemonic="USD")
+        # define the amount as Decimal
+        amount = Decimal("25.35")
+        # retrieve accounts
+        from_account = mybook.accounts(fullname="Expenses:Some Expense Account")
+        to_account = mybook.accounts(fullname="Assets:Current Assets:Checking")
+        # create the transaction with its two splits
+        Transaction(
+            post_date=today,
+            enter_date=today,
+            currency=USD,
+            description="Transaction Description!",
+            splits=[
+                Split(account=to_account,
+                      value=amount,
+                      memo="Split Memo!"),
+                Split(account=from_account,
+                      value=-amount,
+                      memo="Other Split Memo!"),
+            ]
+        )
+        # save the book
+        mybook.save()
+
+    fdsfdsfds
 
     # create a book (in memory)
     b = open_book("../gnucash_books/book_schtx.gnucash", open_if_lock=True)
     print("============================================")
     df_splits = b.splits_df()
-
-    print df_splits\
-        .groupby(["account.fullname", "transaction.post_date"])[["value", "quantity"]] \
-        .sum() \
-        .groupby(level=[0]) \
-        .cumsum()
 
     # df_prices = b.prices_df()
     # assert isinstance(df_prices, pandas.DataFrame)
@@ -108,7 +314,7 @@ sp.quantity = -13
 b.flush()
 sp.quantity = -13
 b.flush()
-print (tr.splits)
+print(tr.splits)
 
 fdsfdsfd
 # b1 = create_book("foo.gnucash",overwrite=True,echo=True)
@@ -130,7 +336,6 @@ print(a, b1.accounts[0].name, b2.accounts[0].name)
 fdsffds
 
 # create a book (in memory)
-from piecash.core import factories
 from piecash.ledger import ledger
 
 b = create_book(currency="EUR")
