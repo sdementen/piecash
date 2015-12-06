@@ -358,7 +358,7 @@ class TestBook_access_book(object):
 10   -135     -135            2015-10-31                           USD    foreign asset                        USD
 11    135      215            2015-10-31                           USD            asset                        EUR"""
 
-        assert df.to_string() == df_to_string
+        assert df_to_string == df.to_string()
 
     def test_prices_df(self, book_transactions):
         df = book_transactions.prices_df().reset_index()
@@ -379,4 +379,4 @@ class TestBook_access_book(object):
 4      4  2015-11-04      unknown       1.27       GnuCash Inc.               USD
 5      5  2015-10-30  transaction   1.481481                USD               EUR"""
 
-        assert df.to_string() == df_to_string
+        assert df_to_string == df.to_string()

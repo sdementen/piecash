@@ -2,12 +2,10 @@ import locale
 import warnings
 from collections import defaultdict
 from operator import attrgetter
-
 from sqlalchemy import Column, VARCHAR, ForeignKey
 from sqlalchemy.orm import relation, aliased
 from sqlalchemy.orm.base import instance_state
 from sqlalchemy.orm.exc import NoResultFound
-
 from . import factories
 from .account import Account
 from .commodity import Commodity, Price
@@ -452,7 +450,7 @@ class Book(DeclarativeBaseGuid):
         transactions = self.session.query(Transaction).all()
 
         # load all splits
-        splits = self.session.query(Split).join(Transaction)\
+        splits = self.session.query(Split).join(Transaction) \
             .order_by(Transaction.post_date, Split.value).all()
 
         # build dataframe
@@ -460,8 +458,9 @@ class Book(DeclarativeBaseGuid):
                   "transaction.post_date", "transaction.currency.guid", "transaction.currency.mnemonic",
                   "account.fullname", "account.commodity.guid", "account.commodity.mnemonic",
                   ]
-        fields_getter = map(attrgetter, fields)
-        df_splits = pandas.DataFrame([map(lambda ag: ag(sp), fields_getter) for sp in splits], columns=fields)
+        fields_getter = [attrgetter(fld) for fld in fields]
+        df_splits = pandas.DataFrame([[fg(sp) for fg in fields_getter]
+                                      for sp in splits], columns=fields)
         df_splits = df_splits[df_splits["account.commodity.mnemonic"] != "template"]
         df_splits = df_splits.set_index("guid")
 
@@ -483,15 +482,16 @@ class Book(DeclarativeBaseGuid):
 
         # load all prices
         Currency = aliased(Commodity)
-        prices = self.session.query(Price)\
-            .join(Commodity, Price.commodity)\
-            .join(Currency, Price.currency)\
+        prices = self.session.query(Price) \
+            .join(Commodity, Price.commodity) \
+            .join(Currency, Price.currency) \
             .order_by(Commodity.mnemonic, Price.date, Currency.mnemonic).all()
 
         fields = ["date", "type", "value",
                   "commodity.guid", "commodity.mnemonic",
                   "currency.guid", "currency.mnemonic", ]
-        fields_getter = map(attrgetter, fields)
-        df_prices = pandas.DataFrame([map(lambda ag: ag(pr), fields_getter) for pr in prices], columns=fields)
+        fields_getter = [attrgetter(fld) for fld in fields]
+        df_prices = pandas.DataFrame([[fg(pr) for fg in fields_getter]
+                                      for pr in prices], columns=fields)
 
         return df_prices
