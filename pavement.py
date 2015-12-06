@@ -11,8 +11,8 @@ import subprocess
 sys.path.append('.')
 from setup import (
     setup_dict, get_project_files, print_success_message,
-    print_failure_message, _lint, _test, _test_all,
-    CODE_DIRECTORY, DOCS_DIRECTORY, TESTS_DIRECTORY, PYTEST_FLAGS)
+    print_failure_message, _lint,
+    CODE_DIRECTORY, DOCS_DIRECTORY, TESTS_DIRECTORY, PYTEST_FLAGS, PyTest)
 
 from paver.easy import options, task, needs, consume_args
 from paver.setuputils import install_distutils_tasks
@@ -96,7 +96,7 @@ def sdist():
 @task
 def test():
     """Run the unit tests."""
-    raise SystemExit(_test())
+    raise SystemExit(PyTest())
 
 
 @task
@@ -105,15 +105,6 @@ def lint():
     raise SystemExit(_lint())
 
 
-@task
-def test_all():
-    """Perform a style check and run all unit tests."""
-    retcode = _test_all()
-    if retcode == 0:
-        print_passed()
-    else:
-        print_failed()
-    raise SystemExit(retcode)
 
 
 # @task
