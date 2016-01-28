@@ -42,6 +42,9 @@ It is a pure python package, tested on python 2.7 and 3.3/3.4, that can be used 
   python 3.
 - XML parsing/reading of XML GnuCash files if you prefer python over XML/XLST manipulations.
 
+piecash test suite runs successfully on Windows and Linux on the three supported SQL backends (sqlite3, Postgres and MySQL).
+piecash has also been successfully run on Android (sqlite3 backend) thanks to Kivy buildozer and python-for-android.
+
 It allows you to:
 
 - open existing GnuCash documents and access all objects within
