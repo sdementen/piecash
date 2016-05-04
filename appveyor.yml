@@ -120,7 +120,7 @@ build_script:
 test_script:
   # Run the project tests
   - "createdb foo"
-  - '"C:\\Program Files\\MySql\\MySQL Server 5.6\\bin\\mysql" -e "create database foo;" --user=root'
+  - '"C:\\Program Files\\MySql\\MySQL Server 5.7\\bin\\mysql" -e "create database foo;" --user=root'
   - "%CMD_IN_ENV% python setup.py test"
 
 after_test:
