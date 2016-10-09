@@ -149,7 +149,7 @@ def create_stock_from_symbol(symbol, book=None):
         :class:`Commodity`: the stock as a commodity object
 
     .. note::
-       The information is gathered from a yql query to the yahoo.finance.quotes
+       The information is gathered from a yql query to the yahoo.finance.historicaldata 
        The default currency in which the quote is traded is stored as a slot
 
     .. todo::
@@ -158,7 +158,7 @@ def create_stock_from_symbol(symbol, book=None):
        This could also be used to retrieve all symbols related to the same company
     """
     from .commodity import Commodity
-    yql = 'select Name, StockExchange, Symbol,Currency from yahoo.finance.quotes where symbol = "{}"'.format(symbol)
+    yql = 'select Name, StockExchange, Symbol,Currency from yahoo.finance.historicaldata where symbol = "{}"'.format(symbol)
     symbol_info = run_yql(yql, scalar=True)
     if symbol_info and symbol_info.StockExchange:
         stock = Commodity(mnemonic=symbol_info.Symbol,
