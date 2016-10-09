@@ -11,6 +11,15 @@ services:
 - mysql
 
 install:
+ # Install conda
+ - sudo pip install conda
+ # install deps
+ - sudo conda init
+ - sudo conda update conda --yes
+ - deps='pip sqlalchemy pandas sphinx'
+ - conda create -p $HOME/py --yes $deps "python=$TRAVIS_PYTHON_VERSION"
+ - export PATH=$HOME/py/bin:$PATH
+ # install your own package into the environment
  - pip install -r requirements-dev.txt
  - pip install coveralls
 
