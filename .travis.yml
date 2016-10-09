@@ -10,15 +10,20 @@ services:
 - postgresql
 - mysql
 
+before_install:
+ - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+ - chmod +x miniconda.sh
+ - ./miniconda.sh -b
+ - export PATH=/home/travis/miniconda/bin:$PATH
+ - conda update --yes conda
+ # The next couple lines fix a crash with multiprocessing on Travis and are not specific to using Miniconda
+ - sudo rm -rf /dev/shm
+ - sudo ln -s /run/shm /dev/shm
+
+
 install:
- # Install conda
- - pip install auxlib
- - pip install conda
- # install deps
- # - conda init
- # - conda update conda --yes
  - deps='pip sqlalchemy pandas sphinx'
- - conda create -p $HOME/py --yes $deps "python=$TRAVIS_PYTHON_VERSION"
+ - conda install --yes $deps "python=$TRAVIS_PYTHON_VERSION"
  - export PATH=$HOME/py/bin:$PATH
  # install your own package into the environment
  - pip install -r requirements-dev.txt
