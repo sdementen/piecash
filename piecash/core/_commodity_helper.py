@@ -11,7 +11,7 @@ def run_yql(yql, scalar=False):
 
     DATATABLES_URL = 'store://datatables.org/alltableswithkeys'
     PUBLIC_API_URL = 'http://query.yahooapis.com/v1/public/yql'
-    text_result = requests.get(PUBLIC_API_URL, params={'q': yql, 'format': 'json', 'env': DATATABLES_URL}).text
+    text_result = requests.get(PUBLIC_API_URL, params={'q': "env 'store://datatables.org/alltableswithkeys';" + yql, 'format': 'json'}).text
     try:
         query_result = json.loads(text_result)["query"]
     except ValueError:
