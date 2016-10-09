@@ -15,7 +15,7 @@ def run_yql(yql, scalar=False):
     try:
         query_result = json.loads(text_result)["query"]
     except ValueError:
-        logging.error("issue when retrieving info from yahooapis.com : '{}'".format(text_result))
+        logging.error(u"issue when retrieving info from yahooapis.com : '{}'".format(text_result))
         return []
 
     if query_result["count"] == 0:
