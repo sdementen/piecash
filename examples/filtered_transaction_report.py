@@ -31,7 +31,7 @@ for tr in transactions:
     for spl in tr.splits:
         print("\t{amount}  {direction}  {account} : {memo}".format(amount=abs(spl.value),
                                                                    direction="-->" if spl.value > 0 else "<--",
-                                                                   account=spl.account.fullname(),
+                                                                   account=spl.account.fullname,
                                                                    memo=spl.memo))
 
 # same with jinja2 templates
@@ -48,7 +48,7 @@ if jinja2:
     {% for tr in transactions %}
     - {{ tr.post_date.strftime("%Y/%m/%d") }} : {{ tr.description }}
       {% for spl in tr.splits %}
-        {{ spl.value.__abs__() }} {% if spl.value < 0 %} --> {% else %} <-- {% endif %} {{ spl.account.fullname() }} : {{ spl.memo }}
+        {{ spl.value.__abs__() }} {% if spl.value < 0 %} --> {% else %} <-- {% endif %} {{ spl.account.fullname }} : {{ spl.memo }}
       {% endfor %}
     {% endfor %}
     """).render(transactions=transactions,
