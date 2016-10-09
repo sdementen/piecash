@@ -14,8 +14,8 @@ install:
  # Install conda
  - pip install conda
  # install deps
- - conda init
- - conda update conda --yes
+ # - conda init
+ # - conda update conda --yes
  - deps='pip sqlalchemy pandas sphinx'
  - conda create -p $HOME/py --yes $deps "python=$TRAVIS_PYTHON_VERSION"
  - export PATH=$HOME/py/bin:$PATH
