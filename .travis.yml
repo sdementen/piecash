@@ -2,7 +2,6 @@ language: python
 
 python:
 - '2.7'
-- '3.3'
 - '3.4'
 - '3.5'
 
@@ -10,13 +9,34 @@ services:
 - postgresql
 - mysql
 
+
 install:
- - pip install -r requirements-dev.txt
- - pip install coveralls
+  # We do this conditionally because it saves us some downloading if the
+  # version is the same.
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+    fi
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  # Useful for debugging any issues with conda
+  - conda info -a
+
+  # Replace dep1 dep2 ... with your dependencies
+  - deps='pip sqlalchemy=1.0.9 pandas=0.17.0 sphinx=1.3.1 pytz=2015.7'
+  - conda create -q --yes -n test-environment python=$TRAVIS_PYTHON_VERSION $deps
+  - source activate test-environment
+  - conda list
+  - pip install -r requirements-dev.txt
+  - pip install coveralls
 
 script:
- - python setup.py test
- - coverage run --source=piecash setup.py test
+  - python setup.py test
+  - coverage run --source=piecash setup.py test
 
 after_success:
   coveralls
