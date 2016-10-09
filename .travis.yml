@@ -32,4 +32,4 @@ deploy:
     repo: sdementen/piecash
     tags: true
     all_branches: master
-    condition: $PYTHON_VERSION=3.4
+    condition: $PYTHON_VERSION=3.5

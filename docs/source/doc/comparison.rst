@@ -15,7 +15,7 @@ Information on the official python bindings may be incomplete (information gathe
 +===========================+============================+=======================================+
 |  environment              |      Python 2.7            |      Python 2.7                       |
 |                           |                            |                                       |
-|                           |      Python 3.4            |                                       |
+|                           |      Python 3.3/3.4/3.5    |                                       |
 +---------------------------+----------------------------+---------------------------------------+
 |  installation             |    pure python package     |    compilation (difficult on windows) |
 |                           |                            |                                       |
