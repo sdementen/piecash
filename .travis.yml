@@ -12,6 +12,7 @@ services:
 
 install:
  # Install conda
+ - pip install auxlib
  - pip install conda
  # install deps
  # - conda init
