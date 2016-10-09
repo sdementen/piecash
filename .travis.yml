@@ -10,28 +10,35 @@ services:
 - postgresql
 - mysql
 
-before_install:
- - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
- - chmod +x miniconda.sh
- - ./miniconda.sh -b
- - export PATH=/home/travis/miniconda/bin:$PATH
- - conda update --yes conda
- # The next couple lines fix a crash with multiprocessing on Travis and are not specific to using Miniconda
- - sudo rm -rf /dev/shm
- - sudo ln -s /run/shm /dev/shm
-
+sudo: required
 
 install:
- - deps='pip sqlalchemy pandas sphinx'
- - conda install --yes $deps "python=$TRAVIS_PYTHON_VERSION"
- - export PATH=$HOME/py/bin:$PATH
- # install your own package into the environment
- - pip install -r requirements-dev.txt
- - pip install coveralls
+  - sudo apt-get update
+  # We do this conditionally because it saves us some downloading if the
+  # version is the same.
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+    fi
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  # Useful for debugging any issues with conda
+  - conda info -a
+
+  # Replace dep1 dep2 ... with your dependencies
+  - deps='pip sqlalchemy pandas sphinx'
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION $deps
+  - source activate test-environment
+  - pip install -r requirements-dev.txt
+  - pip install coveralls
 
 script:
- - python setup.py test
- - coverage run --source=piecash setup.py test
+  - python setup.py test
+  - coverage run --source=piecash setup.py test
 
 after_success:
   coveralls
