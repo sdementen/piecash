@@ -50,7 +50,7 @@ deploy:
   provider: pypi
   user: sdementen
   password:
-    secure: kIW3wjCwmXVO5XyCU9SjT4NZxAcq/9XBjHKN5HuD8ACZzlaqxU3UI8YKTE3O8XFNaT56/6bySLDrR83O4+s7bcIW/tWacky5PqKSkTuYhyQfnggHn4EQC5iDBSYYONPIBwIMb28pCLps3HMAT2F868iGHpFge7hr+YQBwZ5O1Io=
+    secure: jPJOUnrIkRary3QQGcuz4TgyP3ChoCJpRnDZYJmdTKh4GPOGXtYAKi6vGqlrlnVlnAxzopXfzzvHkEBH9RYtH/l7ylIGMSFwW245wJPsj7yq+by4LbufRT8EMJqhS2UofU3feOgHrwKhgqXcH7SOEwKpRN/xpm0nc4Wh+HHpL4s=
   on:
     repo: sdementen/piecash
     tags: true
