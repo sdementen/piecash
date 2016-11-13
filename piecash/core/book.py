@@ -3,7 +3,7 @@ import warnings
 from collections import defaultdict
 from operator import attrgetter
 from sqlalchemy import Column, VARCHAR, ForeignKey
-from sqlalchemy.orm import relation, aliased
+from sqlalchemy.orm import relation, aliased, joinedload
 from sqlalchemy.orm.base import instance_state
 from sqlalchemy.orm.exc import NoResultFound
 from . import factories
@@ -428,6 +428,22 @@ class Book(DeclarativeBaseGuid):
         proxy for the query function of the underlying sqlalchemy session
         """
         return self.session.query
+
+    def preload(self):
+        # preload list of accounts
+        accounts = self.session.query(Account).options(joinedload("splits").joinedload("transaction"),
+                                                       joinedload("children"),
+                                                       joinedload("commodity"),
+                                                       ).all()
+
+        # load all splits
+        splits = self.session.query(Split).join(Transaction).options(
+                                                   joinedload("account"),
+                                                   joinedload("lot")) \
+            .order_by(Transaction.post_date, Split.value).all()
+
+        return accounts, splits
+
 
     def splits_df(self):
         """
