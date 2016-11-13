@@ -1,10 +1,11 @@
 What's new
 ==========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.11.0 (2016-11-13)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Empty
+- add support for python 3.5
+- add preload method on book to allow preloading all objects at once
 
 Version 0.10.2 (2015-12-06)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
