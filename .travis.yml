@@ -1,58 +1,42 @@
 language: python
-
 python:
 - '2.7'
 - '3.4'
 - '3.5'
-
 services:
 - postgresql
 - mysql
-
 env:
- - DONOTGOONWEB=True
-
-
+- DONOTGOONWEB=True
 install:
-  # We do this conditionally because it saves us some downloading if the
-  # version is the same.
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
-    else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-    fi
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - export PATH="$HOME/miniconda/bin:$PATH"
-  - hash -r
-  - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
-  # Useful for debugging any issues with conda
-  - conda info -a
-
-  # Replace dep1 dep2 ... with your dependencies
-  - deps='pip sqlalchemy=1.0.9 pandas=0.17.0 sphinx=1.3.1 pytz=2015.7'
-  - conda create -q --yes -n test-environment python=$TRAVIS_PYTHON_VERSION $deps
-  - source activate test-environment
-  - conda list
-  - pip install -r requirements-dev.txt
-  - pip install coveralls
-
+- if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
+  -O miniconda.sh; else wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+  -O miniconda.sh; fi
+- bash miniconda.sh -b -p $HOME/miniconda
+- export PATH="$HOME/miniconda/bin:$PATH"
+- hash -r
+- conda config --set always_yes yes --set changeps1 no
+- conda update -q conda
+- conda info -a
+- deps='pip sqlalchemy=1.0.9 pandas=0.17.0 sphinx=1.3.1 pytz=2015.7'
+- conda create -q --yes -n test-environment python=$TRAVIS_PYTHON_VERSION $deps
+- source activate test-environment
+- conda list
+- pip install -r requirements-dev.txt
+- pip install coveralls
 script:
-  - python setup.py test
-  - coverage run --source=piecash setup.py test
-
-after_success:
-  coveralls
-
+- python setup.py test
+- coverage run --source=piecash setup.py test
+after_success: coveralls
 sudo: false
-
 deploy:
   provider: pypi
   user: sdementen
   password:
-    secure: jPJOUnrIkRary3QQGcuz4TgyP3ChoCJpRnDZYJmdTKh4GPOGXtYAKi6vGqlrlnVlnAxzopXfzzvHkEBH9RYtH/l7ylIGMSFwW245wJPsj7yq+by4LbufRT8EMJqhS2UofU3feOgHrwKhgqXcH7SOEwKpRN/xpm0nc4Wh+HHpL4s=
+    secure: JDJrFwdiEbyY6T3GE+XJv6lX/EpyjMeADGRKXZKalKebbGXqxG1198DaC0zKi2CwWQ57qv1z2JvCr2xDkw5zn5o/0DFdONnQegz+PtNUP+LvRCqoxo8wYGwYmKGmBSCfXI9j0jsfuE3xqx7KRwHMNGlrfBVETo6fTsngaEqPY3g=
   on:
-    repo: sdementen/piecash
     tags: true
+    distributions: sdist bdist_wheel
+    repo: sdementen/piecash
     all_branches: master
     condition: $PYTHON_VERSION=3.5
