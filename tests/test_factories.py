@@ -1,7 +1,7 @@
 # coding=utf-8
 from __future__ import unicode_literals
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 import pytest
@@ -79,7 +79,7 @@ class TestFactoriesCommodities(object):
 
 class TestFactoriesTransactions(object):
     def test_single_transaction(self, book_basic):
-        today = date.today()
+        today = datetime.today()
         factories.single_transaction(today,
                                      today,
                                      "my test",
@@ -97,11 +97,11 @@ class TestFactoriesTransactions(object):
         assert sp2.account == book_basic.accounts(name="asset")
         assert sp1.value == -sp2.value
         assert sp1.quantity == sp1.value
-        assert tr.post_date == tzlocal.get_localzone().localize(today)
-        assert tr.enter_date == tzlocal.get_localzone().localize(today)
+        assert tr.enter_date == tzlocal.get_localzone().localize(today.replace(microsecond=0))
+        assert tr.post_date == tzlocal.get_localzone().localize(today.replace(hour=11, minute=0, second=0, microsecond=0))
 
     def test_single_transaction_tz(self, book_basic):
-        today = tzlocal.get_localzone().localize(date.today())
+        today = tzlocal.get_localzone().localize(datetime.today())
         factories.single_transaction(today,
                                      today,
                                      "my test",
@@ -110,11 +110,11 @@ class TestFactoriesTransactions(object):
                                      to_account=book_basic.accounts(name="asset"))
         book_basic.save()
         tr = book_basic.transactions(description="my test")
-        assert tr.post_date == today
-        assert tr.enter_date == today
+        assert tr.post_date == today.replace(hour=11, minute=0, second=0, microsecond=0)
+        assert tr.enter_date == today.replace(microsecond=0)
 
     def test_single_transaction_rollback(self, book_basic):
-        today = tzlocal.get_localzone().localize(date.today())
+        today = tzlocal.get_localzone().localize(datetime.today())
         factories.single_transaction(today,
                                      today,
                                      "my test",

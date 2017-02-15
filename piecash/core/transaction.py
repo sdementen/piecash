@@ -2,9 +2,11 @@ import datetime
 import uuid
 from collections import defaultdict
 from decimal import Decimal
+
 from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, INTEGER
 from sqlalchemy.orm import relation, validates, foreign
 from sqlalchemy.orm.base import NEVER_SET
+
 from .._common import CallableList, GncImbalanceError
 from .._common import GncValidationError, hybrid_property_gncnumeric, Recurrence
 from .._declbase import DeclarativeBaseGuid
@@ -220,14 +222,16 @@ class Transaction(DeclarativeBaseGuid):
                  post_date=None,
                  num="",
                  ):
+
         assert enter_date is None or isinstance(enter_date, datetime.datetime), "enter_date should be a datetime object"
         assert post_date is None or isinstance(post_date, datetime.datetime), "post_date should be a datetime object"
 
         self.currency = currency
         self.description = description
-        self.enter_date = enter_date if enter_date else datetime.datetime.today().replace(microsecond=0)
-        self.post_date = post_date if post_date \
-            else datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
+        self.enter_date = (enter_date if enter_date else datetime.datetime.today()) \
+            .replace(microsecond=0)
+        self.post_date = (post_date if post_date else datetime.datetime.today()) \
+            .replace(hour=11, minute=0, second=0, microsecond=0)
         self.num = num
         if notes is not None:
             self.notes = notes
@@ -272,6 +276,10 @@ class Transaction(DeclarativeBaseGuid):
 
             if any(quantity_imbalances.values()) and self.book.use_trading_accounts:
                 self.normalize_trading_accounts()
+
+        # normalise post_date to 11:00AM
+        if self.post_date:
+            self.post_date = self.post_date.replace(hour=11, minute=0, second=0, microsecond=0)
 
     def calculate_imbalances(self):
         """Calculate value and quantity imbalances of a transaction"""
