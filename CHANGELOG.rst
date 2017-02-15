@@ -6,6 +6,7 @@ Version 0.12.0 (2017-02-15)
 
 - rely on yahoo-finance to retrieve share information and share prices
 - use only ISO currency static data (remove support for looking on the web)
+- normalise post_date to 11:00AM
 
 Version 0.11.0 (2016-11-13)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
