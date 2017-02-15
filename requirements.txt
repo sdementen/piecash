@@ -4,4 +4,4 @@ six==1.10.0
 SQLAlchemy==1.0.9
 SQLAlchemy-Utils==0.31.3
 tzlocal==1.2
-yahoo-finance
+-e git+https://github.com/sdementen/yahoo-finance.git
