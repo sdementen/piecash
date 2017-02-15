@@ -80,59 +80,22 @@ def create_currency_from_ISO(isocode, from_web=False):
     # if self.get_session().query(Commodity).filter_by(isocode=isocode).first():
     #     raise GncCommodityError("Currency '{}' already exists".format(isocode))
 
-    if not from_web:
-        from .currency_ISO import ISO_currencies
+    from .currency_ISO import ISO_currencies
 
-        for cur in ISO_currencies:
-            if cur.mnemonic == isocode:
-                # create the currency
-                cdty = Commodity(mnemonic=cur.mnemonic,
-                                 fullname=cur.currency,
-                                 fraction=10 ** int(cur.fraction),
-                                 cusip=cur.cusip,
-                                 namespace="CURRENCY",
-                                 quote_flag=1,
-                                 )
-                break
-        else:
-            raise ValueError("Could not find the ISO code '{}' in the ISO table".format(isocode))
-
-    else:
-        # retrieve XML table with currency information
-        import requests
-        from xml.etree import ElementTree
-
-        url = "http://www.currency-iso.org/dam/downloads/lists/list_one.xml"
-        table = requests.get(url)
-
-        # parse it with elementree
-        root = ElementTree.fromstring(table.content)
-        # and look for each currency item
-        for i in root.findall(".//CcyNtry"):
-            # if there is no isocode, skip it
-            mnemonic_node = i.find("Ccy")
-            if mnemonic_node is None:
-                continue
-            # if the isocode is not the one expected, skip it
-            if mnemonic_node.text != isocode:
-                continue
-            # retreive currency info from xml
-            cusip = i.find("CcyNbr").text
-            fraction = 10 ** int(i.find("CcyMnrUnts").text)
-            fullname = i.find("CcyNm").text
+    for cur in ISO_currencies:
+        if cur.mnemonic == isocode:
+            # create the currency
+            cdty = Commodity(mnemonic=cur.mnemonic,
+                             fullname=cur.currency,
+                             fraction=10 ** int(cur.fraction),
+                             cusip=cur.cusip,
+                             namespace="CURRENCY",
+                             quote_flag=1,
+                             )
             break
-        else:
-            # raise error if isocode has not been found
-            raise ValueError("Could not find the isocode '{}' in the table at {}".format(isocode, url))
+    else:
+        raise ValueError("Could not find the ISO code '{}' in the ISO table".format(isocode))
 
-        # create the currency
-        cdty = Commodity(mnemonic=isocode,
-                         fullname=fullname,
-                         fraction=fraction,
-                         cusip=cusip,
-                         namespace="CURRENCY",
-                         quote_flag=1,
-                         )
     # self.gnc_session.add(cdty)
     return cdty
 
