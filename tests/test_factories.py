@@ -76,11 +76,6 @@ class TestFactoriesCommodities(object):
         with pytest.raises(ValueError):
             factories.create_currency_from_ISO("EFR").fullname
 
-    def test_create_currency_from_ISO_web(self, book_basic):
-        if is_not_on_web():
-            return
-        assert factories.create_currency_from_ISO("CAD", from_web=True).fullname == "Canadian Dollar"
-
 
 class TestFactoriesTransactions(object):
     def test_single_transaction(self, book_basic):
