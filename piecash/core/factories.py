@@ -1,7 +1,8 @@
 # coding=utf-8
 from __future__ import unicode_literals
 
-from ._commodity_helper import run_yql
+import yahoo_finance
+
 from .commodity import GncCommodityError
 from .._common import GnucashException
 
@@ -64,13 +65,12 @@ def create_stock_accounts(cdty, broker_account, income_account=None, income_acco
     return acc, inc_accounts
 
 
-def create_currency_from_ISO(isocode, from_web=False):
+def create_currency_from_ISO(isocode):
     """
     Factory function to create a new currency from its ISO code
 
     Args:
         isocode (str): the ISO code of the currency (e.g. EUR for the euro)
-        from_web (bool): True to get the info from the website, False to get it from the hardcoded currency_ISO module
 
     Returns:
         :class:`Commodity`: the currency as a commodity object
@@ -82,19 +82,19 @@ def create_currency_from_ISO(isocode, from_web=False):
 
     from .currency_ISO import ISO_currencies
 
-    for cur in ISO_currencies:
-        if cur.mnemonic == isocode:
-            # create the currency
-            cdty = Commodity(mnemonic=cur.mnemonic,
-                             fullname=cur.currency,
-                             fraction=10 ** int(cur.fraction),
-                             cusip=cur.cusip,
-                             namespace="CURRENCY",
-                             quote_flag=1,
-                             )
-            break
-    else:
+    cur = ISO_currencies.get(isocode)
+
+    if cur is None:
         raise ValueError("Could not find the ISO code '{}' in the ISO table".format(isocode))
+
+    # create the currency
+    cdty = Commodity(mnemonic=cur.mnemonic,
+                     fullname=cur.currency,
+                     fraction=10 ** int(cur.fraction),
+                     cusip=cur.cusip,
+                     namespace="CURRENCY",
+                     quote_flag=1,
+                     )
 
     # self.gnc_session.add(cdty)
     return cdty
@@ -112,8 +112,8 @@ def create_stock_from_symbol(symbol, book=None):
         :class:`Commodity`: the stock as a commodity object
 
     .. note::
-       The information is gathered from a yql query to the yahoo.finance.historicaldata 
-       The default currency in which the quote is traded is stored as a slot
+       The information is gathered from the yahoo-finance package
+       The default currency in which the quote is traded is stored in a slot 'quoted_currency'
 
     .. todo::
        use 'select * from yahoo.finance.sectors' and 'select * from yahoo.finance.industry where id ="sector_id"'
@@ -121,21 +121,24 @@ def create_stock_from_symbol(symbol, book=None):
        This could also be used to retrieve all symbols related to the same company
     """
     from .commodity import Commodity
-    yql = 'select Name, StockExchange, Symbol,Currency from yahoo.finance.historicaldata where symbol = "{}"'.format(symbol)
-    symbol_info = run_yql(yql, scalar=True)
-    if symbol_info and symbol_info.StockExchange:
-        stock = Commodity(mnemonic=symbol_info.Symbol,
-                          fullname=symbol_info.Name,
-                          fraction=10000,
-                          namespace=symbol_info.StockExchange.upper(),
-                          quote_flag=1,
-                          )
-        stock["quoted_currency"] = symbol_info.Currency
-        if book:
-            book.session.add(stock)
-        return stock
-    else:
+
+    share = yahoo_finance.Share(symbol).data_set
+    currency = share["Currency"]
+    if not currency:
         raise GncCommodityError("Can't find information on symbol '{}'".format(symbol))
+
+    stock = Commodity(mnemonic=symbol,
+                      fullname=share["Name"],
+                      fraction=10000,
+                      namespace=share["StockExchange"].upper(),
+                      quote_flag=1,
+                      )
+    stock["quoted_currency"] = share["Currency"]
+
+    if book:
+        book.session.add(stock)
+
+    return stock
 
 
 def single_transaction(post_date,

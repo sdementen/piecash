@@ -1,6 +1,5 @@
 # coding=utf-8
 from collections import namedtuple
-from pprint import pprint
 from xml.etree import ElementTree
 
 ISO_type = namedtuple("ISO_type", "country	currency	mnemonic	cusip	fraction".split("\t"))
@@ -1962,8 +1961,7 @@ The codes assigned for transactions where no currency is involved
 </CcyTbl>
 </ISO_4217>
 """
-ISO_currencies = [
-    ISO_type(*[e.text for e in cur.getchildren()])
-    for cur in ElementTree.fromstring(ISO_currencies_XML).findall(".//CcyNtry")
-    if cur.findtext("CcyMnrUnts")
-]
+ISO_currencies = {cur.findtext("Ccy"): ISO_type(*[e.text for e in cur.getchildren()])
+                  for cur in ElementTree.fromstring(ISO_currencies_XML).findall(".//CcyNtry")
+                  if cur.findtext("CcyMnrUnts")
+                  }
