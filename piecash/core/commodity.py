@@ -4,10 +4,11 @@ from __future__ import unicode_literals
 import datetime
 from decimal import Decimal
 
+import yahoo_finance
 from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT, Index
 from sqlalchemy.orm import relation
 
-from ._commodity_helper import run_yql, quandl_fx
+from ._commodity_helper import quandl_fx
 from .._common import CallableList
 from .._common import GnucashException, hybrid_property_gncnumeric
 from .._declbase import DeclarativeBaseGuid
@@ -233,19 +234,16 @@ class Commodity(DeclarativeBaseGuid):
 
         else:
             symbol = self.mnemonic
-            default_currency = self.base_currency
+            share = yahoo_finance.Share(symbol)
+            currency = self.book.currencies(mnemonic=share.data_set["Currency"])
 
             # get historical data
-            yql = 'select Date, Close from yahoo.finance.historicaldata where ' \
-                  'symbol = "{}" ' \
-                  'and startDate = "{:%Y-%m-%d}" ' \
-                  'and endDate = "{:%Y-%m-%d}"'.format(symbol,
-                                                       start_date,
-                                                       datetime.date.today())
-            for q in run_yql(yql):
-                day, close = q.Date, q.Close
+            for q in share.get_historical("{:%Y-%m-%d}".format(start_date),
+                                          "{:%Y-%m-%d}".format(datetime.date.today()),
+                                          ):
+                day, close = q["Date"], q["Close"]
                 Price(commodity=self,
-                      currency=default_currency,
+                      currency=currency,
                       date=datetime.datetime.strptime(day, "%Y-%m-%d"),
                       value=Decimal(close),
                       type='last')
