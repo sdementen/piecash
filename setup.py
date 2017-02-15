@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
-import os
-import sys
 import imp
+import os
 import subprocess
-import platform
-
+import sys
 
 # # Python 2.6 subprocess.check_output compatibility. Thanks Greg Hewgill!
 if 'check_output' not in dir(subprocess):
@@ -19,10 +17,12 @@ if 'check_output' not in dir(subprocess):
             raise subprocess.CalledProcessError(args)
         return out
 
+
     subprocess.check_output = check_output
 
-from setuptools import setup, find_packages, Command
+from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
+
 
 # from setuptools.command.test import test
 
@@ -249,6 +249,7 @@ setup_dict = dict(
                          'pytz',
                          'enum-compat',
                          'tzlocal',
+                         'yahoo-finance',
                      ] + python_version_specific_requires,
     # Allow tests to be run with `python setup.py test'.
     tests_require=[
@@ -256,8 +257,8 @@ setup_dict = dict(
         'py',
     ],
     # console=['scripts/piecash_ledger.py','scripts/piecash_toqif.py'],
-    scripts=['scripts/piecash_ledger.py','scripts/piecash_toqif.py','scripts/piecash_prices.py'],
-    cmdclass = {'test': PyTest},
+    scripts=['scripts/piecash_ledger.py', 'scripts/piecash_toqif.py', 'scripts/piecash_prices.py'],
+    cmdclass={'test': PyTest},
     test_suite="tests",
     zip_safe=False,  # don't use eggs
 )
