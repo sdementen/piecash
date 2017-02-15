@@ -1,7 +1,7 @@
 # coding=utf-8
 from __future__ import unicode_literals
 
-from datetime import datetime
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -79,7 +79,7 @@ class TestFactoriesCommodities(object):
 
 class TestFactoriesTransactions(object):
     def test_single_transaction(self, book_basic):
-        today = datetime.today().replace(microsecond=0)
+        today = date.today()
         factories.single_transaction(today,
                                      today,
                                      "my test",
@@ -101,7 +101,7 @@ class TestFactoriesTransactions(object):
         assert tr.enter_date == tzlocal.get_localzone().localize(today)
 
     def test_single_transaction_tz(self, book_basic):
-        today = tzlocal.get_localzone().localize(datetime.today()).replace(microsecond=0)
+        today = tzlocal.get_localzone().localize(date.today())
         factories.single_transaction(today,
                                      today,
                                      "my test",
@@ -114,7 +114,7 @@ class TestFactoriesTransactions(object):
         assert tr.enter_date == today
 
     def test_single_transaction_rollback(self, book_basic):
-        today = tzlocal.get_localzone().localize(datetime.today())
+        today = tzlocal.get_localzone().localize(date.today())
         factories.single_transaction(today,
                                      today,
                                      "my test",
