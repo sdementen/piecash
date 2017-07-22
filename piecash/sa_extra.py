@@ -14,6 +14,7 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import sessionmaker, object_session
+from sqlalchemy.orm import exc as orm_exc
 
 # import yaml
 
@@ -163,12 +164,15 @@ def mapped_to_slot_property(col, slot_name, slot_transform=lambda x: x):
     )
 
 
-def pure_slot_property(slot_name, slot_transform=lambda x: x):
+def pure_slot_property(slot_name, slot_transform=lambda x: x,
+                       ignore_invalid_slot=False):
     """
     Create a property (class must have slots) that maps to a slot
 
     :param slot_name: name of the slot
     :param slot_transform: transformation to operate before assigning value
+    :param ignore_invalid_slot: True if incorrect values (usually due to deleted data)
+        should be converted to None
     :return:
     """
 
@@ -178,6 +182,15 @@ def pure_slot_property(slot_name, slot_transform=lambda x: x):
             return self[slot_name].value
         except KeyError:
             return None
+
+    if ignore_invalid_slot:
+        inner_fget = fget
+
+        def fget(self):
+            try:
+                return inner_fget(self)
+            except orm_exc.NoResultFound:
+                return None
 
     def fset(self, value):
         v = slot_transform(value)
