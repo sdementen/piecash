@@ -201,7 +201,7 @@ class Transaction(DeclarativeBaseGuid):
     description = Column('description', VARCHAR(length=2048))
     notes = pure_slot_property('notes')
 
-    scheduled_transaction = pure_slot_property('from-sched-xaction')
+    scheduled_transaction = pure_slot_property('from-sched-xaction', ignore_invalid_slot=True)
 
     # relation definitions
     currency = relation('Commodity',
