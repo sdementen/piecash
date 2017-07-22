@@ -335,7 +335,7 @@ class SlotGUID(SlotFrame):
 
     @property
     def value(self):
-        return object_session(self).query(self.Class).filter_by(guid=self.guid_val).one()
+        return object_session(self).query(self.Class).filter_by(guid=self.guid_val).one_or_none()
 
     @value.setter
     def value(self, value):
