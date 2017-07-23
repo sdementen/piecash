@@ -182,15 +182,11 @@ def pure_slot_property(slot_name, slot_transform=lambda x: x,
             return self[slot_name].value
         except KeyError:
             return None
-
-    if ignore_invalid_slot:
-        inner_fget = fget
-
-        def fget(self):
-            try:
-                return inner_fget(self)
-            except orm_exc.NoResultFound:
+        except orm_exc.NoResultFound:
+            if ignore_invalid_slot:
                 return None
+            else:
+                raise
 
     def fset(self, value):
         v = slot_transform(value)
