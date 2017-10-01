@@ -344,19 +344,48 @@ class TestBook_access_book(object):
         # converte datetime to date as different tzone in CI environments
         df["transaction.post_date"] = df["transaction.post_date"].dt.date
 
-        df_to_string = """    value quantity transaction.post_date transaction.currency.mnemonic account.fullname account.commodity.mnemonic
-0   -1000    -1000            2015-10-21                           EUR              inc                        EUR
-1    1000     1000            2015-10-21                           EUR            asset                        EUR
-2    -100     -100            2015-10-25                           EUR            asset                        EUR
-3      20       20            2015-10-25                           EUR              exp                        EUR
-4      80       80            2015-10-25                           EUR              exp                        EUR
-5    -200     -200            2015-10-29                           EUR            asset                        EUR
-6      15       15            2015-10-29                           EUR              exp                        EUR
-7     185        6            2015-10-29                           EUR     asset:broker               GnuCash Inc.
-8    -200     -200            2015-10-30                           EUR            asset                        EUR
-9     200      135            2015-10-30                           EUR    foreign asset                        USD
-10   -135     -135            2015-10-31                           USD    foreign asset                        USD
-11    135      215            2015-10-31                           USD            asset                        EUR"""
+        df_to_string = """    value quantity               memo      transaction.description transaction.post_date transaction.currency.mnemonic account.fullname account.commodity.mnemonic
+0   -1000    -1000                                      my revenue            2015-10-21                           EUR              inc                        EUR
+1    1000     1000                                      my revenue            2015-10-21                           EUR            asset                        EUR
+2    -100     -100                                      my expense            2015-10-25                           EUR            asset                        EUR
+3      20       20          cost of X                   my expense            2015-10-25                           EUR              exp                        EUR
+4      80       80          cost of Y                   my expense            2015-10-25                           EUR              exp                        EUR
+5    -200     -200                            my purchase of stock            2015-10-29                           EUR            asset                        EUR
+6      15       15  transaction costs         my purchase of stock            2015-10-29                           EUR              exp                        EUR
+7     185        6  purchase of stock         my purchase of stock            2015-10-29                           EUR     asset:broker               GnuCash Inc.
+8    -200     -200                       transfer to foreign asset            2015-10-30                           EUR            asset                        EUR
+9     200      135                       transfer to foreign asset            2015-10-30                           EUR    foreign asset                        USD
+10   -135     -135                     transfer from foreign asset            2015-10-31                           USD    foreign asset                        USD
+11    135      215                     transfer from foreign asset            2015-10-31                           USD            asset                        EUR"""
+
+        assert df_to_string == df.to_string()
+
+    def test_splits_df_with_additional(self, book_transactions):
+        # Adding in two additional memo fields here. If it works for non-unique it should
+        # be fine for unique fields.
+        df = book_transactions.splits_df(additional_fields=['memo', 'memo']).reset_index()
+
+        # remove guid columns as not comparable from run to run
+        for col in df.columns:
+            if "guid" in col:
+                del df[col]
+
+        # converte datetime to date as different tzone in CI environments
+        df["transaction.post_date"] = df["transaction.post_date"].dt.date
+
+        df_to_string = """    value quantity               memo      transaction.description transaction.post_date transaction.currency.mnemonic account.fullname account.commodity.mnemonic               memo               memo
+0   -1000    -1000                                      my revenue            2015-10-21                           EUR              inc                        EUR                                      
+1    1000     1000                                      my revenue            2015-10-21                           EUR            asset                        EUR                                      
+2    -100     -100                                      my expense            2015-10-25                           EUR            asset                        EUR                                      
+3      20       20          cost of X                   my expense            2015-10-25                           EUR              exp                        EUR          cost of X          cost of X
+4      80       80          cost of Y                   my expense            2015-10-25                           EUR              exp                        EUR          cost of Y          cost of Y
+5    -200     -200                            my purchase of stock            2015-10-29                           EUR            asset                        EUR                                      
+6      15       15  transaction costs         my purchase of stock            2015-10-29                           EUR              exp                        EUR  transaction costs  transaction costs
+7     185        6  purchase of stock         my purchase of stock            2015-10-29                           EUR     asset:broker               GnuCash Inc.  purchase of stock  purchase of stock
+8    -200     -200                       transfer to foreign asset            2015-10-30                           EUR            asset                        EUR                                      
+9     200      135                       transfer to foreign asset            2015-10-30                           EUR    foreign asset                        USD                                      
+10   -135     -135                     transfer from foreign asset            2015-10-31                           USD    foreign asset                        USD                                      
+11    135      215                     transfer from foreign asset            2015-10-31                           USD            asset                        EUR                                      """
 
         assert df_to_string == df.to_string()
 
