@@ -445,9 +445,11 @@ class Book(DeclarativeBaseGuid):
         return accounts, splits
 
 
-    def splits_df(self):
+    def splits_df(self, additional_fields=None):
         """
         Return a pandas DataFrame with all splits (:class:`piecash.core.commodity.Split`) from the book
+        
+        :parameters: :class:`list`
 
         :return: :class:`pandas.DataFrame`
         """
@@ -455,6 +457,9 @@ class Book(DeclarativeBaseGuid):
             import pandas
         except ImportError:
             raise GnucashException("pandas is required to output dataframes")
+
+        # Initialise default argument here
+        additional_fields = additional_fields if additional_fields else []
 
         # preload list of accounts
         accounts = self.session.query(Account).all()
@@ -469,11 +474,11 @@ class Book(DeclarativeBaseGuid):
         splits = self.session.query(Split).join(Transaction) \
             .order_by(Transaction.post_date, Split.value).all()
 
-        # build dataframe
-        fields = ["guid", "value", "quantity",
+        # build dataframe. Adds additional transaction.guid field.
+        fields = ["guid", "value", "quantity", "memo", "transaction.guid", "transaction.description",
                   "transaction.post_date", "transaction.currency.guid", "transaction.currency.mnemonic",
                   "account.fullname", "account.commodity.guid", "account.commodity.mnemonic",
-                  ]
+                  ] + additional_fields
         fields_getter = [attrgetter(fld) for fld in fields]
         df_splits = pandas.DataFrame([[fg(sp) for fg in fields_getter]
                                       for sp in splits], columns=fields)
