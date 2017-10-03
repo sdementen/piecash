@@ -150,7 +150,8 @@ placeholder
   This field, if True, is also stored as a Slot under the key "placeholder" as a string "true".
 
 hidden
-  to be investigated
+  if True/1, the account will not be displayed in the GnuCash GUI Accounts tab and can be easily excluded from GnuCash GUI Reports.
+  if False/0, the account will be displayed in the GnuCash GUI Accounts tab.
 
 
 Invariant
@@ -179,7 +180,7 @@ currency (mandatory)
   The currency of the transaction
 
 num (optional)
-  A transaction number (only used for information ?)
+  A transaction number (only used for information)
 
 post_date (mandatory)
   self-explanatory. This field is also stored as a slot under the date-posted key (as a date instead of a time)
@@ -205,7 +206,13 @@ quantity (mandatory)
   the change in quantity of the account expressed in the commodity of the account
 
 reconcile information
-  to be filled
+  (Descriptions from official help manual.)
+  
+  - n - Default status when a transaction is created
+  - c - Cleared. Status may be assigned either manually or by an import process.
+  - y - Status assigned solely by the reconciliation process. Places limits optionally requiring confirmation on editing fields in that line of a transaction.
+  - f - Frozen. Not implemented at this time
+  - v - Voided. Status is assigned or released manually and applies to every line in the transaction. It hides most of the transaction details but does not delete them. When a transaction is voided a reason entry is required that appears to the right of the description. (Note: There appears to be no way to actually view the reason in the GnuCash GUI at the moment.)
 
 lot
   reference to the lot (to be investigated)
@@ -222,6 +229,17 @@ Invariant
  - the currency of a transaction is the currency of the account into which it is created in the GUI
  - if "use trading accounts" is enabled then the sum of quantities per commodity should also be balanced. This is done thanks
    to the automatic creation of splits with trading accounts (of type TRADING)
+ - the reconcile field in all splits in a transaction that is voided are set to v
+ - a voided transaction has 4 associated slots with obj_guid equal to the transaction's guid and slot_type 4:
+ 
+   + name: notes, string_val: Voided transaction
+   + name: trans-read-only, string_val: Transaction Voided
+   + name: void-reason, string_val: <user-supplied reason string>
+   + name: void-time, string_val: date as string in format ``YYYY-MM-DD HH:mm:ss.nnnnnn pZZZZ`` where n represents milliseconds, p is an optionally present minus sign, and ZZZZ is GMT offset in HHmm format.
+ - a voided split has 2 nearly identical associated slots with obj_guid equal to the split's guid and slot_type 3:
+ 
+   + name: void-former-amount, numeric_val_num/numeric_val_denom: the value of the voided split
+   + name: void-former-value, numeric_val_num/numeric_val_denom: the value of the voided split
 
 Price
 -----
