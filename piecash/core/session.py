@@ -29,7 +29,6 @@ gnclock = Table(u'gnclock', DeclarativeBase.metadata,
 class Version(DeclarativeBase):
     """The declarative class for the 'versions' table.
     """
-
     __tablename__ = 'versions'
 
     __table_args__ = {}
