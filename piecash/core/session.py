@@ -2,9 +2,10 @@ import datetime
 import os
 import shutil
 import socket
+import re
 from collections import defaultdict
 
-from sqlalchemy import event, Column, VARCHAR, INTEGER, Table, PrimaryKeyConstraint
+from sqlalchemy import event, Column, VARCHAR, INTEGER, Table, PrimaryKeyConstraint, text
 from sqlalchemy.sql.ddl import DropConstraint, DropIndex
 from sqlalchemy_utils import database_exists
 
@@ -28,6 +29,7 @@ gnclock = Table(u'gnclock', DeclarativeBase.metadata,
 class Version(DeclarativeBase):
     """The declarative class for the 'versions' table.
     """
+
     __tablename__ = 'versions'
 
     __table_args__ = {}
@@ -131,6 +133,8 @@ def create_book(sqlite_file=None,
 
     uri_conn = build_uri(sqlite_file, uri_conn, db_type, db_user, db_password, db_name, db_host, db_port)
 
+    _db_created = False
+
     # create database (if DB is not a sqlite in memory)
     if uri_conn != "sqlite:///:memory:":
         if database_exists(uri_conn):
@@ -139,8 +143,23 @@ def create_book(sqlite_file=None,
             else:
                 raise GnucashException("'{}' db already exists".format(uri_conn))
         create_database(uri_conn)
+        _db_created = True
 
     engine = create_piecash_engine(uri_conn, **kwargs)
+
+    # Do any special setup we need to do the first time the database is created
+    if _db_created:
+        # For postgresql, GnuCash needs the standard_conforming_strings database variable set to 'on' in order to
+        # find the gnclock table as expected. (Probably would break some other stuff too.)
+        match = re.match('postgres://([^:]+):([^@]+)@([^/]+)/(.+)', uri_conn)
+        if match:
+            # TODO: figure out how to use sqlalchemy.sql.expression.literal to make this slightly SQL injection safer.
+            # t = text('ALTER DATABASE :db_name SET standard_conforming_string TO on')
+            # engine.execute(t, db_name="blah")
+            # produces: ALTER DATABASE 'blah' SET standard_conforming_string TO on
+            # we need: ALTER DATABASE blah SET standard_conforming_string TO on
+            t = text('ALTER DATABASE {} SET standard_conforming_strings TO on'.format(match.group(4)))
+            engine.execute(t)
 
     # drop constraints if we de not want to keep them (keep_foreign_keys=False), the default
     if not keep_foreign_keys:
@@ -184,6 +203,9 @@ def create_book(sqlite_file=None,
     b["default-currency"] = b.currencies(mnemonic=currency)
     b.save()
 
+    s.create_lock()
+    b._acquire_lock = True
+
     return b
 
 
@@ -191,6 +213,7 @@ def open_book(sqlite_file=None,
               uri_conn=None,
               readonly=True,
               open_if_lock=False,
+              overwrite_lock_if_lock=False,
               do_backup=True,
               db_type=None,
               db_user=None,
@@ -206,6 +229,9 @@ def open_book(sqlite_file=None,
     :param bool readonly: open the file as readonly (useful to play with and avoid any unwanted save)
     :param bool open_if_lock: open the file even if it is locked by another user
         (using open_if_lock=True with readonly=False is not recommended)
+    :param bool overwrite_lock_if_lock: remove any existing lock from another user and replace it with our own
+        (only relevant with open_if_lock=True and readonly=False. WARNING: this option should only be used if you know
+         the existing lock is in error and no other client actually has the file locked!!!)
     :param bool do_backup: do a backup if the file written in RW (i.e. readonly=False)
         (this only works with the sqlite backend and copy the file with .{:%Y%m%d%H%M%S}.gnucash appended to it)
 
@@ -259,6 +285,19 @@ def open_book(sqlite_file=None,
                                                                                                                k])
     book = s.query(Book).one()
     adapt_session(s, book=book, readonly=readonly)
+    if not readonly:
+        # We assume open_if_lock is true at this point because we raise an exception if not and there is a lock
+        if not locks or overwrite_lock_if_lock:
+            if locks:
+                # The delete_lock() define function created by adapt_session() only deletes our own lock
+                engine.execute(gnclock.delete())
+            s.create_lock()
+            book._acquire_lock = True
+        else:
+            # In this case (existing lock, opening in read/write mode, not overwriting lock) we don't change gnclock.
+            # This is potentially a dangerous state to be in because we can write to the DB while another client can
+            # write to the DB, but we assume the user knows what they are doing if they get here.
+            pass
 
     return book
 
