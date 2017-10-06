@@ -12,21 +12,25 @@ piecash can create new commodities (a :class:`piecash.core.commodity.Commodity`)
 
     print(book.commodities)
 
-    # creating a new ISO currency (if not already available in s.commodities)
+    # creating a new ISO currency (if not already available in s.commodities) (warning, object should be manually added to session)
     USD = factories.create_currency_from_ISO("USD")
     book.add(USD) # add to session
 
     # create a commodity (lookup on yahoo! finance, need web access)
-    apple = factories.create_stock_from_symbol("AAPL")
-    book.add(apple) # add to session
+    # (warning, object should be manually added to session if book kwarg is not included in constructor)
+    apple = factories.create_stock_from_symbol("AAPL", book)
 
-    # creating commodities using the constructor (warning, object should be manually added to session)
+    # creating commodities using the constructor
+    # (warning, object should be manually added to session if book kwarg is not included in constructor)
 
-    # create a special "reward miles" Commodity using the constructor
+    # create a special "reward miles" Commodity using the constructor without book kwarg
     miles = Commodity(namespace="LOYALTY", mnemonic="Miles", fullname="Reward miles", fraction=1000000)
     book.add(miles) # add to session
+    
+    # create a special "unicorn hugs" Commodity using the constructor with book kwarg
+    unhugs = Commodity(namespace="KINDNESS", mnemonic="Unhugs", fullname="Unicorn hugs", fraction=1, book=book)
 
-    USD, apple, miles
+    USD, apple, miles, unhugs
 
 .. warning::
 
