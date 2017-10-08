@@ -31,6 +31,11 @@ environment:
       PYTHON_VERSION: "3.5.x" # currently 3.5
       PYTHON_ARCH: "32"
 
+    # does not work as compilation problems with psycopg2
+    - PYTHON: "C:\\Python36"
+      PYTHON_VERSION: "3.6.x" # currently 3.5
+      PYTHON_ARCH: "32"
+
     - PYTHON: "C:\\Python27-x64"
       PYTHON_VERSION: "2.7.x" # currently 2.7.9
       PYTHON_ARCH: "64"
@@ -44,6 +49,11 @@ environment:
     # does not work as compilation problems with psycopg2
     - PYTHON: "C:\\Python35-x64"
       PYTHON_VERSION: "3.5.x" # currently 3.5
+      PYTHON_ARCH: "64"
+      WINDOWS_SDK_VERSION: "v7.1"
+
+    - PYTHON: "C:\\Python36-x64"
+      PYTHON_VERSION: "3.6.x" # currently 3.5
       PYTHON_ARCH: "64"
       WINDOWS_SDK_VERSION: "v7.1"
 
