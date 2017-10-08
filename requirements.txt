@@ -1,7 +1,7 @@
 enum-compat==0.0.1
 pytz==2015.7
 six==1.10.0
-SQLAlchemy==1.1.14
+SQLAlchemy
 SQLAlchemy-Utils==0.31.3
 tzlocal==1.2
 git+https://github.com/sdementen/yahoo-finance.git@patch-1#egg=yahoo_finance

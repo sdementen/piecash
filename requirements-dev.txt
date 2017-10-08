@@ -18,7 +18,7 @@ requests==2.18.4
 pandas==0.20.3
 
 # Documentation
-Sphinx==1.6.3
+Sphinx
 sphinxcontrib-napoleon==0.4.3
 ipyext==0.1.0
 ipython==4.0.0
