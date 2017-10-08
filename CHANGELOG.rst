@@ -1,10 +1,14 @@
 What's new
 ==========
 
-In development
-~~~~~~~~~~~~~~
+Version 0.13.0 (2017-10-08)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Empty
+- upgrade CI (appveyor and travis) to 2.7/3.4/3.5/3.6
+- upgrade dependencies
+- df_splits: allow user to specify additional fields to extract (@NigelCleland)
+- improve documentation (@Brian-K-Smith)
+
 
 Version 0.12.0 (2017-02-15)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
