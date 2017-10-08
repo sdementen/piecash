@@ -3,18 +3,21 @@ import json
 import datetime
 
 import requests
-
+import requests_cache
 
 client_id = "sdementen"
 
 if __name__ == '__main__':
+    requests_cache.install_cache()
     languages = {}
-    client_secret = getpass("Enter password for user '{}' :".format(client_id))
+    client_secret = input("Enter password for user '{}' :".format(client_id))
     i = 0
     for pg in range(100):
+        print(pg)
         url = "https://api.github.com/search/repositories?q=gnucash&sort=stars&order=desc&page={}&per_page=100?client_id={}&client_secret={}".format(
             pg + 1, client_id, client_secret)
         response = requests.get(url)
+        response.raise_for_status()
         res = json.loads(response.text)
         try:
             projects = res["items"]
@@ -29,7 +32,7 @@ if __name__ == '__main__':
             i += 1
             languages.setdefault(project["language"], []).append(project)
 
-    with open("docs/source/doc/github_links.rst", "w") as fo:
+    with open("docs/source/doc/github_links.rst", "w", encoding="UTF-8") as fo:
         list_of_projects = sorted([(k or "", v) for k, v in languages.items()],
                                   key=lambda v: ("AAA" if v[0] == "Python" else v[0] or "zzz"))
 
