@@ -3,6 +3,7 @@ python:
 - '2.7'
 - '3.4'
 - '3.5'
+- '3.6'
 services:
 - postgresql
 - mysql
@@ -18,7 +19,7 @@ install:
 - conda config --set always_yes yes --set changeps1 no
 - conda update -q conda
 - conda info -a
-- deps='pip sqlalchemy=1.0.9 pandas=0.17.0 sphinx=1.3.1 pytz=2015.7'
+- deps='pip sqlalchemy pandas sphinx'
 - conda create -q --yes -n test-environment python=$TRAVIS_PYTHON_VERSION $deps
 - source activate test-environment
 - conda list
