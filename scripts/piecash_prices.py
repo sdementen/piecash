@@ -3,6 +3,12 @@
  adapted for:
  - python 3 support
  - new string formatting
+
+The security must exist in GnuCash database.
+Example of a valid CSV file:
+    currency,commodity,value,date
+    AUD,YMAX,9.06,"2017-11-10"
+ 
 """
 import argparse
 import csv
@@ -39,6 +45,8 @@ parser.add_argument("--import", dest="operation",
                     help="to import the prices from a csv file (default export)")
 args = parser.parse_args()
 
+# args.operation is the name of the import file (.csv).
+
 if args.operation is None:
     # export the prices
     out.write("date,type,value,value_num, value_denom, currency,commodity,source\n")
@@ -48,7 +56,9 @@ else:
     # import the prices
     with piecash.open_book(args.gnucash_filename, open_if_lock=True, readonly=False) as book:
         cdty = book.commodities
-        for l in csv.DictReader(file(args.operation)):
+        importFile = open(args.operation, 'r')
+        
+        for l in csv.DictReader(importFile):
             cur = cdty(mnemonic=l['currency'])
             com = cdty(mnemonic=l['commodity'])
             type = l.get('type',None)
