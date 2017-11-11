@@ -14,7 +14,7 @@ book = piecash.open_book(filename, open_if_lock=True)
 # , readonly=False, 
 
 # get the SQLAlchemy session
-session = book.session
+#session = book.session
 #accountsFiltered = session.query(Account).filter(Account.name >= "T").all()
 
 # all commodities
@@ -25,7 +25,9 @@ session = book.session
 # SQLAlchemy methods: count, first, all
 #commoditiesFiltered = session.query(Commodity).filter(Commodity.mnemonic == "EUR").all()
 
-cdty = session.query(Commodity).filter(Commodity.mnemonic == symbol).first()
+cdty = book.get(Commodity, namespace="CURRENCY", mnemonic=symbol)
+# Or, using the Session object.
+#cdty = session.query(Commodity).filter(Commodity.mnemonic == symbol).first()
 print(cdty)
 
 # Accessing individual records.
