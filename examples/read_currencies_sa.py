@@ -1,9 +1,10 @@
 """
 Read currency exchange rates.
-This functionality could be used to display the exchange rate graph, for example.
+This example is similar to read_currencies script but uses SQLAlchemy directly
+to achieve the same result.
 
-The first (and only) parameter is the name of the GnuCash file to use. If not set,
-'test.gnucash' is used.
+The goal is simply to illustrate what happens under the hood. Hopefully this 
+shows how simple the piecash API is.
 """
 # pylint: disable=invalid-name
 import sys
@@ -21,20 +22,23 @@ symbol = "AUD"
 book = piecash.open_book(filename, open_if_lock=True)
 # , readonly=False,
 
-# Get all commodities.
-# The commodities (including currencies) in the book are only those used in accounts.
-#commodities = book.commodities
+# SQLAlchemy session.
+session = book.session
+
+# query example:
+#accountsFiltered = session.query(Account).filter(Account.name >= "T").all()
+# SQLAlchemy methods: count, first, all, one...
 
 # Get all the currencies in the book (i.e. for update).
 print("All currencies used in the book:")
-currencies = book.currencies
+currencies = session.query(Commodity).filter(Commodity.namespace == "CURRENCY").all()
 for c in currencies:
     print(c)
 
 # Accessing individual records.
 
 print("\nSelected single currency details (" + symbol + "):")
-cdty = book.get(Commodity, namespace="CURRENCY", mnemonic=symbol)
+cdty = session.query(Commodity).filter(Commodity.namespace == "CURRENCY", Commodity.mnemonic == symbol).first()
 
 # Accessing attributes of a commodity.
 print("Commodity namespace={cdty.namespace}\n"
