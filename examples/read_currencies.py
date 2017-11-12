@@ -40,13 +40,13 @@ session = book.session
 print("All currencies used in the book:")
 #currencies = book.get(Commodity, namespace="CURRENCY")
 currencies = session.query(Commodity).filter(Commodity.namespace == "CURRENCY").all()
-print(currencies)
+for c in currencies: 
+    print(c)
 
 # Accessing individual records.
 
 print("\nSelected single currency details (" + symbol + "):")
 cdty = book.get(Commodity, namespace="CURRENCY", mnemonic=symbol)
-#print(cdty)
 
 # accessing attributes of a commodity
 print("Commodity namespace={cdty.namespace}\n"
