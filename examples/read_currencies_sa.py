@@ -14,6 +14,7 @@ from piecash import Commodity
 # Variables
 filename = sys.argv[1]
 if filename is None:
+    print("You need to specify a valid .gnucash file to use.")
     filename = "test.gnucash"
 
 symbol = "AUD"
