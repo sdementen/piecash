@@ -22,13 +22,15 @@ symbol = "AUD"
 book = piecash.open_book(filename, open_if_lock=True)
 # , readonly=False,
 
+# SQLAlchemy - direct access to the data layer, explanation.
 # The data can also be read directly through the SQLAlchemy session, if desired.
-session = book.session
+#session = book.session
 #accountsFiltered = session.query(Account).filter(Account.name >= "T").all()
 # SQLAlchemy methods: count, first, all
 #commoditiesFiltered = session.query(Commodity).filter(Commodity.mnemonic == "EUR").all()
 # Getting a single commodity.
 #cdty = session.query(Commodity).filter(Commodity.mnemonic == symbol).first()
+#currencies = session.query(Commodity).filter(Commodity.namespace == "CURRENCY").all()
 
 # Get all commodities.
 # The commodities (including currencies) in the book are only those used in accounts.
@@ -36,11 +38,8 @@ session = book.session
 #print(commodities)
 
 # Get all the currencies in the book (to update, for example).
-
 print("All currencies used in the book:")
-#currencies = book.get(Commodity, namespace="CURRENCY")
-currencies = session.query(Commodity).filter(Commodity.namespace == "CURRENCY").all()
-for c in currencies:
+for c in book.currencies:
     print(c)
 
 # Accessing individual records.
