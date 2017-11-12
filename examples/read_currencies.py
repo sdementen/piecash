@@ -40,7 +40,7 @@ session = book.session
 print("All currencies used in the book:")
 #currencies = book.get(Commodity, namespace="CURRENCY")
 currencies = session.query(Commodity).filter(Commodity.namespace == "CURRENCY").all()
-for c in currencies: 
+for c in currencies:
     print(c)
 
 # Accessing individual records.
