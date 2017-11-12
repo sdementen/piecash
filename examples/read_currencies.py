@@ -35,16 +35,18 @@ session = book.session
 #commodities = book.commodities
 #print(commodities)
 
-# find the currencies to update
+# Get all the currencies in the book (to update, for example).
 
+print("All currencies used in the book:")
 #currencies = book.get(Commodity, namespace="CURRENCY")
 currencies = session.query(Commodity).filter(Commodity.namespace == "CURRENCY").all()
 print(currencies)
 
-cdty = book.get(Commodity, namespace="CURRENCY", mnemonic=symbol)
-print(cdty)
-
 # Accessing individual records.
+
+print("\nSelected single currency details (" + symbol + "):")
+cdty = book.get(Commodity, namespace="CURRENCY", mnemonic=symbol)
+#print(cdty)
 
 # accessing attributes of a commodity
 print("Commodity namespace={cdty.namespace}\n"
@@ -54,7 +56,7 @@ print("Commodity namespace={cdty.namespace}\n"
 
 # loop on the prices.
 # This can be used to display a price graph, for example.
-print("Historical prices:")
+print("\nHistorical prices:")
 for pr in cdty.prices:
     print("Price date={pr.date}"
           "      value={pr.value} {pr.currency.mnemonic}/{pr.commodity.mnemonic}".format(pr=pr))
