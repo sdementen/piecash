@@ -167,8 +167,8 @@ class Book(DeclarativeBaseGuid):
             return None
 
         key = "currency-other"
-        custom_currency = self.__get_registry_key(key)
-        def_curr = self["default-currency"] = self.__get_locale_currency()
+        custom_symbol = self.__get_registry_key(key)
+        def_curr = self["default-currency"] = self.currencies(mnemonic=custom_symbol)
         return def_curr
 
     def __get_registry_key(self, key):
