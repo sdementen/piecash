@@ -16,9 +16,9 @@ from piecash import Commodity
 filename = sys.argv[1]
 #############################
 
-searchTerm = input("Please enter the search term:")
+search_term = input("Please enter the search term:")
 
-def searchAccount(searchTerm, book):
+def search_account(search_term, book):
     """Searches through account names"""
     print("Search results:\n")
 
@@ -28,7 +28,7 @@ def searchAccount(searchTerm, book):
     for account in book.accounts:
         #print(account.fullname)
         # name
-        if searchTerm.lower() in account.fullname.lower():
+        if search_term.lower() in account.fullname.lower():
             print(account.fullname)
             found = True
 
@@ -37,4 +37,4 @@ def searchAccount(searchTerm, book):
     return
 
 with piecash.open_book(filename, open_if_lock=True) as book:
-    searchAccount(searchTerm, book)
+    search_account(search_term, book)
