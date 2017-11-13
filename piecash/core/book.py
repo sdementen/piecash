@@ -139,7 +139,7 @@ class Book(DeclarativeBaseGuid):
             return self["default-currency"].value
         except KeyError:
             def_currency = self.__get_default_currency()
-            
+            return def_curr
 
     def __get_default_currency(self):
         """Read the default currency from GnuCash preferences"""
