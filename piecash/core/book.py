@@ -172,11 +172,14 @@ class Book(DeclarativeBaseGuid):
         return def_curr
 
     def __get_registry_key(self, key):
-        root= winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'SOFTWARE\GSettings\org\gnucash\general', 0, winreg.KEY_READ)
-        [Pathname,regtype]=(winreg.QueryValueEx(root, key))
-        #print(key, [Pathname, regtype])
-        winreg.CloseKey(root)
-        return Pathname
+        try:
+            root= winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'SOFTWARE\GSettings\org\gnucash\general', 0, winreg.KEY_READ)
+            [Pathname,regtype]=(winreg.QueryValueEx(root, key))
+            #print(key, [Pathname, regtype])
+            winreg.CloseKey(root)
+            return Pathname
+        except FileNotFoundError:
+            print("Could not open Windows registry. Will use the locale currency.")
 
     def __get_locale_currency(self):
         if locale.getlocale() == (None, None):
@@ -485,7 +488,6 @@ class Book(DeclarativeBaseGuid):
             .order_by(Transaction.post_date, Split.value).all()
 
         return accounts, splits
-
 
     def splits_df(self, additional_fields=None):
         """
