@@ -28,3 +28,4 @@ Paver==1.2.4
 bumpr==0.2.0
 # hatch=0.20.0
 requests-cache
+winreg
