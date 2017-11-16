@@ -207,7 +207,6 @@ class TestBook_open_book(object):
         with open_book(uri_conn=book_uri, open_if_lock=False) as b:
             pass
 
-
 class TestBook_access_book(object):
     def test_book_options(self, new_book):
         assert new_book.use_trading_accounts == False
@@ -409,3 +408,26 @@ class TestBook_access_book(object):
 5      5  2015-10-30  transaction   1.481481                USD               EUR"""
 
         assert df_to_string == df.to_string()
+
+    def test_commodity_quantity(self, new_book):
+        """
+        Tests listing the commodity quantity in the account.
+        """
+        security = new_book.get(Commodity, mnemonic="VEUR")
+
+        total_quantity = Decimal(0)
+
+        for account in security.accounts:
+			# exclude Trading accouns explicitly.
+            if account.type == "TRADING":
+                continue
+
+            balance = account.get_balance()
+            quantity = account.get_quantity()
+
+            print(account.fullname, balance, quantity)
+			#total_balance += balance
+            total_quantity += quantity
+
+		#print("Balance:", total_balance)
+        assert total_quantity == Decimal(13)
