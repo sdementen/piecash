@@ -129,7 +129,7 @@ def book_basic(request):
     with create_book(uri_conn=name, currency="EUR", keep_foreign_keys=False) as b:
         # create some accounts
         curr = b.currencies[0]
-        cdty = Commodity(namespace=u"√©change", mnemonic=u"√Øo√†", fullname=u"Example of unicode d√©ta")
+        cdty = Commodity(namespace=u"Èchange", mnemonic=u"Ôo‡", fullname=u"Example of unicode dÈta")
         a = Account(name="asset", type="ASSET", commodity=curr, parent=b.root_account)
         Account(name="broker", type="STOCK", commodity=cdty, parent=a)
         Account(name="exp", type="EXPENSE", commodity=curr, parent=b.root_account)
