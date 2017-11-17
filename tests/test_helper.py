@@ -4,7 +4,7 @@ import sys
 from datetime import datetime
 import pytest
 from sqlalchemy_utils import database_exists, drop_database
-from piecash import create_book, Account, Commodity, Employee, Customer, Vendor, Transaction, Split, Price
+from piecash import create_book, open_book, Account, Commodity, Employee, Customer, Vendor, Transaction, Split, Price
 
 test_folder = os.path.dirname(os.path.realpath(__file__))
 book_folder = os.path.join(test_folder, "..", "gnucash_books")
@@ -224,10 +224,14 @@ def book_transactions(request):
 
 @pytest.yield_fixture(params=databases_to_check)
 def book_investment(request):
+    """
+    Returns the book that contains investment accounts and transactions.
+    """
     #name = request.param
     #print(name)
     file_template_full = os.path.join(book_folder, "investment.gnucash")
-    with open(file_template_full, mode='r') as book:
+
+    with open_book(file_template_full) as book:
         yield book
 
 def is_inmemory_sqlite(book_basic):
