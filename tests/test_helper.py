@@ -63,7 +63,6 @@ elif APPVEYOR:
 else:
     pass
 
-
 @pytest.yield_fixture(params=[Customer, Vendor, Employee])
 def Person(request):
     yield request.param
@@ -130,7 +129,7 @@ def book_basic(request):
     with create_book(uri_conn=name, currency="EUR", keep_foreign_keys=False) as b:
         # create some accounts
         curr = b.currencies[0]
-        cdty = Commodity(namespace=u"�change", mnemonic=u"�o�", fullname=u"Example of unicode d�ta")
+        cdty = Commodity(namespace=u"échange", mnemonic=u"ïoà", fullname=u"Example of unicode déta")
         a = Account(name="asset", type="ASSET", commodity=curr, parent=b.root_account)
         Account(name="broker", type="STOCK", commodity=cdty, parent=a)
         Account(name="exp", type="EXPENSE", commodity=curr, parent=b.root_account)
