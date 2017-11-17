@@ -4,7 +4,7 @@ import sys
 from datetime import datetime
 import pytest
 from sqlalchemy_utils import database_exists, drop_database
-from piecash import create_book, Account, Commodity, Employee, Customer, Vendor, Transaction, Split, Price
+from piecash import create_book, open_book, Account, Commodity, Employee, Customer, Vendor, Transaction, Split, Price
 
 test_folder = os.path.dirname(os.path.realpath(__file__))
 book_folder = os.path.join(test_folder, "..", "gnucash_books")
@@ -63,11 +63,9 @@ elif APPVEYOR:
 else:
     pass
 
-
 @pytest.yield_fixture(params=[Customer, Vendor, Employee])
 def Person(request):
     yield request.param
-
 
 @pytest.yield_fixture(params=db_config.items())
 def book_db_config(request):
@@ -84,7 +82,6 @@ def book_db_config(request):
     if sql_backend != "sqlite_in_mem" and database_exists(name):
         drop_database(name)
 
-
 @pytest.yield_fixture(params=databases_to_check[1:])
 def book_uri(request):
     name = request.param
@@ -95,7 +92,6 @@ def book_uri(request):
 
     if name and database_exists(name):
         drop_database(name)
-
 
 @pytest.yield_fixture(params=databases_to_check)
 def new_book(request):
@@ -110,7 +106,6 @@ def new_book(request):
     if name and database_exists(name):
         drop_database(name)
 
-
 @pytest.yield_fixture(params=databases_to_check)
 def new_book_USD(request):
     name = request.param
@@ -123,7 +118,6 @@ def new_book_USD(request):
 
     if name and database_exists(name):
         drop_database(name)
-
 
 @pytest.yield_fixture(params=databases_to_check)
 def book_basic(request):
@@ -145,7 +139,6 @@ def book_basic(request):
 
     if name and database_exists(name):
         drop_database(name)
-
 
 @pytest.yield_fixture(params=databases_to_check)
 def book_transactions(request):
@@ -229,13 +222,23 @@ def book_transactions(request):
     if name and database_exists(name):
         drop_database(name)
 
+@pytest.yield_fixture(params=databases_to_check)
+def book_investment(request):
+    """
+    Returns the book that contains investment accounts and transactions.
+    """
+    #name = request.param
+    #print(name)
+    file_template_full = os.path.join(book_folder, "investment.gnucash")
+
+    with open_book(file_template_full) as book:
+        yield book
 
 def is_inmemory_sqlite(book_basic):
     # print book_basic.uri, book_basic.uri.get_dialect(), book_basic.uri.database, type(book_basic.uri), dir(book_basic.uri)
     # print "sqlite" in book_basic.uri and ":memory:" in book_basic.uri
     # fdsfdssfd
     return book_basic.uri.database == ":memory:"
-
 
 def is_not_on_web():
     return os.environ.get("DONOTGOONWEB", False)
