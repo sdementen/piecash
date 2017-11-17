@@ -68,7 +68,6 @@ else:
 def Person(request):
     yield request.param
 
-
 @pytest.yield_fixture(params=db_config.items())
 def book_db_config(request):
     from piecash.core.session import build_uri
@@ -84,7 +83,6 @@ def book_db_config(request):
     if sql_backend != "sqlite_in_mem" and database_exists(name):
         drop_database(name)
 
-
 @pytest.yield_fixture(params=databases_to_check[1:])
 def book_uri(request):
     name = request.param
@@ -95,7 +93,6 @@ def book_uri(request):
 
     if name and database_exists(name):
         drop_database(name)
-
 
 @pytest.yield_fixture(params=databases_to_check)
 def new_book(request):
@@ -110,7 +107,6 @@ def new_book(request):
     if name and database_exists(name):
         drop_database(name)
 
-
 @pytest.yield_fixture(params=databases_to_check)
 def new_book_USD(request):
     name = request.param
@@ -124,7 +120,6 @@ def new_book_USD(request):
     if name and database_exists(name):
         drop_database(name)
 
-
 @pytest.yield_fixture(params=databases_to_check)
 def book_basic(request):
     name = request.param
@@ -135,7 +130,7 @@ def book_basic(request):
     with create_book(uri_conn=name, currency="EUR", keep_foreign_keys=False) as b:
         # create some accounts
         curr = b.currencies[0]
-        cdty = Commodity(namespace=u"échange", mnemonic=u"ïoà", fullname=u"Example of unicode déta")
+        cdty = Commodity(namespace=u"ï¿½change", mnemonic=u"ï¿½oï¿½", fullname=u"Example of unicode dï¿½ta")
         a = Account(name="asset", type="ASSET", commodity=curr, parent=b.root_account)
         Account(name="broker", type="STOCK", commodity=cdty, parent=a)
         Account(name="exp", type="EXPENSE", commodity=curr, parent=b.root_account)
@@ -145,7 +140,6 @@ def book_basic(request):
 
     if name and database_exists(name):
         drop_database(name)
-
 
 @pytest.yield_fixture(params=databases_to_check)
 def book_transactions(request):
@@ -229,6 +223,13 @@ def book_transactions(request):
     if name and database_exists(name):
         drop_database(name)
 
+@pytest.yield_fixture(params=databases_to_check)
+def book_investment(request):
+    #name = request.param
+    #print(name)
+    file_template_full = os.path.join(book_folder, "investment.gnucash")
+    with open(file_template_full, mode='r') as book:
+        yield book
 
 def is_inmemory_sqlite(book_basic):
     # print book_basic.uri, book_basic.uri.get_dialect(), book_basic.uri.database, type(book_basic.uri), dir(book_basic.uri)

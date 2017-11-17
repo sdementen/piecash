@@ -6,7 +6,7 @@ from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.orm import Session
 from piecash import create_book, Account, GnucashException, Book, open_book, Commodity
 from piecash.core import Version
-from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_transactions
+from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_transactions, book_investment
 
 # dummy line to avoid removing unused symbols
 a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_transactions
@@ -409,11 +409,11 @@ class TestBook_access_book(object):
 
         assert df_to_string == df.to_string()
 
-    def test_commodity_quantity(self, new_book):
+    def test_commodity_quantity(self, book_investment):
         """
         Tests listing the commodity quantity in the account.
         """
-        security = new_book.get(Commodity, mnemonic="VEUR")
+        security = book_investment.get(Commodity, mnemonic="VEUR")
 
         total_quantity = Decimal(0)
 
