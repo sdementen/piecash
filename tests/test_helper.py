@@ -240,6 +240,5 @@ def is_inmemory_sqlite(book_basic):
     # fdsfdssfd
     return book_basic.uri.database == ":memory:"
 
-
 def is_not_on_web():
     return os.environ.get("DONOTGOONWEB", False)

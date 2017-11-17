@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from piecash import create_book, Account, GnucashException, Book, open_book, Commodity
 from piecash.core import Version
 from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_transactions, book_investment
+from decimal import Decimal
 
 # dummy line to avoid removing unused symbols
 a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_transactions
