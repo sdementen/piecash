@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+import collections
 import datetime
 
+import pytest
 import pytz
 from sqlalchemy import create_engine, Column, TEXT
 from sqlalchemy.orm import sessionmaker, composite
@@ -97,3 +99,21 @@ class TestModelCommon(object):
         assert a.time
 
         assert str(list(s.bind.execute("select time from d_table"))[0][0]) == "20100412030405"
+
+    def test_float_in_gncnumeric(self):
+        Mock = collections.namedtuple('Mock', 'name')
+        sqlcolumn_mock = Mock('')
+        numeric = mc.hybrid_property_gncnumeric(sqlcolumn_mock, sqlcolumn_mock)
+        with pytest.raises(TypeError) as excinfo:
+            numeric.fset(None, 4020.19)
+        assert ("Received a floating-point number 4020.19 where a decimal is expected. " +
+                "Use a Decimal, str, or int instead") == str(excinfo.value)
+
+    def test_weird_type_in_gncnumeric(self):
+        Mock = collections.namedtuple('Mock', 'name')
+        sqlcolumn_mock = Mock('')
+        numeric = mc.hybrid_property_gncnumeric(sqlcolumn_mock, sqlcolumn_mock)
+        with pytest.raises(TypeError) as excinfo:
+            numeric.fset(None, dict())
+        assert ("Received an unknown type dict where a decimal is expected. " +
+                "Use a Decimal, str, or int instead") == str(excinfo.value)
