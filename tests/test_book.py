@@ -125,7 +125,6 @@ class TestBook_create_book(object):
             fk = insp.get_foreign_keys(tbl)
             assert len(fk) == 0
 
-
 class TestBook_open_book(object):
     def test_open_noarg(self):
         with pytest.raises(ValueError):

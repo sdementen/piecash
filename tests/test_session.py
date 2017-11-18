@@ -54,3 +54,12 @@ class TestSession_create_book(object):
                          db_name="pqsd",
                          db_host="qsdqs",
                          db_port=3434) == "mysql+pymysql://foo:pp@qsdqs:3434/pqsd?charset=utf8"
+
+        ### Test duplicate protocol spec. This happens when the open_book is called
+        ### from GnuCash reports (.scm), gnucash-utilities.
+        sqlite_uri = "sqlite:///some_file"
+        uri = sqlite_uri
+        assert build_uri(sqlite_file=uri) == sqlite_uri
+        # When run with just the name (without sqlite:// prefix):
+        uri = "some_file"
+        assert build_uri(sqlite_file=uri) == sqlite_uri
