@@ -58,7 +58,7 @@ class TestSession_create_book(object):
         ### Test duplicate protocol spec. This happens when the open_book is called
         ### from GnuCash reports (.scm), gnucash-utilities.
         sqlite_uri = "sqlite:///some_file"
-        uri = sqlite_uri
+        uri = "sqlite:///some_file"
         assert build_uri(sqlite_file=uri) == sqlite_uri
         # When run with just the name (without sqlite:// prefix):
         uri = "some_file"
