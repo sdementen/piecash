@@ -207,7 +207,7 @@ quantity (mandatory)
 
 reconcile information
   (Descriptions from official help manual.)
-  
+
   - n - Default status when a transaction is created
   - c - Cleared. Status may be assigned either manually or by an import process.
   - y - Status assigned solely by the reconciliation process. Places limits optionally requiring confirmation on editing fields in that line of a transaction.
@@ -231,13 +231,13 @@ Invariant
    to the automatic creation of splits with trading accounts (of type TRADING)
  - the reconcile field in all splits in a transaction that is voided are set to v
  - a voided transaction has 4 associated slots with obj_guid equal to the transaction's guid and slot_type 4:
- 
+
    + name: notes, string_val: Voided transaction
    + name: trans-read-only, string_val: Transaction Voided
    + name: void-reason, string_val: <user-supplied reason string>
    + name: void-time, string_val: date as string in format ``YYYY-MM-DD HH:mm:ss.nnnnnn pZZZZ`` where n represents milliseconds, p is an optionally present minus sign, and ZZZZ is GMT offset in HHmm format.
  - a voided split has 2 nearly identical associated slots with obj_guid equal to the split's guid and slot_type 3:
- 
+
    + name: void-former-amount, numeric_val_num/numeric_val_denom: the value of the voided split
    + name: void-former-value, numeric_val_num/numeric_val_denom: the value of the voided split
 
@@ -256,7 +256,7 @@ commodity (mandatory)
 currency (mandatory)
   The currency of the Price
 
-datetime (mandatory)
+date (mandatory)
   self-explanatory (expressed in UTC)
 
 value (mandatory)
