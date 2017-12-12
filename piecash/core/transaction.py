@@ -191,6 +191,7 @@ class Transaction(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
+    guid = Column('guid', VARCHAR(length=32), primary_key=True, nullable=False, default=lambda: uuid.uuid4().hex)
     currency_guid = Column('currency_guid', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
     num = Column('num', VARCHAR(length=2048), nullable=False)
     _post_date = Column('post_date', _DateTime, index=True)
