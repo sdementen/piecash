@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import datetime
 from decimal import Decimal
 
-import yahoo_finance
+import requests
 from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT, Index
 from sqlalchemy.orm import relation
 
@@ -189,7 +189,7 @@ class Commodity(DeclarativeBaseGuid):
     def __unirepr__(self):
         return u"Commodity<{}:{}>".format(self.namespace, self.mnemonic)
 
-    def update_prices(self, start_date=None):
+    def update_prices(self, start_date=None, alpha_vantage_api_key=None):
         """
         Retrieve online prices for the commodity:
 
@@ -218,9 +218,11 @@ class Commodity(DeclarativeBaseGuid):
             start_date = max(last_price.date.date() + datetime.timedelta(days=1),
                              start_date)
 
+        # get reference currency (from book.root_account)
+        default_currency = self.base_currency
+
         if self.namespace == "CURRENCY":
-            # get reference currency (from book.root_account)
-            default_currency = self.base_currency
+
             if default_currency == self:
                 raise GncPriceError("Cannot update exchange rate for base currency")
 
@@ -234,16 +236,28 @@ class Commodity(DeclarativeBaseGuid):
 
         else:
             symbol = self.mnemonic
-            share = yahoo_finance.Share(symbol)
-            currency = self.book.currencies(mnemonic=share.data_set["Currency"])
+            currency = self.book.currencies(mnemonic=default_currency.mnemonic)
 
-            # get historical data
-            for q in share.get_historical("{:%Y-%m-%d}".format(start_date),
-                                          "{:%Y-%m-%d}".format(datetime.date.today()),
-                                          ):
-                day, close = q["Date"], q["Close"]
-                Price(commodity=self,
-                      currency=currency,
-                      date=datetime.datetime.strptime(day, "%Y-%m-%d"),
-                      value=Decimal(close),
-                      type='last')
+            request_payload = {
+                'function': 'TIME_SERIES_DAILY',
+                'apikey': alpha_vantage_api_key,
+                'symbol': symbol,
+                'datatype': 'json',
+                'outputsize': 'compact'
+            }
+
+            data_request = requests.get('https://www.alphavantage.co/query', params=request_payload)
+            data_json = data_request.json()
+
+            if 'Time Series (Daily)' in data_json:
+                for key, value in data_json['Time Series (Daily)']:
+                    key_date = datetime.datetime.strptime('%Y-%m-%d', key)
+                    if start_date <= key_date <= datetime.datetime.today():
+                        Price(commodity=self,
+                              currency=currency,
+                              date=key_date,
+                              value=Decimal(value.get('4. close')),
+                              type='last')
+
+            else:
+                raise GncPriceError('Error retrieving price data for %s', symbol)

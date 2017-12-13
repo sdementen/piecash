@@ -11,9 +11,6 @@ tox==2.2.1
 psycopg2==2.7.3.1
 PyMySQL==0.7.11
 
-# to access yahoo/quandl
-requests==2.18.4
-
 # to ouput pandas dataframes
 pandas==0.20.3
 
