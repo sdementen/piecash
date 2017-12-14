@@ -252,14 +252,7 @@ class Account(DeclarativeBaseGuid):
             return u""
 
 
-    def get_value(self):
-        """
-        Retrieves the value sum. 
-        For commodity accounts, this will display the value in the commodity currency.
-        """
-        return sum([sp.value for sp in self.splits]) * self.sign
-
-    def get_quantity(self):
+    def get_balance(self):
         """
         Returns the balance of the account expressed in account's commodity/currency.
         If this is a stock/fund account, it will return the number of shares held.
