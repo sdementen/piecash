@@ -253,14 +253,16 @@ class Account(DeclarativeBaseGuid):
 
     def get_balance(self):
         """
-        Returns the balance of the account
+        Returns the balance of the account.
+        In case of a transfer split, this value will be in remote currency.
         """
         return sum([sp.value for sp in self.splits]) * self.sign
 
     def get_quantity(self):
         """
-        Returns the balance of the account expressed in commodity. 
+        Returns the balance of the account expressed in commodity.
         If this is a stock/fund account, it will return the number of shares held.
+        In case of a transfer split, this value will be in account's currency.
         """
         return sum([sp.quantity for sp in self.splits]) * self.sign
 
