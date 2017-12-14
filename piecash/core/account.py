@@ -260,7 +260,7 @@ class Account(DeclarativeBaseGuid):
 
     def get_quantity(self):
         """
-        Returns the balance of the account expressed in commodity.
+        Returns the balance of the account expressed in account's commodity.
         If this is a stock/fund account, it will return the number of shares held.
         In case of a transfer split, this value will be in account's currency.
         """
