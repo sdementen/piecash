@@ -424,11 +424,9 @@ class TestBook_access_book(object):
                 continue
 
             balance = account.get_balance()
-            quantity = account.get_quantity()
 
-            print(account.fullname, balance, quantity)
-			#total_balance += balance
-            total_quantity += quantity
+            #print(account.fullname, balance)
+            total_balance += balance
 
 		#print("Balance:", total_balance)
-        assert total_quantity == Decimal(13)
+        assert total_balance == Decimal(13)
