@@ -251,18 +251,15 @@ class Account(DeclarativeBaseGuid):
         else:
             return u""
 
+
     def get_balance(self):
         """
-        Returns the balance of the account
-        """
-        return sum([sp.value for sp in self.splits]) * self.sign
-
-    def get_quantity(self):
-        """
-        Returns the balance of the account expressed in commodity. 
+        Returns the balance of the account expressed in account's commodity/currency.
         If this is a stock/fund account, it will return the number of shares held.
+        If this is a currency account, it will be in account's currency.
         """
         return sum([sp.quantity for sp in self.splits]) * self.sign
+
 
     @property
     def sign(self):

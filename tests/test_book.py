@@ -416,7 +416,7 @@ class TestBook_access_book(object):
         """
         security = book_investment.get(Commodity, mnemonic="VEUR")
 
-        total_quantity = Decimal(0)
+        total = Decimal(0)
 
         for account in security.accounts:
 			# exclude Trading accouns explicitly.
@@ -424,11 +424,9 @@ class TestBook_access_book(object):
                 continue
 
             balance = account.get_balance()
-            quantity = account.get_quantity()
 
-            print(account.fullname, balance, quantity)
-			#total_balance += balance
-            total_quantity += quantity
+            #print(account.fullname, balance)
+            total += balance
 
 		#print("Balance:", total_balance)
-        assert total_quantity == Decimal(13)
+        assert total == Decimal(13)
