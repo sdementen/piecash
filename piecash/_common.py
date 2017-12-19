@@ -55,9 +55,14 @@ def hybrid_property_gncnumeric(num_col, denom_col):
         else:
             if isinstance(d, tuple):
                 d = Decimal(d[0]) / d[1]
-            elif isinstance(d, (float, int, long, str)):
+            elif isinstance(d, (int, long, str)):
                 d = Decimal(d)
-            assert isinstance(d, Decimal)
+            elif isinstance(d, float):
+                raise TypeError(("Received a floating-point number {} where a decimal is expected. " +
+                                 "Use a Decimal, str, or int instead").format(d))
+            elif not isinstance(d, Decimal):
+                raise TypeError(("Received an unknown type {} where a decimal is expected. " +
+                                 "Use a Decimal, str, or int instead").format(type(d).__name__))
 
             sign, digits, exp = d.as_tuple()
             denom = 10 ** max(-exp, 0)
