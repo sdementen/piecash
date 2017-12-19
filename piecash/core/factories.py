@@ -1,8 +1,6 @@
 # coding=utf-8
 from __future__ import unicode_literals
 
-import yahoo_finance
-
 from .commodity import GncCommodityError
 from .._common import GnucashException
 
@@ -100,13 +98,17 @@ def create_currency_from_ISO(isocode):
     return cdty
 
 
-def create_stock_from_symbol(symbol, book=None):
+def create_stock_from_symbol(symbol, book=None, currency=None, name=None, namespace='STOCK'):
     """
     Factory function to create a new stock from its symbol. The ISO code of the quoted currency of the stock is
     stored in the slot "quoted_currency".
 
     Args:
         symbol (str): the symbol for the stock (e.g. YHOO for the Yahoo! stock)
+        book: book that will be used to add the new stock
+        currency: the currency that should be used to create the stock, if null will use the books default value
+        name:
+        namespace:
 
     Returns:
         :class:`Commodity`: the stock as a commodity object
@@ -122,18 +124,19 @@ def create_stock_from_symbol(symbol, book=None):
     """
     from .commodity import Commodity
 
-    share = yahoo_finance.Share(symbol).data_set
-    currency = share["Currency"]
     if not currency:
-        raise GncCommodityError("Can't find information on symbol '{}'".format(symbol))
+        currency = book.default_currency
+
+    if not name:
+        name = symbol
 
     stock = Commodity(mnemonic=symbol,
-                      fullname=share["Name"],
+                      fullname=name,
                       fraction=10000,
-                      namespace=share["StockExchange"].upper(),
+                      namespace=namespace.upper(),
                       quote_flag=1,
                       )
-    stock["quoted_currency"] = share["Currency"]
+    stock["quoted_currency"] = currency
 
     if book:
         book.session.add(stock)

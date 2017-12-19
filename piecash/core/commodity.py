@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import datetime
 from decimal import Decimal
 
+import os
 import requests
 from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT, Index
 from sqlalchemy.orm import relation
@@ -235,6 +236,14 @@ class Commodity(DeclarativeBaseGuid):
                           value=str(q.rate))
 
         else:
+
+            # Check the validity of the alpha vantage key and raise exception if not defined properly
+            if alpha_vantage_api_key is None:
+                if 'AV_API_KEY' in os.environ:
+                    alpha_vantage_api_key = os.environ['AV_API_KEY']
+                else:
+                    raise GncPriceError('Alpha vantage api key not provided')
+
             symbol = self.mnemonic
             currency = self.book.currencies(mnemonic=default_currency.mnemonic)
 
