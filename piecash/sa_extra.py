@@ -87,7 +87,7 @@ def compile_date(element, compiler, **kw):
 
 
 @compiles(sqlite.DATETIME, 'sqlite')
-def compile_date(element, compiler, **kw):
+def compile_datetime(element, compiler, **kw):
     """ data type for the date field """
     #return "TEXT(14)"  # % element.__class__.__name__
     return "TEXT(19)"
@@ -100,14 +100,14 @@ class _DateTime(types.TypeDecorator):
 
     def load_dialect_impl(self, dialect):
         if dialect.name == "sqlite":
-            return sqlite.DATETIME(
-                storage_format="%(year)04d%(month)02d%(day)02d%(hour)02d%(minute)02d%(second)02d",
-                regexp=r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})",
-            )
             # return sqlite.DATETIME(
-            #     storage_format="%(year)04d-%(month)02d-%(day)02d %(hour)02d:%(minute)02d:%(second)02d",
-            #     regexp=r"(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})",
+            #     storage_format="%(year)04d%(month)02d%(day)02d%(hour)02d%(minute)02d%(second)02d",
+            #     regexp=r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})",
             # )
+            return sqlite.DATETIME(
+                storage_format="%(year)04d-%(month)02d-%(day)02d %(hour)02d:%(minute)02d:%(second)02d",
+                regexp=r"(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})",
+            )
         else:
             return types.DateTime()
 
