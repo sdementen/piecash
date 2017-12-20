@@ -126,6 +126,7 @@ class Book(DeclarativeBaseGuid):
         return u"Book<{}>".format(self.uri)
 
     _control_mode = None
+    _default_currency = None
 
     @property
     def control_mode(self):
@@ -135,58 +136,54 @@ class Book(DeclarativeBaseGuid):
 
     @property
     def default_currency(self):
-        try:
-            return self["default-currency"].value
-        except KeyError:
-            def_currency = self.__get_default_currency()
-            self["default-currency"] = def_currency
-            return def_currency
+        if self._default_currency is None:
+            self._default_currency = self.__get_default_currency()
+            
+        return self._default_currency
 
     def __get_default_currency(self):
-        """Read the default currency from GnuCash preferences"""
-        # If we are on Windows, read from registry.
+        """Read the default currency from GnuCash preferences as described in
+        https://www.gnucash.org/docs/v2.6/C/gnucash-guide/basics-migrate-settings.html"""
+        
         if (sys.platform == "win32"):
             # read from registry
-            def_curr = self["default-currency"] = self.__get_default_currency_windows()
-        else:
+            mnemonic = self.__get_default_currency_windows_mnemonic()
+        elif (sys.platform == "linux2"):
             # return the currency from locale.
-            # todo: Read the preferences on other operating systems.
-            def_curr = self["default-currency"] = self.__get_locale_currency()
+            # todo: Read the preferences on Linux (dconf load /org/gnucash/).
+            mnemonic = self.__get_locale_currency_mnemonic()
+        elif (sys.platform == "darwin"):
+            # return the currency from locale.
+            # todo: Read the preferences on MacOs (~/Library/Preferences/gnucash.plist).
+            mnemonic = self.__get_locale_currency_mnemonic()
+        else:
+            raise ValueError("Unrecognised platform '{}'".format(sys.platform)
+        
+        return self.currencies(mnemonic=mnemonic)
 
-        return def_curr
+    def __get_default_currency_windows_mnemonic(self):
+        custom_currency_selected = self.__get_winregistry_key("currency-choice-other")
+        if custom_currency_selected:
+            return self.__get_winregistry_key("currency-other")
+        else:
+            return self.__get_locale_currency_mnemonic()
+        
 
-    def __get_default_currency_windows(self):
-        key = "currency-choice-locale"
-        locale_selected = self.__get_registry_key(key)
-        if locale_selected:
-            return self.__get_locale_currency()
-
-        key = "currency-choice-other"
-        custom_selected = self.__get_registry_key(key)
-        if not custom_selected:
-            # This is an invalid state
-            return None
-
-        key = "currency-other"
-        custom_symbol = self.__get_registry_key(key)
-        def_curr = self["default-currency"] = self.currencies(mnemonic=custom_symbol)
-        return def_curr
-
-    def __get_registry_key(self, key):
+    def __get_winregistry_key(self, key):
         try:
-            root= winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'SOFTWARE\GSettings\org\gnucash\general', 0, winreg.KEY_READ)
-            [Pathname,regtype]=(winreg.QueryValueEx(root, key))
-            #print(key, [Pathname, regtype])
+            root = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'SOFTWARE\GSettings\org\gnucash\general', 0, winreg.KEY_READ)
+            pathname, regtype = winreg.QueryValueEx(root, key)
             winreg.CloseKey(root)
-            return Pathname
+            return pathname
         except FileNotFoundError:
-            print("Could not open Windows registry. Will use the locale currency.")
+            # Could not open Windows registry. Return False
+            return False
 
-    def __get_locale_currency(self):
+    def __get_locale_currency_mnemonic(self):
         if locale.getlocale() == (None, None):
             locale.setlocale(locale.LC_ALL, '')
         mnemonic = locale.localeconv()['int_curr_symbol'].strip() or "EUR"
-        return self.currencies(mnemonic=mnemonic)
+        return mnemonic
 
     @property
     def book(self):
