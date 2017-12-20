@@ -147,7 +147,7 @@ class Book(DeclarativeBaseGuid):
         if (sys.platform == "win32"):
             # read from registry
             mnemonic = self.__get_default_currency_windows_mnemonic()
-        elif (sys.platform == "linux2"):
+        elif (sys.platform in ["linux", "linux2"]):
             # return the currency from locale.
             # todo: Read the preferences on Linux (dconf load /org/gnucash/).
             mnemonic = self.__get_locale_currency_mnemonic()
