@@ -410,6 +410,17 @@ class TestBook_access_book(object):
 
         assert df_to_string == df.to_string()
 
+    def test_default_currency(self, new_book):
+        """
+        Test getting the default currency 
+        This test only displays the currency. The user has to confirm.
+        To run this test only, use
+        pytest -s test_book.py::TestBook_access_book::test_default_currency
+        """
+        def_cur = new_book.default_currency
+        print(def_cur)
+        assert True
+
     def test_commodity_quantity(self, book_investment):
         """
         Tests listing the commodity quantity in the account.
@@ -419,7 +430,7 @@ class TestBook_access_book(object):
         total = Decimal(0)
 
         for account in security.accounts:
-			# exclude Trading accouns explicitly.
+			      # exclude Trading accouns explicitly.
             if account.type == "TRADING":
                 continue
 
@@ -428,5 +439,6 @@ class TestBook_access_book(object):
             #print(account.fullname, balance)
             total += balance
 
-		#print("Balance:", total_balance)
+		    #print("Balance:", total_balance)
         assert total == Decimal(13)
+
