@@ -1,7 +1,6 @@
 import locale
 import sys
 import warnings
-import winreg
 from collections import defaultdict
 from operator import attrgetter
 from sqlalchemy import Column, VARCHAR, ForeignKey
@@ -170,6 +169,10 @@ class Book(DeclarativeBaseGuid):
         
 
     def __get_winregistry_key(self, key):
+        try: 
+            import winreg
+        except ImportError:
+            import _winreg as winreg
         try:
             root = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'SOFTWARE\GSettings\org\gnucash\general', 0, winreg.KEY_READ)
             pathname, regtype = winreg.QueryValueEx(root, key)
