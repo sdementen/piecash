@@ -409,3 +409,12 @@ class TestBook_access_book(object):
 5      5  2015-10-30  transaction   1.481481                USD               EUR"""
 
         assert df_to_string == df.to_string()
+
+    def test_default_currency(self, new_book):
+        """
+        Test getting the default currency 
+        This test only displays the currency. The user has to confirm.
+        """
+        def_cur = new_book.default_currency
+        print(def_cur)
+        assert True
