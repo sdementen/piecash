@@ -12,7 +12,7 @@ from .book import Book
 from .._common import GnucashException
 from ..sa_extra import create_piecash_engine, DeclarativeBase, Session
 
-version_supported = {u'Gnucash': 2060400, u'Gnucash-Resave': 19920,
+version_supported = {u'Gnucash': 2061800, u'Gnucash-Resave': 19920,
                      u'accounts': 1,
                      u'billterms': 2,
                      u'books': 1,
