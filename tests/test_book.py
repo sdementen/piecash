@@ -414,6 +414,8 @@ class TestBook_access_book(object):
         """
         Test getting the default currency 
         This test only displays the currency. The user has to confirm.
+        To run this test only, use
+        pytest -s test_book.py::TestBook_access_book::test_default_currency
         """
         def_cur = new_book.default_currency
         print(def_cur)
