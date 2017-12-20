@@ -95,6 +95,7 @@ install:
   - "SET PGUSER=postgres"
   - "SET PGPASSWORD=Password12!"
   - "SET MYSQL_PWD=Password12!"
+  - "SET DONOTGOONWEB=True"
   - "SET PATH=C:\\Program Files\\PostgreSQL\\9.4\\bin\\;%PATH%"
 
 

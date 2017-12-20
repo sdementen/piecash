@@ -1,6 +1,13 @@
 What's new
 ==========
 
+
+In development
+~~~~~~~~~~~~~~
+
+- add get_quantity on an account to retrieve the balance in quantity of the accound (for non currency based accounts)
+- fix bug when providing a float instead of a Decimal to a numeric value (@gregorias)
+
 Version 0.13.0 (2017-10-08)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

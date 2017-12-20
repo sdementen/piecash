@@ -6,7 +6,8 @@ from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.orm import Session
 from piecash import create_book, Account, GnucashException, Book, open_book, Commodity
 from piecash.core import Version
-from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_transactions
+from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_transactions, book_investment
+from decimal import Decimal
 
 # dummy line to avoid removing unused symbols
 a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_transactions
@@ -206,7 +207,6 @@ class TestBook_open_book(object):
         # open book specifying open_if_lock as False as lock has been removed
         with open_book(uri_conn=book_uri, open_if_lock=False) as b:
             pass
-
 
 class TestBook_access_book(object):
     def test_book_options(self, new_book):
@@ -418,3 +418,25 @@ class TestBook_access_book(object):
         def_cur = new_book.default_currency
         print(def_cur)
         assert True
+
+    def test_commodity_quantity(self, book_investment):
+        """
+        Tests listing the commodity quantity in the account.
+        """
+        security = book_investment.get(Commodity, mnemonic="VEUR")
+
+        total = Decimal(0)
+
+        for account in security.accounts:
+			      # exclude Trading accouns explicitly.
+            if account.type == "TRADING":
+                continue
+
+            balance = account.get_balance()
+
+            #print(account.fullname, balance)
+            total += balance
+
+		    #print("Balance:", total_balance)
+        assert total == Decimal(13)
+

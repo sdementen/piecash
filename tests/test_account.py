@@ -4,7 +4,6 @@ import pytest
 from piecash import Account, Commodity
 from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri
 
-
 # dummy line to avoid removing unused symbols
 
 a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri
@@ -37,7 +36,6 @@ class TestAccount_create_account(object):
         assert len(new_book.accounts) == 0
         root_accs = new_book.query(Account).all()
         assert len(root_accs) == 3
-
 
     def test_create_samenameandparent_accounts(self, new_book):
         EUR = new_book.commodities[0]
@@ -100,8 +98,18 @@ class TestAccount_create_account(object):
 
         # create account with no book attachable to it
         with pytest.raises(ValueError):
-            acc = Account(name="test account", type="FOO", commodity=USD)
+            acc = Account(name="test account", type="ASSET", commodity=USD)
             new_book.flush()
+
+    def test_create_children_accounts(self, new_book):
+        EUR = new_book.commodities[0]
+        racc = new_book.root_account
+
+        # create account with unknown type
+        acc = Account(name="test account", type="ASSET", commodity=EUR, parent=racc,
+                      children=[Account(name="test sub-account", type="ASSET", commodity=EUR)])
+        new_book.flush()
+        assert len(acc.children) == 1
 
     def test_create_unicodename_account(self, new_book):
         EUR = new_book.commodities[0]
@@ -112,7 +120,6 @@ class TestAccount_create_account(object):
         new_book.flush()
         assert len(new_book.accounts) == 1
         assert len(repr(acc)) >= 2
-
 
     def test_create_root_subaccount(self, new_book):
         EUR = new_book.commodities[0]

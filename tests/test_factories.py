@@ -15,7 +15,6 @@ from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_u
 
 a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic
 
-
 class TestFactoriesCommodities(object):
     def test_create_stock_accounts_simple(self, book_basic):
         with pytest.raises(GnucashException):
@@ -75,7 +74,6 @@ class TestFactoriesCommodities(object):
 
         with pytest.raises(ValueError):
             factories.create_currency_from_ISO("EFR").fullname
-
 
 class TestFactoriesTransactions(object):
     def test_single_transaction(self, book_basic):
