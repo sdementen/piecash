@@ -15,7 +15,7 @@ from ..sa_extra import create_piecash_engine, DeclarativeBase, Session
 version_supported = {u'Gnucash-Resave': 19920, u'invoices': 3, u'books': 1, u'accounts': 1, u'slots': 3,
                      u'taxtables': 2, u'lots': 2, u'orders': 1, u'vendors': 1, u'customers': 2, u'jobs': 1,
                      u'transactions': 3, u'Gnucash': 2060400, u'budget_amounts': 1, u'billterms': 2, u'recurrences': 2,
-                     u'entries': 3, u'prices': 2, u'schedxactions': 1, u'splits': 4, u'taxtable_entries': 3,
+                     u'entries': 3, u'prices': 3, u'schedxactions': 1, u'splits': 4, u'taxtable_entries': 3,
                      u'employees': 2, u'commodities': 1, u'budgets': 1}
 
 # this is not a declarative as it is used before binding the session to an engine.
