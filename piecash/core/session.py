@@ -12,11 +12,30 @@ from .book import Book
 from .._common import GnucashException
 from ..sa_extra import create_piecash_engine, DeclarativeBase, Session
 
-version_supported = {u'Gnucash-Resave': 19920, u'invoices': 4, u'books': 1, u'accounts': 1, u'slots': 4,
-                     u'taxtables': 2, u'lots': 2, u'orders': 1, u'vendors': 1, u'customers': 2, u'jobs': 1,
-                     u'transactions': 4, u'Gnucash': 2060400, u'budget_amounts': 1, u'billterms': 2, u'recurrences': 2,
-                     u'entries': 4, u'prices': 3, u'schedxactions': 1, u'splits': 4, u'taxtable_entries': 3,
-                     u'employees': 2, u'commodities': 1, u'budgets': 1}
+version_supported = {u'Gnucash': 2060400, u'Gnucash-Resave': 19920,
+                     u'accounts': 1,
+                     u'billterms': 2,
+                     u'books': 1,
+                     u'budgets': 1,
+                     u'budget_amounts': 1,
+                     u'commodities': 1,
+                     u'customers': 2,
+                     u'employees': 2,
+                     u'entries': 4,
+                     u'invoices': 4,
+                     u'jobs': 1,
+                     u'lots': 2,
+                     u'orders': 1,
+                     u'recurrences': 2,
+                     u'slots': 4,
+                     u'splits': 4,
+                     u'taxtables': 2,
+                     u'transactions': 4,
+                     u'prices': 3,
+                     u'schedxactions': 1,
+                     u'taxtable_entries': 3,
+                     u'vendors': 1,
+                    }
 
 # this is not a declarative as it is used before binding the session to an engine.
 gnclock = Table(u'gnclock', DeclarativeBase.metadata,
