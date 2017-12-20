@@ -157,7 +157,7 @@ class Book(DeclarativeBaseGuid):
             # todo: Read the preferences on MacOs (~/Library/Preferences/gnucash.plist).
             mnemonic = self.__get_locale_currency_mnemonic()
         else:
-            raise ValueError("Unrecognised platform '{}'".format(sys.platform)
+            raise ValueError("Unrecognised platform '{}'".format(sys.platform))
         
         return self.currencies(mnemonic=mnemonic)
 
