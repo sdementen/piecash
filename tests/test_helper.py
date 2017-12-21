@@ -17,7 +17,7 @@ if sys.version_info.major == 3:
     def run_file(fname):
         with open(fname) as f:
             code = compile(f.read(), fname, 'exec')
-            exec (code, {})
+            exec(code, {})
 else:
     def run_file(fname):
         return execfile(fname, {})
@@ -63,9 +63,16 @@ elif APPVEYOR:
 else:
     pass
 
+
 @pytest.yield_fixture(params=[Customer, Vendor, Employee])
 def Person(request):
     yield request.param
+
+
+@pytest.yield_fixture(params=["2.6", "2.7"])
+def format_version(request):
+    yield request.param
+
 
 @pytest.yield_fixture(params=db_config.items())
 def book_db_config(request):
@@ -82,6 +89,7 @@ def book_db_config(request):
     if sql_backend != "sqlite_in_mem" and database_exists(name):
         drop_database(name)
 
+
 @pytest.yield_fixture(params=databases_to_check[1:])
 def book_uri(request):
     name = request.param
@@ -92,6 +100,7 @@ def book_uri(request):
 
     if name and database_exists(name):
         drop_database(name)
+
 
 @pytest.yield_fixture(params=databases_to_check)
 def new_book(request):
@@ -106,6 +115,7 @@ def new_book(request):
     if name and database_exists(name):
         drop_database(name)
 
+
 @pytest.yield_fixture(params=databases_to_check)
 def new_book_USD(request):
     name = request.param
@@ -118,6 +128,7 @@ def new_book_USD(request):
 
     if name and database_exists(name):
         drop_database(name)
+
 
 @pytest.yield_fixture(params=databases_to_check)
 def book_basic(request):
@@ -139,6 +150,7 @@ def book_basic(request):
 
     if name and database_exists(name):
         drop_database(name)
+
 
 @pytest.yield_fixture(params=databases_to_check)
 def book_transactions(request):
@@ -222,23 +234,37 @@ def book_transactions(request):
     if name and database_exists(name):
         drop_database(name)
 
-@pytest.yield_fixture(params=databases_to_check)
+
+@pytest.yield_fixture()
 def book_investment(request):
     """
     Returns the book that contains investment accounts and transactions.
     """
-    #name = request.param
-    #print(name)
+    # name = request.param
+    # print(name)
     file_template_full = os.path.join(book_folder, "investment.gnucash")
 
     with open_book(file_template_full) as book:
         yield book
+
+
+@pytest.yield_fixture(params=["", ".272"])
+def book_sample(request):
+    """
+    Returns a simple sample book for 2.6.N
+    """
+    file_template_full = os.path.join(book_folder, "simple_sample{}.gnucash".format(request.param))
+
+    with open_book(file_template_full) as book:
+        yield book
+
 
 def is_inmemory_sqlite(book_basic):
     # print book_basic.uri, book_basic.uri.get_dialect(), book_basic.uri.database, type(book_basic.uri), dir(book_basic.uri)
     # print "sqlite" in book_basic.uri and ":memory:" in book_basic.uri
     # fdsfdssfd
     return book_basic.uri.database == ":memory:"
+
 
 def is_not_on_web():
     return os.environ.get("DONOTGOONWEB", False)

@@ -6,7 +6,8 @@ from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.orm import Session
 from piecash import create_book, Account, GnucashException, Book, open_book, Commodity
 from piecash.core import Version
-from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_transactions, book_investment
+from test_helper import (db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri,
+                         book_transactions, book_investment, book_sample, format_version)
 from decimal import Decimal
 
 # dummy line to avoid removing unused symbols
@@ -57,6 +58,12 @@ class TestBook_create_book(object):
         CUR = new_book_USD.commodities[0]
         assert CUR.mnemonic == "USD"
         assert CUR.namespace == "CURRENCY"
+
+    def test_create_specific_format(self, format_version):
+        b = create_book(version_format=format_version)
+        v = b.session.query(Version).all()
+        print(v)
+        # b = create_book(version_format='2.6')
 
     def test_create_specific_currency(self):
         b = create_book(currency="USD")
@@ -207,6 +214,10 @@ class TestBook_open_book(object):
         # open book specifying open_if_lock as False as lock has been removed
         with open_book(uri_conn=book_uri, open_if_lock=False) as b:
             pass
+
+    def test_read_book_transactions(self, book_sample):
+        assert len(book_sample.transactions) == 5
+
 
 class TestBook_access_book(object):
     def test_book_options(self, new_book):
@@ -419,14 +430,14 @@ class TestBook_access_book(object):
         total = Decimal(0)
 
         for account in security.accounts:
-			# exclude Trading accouns explicitly.
+            # exclude Trading accouns explicitly.
             if account.type == "TRADING":
                 continue
 
             balance = account.get_balance()
 
-            #print(account.fullname, balance)
+            # print(account.fullname, balance)
             total += balance
 
-		#print("Balance:", total_balance)
+        # print("Balance:", total_balance)
         assert total == Decimal(13)

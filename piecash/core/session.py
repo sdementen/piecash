@@ -13,30 +13,58 @@ from .._common import GnucashException
 from ..sa_extra import create_piecash_engine, DeclarativeBase, Session
 
 version_supported = {
-    # 'Gnucash': (2061800, 2061800),
-    # 'Gnucash-Resave': (19920, 19920),
-    'accounts': (1, 1),
-    'billterms': (2, 2),
-    'books': (1, 1),
-    'budget_amounts': (1, 1),
-    'budgets': (1, 1),
-    'commodities': (1, 1),
-    'customers': (2, 2),
-    'employees': (2, 2),
-    'entries': (3, 4),
-    'invoices': (3, 4),
-    'jobs': (1, 1),
-    'lots': (2, 2),
-    'orders': (1, 1),
-    'prices': (3, 3),
-    'recurrences': (2, 2),
-    'schedxactions': (1, 1),
-    'slots': (3, 4),
-    'splits': (1, 4),
-    'taxtable_entries': (3, 3),
-    'taxtables': (2, 2),
-    'transactions': (3, 4),
-    'vendors': (1, 1),
+    '2.6': {
+        'Gnucash': 2061800,
+        'Gnucash-Resave': 19920,
+        'accounts': 1,
+        'billterms': 2,
+        'books': 1,
+        'budget_amounts': 1,
+        'budgets': 1,
+        'commodities': 1,
+        'customers': 2,
+        'employees': 2,
+        'entries': 3,
+        'invoices': 3,
+        'jobs': 1,
+        'lots': 2,
+        'orders': 1,
+        'prices': 2,
+        'recurrences': 2,
+        'schedxactions': 1,
+        'slots': 3,
+        'splits': 4,
+        'taxtable_entries': 3,
+        'taxtables': 2,
+        'transactions': 3,
+        'vendors': 1,
+    },
+    '2.7': {
+        'Gnucash': 2070200,
+        'Gnucash-Resave': 19920,
+        'accounts': 1,
+        'billterms': 2,
+        'books': 1,
+        'budget_amounts': 1,
+        'budgets': 1,
+        'commodities': 1,
+        'customers': 2,
+        'employees': 2,
+        'entries': 4,
+        'invoices': 4,
+        'jobs': 1,
+        'lots': 2,
+        'orders': 1,
+        'prices': 3,
+        'recurrences': 2,
+        'schedxactions': 1,
+        'slots': 4,
+        'splits': 4,
+        'taxtable_entries': 3,
+        'taxtables': 2,
+        'transactions': 4,
+        'vendors': 1,
+    }
 }
 
 # this is not a declarative as it is used before binding the session to an engine.
@@ -128,6 +156,7 @@ def create_book(sqlite_file=None,
                 db_name=None,
                 db_host=None,
                 db_port=None,
+                version_format="2.6",
                 **kwargs):
     """Create a new empty GnuCash book. If both sqlite_file and uri_conn are None, then an "in memory" sqlite book is created.
 
@@ -188,7 +217,10 @@ def create_book(sqlite_file=None,
     s = Session(bind=engine)
 
     # create all rows in version table
-    for table_name, table_version in version_supported.items():
+    assert version_format in version_supported, "The 'version_format'={} is not supported. " \
+                                                "Choose one of {}".format(version_format,
+                                                                          list(version_supported.keys()))
+    for table_name, table_version in version_supported[version_format].items():
         s.add(Version(table_name=table_name, table_version=table_version))
 
     # create book and merge with session
@@ -269,15 +301,15 @@ def open_book(sqlite_file=None,
     s = Session(bind=engine)
 
     # check the versions in the table versions is consistent with the API
-    version_book = {v.table_name: v.table_version for v in s.query(Version).all()}
-    for k, (vmin, vmax) in version_book.items():
-        # skip GnuCash
-        if "Gnucash" in k:
-            continue
-        assert vmin <= version_supported[k] <= vmax, "Unsupported version for table {} : got {}, supported {}".format(k,
-                                                                                                                      v,
-                                                                                                                      version_supported[
-                                                                                                                          k])
+    version_book = {v.table_name: v.table_version
+                    for v in s.query(Version).all()
+                    if "Gnucash" not in v.table_name}
+    assert any(version_book == {k: v
+                                for k, v in vt.items() if
+                                "Gnucash" not in k}
+               for version, vt in version_supported.items()), "Unsupported table versions"
+
+
     book = s.query(Book).one()
     adapt_session(s, book=book, readonly=readonly)
 
