@@ -14,7 +14,7 @@ from ..sa_extra import create_piecash_engine, DeclarativeBase, Session
 
 version_supported = {
     '2.6': {
-        'Gnucash': 2061800,
+        'Gnucash': 2060400,
         'Gnucash-Resave': 19920,
         'accounts': 1,
         'billterms': 2,
@@ -308,7 +308,6 @@ def open_book(sqlite_file=None,
                                 for k, v in vt.items() if
                                 "Gnucash" not in k}
                for version, vt in version_supported.items()), "Unsupported table versions"
-
 
     book = s.query(Book).one()
     adapt_session(s, book=book, readonly=readonly)
