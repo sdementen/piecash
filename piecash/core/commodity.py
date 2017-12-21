@@ -127,7 +127,7 @@ class Commodity(DeclarativeBaseGuid):
     def base_currency(self):
         b = self.book
         if b is None:
-            raise GnucashException("The commodity should be link to a session to have a 'base_currency'")
+            raise GnucashException("The commodity should be linked to a session to have a 'base_currency'")
 
         if self.namespace == "CURRENCY":
             # get the base currency as first commodity in DB

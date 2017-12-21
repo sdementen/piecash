@@ -138,7 +138,11 @@ def build_uri(sqlite_file=None,
 
     if uri_conn is None:
         if sqlite_file:
-            uri_conn = "sqlite:///{}".format(sqlite_file)
+            if sqlite_file.startswith("sqlite:///"):
+                # already have the protocol specified.
+                uri_conn = sqlite_file
+            else:
+                uri_conn = "sqlite:///{}".format(sqlite_file)
         else:
             uri_conn = "sqlite:///:memory:"
 
