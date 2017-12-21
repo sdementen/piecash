@@ -171,6 +171,7 @@ def create_book(sqlite_file=None,
     :param str db_name: name of database
     :param str db_host: host of database
     :param str db_port: port of database
+    :param str version_format: the format (2.6 or 2.7) for the schema tables to generate
 
     :return: the document as a gnucash session
     :rtype: :class:`GncSession`
