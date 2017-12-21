@@ -12,30 +12,32 @@ from .book import Book
 from .._common import GnucashException
 from ..sa_extra import create_piecash_engine, DeclarativeBase, Session
 
-version_supported = {u'Gnucash': 2061800, u'Gnucash-Resave': 19920,
-                     u'accounts': 1,
-                     u'billterms': 2,
-                     u'books': 1,
-                     u'budgets': 1,
-                     u'budget_amounts': 1,
-                     u'commodities': 1,
-                     u'customers': 2,
-                     u'employees': 2,
-                     u'entries': 4,
-                     u'invoices': 4,
-                     u'jobs': 1,
-                     u'lots': 2,
-                     u'orders': 1,
-                     u'prices': 3,
-                     u'recurrences': 2,
-                     u'slots': 4,
-                     u'splits': 4,
-                     u'schedxactions': 1,
-                     u'taxtable_entries': 3,
-                     u'taxtables': 2,
-                     u'transactions': 4,
-                     u'vendors': 1,
-                    }
+version_supported = {
+    # 'Gnucash': (2061800, 2061800),
+    # 'Gnucash-Resave': (19920, 19920),
+    'accounts': (1, 1),
+    'billterms': (2, 2),
+    'books': (1, 1),
+    'budget_amounts': (1, 1),
+    'budgets': (1, 1),
+    'commodities': (1, 1),
+    'customers': (2, 2),
+    'employees': (2, 2),
+    'entries': (3, 4),
+    'invoices': (3, 4),
+    'jobs': (1, 1),
+    'lots': (2, 2),
+    'orders': (1, 1),
+    'prices': (3, 3),
+    'recurrences': (2, 2),
+    'schedxactions': (1, 1),
+    'slots': (3, 4),
+    'splits': (1, 4),
+    'taxtable_entries': (3, 3),
+    'taxtables': (2, 2),
+    'transactions': (3, 4),
+    'vendors': (1, 1),
+}
 
 # this is not a declarative as it is used before binding the session to an engine.
 gnclock = Table(u'gnclock', DeclarativeBase.metadata,
@@ -267,15 +269,15 @@ def open_book(sqlite_file=None,
     s = Session(bind=engine)
 
     # check the versions in the table versions is consistent with the API
-    # TODO: improve this in the future to allow more than 1 version
     version_book = {v.table_name: v.table_version for v in s.query(Version).all()}
-    for k, v in version_book.items():
+    for k, (vmin, vmax) in version_book.items():
         # skip GnuCash
-        if k in ("Gnucash"):
+        if "Gnucash" in k:
             continue
-        assert version_supported[k] == v, "Unsupported version for table {} : got {}, supported {}".format(k, v,
-                                                                                                           version_supported[
-                                                                                                               k])
+        assert vmin <= version_supported[k] <= vmax, "Unsupported version for table {} : got {}, supported {}".format(k,
+                                                                                                                      v,
+                                                                                                                      version_supported[
+                                                                                                                          k])
     book = s.query(Book).one()
     adapt_session(s, book=book, readonly=readonly)
 
