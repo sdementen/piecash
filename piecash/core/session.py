@@ -342,7 +342,7 @@ def adapt_session(session, book, readonly):
     # add logic to make session readonly
     def readonly_commit(*args, **kwargs):
         # session.rollback()
-        raise GnucashException("You cannot change the DB, it is locked !")
+        raise GnucashException("You cannot change the DB, it was opened as readonly!")
 
     if readonly:
         session.commit = readonly_commit
