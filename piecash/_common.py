@@ -19,7 +19,7 @@ class GncValidationError(GnucashException):
 
 
 class Recurrence(DeclarativeBase):
-    """ 
+    """
     Recurrence information for scheduled transactions
 
     Attributes:
@@ -41,17 +41,20 @@ class Recurrence(DeclarativeBase):
     recurrence_mult = Column('recurrence_mult', INTEGER(), nullable=False)
     recurrence_period_type = Column('recurrence_period_type', VARCHAR(length=2048), nullable=False)
     recurrence_period_start = Column('recurrence_period_start', _Date(), nullable=False)
-    recurrence_weekend_adjust = Column('recurrence_weekend_adjust', VARCHAR(length=2048), nullable=False)
+    recurrence_weekend_adjust = Column('recurrence_weekend_adjust', VARCHAR(length=2048),
+                                       nullable=False)
 
     # relation definitions
     # added from the DeclarativeBaseGUID object (as linked from different objects like the slots)
     def __unirepr__(self):
         return u"{}*{} from {} [{}]".format(self.recurrence_period_type, self.recurrence_mult,
-                                            self.recurrence_period_start, self.recurrence_weekend_adjust)
+                                            self.recurrence_period_start,
+                                            self.recurrence_weekend_adjust)
 
 
 def hybrid_property_gncnumeric(num_col, denom_col):
-    """Return an hybrid_property handling a Decimal represented by a numerator and a denominator column.
+    """Return an hybrid_property handling a Decimal represented by a numerator and a
+    denominator column.
     It assumes the python field related to the sqlcolumn is named as _sqlcolumn.
 
     :type num_col: sqlalchemy.sql.schema.Column
