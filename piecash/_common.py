@@ -23,9 +23,10 @@ class Recurrence(DeclarativeBase):
     Recurrence information for scheduled transactions
 
     Attributes:
-        obj_guid (str): link to ScheduledTransaction record
-        recurrence_mult (int): multiplier for the period type
-        recurrence_period_type (str): type or recurrence (monthly, daily)
+        obj_guid (str): link to the parent ScheduledTransaction record.
+        recurrence_mult (int): Multiplier for the period type. Describes how many times
+            the period repeats for the next occurrence.
+        recurrence_period_type (str): type or recurrence (monthly, daily).
         recurrence_period_start (date): the date the recurrence starts.
         recurrence_weekend_adjust (str): adjustment to be made if the next occurrence
             falls on weekend / non-working day.
