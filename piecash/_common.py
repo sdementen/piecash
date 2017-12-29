@@ -19,6 +19,18 @@ class GncValidationError(GnucashException):
 
 
 class Recurrence(DeclarativeBase):
+    """ 
+    Recurrence information for scheduled transactions
+
+    Attributes:
+        obj_guid (str): link to ScheduledTransaction record
+        recurrence_mult (int): multiplier for the period type
+        recurrence_period_type (str): type or recurrence (monthly, daily)
+        recurrence_period_start (date): the date the recurrence starts.
+        recurrence_weekend_adjust (str): adjustment to be made if the next occurrence
+            falls on weekend / non-working day.
+    """
+
     __tablename__ = 'recurrences'
 
     __table_args__ = {'sqlite_autoincrement': True}
