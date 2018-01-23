@@ -12,6 +12,8 @@ file_template = os.path.join(book_folder, "empty_book.gnucash")
 file_for_test = os.path.join(test_folder, "empty_book_for_test.gnucash")
 file_template_full = os.path.join(book_folder, "test_book.gnucash")
 file_for_test_full = os.path.join(test_folder, "test_book_for_test.gnucash")
+file_ghost_kvp_scheduled_transaction = os.path.join(book_folder, "ghost_kvp_scheduled_transaction.gnucash")
+file_ghost_kvp_scheduled_transaction_for_test = os.path.join(test_folder, "ghost_kvp_scheduled_transaction_for_test.gnucash")
 
 if sys.version_info.major == 3:
     def run_file(fname):

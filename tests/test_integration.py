@@ -13,7 +13,7 @@ from piecash import create_book, Account, ACCOUNT_TYPES, open_book, Price
 from piecash._common import GnucashException
 from piecash.core.account import _is_parent_child_types_consistent, root_types
 from piecash.kvp import Slot
-from test_helper import file_template_full, file_for_test_full, run_file
+from test_helper import file_template_full, file_for_test_full, run_file, file_ghost_kvp_scheduled_transaction, file_ghost_kvp_scheduled_transaction_for_test
 
 
 @pytest.fixture
@@ -24,16 +24,27 @@ def book(request):
 
 @pytest.fixture
 def realbook_session(request):
-    shutil.copyfile(file_template_full, file_for_test_full)
+    return use_copied_book(request, file_template_full, file_for_test_full)
+
+
+@pytest.fixture
+def ghost_kvp_scheduled_transaction_session(request):
+    return use_copied_book(request,
+                           file_ghost_kvp_scheduled_transaction,
+                           file_ghost_kvp_scheduled_transaction_for_test)
+
+
+def use_copied_book(request, template_filename, test_filename):
+    shutil.copy(template_filename,
+                test_filename)
 
     # default book is readonly
-
-    s = open_book(file_for_test_full)
+    s = open_book(test_filename)
 
     @request.addfinalizer
     def finalizer():
         s.close()
-        os.remove(file_for_test_full)
+        os.remove(test_filename)
 
     return s
 
@@ -271,3 +282,19 @@ class TestIntegration_EmptyBook(object):
         # save changes
         with pytest.raises(GnucashException) as excinfo:
             book.save()
+
+
+class TestIntegration_GhostKvpScheduledTransaction(object):
+
+    # See PR https://github.com/sdementen/piecash/pull/20
+    # The book ghost_kvp_scheduled_transaction.gnucash was created in GnuCash
+    # as follows:
+    # * Created a scheduled transaction
+    # * Used it to create a real transaction
+    # * Deleted the original template transaction
+
+    def test_print_transactions(self, ghost_kvp_scheduled_transaction_session):
+        book = ghost_kvp_scheduled_transaction_session
+        assert len(book.transactions) == 3
+        # Check we can do repr:
+        assert len(list(map(repr, book.transactions))) == 3
