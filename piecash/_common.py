@@ -38,6 +38,9 @@ class Recurrence(DeclarativeBase):
                                             self.recurrence_period_start, self.recurrence_weekend_adjust)
 
 
+MAX_NUMBER = 2**63 - 1
+
+
 def hybrid_property_gncnumeric(num_col, denom_col):
     """Return an hybrid_property handling a Decimal represented by a numerator and a denominator column.
     It assumes the python field related to the sqlcolumn is named as _sqlcolumn.
@@ -72,6 +75,9 @@ def hybrid_property_gncnumeric(num_col, denom_col):
                 denom = denom_basis
 
             num = int(d * denom)
+            if (-MAX_NUMBER < num < MAX_NUMBER) or (-MAX_NUMBER < denom < MAX_NUMBER):
+                raise ValueError(("The amount '{}' cannot be represented in GnuCash. " +
+                                 "Either it is too large or it has too many decimals").format(d)
 
         setattr(self, num_name, num)
         setattr(self, denom_name, denom)
