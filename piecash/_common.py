@@ -77,8 +77,8 @@ def hybrid_property_gncnumeric(num_col, denom_col):
             num = int(d * denom)
             if (-MAX_NUMBER < num < MAX_NUMBER) or (-MAX_NUMBER < denom < MAX_NUMBER):
                 raise ValueError(("The amount '{}' cannot be represented in GnuCash. " +
-                                 "Either it is too large or it has too many decimals").format(d)
-
+                                  "Either it is too large or it has too many decimals").format(d))
+                
         setattr(self, num_name, num)
         setattr(self, denom_name, denom)
 
