@@ -2,9 +2,9 @@ import datetime
 import decimal
 import sys
 import uuid
+from enum import Enum
 from importlib import import_module
 
-from enum import Enum
 from sqlalchemy import Column, VARCHAR, INTEGER, REAL, BIGINT, types, event
 from sqlalchemy.orm import relation, foreign, object_session, backref
 
@@ -77,7 +77,8 @@ class DictWrapper(object):
             return False
 
     def __getitem__(self, key):
-        assert not isinstance(key, int), "You are accessing slots with an integer (={}) while a string is expected".format(key)
+        assert not isinstance(key, int), \
+            "You are accessing slots with an integer (={}) while a string is expected".format(key)
         keys = key.split("/", 1)
         key = keys[0]
         for sl in self.slots:
@@ -195,6 +196,13 @@ class SlotSimple(Slot):
     @value.setter
     def value(self, value):
         setattr(self, self._field, value)
+
+    def __eq__(self, other):
+        return (
+                isinstance(other, self.__class__)
+                and self.name == other.name
+                and self.value == other.value
+        )
 
 
 def define_simpleslot(postfix, pytype, KVPtype, field, col_type, col_default):
@@ -326,8 +334,10 @@ class SlotGUID(SlotFrame):
         else:
             class_to_retrieve = self._mapping_name_class.get(name, None)
             if class_to_retrieve is None:
-                raise ValueError("Smart retrieval of GUID slot with name '{}' is not yet supported."
-                                 "Need to retrieve proper object type in kvp module (add in SlotGUID._mapping_name_class)".format(name))
+                raise ValueError(
+                    "Smart retrieval of GUID slot with name '{}' is not yet supported. "
+                    "Need to retrieve proper object type in kvp module "
+                    "(add in SlotGUID._mapping_name_class)".format(name))
         class_module, class_name = class_to_retrieve.rsplit('.', 1)
         mod = import_module(class_module)
         Class = getattr(mod, class_name)
