@@ -198,11 +198,10 @@ class SlotSimple(Slot):
         setattr(self, self._field, value)
 
     def __eq__(self, other):
-        return (
-                isinstance(other, self.__class__)
+        return (isinstance(other, self.__class__)
                 and self.name == other.name
                 and self.value == other.value
-        )
+                )
 
 
 def define_simpleslot(postfix, pytype, KVPtype, field, col_type, col_default):
