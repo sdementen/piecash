@@ -11,6 +11,7 @@ In development
 - fix bug where transactions based on deleted scheduled transactions cause exceptions (@spookylukey)
 - fix bug (#58) where large Decimals where raising an sql exception instead of a ValueError exception (@sdementen)
 - add Recurrence to global imports + add documentation to Recurrence (@MisterY)
+- add script to export customers and vendors from a gnucash book
 
 Version 0.13.0 (2017-10-08)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
