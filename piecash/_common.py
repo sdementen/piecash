@@ -38,7 +38,7 @@ class Recurrence(DeclarativeBase):
                                             self.recurrence_period_start, self.recurrence_weekend_adjust)
 
 
-MAX_NUMBER = 2**63 - 1
+MAX_NUMBER = 2 ** 63 - 1
 
 
 def hybrid_property_gncnumeric(num_col, denom_col):
@@ -75,10 +75,10 @@ def hybrid_property_gncnumeric(num_col, denom_col):
                 denom = denom_basis
 
             num = int(d * denom)
-            if (-MAX_NUMBER < num < MAX_NUMBER) or (-MAX_NUMBER < denom < MAX_NUMBER):
+            if not ((-MAX_NUMBER < num < MAX_NUMBER) or (-MAX_NUMBER < denom < MAX_NUMBER)):
                 raise ValueError(("The amount '{}' cannot be represented in GnuCash. " +
                                   "Either it is too large or it has too many decimals").format(d))
-                
+
         setattr(self, num_name, num)
         setattr(self, denom_name, denom)
 
