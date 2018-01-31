@@ -5,13 +5,13 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
-- add get_quantity on an account to retrieve the balance in quantity of the accound (for non currency based accounts)
+- fix definition of account get_balance to use quantities (and not values) (@sdementen)
 - fix bug when providing a float instead of a Decimal to a numeric value (@gregorias)
 - support new format for date for 2.7/2.8 (@MisterY, @sdementen)
 - fix bug where transactions based on deleted scheduled transactions cause exceptions (@spookylukey)
 - fix bug (#58) where large Decimals where raising an sql exception instead of a ValueError exception (@sdementen)
 - add Recurrence to global imports + add documentation to Recurrence (@MisterY)
-- add script to export customers and vendors from a gnucash book
+- add script to export customers and vendors from a gnucash book (@sdementen)
 
 Version 0.13.0 (2017-10-08)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
