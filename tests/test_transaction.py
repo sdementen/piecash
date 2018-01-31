@@ -1,9 +1,12 @@
 # coding=utf-8
 from __future__ import unicode_literals
+
 from collections import defaultdict
-from datetime import datetime, date
+from datetime import datetime
 from decimal import Decimal
+
 import pytest
+
 from piecash import Transaction, Split, GncImbalanceError, GncValidationError, Lot
 from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, book_transactions
 
@@ -40,6 +43,7 @@ class TestTransaction_create_transaction(object):
         assert str(tr.splits)
         assert repr(tr)
         assert repr(tr.splits)
+        assert tr.notes == u"on St-Eugène day"
 
     def test_create_basictransaction_splitfirst(self, book_basic):
         EUR = book_basic.commodities(namespace="CURRENCY")
@@ -100,6 +104,21 @@ class TestTransaction_create_transaction(object):
             d["cur"] += sp.value
         assert d["cur"] == 0
         assert all([v != 0 for k, v in d.items() if k != "cur"])
+
+    def test_create_split_overflow(self, book_basic):
+        a = book_basic.accounts(name="asset")
+
+        # raise error as Transaction has a non CURRENCY commodity
+        with pytest.raises(TypeError):
+            sp = Split(account=a, value=1. / 3., quantity=10, memo=u"mémo asset")
+
+        with pytest.raises(ValueError):
+            sp = Split(account=a, value=Decimal(1) / Decimal(3), quantity=10, memo=u"mémo asset")
+
+        sp = Split(account=a, value=Decimal(1234567890123455678), quantity=10, memo=u"mémo asset")
+
+        with pytest.raises(ValueError):
+            sp = Split(account=a, value=Decimal(1234567890123455678901234), quantity=10, memo=u"mémo asset")
 
     def test_create_cdtytransaction_cdtycurrency(self, book_basic):
         EUR = book_basic.commodities(namespace="CURRENCY")
