@@ -12,8 +12,6 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
               help="File to which to export the data (default=stdout)")
 @click.option('--inactive', is_flag=True, default=False,
               help="Include inactive entities")
-@click.option('--separator', is_flag=True, default=False,
-              help="Include inactive entities")
 def cli(book, entities, output, inactive):
     """This script exports all ENTITIES from the BOOK in a CSV format that can be used to import in GnuCash.
 
