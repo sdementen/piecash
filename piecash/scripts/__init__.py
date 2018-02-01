@@ -1,0 +1,1 @@
+"""Scripts with basic utilities for gnucash (import and export of data)"""

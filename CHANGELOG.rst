@@ -5,13 +5,16 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
+Version 0.14.0 (2018-02-01)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 - fix definition of account get_balance to use quantities (and not values) (@sdementen)
 - fix bug when providing a float instead of a Decimal to a numeric value (@gregorias)
 - support new format for date for 2.7/2.8 (@MisterY, @sdementen)
 - fix bug where transactions based on deleted scheduled transactions cause exceptions (@spookylukey)
 - fix bug (#58) where large Decimals where raising an sql exception instead of a ValueError exception (@sdementen)
 - add Recurrence to global imports + add documentation to Recurrence (@MisterY)
-- add script to export customers and vendors from a gnucash book (@sdementen)
+- add script pc-export to export customers and vendors from a gnucash book (@sdementen)
 
 Version 0.13.0 (2017-10-08)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
