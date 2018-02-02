@@ -5,6 +5,8 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
+- add piecash CLI (refactor of scripts)
+
 Version 0.14.1 (2018-02-01)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

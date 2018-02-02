@@ -261,15 +261,9 @@ setup_dict = dict(
     ],
     entry_points={
         'console_scripts': [
-            'pc-export = piecash.scripts.export:cli',
+            'piecash = piecash.scripts.export:cli',
         ]
     },
-    #console=['piecash/scripts/export.py','scripts/piecash_ledger.py','scripts/piecash_toqif.py'],
-    scripts=[
-        'scripts/piecash_ledger.py',
-        'scripts/piecash_toqif.py',
-        'scripts/piecash_prices.py',
-    ],
     cmdclass={
         'test': PyTest,
     },

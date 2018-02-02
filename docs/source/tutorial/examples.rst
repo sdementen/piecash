@@ -1,7 +1,8 @@
-Examples of scripts
-===================
+Examples of programs written with piecash
+=========================================
 
-You can find examples for scripts (loosely based on the scripts for the official python bindings for gnucash or on
+You can find examples of programs/scripts (loosely based on the scripts for the
+official python bindings for gnucash or on
 questions posted on the mailing list) in the examples subfolder.
 
 Creating and opening gnucash files
