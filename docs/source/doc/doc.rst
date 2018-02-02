@@ -168,18 +168,20 @@ or to create a new expense account for utilities:
 
 Most basic objects used for personal finance are supported (Account, Split, Transaction, Price, ...).
 
-Ready to use scripts
-====================
+The piecash command line interface
+==================================
 
-The `piecash` script offers the following features:
+The `piecash` CLI offers the following features:
 
 .. command-output:: piecash -h
 
-To export data out of a GnuCash book:
+To export specific entities out of a GnuCash book:
 
 .. command-output:: piecash export -h
 
-You can also run the  `piecash` script on a gnucash file that is opened by GnuCash at the same time.
+To export a GnuCash book to the ledger-cli format:
+
+.. command-output:: piecash ledger -h
 
 For more information on how to use piecash, please refer to the Tutorials on
 :doc:`Using existing objects <../tutorial/index_existing>` and
