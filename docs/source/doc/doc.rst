@@ -171,25 +171,15 @@ Most basic objects used for personal finance are supported (Account, Split, Tran
 Ready to use scripts
 ====================
 
-The following 'experimental' scripts are available:
+The `piecash` script offers the following features:
 
-.. command-output:: pc-export -h
+.. command-output:: piecash -h
 
+To export data out of a GnuCash book:
 
+.. command-output:: piecash export -h
 
-
-- usage: piecash_ledger.py [-h] gnucash_filename
-
-  Output to screen a ledger-cli representation of the gnucash file (http://www.ledger-cli.org/)
-
-- usage: piecash_toqif.py [-h] gnucash_filename
-
-  Output to screen a QIF representation of the gnucash file
-
-None of these scripts can damage your files. However, their output may be inaccurate/false (they haven't been
-fully tested).
-You can also run the script on a gnucash file that is already opened by GnuCash.
-To produce a file, just redirect the output to a file as (e.g. "piecash_toqif.py mybook.gnucash > mybook.qif").
+You can also run the  `piecash` script on a gnucash file that is opened by GnuCash at the same time.
 
 For more information on how to use piecash, please refer to the Tutorials on
 :doc:`Using existing objects <../tutorial/index_existing>` and
