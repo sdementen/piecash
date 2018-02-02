@@ -173,6 +173,11 @@ Ready to use scripts
 
 The following 'experimental' scripts are available:
 
+.. command-output:: pc-export -h
+
+
+
+
 - usage: piecash_ledger.py [-h] gnucash_filename
 
   Output to screen a ledger-cli representation of the gnucash file (http://www.ledger-cli.org/)

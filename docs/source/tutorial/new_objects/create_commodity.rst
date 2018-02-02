@@ -18,7 +18,8 @@ piecash can create new commodities (a :class:`piecash.core.commodity.Commodity`)
 
     # create a commodity (lookup on yahoo! finance, need web access)
     # (warning, object should be manually added to session if book kwarg is not included in constructor)
-    apple = factories.create_stock_from_symbol("AAPL", book)
+    # DOES NOT WORK ANYMORE DUE TO CLOSING OF YAHOO!FINANCE
+    # apple = factories.create_stock_from_symbol("AAPL", book)
 
     # creating commodities using the constructor
     # (warning, object should be manually added to session if book kwarg is not included in constructor)
@@ -30,7 +31,7 @@ piecash can create new commodities (a :class:`piecash.core.commodity.Commodity`)
     # create a special "unicorn hugs" Commodity using the constructor with book kwarg
     unhugs = Commodity(namespace="KINDNESS", mnemonic="Unhugs", fullname="Unicorn hugs", fraction=1, book=book)
 
-    USD, apple, miles, unhugs
+    USD, miles, unhugs
 
 .. warning::
 

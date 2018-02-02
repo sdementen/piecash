@@ -20,6 +20,7 @@ pandas==0.20.3
 # Documentation
 Sphinx
 sphinxcontrib-napoleon==0.4.3
+sphinxcontrib-programoutput
 ipyext==0.1.0
 ipython==4.0.0
 
