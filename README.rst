@@ -1,6 +1,10 @@
 piecash
 =======
 
+.. image:: https://badges.gitter.im/sdementen/piecash.svg
+   :alt: Join the chat at https://gitter.im/sdementen/piecash
+   :target: https://gitter.im/sdementen/piecash?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
 
 .. image:: https://travis-ci.org/sdementen/piecash.svg?branch=master
     :target: https://travis-ci.org/sdementen/piecash
