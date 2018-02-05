@@ -1,6 +1,9 @@
 piecash
 =======
 
+.. image:: https://badges.gitter.im/sdementen/piecash.svg
+   :alt: Join the chat at https://gitter.im/sdementen/piecash
+   :target: https://gitter.im/sdementen/piecash?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
 .. image:: https://travis-ci.org/sdementen/piecash.svg?branch=master
     :target: https://travis-ci.org/sdementen/piecash
@@ -30,6 +33,7 @@ piecash
 Piecash provides a simple and pythonic interface to GnuCash files stored in SQL (sqlite3, Postgres and MySQL).
 
 :Documentation: http://piecash.readthedocs.org.
+:Gitter: https://gitter.im/sdementen/piecash
 :Google group: https://groups.google.com/d/forum/piecash (piecash@googlegroups.com)
 :Github: https://github.com/sdementen/piecash
 :PyPI: https://pypi.python.org/pypi/piecash
