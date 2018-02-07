@@ -34,7 +34,6 @@ Piecash provides a simple and pythonic interface to GnuCash files stored in SQL 
 
 :Documentation: http://piecash.readthedocs.org.
 :Gitter: https://gitter.im/sdementen/piecash
-:Google group: https://groups.google.com/d/forum/piecash (piecash@googlegroups.com)
 :Github: https://github.com/sdementen/piecash
 :PyPI: https://pypi.python.org/pypi/piecash
 
