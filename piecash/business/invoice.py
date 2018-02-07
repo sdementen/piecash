@@ -2,8 +2,9 @@ import uuid
 
 from sqlalchemy import Column, INTEGER, BIGINT, VARCHAR, ForeignKey
 from sqlalchemy.orm import composite, relation
-
 # change of the __doc__ string as getting error in sphinx ==> should be reported to SA project
+from sqlalchemy_utils import generic_relationship
+
 composite.__doc__ = None  # composite.__doc__.replace(":ref:`mapper_composite`", "")
 
 from ..sa_extra import _DateTime
@@ -54,15 +55,23 @@ class Entry(DeclarativeBaseGuid):
     description = Column('description', VARCHAR(length=2048))
     action = Column('action', VARCHAR(length=2048))
     notes = Column('notes', VARCHAR(length=2048))
-    quantity_num = Column('quantity_num', BIGINT())
-    quantity_denom = Column('quantity_denom', BIGINT())
+    _quantity_num = Column('quantity_num', BIGINT())
+    _quantity_denom = Column('quantity_denom', BIGINT())
+    _quantity_denom_basis = None
+    quantity = hybrid_property_gncnumeric(_quantity_num, _quantity_denom)
 
     i_acct = Column('i_acct', VARCHAR(length=32))
-    i_price_num = Column('i_price_num', BIGINT())
-    i_price_denom = Column('i_price_denom', BIGINT())
-    i_discount_num = Column('i_discount_num', BIGINT())
-    i_discount_denom = Column('i_discount_denom', BIGINT())
-    invoice = Column('invoice', VARCHAR(length=32))
+    _i_price_num = Column('i_price_num', BIGINT())
+    _i_price_denom = Column('i_price_denom', BIGINT())
+    _i_price_denom_basis = None
+    i_price = hybrid_property_gncnumeric(_i_price_num, _i_price_denom)
+
+    _i_discount_num = Column('i_discount_num', BIGINT())
+    _i_discount_denom = Column('i_discount_denom', BIGINT())
+    _i_discount_denom_basis = None
+    i_discount = hybrid_property_gncnumeric(_i_discount_num, _i_discount_denom)
+
+    invoice_guid = Column('invoice', VARCHAR(length=32), ForeignKey("invoices.guid"))
     i_disc_type = Column('i_disc_type', VARCHAR(length=2048))
     i_disc_how = Column('i_disc_how', VARCHAR(length=2048))
     i_taxable = Column('i_taxable', INTEGER())
@@ -70,8 +79,10 @@ class Entry(DeclarativeBaseGuid):
     i_taxtable = Column('i_taxtable', VARCHAR(length=32))
 
     b_acct = Column('b_acct', VARCHAR(length=32))
-    b_price_num = Column('b_price_num', BIGINT())
-    b_price_denom = Column('b_price_denom', BIGINT())
+    _b_price_num = Column('b_price_num', BIGINT())
+    _b_price_denom = Column('b_price_denom', BIGINT())
+    _b_price_denom_basis = None
+    b_price = hybrid_property_gncnumeric(_b_price_num, _b_price_denom)
     bill = Column('bill', VARCHAR(length=32))
     b_taxable = Column('b_taxable', INTEGER())
     b_taxincluded = Column('b_taxincluded', INTEGER())
@@ -84,6 +95,10 @@ class Entry(DeclarativeBaseGuid):
 
     # relation definitions
     order = relation('Order', back_populates="entries")
+    invoice = relation('Invoice', back_populates="entries")
+
+    def __unirepr__(self):
+        return u"Entry<{}>".format(self.description)
 
 
 class Invoice(DeclarativeBaseGuid):
@@ -100,6 +115,11 @@ class Invoice(DeclarativeBaseGuid):
     currency_guid = Column('currency', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
     owner_type = Column('owner_type', INTEGER())
     owner_guid = Column('owner_guid', VARCHAR(length=32))
+
+    # owner = generic_relationship(owner_type, owner_guid,
+    #                              map_type2discriminator={"Customer": 2,
+    #                                                      "Vendor": 1,
+    #                                                      })
     term_guid = Column('terms', VARCHAR(length=32), ForeignKey('billterms.guid'))
     billing_id = Column('billing_id', VARCHAR(length=2048))
     post_txn_guid = Column('post_txn', VARCHAR(length=32), ForeignKey('lots.guid'))
@@ -118,6 +138,12 @@ class Invoice(DeclarativeBaseGuid):
     post_account = relation('Account')
     post_lot = relation('Lot')
     post_txn = relation('Transaction')
+
+    entries = relation('Entry',
+                       back_populates='invoice',
+                       cascade='all, delete-orphan',
+                       collection_class=CallableList,
+                       )
 
     def __unirepr__(self):
         return u"Invoice<{}>".format(self.id)
