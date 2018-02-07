@@ -13,6 +13,13 @@ Some note for developers:
 
     sphinx-apidoc -o . ../../piecash
 
+- to build the doc (do not forget to `pip install -r requirements-dev.txt` before)::
+
+    cd docs/source
+    sphinx-build
+
+  The documentation will be available through docs/source/build/index.html.
+
 - to release a new version:
     1. update metadata.py
     2. update changelog
