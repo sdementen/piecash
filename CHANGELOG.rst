@@ -6,6 +6,7 @@ In development
 ~~~~~~~~~~~~~~
 
 - add piecash CLI (refactor of scripts)
+- add book.invoices to retrieve all invoices in a book
 
 Version 0.14.1 (2018-02-01)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
