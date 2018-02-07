@@ -342,6 +342,7 @@ class TestBook_access_book(object):
         assert new_book.vendors == []
         assert new_book.employees == []
         assert new_book.taxtables == []
+        assert new_book.invoices == []
 
     def test_splits_df(self, book_transactions):
         df = book_transactions.splits_df().reset_index()

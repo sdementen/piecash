@@ -250,6 +250,19 @@ def book_investment(request):
         yield book
 
 
+@pytest.yield_fixture()
+def book_invoices(request):
+    """
+    Returns the book that contains invoices.
+    """
+    # name = request.param
+    # print(name)
+    file_template_full = os.path.join(book_folder, "invoices.gnucash")
+
+    with open_book(file_template_full) as book:
+        yield book
+
+
 @pytest.yield_fixture(params=["", ".272"])
 def book_sample(request):
     """
