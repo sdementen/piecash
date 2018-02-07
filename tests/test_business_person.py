@@ -13,7 +13,7 @@ a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, Pers
 
 class TestBusinessPerson_create_Person(object):
     """
-    Person is a paramter taking values in [Customer, Vendor, Employee]
+    Person is a parameter taking values in [Customer, Vendor, Employee]
     """
 
     def test_create_person_noid_nobook(self, book_basic, Person):

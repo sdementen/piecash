@@ -9,6 +9,8 @@ Tutorial : using existing objects
 
 .. include:: existing_objects/transaction.rst
 
+.. include:: existing_objects/invoices.rst
+
 .. include:: existing_objects/others.rst
 
 .. include:: existing_objects/slots.rst

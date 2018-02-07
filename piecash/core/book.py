@@ -10,6 +10,7 @@ from . import factories
 from .account import Account
 from .commodity import Commodity, Price
 from .transaction import Split, Transaction
+from ..business.invoice import Invoice
 from .._common import CallableList, GnucashException
 from .._declbase import DeclarativeBaseGuid
 from ..sa_extra import kvp_attribute
@@ -353,6 +354,17 @@ class Book(DeclarativeBaseGuid):
         from .commodity import Commodity
 
         return CallableList(self.session.query(Commodity))
+
+    @property
+    def invoices(self):
+        """
+        gives easy access to all commodities in the book through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.core.commodity.Commodity`
+        """
+        from .commodity import Commodity
+
+        return CallableList(self.session.query(Invoice))
+
 
     @property
     def currencies(self):
