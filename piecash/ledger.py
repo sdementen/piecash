@@ -27,10 +27,13 @@ def ledger(tr):
         s.append("\t{:40} ".format(split.account.fullname))
         if split.account.commodity != tr.currency:
             s.append("{:10.2f} {} @@ {:.2f} {}".format(
-                split.quantity, split.account.commodity.mnemonic, abs(split.value),
-                tr.currency.mnemonic))
+                split.quantity,
+                format_commodity(split.account.commodity),
+                abs(split.value),
+                format_commodity(tr.currency)))
         else:
-            s.append("{:10.2f} {}".format(split.value, tr.currency.mnemonic))
+            s.append("{:10.2f} {}".format(split.value,
+                                          format_commodity(tr.currency)))
         if split.memo:
             s.append(" ;   {:20}".format(split.memo))
         s.append("\n")
@@ -79,7 +82,9 @@ def ledger(acc):
 @attach_ledger(Price)
 def ledger(price):
     """Return a ledger-cli alike representation of the price"""
-    return "P {:%Y/%m/%d %H:%M:%S} {} {} {}\n".format(price.date, format_commodity(price.commodity), price.value,
+    return "P {:%Y/%m/%d %H:%M:%S} {} {} {}\n".format(price.date,
+                                                      format_commodity(price.commodity),
+                                                      price.value,
                                                       format_commodity(price.currency))
 
 
