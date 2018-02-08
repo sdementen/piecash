@@ -75,7 +75,7 @@ def ledger(acc):
     if acc.description != "":
         res += "\tnote {}\n".format(acc.description, )
 
-    res += "\tcheck commodity == \"{}\"\n".format(acc.commodity.mnemonic)
+    res += "\tcheck commodity == \"{}\"\n".format(format_commodity(acc.commodity).replace("\"","\\\""))
     return res
 
 
