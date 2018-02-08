@@ -18,7 +18,9 @@ def attach_ledger(cls):
 @attach_ledger(Transaction)
 def ledger(tr):
     """Return a ledger-cli alike representation of the transaction"""
-    s = ["{:%Y/%m/%d} * {}\n".format(tr.post_date, tr.description)]
+    s = ["{:%Y/%m/%d} * {}{}\n".format(tr.post_date,
+                                       "({}) ".format(tr.num.replace(")", "")) if tr.num else "",
+                                       tr.description)]
     if tr.notes:
         s.append("\t;{}\n".format(tr.notes))
     for split in tr.splits:
@@ -78,7 +80,7 @@ def ledger(acc):
     if acc.description != "":
         res += "\tnote {}\n".format(acc.description, )
 
-    res += "\tcheck commodity == \"{}\"\n".format(format_commodity(acc.commodity).replace("\"","\\\""))
+    res += "\tcheck commodity == \"{}\"\n".format(format_commodity(acc.commodity).replace("\"", "\\\""))
     return res
 
 
