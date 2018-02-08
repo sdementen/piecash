@@ -10,7 +10,7 @@ from sqlalchemy.orm.base import NEVER_SET
 from .._common import CallableList, GncImbalanceError
 from .._common import GncValidationError, hybrid_property_gncnumeric, Recurrence
 from .._declbase import DeclarativeBaseGuid
-from ..sa_extra import _Date, _DateTime, mapped_to_slot_property, pure_slot_property
+from ..sa_extra import _Date, _DateTime, mapped_to_slot_property, pure_slot_property, utc
 
 
 class Split(DeclarativeBaseGuid):
@@ -228,10 +228,10 @@ class Transaction(DeclarativeBaseGuid):
 
         self.currency = currency
         self.description = description
-        self.enter_date = (enter_date if enter_date else datetime.datetime.today()) \
-            .replace(microsecond=0)
+        self.enter_date = (enter_date if enter_date else datetime.datetime.utcnow()) \
+            .replace(microsecond=0, tzinfo=utc)
         self.post_date = (post_date if post_date else datetime.datetime.today()) \
-            .replace(hour=11, minute=0, second=0, microsecond=0)
+            .replace(hour=10, minute=59, second=0, microsecond=0, tzinfo=utc)
         self.num = num
         if notes is not None:
             self.notes = notes
@@ -277,9 +277,9 @@ class Transaction(DeclarativeBaseGuid):
             if any(quantity_imbalances.values()) and self.book.use_trading_accounts:
                 self.normalize_trading_accounts()
 
-        # normalise post_date to 11:00AM
+        # normalise post_date to 10:59AM
         if self.post_date:
-            self.post_date = self.post_date.replace(hour=11, minute=0, second=0, microsecond=0)
+            self.post_date = self.post_date.replace(hour=10, minute=59, second=0, microsecond=0)
 
     def calculate_imbalances(self):
         """Calculate value and quantity imbalances of a transaction"""
