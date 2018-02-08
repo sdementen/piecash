@@ -189,6 +189,10 @@ class Commodity(DeclarativeBaseGuid):
     def __unirepr__(self):
         return u"Commodity<{}:{}>".format(self.namespace, self.mnemonic)
 
+    @property
+    def precision(self):
+        return len(str(self.fraction)) - 1
+
     def update_prices(self, start_date=None):
         """
         Retrieve online prices for the commodity:

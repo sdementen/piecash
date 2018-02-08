@@ -26,14 +26,17 @@ def ledger(tr):
             return ""
         s.append("\t{:40} ".format(split.account.fullname))
         if split.account.commodity != tr.currency:
-            s.append("{:10.2f} {} @@ {:.2f} {}".format(
+            s.append("{:10.{}f} {} @@ {:.{}f} {}".format(
                 split.quantity,
+                split.account.commodity.precision,
                 format_commodity(split.account.commodity),
                 abs(split.value),
+                tr.currency.precision,
                 format_commodity(tr.currency)))
         else:
-            s.append("{:10.2f} {}".format(split.value,
-                                          format_commodity(tr.currency)))
+            s.append("{:10.{}f} {}".format(split.value,
+                                           tr.currency.precision,
+                                           format_commodity(tr.currency)))
         if split.memo:
             s.append(" ;   {:20}".format(split.memo))
         s.append("\n")
