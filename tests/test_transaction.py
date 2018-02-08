@@ -16,6 +16,33 @@ a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, book
 
 
 class TestTransaction_create_transaction(object):
+    def test_create_basictransaction_neutraltime(self, book_basic):
+        EUR = book_basic.commodities(namespace="CURRENCY")
+        racc = book_basic.root_account
+        a = book_basic.accounts(name="asset")
+        e = book_basic.accounts(name="exp")
+
+        tr = Transaction(currency=EUR, description=u"wire from Hélène", notes=u"on St-Eugène day",
+                         post_date=datetime(2014, 1, 1),
+                         splits=[
+                             Split(account=a, value=100, memo=u"mémo asset"),
+                             Split(account=e, value=-100, memo=u"mémo exp"),
+                         ])
+
+        assert tr.post_date.hour == 10
+        assert tr.post_date.minute == 59
+        assert tr.post_date.second == 0
+        assert tr.post_date.microsecond == 0
+
+        book_basic.flush()
+        book_basic.validate()
+
+        assert tr.post_date.hour == 10
+        assert tr.post_date.minute == 59
+        assert tr.post_date.second == 0
+        assert tr.post_date.microsecond == 0
+
+
     def test_create_basictransaction(self, book_basic):
         EUR = book_basic.commodities(namespace="CURRENCY")
         racc = book_basic.root_account
