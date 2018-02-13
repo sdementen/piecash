@@ -282,4 +282,4 @@ def is_inmemory_sqlite(book_basic):
 
 
 def is_not_on_web():
-    return os.environ.get("DONOTGOONWEB", False)
+    return bool(os.environ.get("DOGOONWEB", True))
