@@ -9,6 +9,7 @@ import tzlocal
 
 from piecash import GnucashException, Commodity
 from piecash.core import factories
+from piecash.sa_extra import utc, tz
 from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, is_not_on_web
 
 # dummy line to avoid removing unused symbols
@@ -78,7 +79,8 @@ class TestFactoriesCommodities(object):
 class TestFactoriesTransactions(object):
     def test_single_transaction(self, book_basic):
         today = datetime.today()
-        factories.single_transaction(today,
+        print("today=",today)
+        factories.single_transaction(today.date(),
                                      today,
                                      "my test",
                                      Decimal(100),
@@ -96,11 +98,11 @@ class TestFactoriesTransactions(object):
         assert sp1.value == -sp2.value
         assert sp1.quantity == sp1.value
         assert tr.enter_date == tzlocal.get_localzone().localize(today.replace(microsecond=0))
-        assert tr.post_date == tzlocal.get_localzone().localize(today.replace(hour=11, minute=0, second=0, microsecond=0))
+        assert tr.post_date == tzlocal.get_localzone().localize(today).date()
 
     def test_single_transaction_tz(self, book_basic):
         today = tzlocal.get_localzone().localize(datetime.today())
-        factories.single_transaction(today,
+        factories.single_transaction(today.date(),
                                      today,
                                      "my test",
                                      Decimal(100),
@@ -108,12 +110,12 @@ class TestFactoriesTransactions(object):
                                      to_account=book_basic.accounts(name="asset"))
         book_basic.save()
         tr = book_basic.transactions(description="my test")
-        assert tr.post_date == today.replace(hour=11, minute=0, second=0, microsecond=0)
+        assert tr.post_date == today.date()
         assert tr.enter_date == today.replace(microsecond=0)
 
     def test_single_transaction_rollback(self, book_basic):
         today = tzlocal.get_localzone().localize(datetime.today())
-        factories.single_transaction(today,
+        factories.single_transaction(today.date(),
                                      today,
                                      "my test",
                                      Decimal(100),

@@ -30,6 +30,35 @@ foreign keys):
     :scale: 30%
 
 
+Days, times, dates & datetimes
+==============================
+
+The use of date and time in GnuCash is somewhat complicated (mainly due to legacy reasons).
+This chapter described how days and time are encoded in the different tables. For each table.field,
+the DB type and the PIECASH type are given (DATE = day, DATETIME = day + time) as well as the representation
+in SQL. All examples are based on a local time in CET (central european time) and for the 11 feb 2018.
+
+prices.date
+    DATETIME -> DAY = YYYY-MM-DD 00:00:00 LT expressed as UTC
+    2018/01/30 in CET = 2018-01-30 23:00:00
+
+transactions.post_date
+    DATETIME -> DAY = YYYY-MM-DD 10:59:00 UTC (e.g. 20180211105900)
+    In the slots, the date-posted stores the post_date as a day (e.g. 20180211)
+
+transactions.enter_date
+    DATETIME -> DATETIME = YYYY-MM-DD hh:mm:ss UTC (e.g. 20180211123036)
+
+splits.reconcile_date
+    DATETIME -> DAY = 1970-01-01 00:00:00 UTC if not applicable (19700101000000)
+    DATETIME -> DAY = YYYY-MM-DD 23:59:59 LT expressed as UTC (e.g. 20180211225959)
+    In the slots, the reconcile-info/last-date stored and int64 representing the timestamp of the last post_date (e.g. 1518389999 ~ 20180211105900)
+
+schedxactions.start_date, schedxactions.end_date, schedxactions.last_occur
+    DAY -> DAY = YYYY-MM-DD
+
+
+
 Core objects
 ============
 

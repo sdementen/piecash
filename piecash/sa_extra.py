@@ -110,19 +110,56 @@ class _DateTime(types.TypeDecorator):
         else:
             return types.DateTime()
 
-    def process_bind_param(self, value, engine):
+    def process_bind_param(self, value, dialect):
         if value is not None:
             assert isinstance(value, datetime.datetime), "value {} is not of type datetime.datetime but type {}".format(
                 value, type(value))
-            if value.tzinfo is None:
-                value = tz.localize(value)
             if value.microsecond != 0:
                 logging.warning("A datetime has been given with microseconds which are not saved in the database")
+
+            if not value.tzinfo:
+                value = tz.localize(value)
+
             return value.astimezone(utc)
 
-    def process_result_value(self, value, engine):
+    def process_result_value(self, value, dialect):
         if value is not None:
             return utc.localize(value).astimezone(tz)
+
+
+class _DateAsDateTime(types.TypeDecorator):
+    """Used to customise the DateTime type for sqlite (ie without the separators as in gnucash
+    """
+    impl = types.TypeEngine
+
+    def __init__(self, neutral_time=True, *args, **kwargs):
+        super(_DateAsDateTime, self).__init__(*args, **kwargs)
+        self.neutral_time = neutral_time
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == "sqlite":
+            return sqlite.DATETIME(
+                storage_format="%(year)04d%(month)02d%(day)02d%(hour)02d%(minute)02d%(second)02d",
+                regexp=r"(\d{4})-?(\d{2})-?(\d{2}) ?(\d{2}):?(\d{2}):?(\d{2})",
+            )
+        else:
+            return types.DateTime()
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            assert isinstance(value, datetime.date) and not isinstance(value, datetime.datetime), \
+                "value {} is not of type datetime.date but type {}".format(value, type(value))
+            if self.neutral_time:
+                result = datetime.datetime.combine(value, datetime.time(10, 59, 0))
+            else:
+                result = tz.localize(datetime.datetime.combine(value, datetime.time(0, 0, 0))) \
+                    .astimezone(utc)
+            return result
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            r = utc.localize(value).astimezone(tz).date()
+            return r
 
 
 class _Date(types.TypeDecorator):

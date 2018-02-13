@@ -62,8 +62,6 @@ class TestBook_create_book(object):
     def test_create_specific_format(self, format_version):
         b = create_book(version_format=format_version)
         v = b.session.query(Version).all()
-        print(v)
-        # b = create_book(version_format='2.6')
 
     def test_create_specific_currency(self):
         b = create_book(currency="USD")
@@ -353,7 +351,7 @@ class TestBook_access_book(object):
                 del df[col]
 
         # converte datetime to date as different tzone in CI environments
-        df["transaction.post_date"] = df["transaction.post_date"].dt.date
+        #df["transaction.post_date"] = df["transaction.post_date"].dt.date
 
         df_to_string = """    value quantity               memo      transaction.description transaction.post_date transaction.currency.mnemonic account.fullname account.commodity.mnemonic
 0   -1000    -1000                                      my revenue            2015-10-21                           EUR              inc                        EUR
@@ -382,7 +380,7 @@ class TestBook_access_book(object):
                 del df[col]
 
         # converte datetime to date as different tzone in CI environments
-        df["transaction.post_date"] = df["transaction.post_date"].dt.date
+        #df["transaction.post_date"] = df["transaction.post_date"].dt.date
 
         df_to_string = """    value quantity               memo      transaction.description transaction.post_date transaction.currency.mnemonic account.fullname account.commodity.mnemonic               memo               memo
 0   -1000    -1000                                      my revenue            2015-10-21                           EUR              inc                        EUR                                      
@@ -409,7 +407,7 @@ class TestBook_access_book(object):
                 del df[col]
 
         # converte datetime to date as different tzone in CI environments
-        df["date"] = df["date"].dt.date
+        #df["date"] = df["date"].dt.date
 
         df_to_string = """   index        date         type      value commodity.mnemonic currency.mnemonic
 0      0  2015-10-31  transaction   0.627907                EUR               USD

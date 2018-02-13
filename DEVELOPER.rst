@@ -20,6 +20,16 @@ Some note for developers:
 
   The documentation will be available through docs/source/build/index.html.
 
+- to test via tox and conda, create first the different environment with the relevant versions of python::
+
+    conda create -n py27 python=2.7 virtualenv
+    conda create -n py35 python=3.5 virtualenv
+    ...
+
+  adapt tox.ini to point to the proper conda envs and then run::
+
+    tox
+
 - to release a new version:
     1. update metadata.py
     2. update changelog

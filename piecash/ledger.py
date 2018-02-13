@@ -18,7 +18,9 @@ def attach_ledger(cls):
 @attach_ledger(Transaction)
 def ledger(tr):
     """Return a ledger-cli alike representation of the transaction"""
-    s = ["{:%Y/%m/%d} * {}\n".format(tr.post_date, tr.description)]
+    s = ["{:%Y/%m/%d} * {}{}\n".format(tr.post_date,
+                                       "({}) ".format(tr.num.replace(")", "")) if tr.num else "",
+                                       tr.description)]
     if tr.notes:
         s.append("\t;{}\n".format(tr.notes))
     for split in tr.splits:
@@ -26,14 +28,17 @@ def ledger(tr):
             return ""
         s.append("\t{:40} ".format(split.account.fullname))
         if split.account.commodity != tr.currency:
-            s.append("{:10.2f} {} @@ {:.2f} {}".format(
+            s.append("{:10.{}f} {} @@ {:.{}f} {}".format(
                 split.quantity,
+                split.account.commodity.precision,
                 format_commodity(split.account.commodity),
                 abs(split.value),
+                tr.currency.precision,
                 format_commodity(tr.currency)))
         else:
-            s.append("{:10.2f} {}".format(split.value,
-                                          format_commodity(tr.currency)))
+            s.append("{:10.{}f} {}".format(split.value,
+                                           tr.currency.precision,
+                                           format_commodity(tr.currency)))
         if split.memo:
             s.append(" ;   {:20}".format(split.memo))
         s.append("\n")
@@ -75,7 +80,7 @@ def ledger(acc):
     if acc.description != "":
         res += "\tnote {}\n".format(acc.description, )
 
-    res += "\tcheck commodity == \"{}\"\n".format(acc.commodity.mnemonic)
+    res += "\tcheck commodity == \"{}\"\n".format(format_commodity(acc.commodity).replace("\"", "\\\""))
     return res
 
 

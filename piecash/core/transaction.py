@@ -10,7 +10,7 @@ from sqlalchemy.orm.base import NEVER_SET
 from .._common import CallableList, GncImbalanceError
 from .._common import GncValidationError, hybrid_property_gncnumeric, Recurrence
 from .._declbase import DeclarativeBaseGuid
-from ..sa_extra import _Date, _DateTime, mapped_to_slot_property, pure_slot_property
+from ..sa_extra import _Date, _DateTime, mapped_to_slot_property, pure_slot_property, _DateAsDateTime
 
 
 class Split(DeclarativeBaseGuid):
@@ -136,7 +136,8 @@ class Split(DeclarativeBaseGuid):
                                          "while the transaction currency and the account commodity is the same")
         else:
             if self.quantity is None:
-                raise GncValidationError("The split quantity is not defined while the split is on a commodity different from the transaction")
+                raise GncValidationError(
+                    "The split quantity is not defined while the split is on a commodity different from the transaction")
             if self.quantity.is_signed() != self.value.is_signed():
                 raise GncValidationError("The split quantity has not the same sign as the split value")
 
@@ -146,7 +147,6 @@ class Split(DeclarativeBaseGuid):
 
         if self.transaction.currency != self.account.commodity:
             # let us also add a Price
-            # TODO: check if price already exist at that tme
             from piecash import Price
 
             value = (self.value / self.quantity).quantize(Decimal("0.000001"))
@@ -179,8 +179,8 @@ class Transaction(DeclarativeBaseGuid):
         currency (:class:`piecash.core.commodity.Commodity`): currency of the transaction. This attribute is
             write-once (i.e. one cannot change it after being set)
         description (str): description of the transaction
-        enter_date (:class:`datetime.datetime`): time at which transaction is entered
-        post_date (:class:`datetime.datetime`): day on which transaction is posted
+        enter_date (:class:`datetime.datetime`): datetimetime at which transaction is entered
+        post_date (:class:`datetime.date`): day on which transaction is posted
         num (str): user provided transaction number
         splits (list of :class:`Split`): list of the splits of the transaction
         scheduled_transaction  (:class:`ScheduledTransaction`): scheduled transaction behind the transaction
@@ -193,10 +193,11 @@ class Transaction(DeclarativeBaseGuid):
     # column definitions
     currency_guid = Column('currency_guid', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
     num = Column('num', VARCHAR(length=2048), nullable=False)
-    _post_date = Column('post_date', _DateTime, index=True)
+    _post_date = Column('post_date', _DateAsDateTime(neutral_time=True), index=True)
     post_date = mapped_to_slot_property(_post_date,
                                         slot_name="date-posted",
-                                        slot_transform=lambda x: x.date() if x else None)
+                                        # slot_transform=lambda x: x.date() if x else None
+                                        )
     enter_date = Column('enter_date', _DateTime)
     description = Column('description', VARCHAR(length=2048))
     notes = pure_slot_property('notes')
@@ -224,14 +225,16 @@ class Transaction(DeclarativeBaseGuid):
                  ):
 
         assert enter_date is None or isinstance(enter_date, datetime.datetime), "enter_date should be a datetime object"
-        assert post_date is None or isinstance(post_date, datetime.datetime), "post_date should be a datetime object"
+        assert post_date is None or (
+                isinstance(post_date, datetime.date)
+                and not isinstance(post_date, datetime.datetime)), "post_date should be a date object"
 
         self.currency = currency
         self.description = description
-        self.enter_date = (enter_date if enter_date else datetime.datetime.today()) \
-            .replace(microsecond=0)
-        self.post_date = (post_date if post_date else datetime.datetime.today()) \
-            .replace(hour=11, minute=0, second=0, microsecond=0)
+        self.enter_date = (enter_date
+                           if enter_date
+                           else datetime.datetime.now()).replace(microsecond=0)
+        self.post_date = (post_date if post_date else datetime.date.today())
         self.num = num
         if notes is not None:
             self.notes = notes
@@ -277,9 +280,9 @@ class Transaction(DeclarativeBaseGuid):
             if any(quantity_imbalances.values()) and self.book.use_trading_accounts:
                 self.normalize_trading_accounts()
 
-        # normalise post_date to 11:00AM
-        if self.post_date:
-            self.post_date = self.post_date.replace(hour=11, minute=0, second=0, microsecond=0)
+        # normalise post_date to 10:59AM
+        # if self.post_date:
+        #    self.post_date = self.post_date.replace(hour=10, minute=59, second=0, microsecond=0, tzinfo=utc)
 
     def calculate_imbalances(self):
         """Calculate value and quantity imbalances of a transaction"""

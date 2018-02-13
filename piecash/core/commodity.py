@@ -12,7 +12,7 @@ from ._commodity_helper import quandl_fx
 from .._common import CallableList
 from .._common import GnucashException, hybrid_property_gncnumeric
 from .._declbase import DeclarativeBaseGuid
-from ..sa_extra import _DateTime
+from ..sa_extra import _DateTime, _DateAsDateTime
 
 
 class GncCommodityError(GnucashException):
@@ -30,7 +30,7 @@ class Price(DeclarativeBaseGuid):
     Attributes:
         commodity (:class:`Commodity`): commodity to which the Price relates
         currency (:class:`Commodity`): currency in which the Price is expressed
-        date (:class:`datetime.datetime`): datetime object representing the time at which the price is relevant
+        date (:class:`datetime.date`): date object representing the day at which the price is relevant
         source (str): source of the price
         type (str): last, ask, bid, unknown, nav
         value (:class:`decimal.Decimal`): the price itself
@@ -42,7 +42,7 @@ class Price(DeclarativeBaseGuid):
     # column definitions
     commodity_guid = Column('commodity_guid', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
     currency_guid = Column('currency_guid', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
-    date = Column('date', _DateTime, nullable=False)
+    date = Column('date', _DateAsDateTime(neutral_time=False), nullable=False)
     source = Column('source', VARCHAR(length=2048))
     type = Column('type', VARCHAR(length=2048))
 
@@ -68,7 +68,7 @@ class Price(DeclarativeBaseGuid):
                  source="user:price"):
         self.commodity = commodity
         self.currency = currency
-        assert isinstance(date, datetime.datetime)
+        assert isinstance(date, datetime.date) and not isinstance(date, datetime.datetime)
         self.date = date
         self.value = value
         self.type = type
@@ -188,6 +188,10 @@ class Commodity(DeclarativeBaseGuid):
 
     def __unirepr__(self):
         return u"Commodity<{}:{}>".format(self.namespace, self.mnemonic)
+
+    @property
+    def precision(self):
+        return len(str(self.fraction)) - 1
 
     def update_prices(self, start_date=None):
         """
