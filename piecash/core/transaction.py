@@ -10,7 +10,7 @@ from sqlalchemy.orm.base import NEVER_SET
 from .._common import CallableList, GncImbalanceError
 from .._common import GncValidationError, hybrid_property_gncnumeric, Recurrence
 from .._declbase import DeclarativeBaseGuid
-from ..sa_extra import _Date, _DateTime, mapped_to_slot_property, pure_slot_property, utc, _DateAsDateTime, tz
+from ..sa_extra import _Date, _DateTime, mapped_to_slot_property, pure_slot_property, _DateAsDateTime
 
 
 class Split(DeclarativeBaseGuid):
@@ -231,10 +231,9 @@ class Transaction(DeclarativeBaseGuid):
 
         self.currency = currency
         self.description = description
-        self.enter_date = (enter_date.astimezone(utc)
+        self.enter_date = (enter_date
                            if enter_date
-                           else utc.localize(datetime.datetime.utcnow())) \
-            .replace(microsecond=0)
+                           else datetime.datetime.now()).replace(microsecond=0)
         self.post_date = (post_date if post_date else datetime.date.today())
         self.num = num
         if notes is not None:

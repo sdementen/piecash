@@ -114,10 +114,12 @@ class _DateTime(types.TypeDecorator):
         if value is not None:
             assert isinstance(value, datetime.datetime), "value {} is not of type datetime.datetime but type {}".format(
                 value, type(value))
-            if value.tzinfo is None:
-                value = tz.localize(value)
             if value.microsecond != 0:
                 logging.warning("A datetime has been given with microseconds which are not saved in the database")
+
+            if not value.tzinfo:
+                value = tz.localize(value)
+
             return value.astimezone(utc)
 
     def process_result_value(self, value, dialect):
