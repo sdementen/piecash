@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 
 import pytest
@@ -23,24 +23,18 @@ class TestTransaction_create_transaction(object):
         e = book_basic.accounts(name="exp")
 
         tr = Transaction(currency=EUR, description=u"wire from Hélène", notes=u"on St-Eugène day",
-                         post_date=datetime(2014, 1, 1),
+                         post_date=date(2014, 1, 1),
                          splits=[
                              Split(account=a, value=100, memo=u"mémo asset"),
                              Split(account=e, value=-100, memo=u"mémo exp"),
                          ])
 
-        assert tr.post_date.hour == 10
-        assert tr.post_date.minute == 59
-        assert tr.post_date.second == 0
-        assert tr.post_date.microsecond == 0
+        assert isinstance(tr.post_date, date)
 
         book_basic.flush()
         book_basic.validate()
 
-        assert tr.post_date.hour == 10
-        assert tr.post_date.minute == 59
-        assert tr.post_date.second == 0
-        assert tr.post_date.microsecond == 0
+        assert isinstance(tr.post_date, date)
 
 
     def test_create_basictransaction(self, book_basic):
@@ -50,7 +44,7 @@ class TestTransaction_create_transaction(object):
         e = book_basic.accounts(name="exp")
 
         tr = Transaction(currency=EUR, description=u"wire from Hélène", notes=u"on St-Eugène day",
-                         post_date=datetime(2014, 1, 1),
+                         post_date=date(2014, 1, 1),
                          enter_date=datetime(2014, 1, 1),
                          splits=[
                              Split(account=a, value=100, memo=u"mémo asset"),
@@ -87,7 +81,7 @@ class TestTransaction_create_transaction(object):
         s = book_basic.accounts(name="broker")
 
         tr = Transaction(currency=EUR, description="buy stock", notes=u"on St-Eugène day",
-                         post_date=datetime(2014, 1, 2),
+                         post_date=date(2014, 1, 2),
                          enter_date=datetime(2014, 1, 3),
                          splits=[
                              Split(account=a, value=100, memo=u"mémo asset"),
@@ -154,7 +148,7 @@ class TestTransaction_create_transaction(object):
         s = book_basic.accounts(name="broker")
 
         tr = Transaction(currency=s.commodity, description="buy stock", notes=u"on St-Eugène day",
-                         post_date=datetime(2014, 1, 2),
+                         post_date=date(2014, 1, 2),
                          enter_date=datetime(2014, 1, 3),
                          splits=[
                              Split(account=a, value=100, quantity=10, memo=u"mémo asset"),
@@ -172,7 +166,7 @@ class TestTransaction_create_transaction(object):
 
         book_basic.use_trading_accounts = True
         tr = Transaction(currency=EUR, description="buy stock", notes=u"on St-Eugène day",
-                         post_date=datetime(2014, 1, 2),
+                         post_date=date(2014, 1, 2),
                          enter_date=datetime(2014, 1, 3),
                          splits=[
                              Split(account=a, value=100, memo=u"mémo asset"),
@@ -219,7 +213,7 @@ class TestTransaction_lots(object):
         l = Lot(title=u"test mé", account=s, notes=u"ïlya")
         for i, am in enumerate([45, -35, -20]):
             tr = Transaction(currency=EUR, description="trade stock", notes=u"àçö",
-                             post_date=datetime(2014, 1, 1 + i),
+                             post_date=date(2014, 1, 1 + i),
                              enter_date=datetime(2014, 1, 1 + i),
                              splits=[
                                  Split(account=a, value=am * 10, memo=u"mémo asset"),
@@ -235,7 +229,7 @@ class TestTransaction_lots(object):
         sp = []
         for i, am in enumerate([45, -35, -20]):
             tr = Transaction(currency=EUR, description="trade stock", notes=u"àçö",
-                             post_date=datetime(2014, 1, 1 + i),
+                             post_date=date(2014, 1, 1 + i),
                              enter_date=datetime(2014, 1, 1 + i),
                              splits=[
                                  Split(account=a, value=am * 10, memo=u"mémo asset"),
@@ -256,7 +250,7 @@ class TestTransaction_lots(object):
         # raise valueerror as lot is closed
         with pytest.raises(ValueError):
             tr = Transaction(currency=EUR, description="trade stock", notes=u"àçö",
-                             post_date=datetime(2014, 1, 1),
+                             post_date=date(2014, 1, 1),
                              enter_date=datetime(2014, 1, 1),
                              splits=[
                                  Split(account=a, value=10, memo=u"mémo asset"),
@@ -271,7 +265,7 @@ class TestTransaction_lots(object):
         l = Lot(title=u"test mé", account=a, notes=u"ïlya")
         # raise valueerror as split account not the same as lot account
         tr = Transaction(currency=EUR, description="trade stock", notes=u"àçö",
-                         post_date=datetime(2014, 1, 1),
+                         post_date=date(2014, 1, 1),
                          enter_date=datetime(2014, 1, 1),
                          splits=[
                              Split(account=a, value=10, memo=u"mémo asset"),
@@ -303,13 +297,21 @@ class TestTransaction_changes(object):
         p = [p for p in book_transactions.prices if p.date.day == 29][0]
         assert p.value == (sp.value / sp.quantity).quantize(Decimal("0.000001"))
 
+        print(book_transactions.prices)
+
         # changing the quantity of the split should change the existing price
         sp.quantity = (5, 1)
+        print(tr.post_date, tr.enter_date)
+        print(Transaction._post_date, Transaction.enter_date)
+        print(book_transactions.prices)
+
         book_transactions.validate()
+        print(book_transactions.prices)
+
         assert len(book_transactions.prices) == 6
         assert p.value == (sp.value / sp.quantity).quantize(Decimal("0.000001"))
 
         # changing the post date of the transaction of the split should create a new price
-        tr.post_date = datetime(2015, 1, 29, tzinfo=tr.post_date.tzinfo)
+        tr.post_date = date(2015, 1, 29)
         book_transactions.validate()
         assert len(book_transactions.prices) == 7

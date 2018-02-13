@@ -1,7 +1,7 @@
 # coding=utf-8
 from __future__ import unicode_literals
 
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 
 import pytest
@@ -58,14 +58,14 @@ class TestCommodity_create_prices(object):
     def test_create_basicprice(self, book_basic):
         EUR = book_basic.commodities(namespace="CURRENCY")
         USD = book_basic.currencies(mnemonic="USD")
-        p = Price(commodity=USD, currency=EUR, date=datetime(2014, 2, 22), value=Decimal('0.54321'))
+        p = Price(commodity=USD, currency=EUR, date=date(2014, 2, 22), value=Decimal('0.54321'))
 
         # check price exist
         np = USD.prices.first()
         assert np is p
         assert repr(p) == "Price<2014-02-22 : 0.54321 EUR/USD>"
 
-        p2 = Price(commodity=USD, currency=EUR, date=datetime(2014, 2, 21), value=Decimal('0.12345'))
+        p2 = Price(commodity=USD, currency=EUR, date=date(2014, 2, 21), value=Decimal('0.12345'))
         book_basic.flush()
         assert p.value + p2.value == Decimal("0.66666")
         assert len(USD.prices.all()) == 2
@@ -73,8 +73,8 @@ class TestCommodity_create_prices(object):
     def test_create_duplicateprice(self, book_basic):
         EUR = book_basic.commodities(namespace="CURRENCY")
         USD = book_basic.currencies(mnemonic="USD")
-        p = Price(commodity=USD, currency=EUR, date=datetime(2014, 2, 22), value=Decimal('0.54321'))
-        p1 = Price(commodity=USD, currency=EUR, date=datetime(2014, 2, 22), value=Decimal('0.12345'))
+        p = Price(commodity=USD, currency=EUR, date=date(2014, 2, 22), value=Decimal('0.54321'))
+        p1 = Price(commodity=USD, currency=EUR, date=date(2014, 2, 22), value=Decimal('0.12345'))
 
         book_basic.flush()
         assert USD.prices.filter_by(value=Decimal('0')).all() == []

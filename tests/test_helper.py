@@ -1,7 +1,7 @@
 # -*- coding: latin-1 -*-
 import os
 import sys
-from datetime import datetime
+from datetime import date
 import pytest
 from sqlalchemy_utils import database_exists, drop_database
 from piecash import create_book, open_book, Account, Commodity, Employee, Customer, Vendor, Transaction, Split, Price
@@ -172,7 +172,7 @@ def book_transactions(request):
         expense = Account(name="exp", type="EXPENSE", commodity=curr, parent=b.root_account)
         income = Account(name="inc", type="INCOME", commodity=curr, parent=b.root_account)
 
-        tr1 = Transaction(post_date=datetime(2015, 10, 21),
+        tr1 = Transaction(post_date=date(2015, 10, 21),
                           description="my revenue",
                           currency=curr,
                           splits=[
@@ -180,7 +180,7 @@ def book_transactions(request):
                               Split(account=income, value=(-1000, 1)),
                           ]
                           )
-        tr2 = Transaction(post_date=datetime(2015, 10, 25),
+        tr2 = Transaction(post_date=date(2015, 10, 25),
                           description="my expense",
                           currency=curr,
                           splits=[
@@ -189,7 +189,7 @@ def book_transactions(request):
                               Split(account=expense, value=(80, 1), memo="cost of Y"),
                           ]
                           )
-        tr_stock = Transaction(post_date=datetime(2015, 10, 29),
+        tr_stock = Transaction(post_date=date(2015, 10, 29),
                                description="my purchase of stock",
                                currency=curr,
                                splits=[
@@ -198,7 +198,7 @@ def book_transactions(request):
                                    Split(account=stock, value=(185, 1), quantity=(6, 1), memo="purchase of stock"),
                                ]
                                )
-        tr_to_foreign = Transaction(post_date=datetime(2015, 10, 30),
+        tr_to_foreign = Transaction(post_date=date(2015, 10, 30),
                                     description="transfer to foreign asset",
                                     currency=curr,
                                     splits=[
@@ -206,7 +206,7 @@ def book_transactions(request):
                                         Split(account=foreign_asset, value=(200, 1), quantity=(135, 1)),
                                     ]
                                     )
-        tr_from_foreign = Transaction(post_date=datetime(2015, 10, 31),
+        tr_from_foreign = Transaction(post_date=date(2015, 10, 31),
                                       description="transfer from foreign asset",
                                       currency=other_curr,
                                       splits=[
@@ -216,17 +216,17 @@ def book_transactions(request):
                                       )
         Price(commodity=cdty,
               currency=other_curr,
-              date=datetime(2015, 11, 1),
+              date=date(2015, 11, 1),
               value=(123, 100),
               )
         Price(commodity=cdty,
               currency=other_curr,
-              date=datetime(2015, 11, 4),
+              date=date(2015, 11, 4),
               value=(127, 100),
               )
         Price(commodity=cdty,
               currency=curr,
-              date=datetime(2015, 11, 2),
+              date=date(2015, 11, 2),
               value=(234, 100),
               )
 
