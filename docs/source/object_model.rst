@@ -39,9 +39,9 @@ the DB type and the PIECASH type are given (DATE = day, DATETIME = day + time) a
 in SQL. All examples are based on a local time in CET (central european time) and for the 11 feb 2018.
 
 prices.date
-    DATETIME -> DAY = YYYY-MM-DD 00:00:00 LT expressed as UTC (e.g. 20180210230000) if price entered via the price editor
-    DATETIME -> DAY = YYYY-MM-DD 10:59:00 UTC (e.g. 20180211105900) if price generated via a transaction
-    DATETIME -> DAY = ??? (To be completed)) if price retrieved via Finance:Quote
+    | DATETIME -> DAY = YYYY-MM-DD 00:00:00 LT expressed as UTC (e.g. 20180210230000) if price entered via the price editor
+    | DATETIME -> DAY = YYYY-MM-DD 10:59:00 UTC (e.g. 20180211105900) if price generated via a transaction
+    | DATETIME -> DAY = ??? (To be completed)) if price retrieved via Finance:Quote
     
 
 transactions.post_date
