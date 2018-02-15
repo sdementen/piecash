@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Python interface to GnuCash documents"""
 from . import metadata
+from .core.account import AccountType
 
 __version__ = metadata.version
 __author__ = metadata.authors[0]
