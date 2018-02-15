@@ -295,6 +295,6 @@ class TestIntegration_GhostKvpScheduledTransaction(object):
 
     def test_print_transactions(self, ghost_kvp_scheduled_transaction_session):
         book = ghost_kvp_scheduled_transaction_session
-        assert len(book.transactions) == 3
-        # Check we can do repr:
-        assert len(list(map(repr, book.transactions))) == 3
+
+        for tr in book.transactions:
+            assert tr.scheduled_transaction is None
