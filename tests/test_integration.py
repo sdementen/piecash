@@ -316,7 +316,7 @@ class TestIntegration_Thread(object):
         class MyThread(threading.Thread):
             def run(self):
                 with pytest.raises(sqlalchemy.exc.ProgrammingError):
-                    print(book.transactions)
+                    book.transactions
 
         thr = MyThread()
         thr.start()
@@ -328,7 +328,7 @@ class TestIntegration_Thread(object):
 
         class MyThread(threading.Thread):
             def run(self):
-                print(book.transactions)
+                book.transactions
 
         thr = MyThread()
         thr.start()
