@@ -10,6 +10,7 @@ In development
 - expose gnucash rationals as decimals in Entry and Invoice
 - fix issue #65 about "template" (scheduled transactions) appearing in ledger export
 - fix issue #64 about escaping in double quote mnemonic with non alpha characters
+- fix issue #19 allowing to pass the check_same_thread flag for sqlite
 
 
 Version 0.14.1 (2018-02-01)

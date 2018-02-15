@@ -102,7 +102,9 @@ def build_uri(sqlite_file=None,
               db_password=None,
               db_name=None,
               db_host=None,
-              db_port=None, ):
+              db_port=None,
+              check_same_thread=True,
+              ):
     """Create the connection string in function of some choices.
 
     :param str sqlite_file: a path to an sqlite3 file (only used if uri_conn is None)
@@ -113,6 +115,7 @@ def build_uri(sqlite_file=None,
     :param str db_name: name of database
     :param str db_host: host of database
     :param str db_port: port of database
+    :param bool check_same_thread: sqlite flag that restricts connection use to the thread that created (see False for use in ipython/flask/... but read first https://docs.python.org/3/library/sqlite3.html)
 
     :return: the connection string
     :rtype: str
@@ -137,6 +140,7 @@ def build_uri(sqlite_file=None,
         raise ValueError("Only one of 'sqlite_file' or 'uri_conn' argument can be defined")
 
     if uri_conn is None:
+        # fallback on sqlite
         if sqlite_file:
             if sqlite_file.startswith("sqlite:///"):
                 # already have the protocol specified.
@@ -145,6 +149,8 @@ def build_uri(sqlite_file=None,
                 uri_conn = "sqlite:///{}".format(sqlite_file)
         else:
             uri_conn = "sqlite:///:memory:"
+        if check_same_thread is False:
+            uri_conn = uri_conn + "?check_same_thread=False"
 
     return uri_conn
 
@@ -160,6 +166,7 @@ def create_book(sqlite_file=None,
                 db_name=None,
                 db_host=None,
                 db_port=None,
+                check_same_thread=True,
                 version_format="2.6",
                 **kwargs):
     """Create a new empty GnuCash book. If both sqlite_file and uri_conn are None, then an "in memory" sqlite book is created.
@@ -175,6 +182,7 @@ def create_book(sqlite_file=None,
     :param str db_name: name of database
     :param str db_host: host of database
     :param str db_port: port of database
+    :param bool check_same_thread: sqlite flag that restricts connection use to the thread that created (see False for use in ipython/flask/... but read first https://docs.python.org/3/library/sqlite3.html)
     :param str version_format: the format (2.6 or 2.7) for the schema tables to generate
 
     :return: the document as a gnucash session
@@ -184,7 +192,10 @@ def create_book(sqlite_file=None,
     """
     from sqlalchemy_utils.functions import database_exists, create_database, drop_database
 
-    uri_conn = build_uri(sqlite_file, uri_conn, db_type, db_user, db_password, db_name, db_host, db_port)
+    uri_conn = build_uri(sqlite_file, uri_conn,
+                         db_type, db_user, db_password, db_name, db_host, db_port,
+                         check_same_thread,
+                         )
 
     # create database (if DB is not a sqlite in memory)
     if uri_conn != "sqlite:///:memory:":
@@ -256,6 +267,7 @@ def open_book(sqlite_file=None,
               db_name=None,
               db_host=None,
               db_port=None,
+              check_same_thread=True,
               **kwargs):
     """Open an existing GnuCash book
 
@@ -266,6 +278,13 @@ def open_book(sqlite_file=None,
         (using open_if_lock=True with readonly=False is not recommended)
     :param bool do_backup: do a backup if the file written in RW (i.e. readonly=False)
         (this only works with the sqlite backend and copy the file with .{:%Y%m%d%H%M%S}.gnucash appended to it)
+    :param str db_type: type of database in ["postgres","mysql"]
+    :param str db_user: username of database
+    :param str db_password: password for the use of database
+    :param str db_name: name of database
+    :param str db_host: host of database
+    :param str db_port: port of database
+    :param bool check_same_thread: sqlite flag that restricts connection use to the thread that created (see False for use in ipython/flask/... but read first https://docs.python.org/3/library/sqlite3.html)
 
     :return: the document as a gnucash session
     :rtype: :class:`GncSession`
@@ -273,7 +292,10 @@ def open_book(sqlite_file=None,
     :raises GnucashException: if there is a lock on the file and open_if_lock is False
 
     """
-    uri_conn = build_uri(sqlite_file, uri_conn, db_type, db_user, db_password, db_name, db_host, db_port)
+    uri_conn = build_uri(sqlite_file, uri_conn,
+                         db_type, db_user, db_password, db_name, db_host, db_port,
+                         check_same_thread,
+                         )
 
     if uri_conn == "sqlite:///:memory:":
         raise ValueError("An in memory sqlite gnucash databook cannot be opened, it should be created")
@@ -292,7 +314,7 @@ def open_book(sqlite_file=None,
                 "Cannot do a backup for engine '{}'. Do yourself a backup and then specify do_backup=False".format(
                     engine.name))
 
-        url = uri_conn[len("sqlite:///"):]
+        url = uri_conn[len("sqlite:///"):].replace("?check_same_thread=False", "")
         url_backup = url + ".{:%Y%m%d%H%M%S}.gnucash".format(datetime.datetime.now())
 
         shutil.copyfile(url, url_backup)

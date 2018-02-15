@@ -5,15 +5,18 @@ from __future__ import print_function
 import datetime
 import os
 import shutil
+import threading
 from decimal import Decimal
 
 import pytest
+import sqlalchemy
 
 from piecash import create_book, Account, ACCOUNT_TYPES, open_book, Price
 from piecash._common import GnucashException
 from piecash.core.account import _is_parent_child_types_consistent, root_types
 from piecash.kvp import Slot
-from test_helper import file_template_full, file_for_test_full, run_file, file_ghost_kvp_scheduled_transaction, file_ghost_kvp_scheduled_transaction_for_test
+from test_helper import file_template_full, file_for_test_full, run_file, file_ghost_kvp_scheduled_transaction, \
+    file_ghost_kvp_scheduled_transaction_for_test
 
 
 @pytest.fixture
@@ -26,6 +29,11 @@ def book(request):
 def realbook_session(request):
     return use_copied_book(request, file_template_full, file_for_test_full)
 
+@pytest.fixture
+def realbook_session_multithread(request):
+    return use_copied_book(request, file_template_full, file_for_test_full,
+                           check_same_thread=False)
+
 
 @pytest.fixture
 def ghost_kvp_scheduled_transaction_session(request):
@@ -34,12 +42,13 @@ def ghost_kvp_scheduled_transaction_session(request):
                            file_ghost_kvp_scheduled_transaction_for_test)
 
 
-def use_copied_book(request, template_filename, test_filename):
+def use_copied_book(request, template_filename, test_filename,
+                    check_same_thread=True):
     shutil.copy(template_filename,
                 test_filename)
 
     # default book is readonly
-    s = open_book(test_filename)
+    s = open_book(test_filename, check_same_thread=check_same_thread)
 
     @request.addfinalizer
     def finalizer():
@@ -295,6 +304,34 @@ class TestIntegration_GhostKvpScheduledTransaction(object):
 
     def test_print_transactions(self, ghost_kvp_scheduled_transaction_session):
         book = ghost_kvp_scheduled_transaction_session
-        assert len(book.transactions) == 3
-        # Check we can do repr:
-        assert len(list(map(repr, book.transactions))) == 3
+
+        for tr in book.transactions:
+            assert tr.scheduled_transaction is None
+
+
+class TestIntegration_Thread(object):
+    def test_exception_due_to_multithread(self, realbook_session):
+        book = realbook_session
+
+        class MyThread(threading.Thread):
+            def run(self):
+                with pytest.raises(sqlalchemy.exc.ProgrammingError):
+                    book.transactions
+
+        thr = MyThread()
+        thr.start()
+        thr.join()
+
+
+    def test_check_same_thread_False_allow_thread_use(self, realbook_session_multithread):
+        book = realbook_session_multithread
+
+        class MyThread(threading.Thread):
+            def run(self):
+                book.transactions
+
+        thr = MyThread()
+        thr.start()
+        thr.join()
+
+
