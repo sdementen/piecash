@@ -256,9 +256,6 @@ class Transaction(DeclarativeBaseGuid):
         if old["STATE_CHANGES"][-1] == "deleted":
             return
 
-        if self.currency.namespace != "CURRENCY":
-            raise GncValidationError("You are assigning a non currency commodity to a transaction")
-
         # check all accounts related to the splits of the transaction are not placeholder(=frozen)
         for sp in self.splits:
             if sp.account.placeholder != 0:
