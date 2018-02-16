@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Python interface to GnuCash documents"""
 from . import metadata
-from .core.account import AccountType
 
 __version__ = metadata.version
 __author__ = metadata.authors[0]
@@ -15,7 +14,7 @@ from ._common import (
 )
 from .core import (
     Book,
-    Account, ACCOUNT_TYPES,
+    Account, ACCOUNT_TYPES, AccountType
     Transaction, Split, ScheduledTransaction, Lot,
     Commodity, Price,
     create_book, open_book,
