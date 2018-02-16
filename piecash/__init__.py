@@ -14,7 +14,7 @@ from ._common import (
 )
 from .core import (
     Book,
-    Account, ACCOUNT_TYPES,
+    Account, ACCOUNT_TYPES, AccountType,
     Transaction, Split, ScheduledTransaction, Lot,
     Commodity, Price,
     create_book, open_book,
