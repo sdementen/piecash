@@ -16,7 +16,7 @@ Some note for developers:
 - to build the doc (do not forget to `pip install -r requirements-dev.txt` before)::
 
     cd docs/source
-    sphinx-build
+    sphinx-build . build
 
   The documentation will be available through docs/source/build/index.html.
 

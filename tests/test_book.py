@@ -7,11 +7,12 @@ from sqlalchemy.orm import Session
 from piecash import create_book, Account, GnucashException, Book, open_book, Commodity
 from piecash.core import Version
 from test_helper import (db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri,
-                         book_transactions, book_investment, book_sample, format_version)
+                         book_transactions, book_investment, book_sample, book_complex,
+                         format_version)
 from decimal import Decimal
 
 # dummy line to avoid removing unused symbols
-a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_transactions
+a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_transactions, book_sample
 
 
 class TestBook_create_book(object):
@@ -129,6 +130,7 @@ class TestBook_create_book(object):
         for tbl in insp.get_table_names():
             fk = insp.get_foreign_keys(tbl)
             assert len(fk) == 0
+
 
 class TestBook_open_book(object):
     def test_open_noarg(self):
@@ -351,7 +353,7 @@ class TestBook_access_book(object):
                 del df[col]
 
         # converte datetime to date as different tzone in CI environments
-        #df["transaction.post_date"] = df["transaction.post_date"].dt.date
+        # df["transaction.post_date"] = df["transaction.post_date"].dt.date
 
         df_to_string = """    value quantity               memo      transaction.description transaction.post_date transaction.currency.mnemonic account.fullname account.commodity.mnemonic
 0   -1000    -1000                                      my revenue            2015-10-21                           EUR              inc                        EUR
@@ -380,7 +382,7 @@ class TestBook_access_book(object):
                 del df[col]
 
         # converte datetime to date as different tzone in CI environments
-        #df["transaction.post_date"] = df["transaction.post_date"].dt.date
+        # df["transaction.post_date"] = df["transaction.post_date"].dt.date
 
         df_to_string = """    value quantity               memo      transaction.description transaction.post_date transaction.currency.mnemonic account.fullname account.commodity.mnemonic               memo               memo
 0   -1000    -1000                                      my revenue            2015-10-21                           EUR              inc                        EUR                                      
@@ -407,7 +409,7 @@ class TestBook_access_book(object):
                 del df[col]
 
         # converte datetime to date as different tzone in CI environments
-        #df["date"] = df["date"].dt.date
+        # df["date"] = df["date"].dt.date
 
         df_to_string = """   index        date         type      value commodity.mnemonic currency.mnemonic
 0      0  2015-10-31  transaction   0.627907                EUR               USD
@@ -439,3 +441,12 @@ class TestBook_access_book(object):
 
         # print("Balance:", total_balance)
         assert total == Decimal(13)
+
+    def test_get_balance(self, book_complex):
+        """
+        Tests listing the commodity quantity in the account.
+        """
+
+        account = book_complex.accounts.get(name="Asset")
+        assert account.get_balance() == Decimal('1320')
+        assert account.get_balance(recurse=True) == Decimal('23790')
