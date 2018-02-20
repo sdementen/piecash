@@ -221,8 +221,9 @@ class Account(DeclarativeBaseGuid):
 
             for acc in self.parent.children:
                 if acc.name == self.name and acc != self:
-                    raise ValueError("{} has two children with the same name {} : {} and {}".format(self.parent, self.name,
-                                                                                                    self, acc))
+                    raise ValueError(
+                        "{} has two children with the same name {} : {} and {}".format(self.parent, self.name,
+                                                                                       self, acc))
         else:
             if self.type in root_types:
                 if self.name not in ['Template Root', 'Root Account']:
@@ -251,15 +252,21 @@ class Account(DeclarativeBaseGuid):
         else:
             return u""
 
-
-    def get_balance(self):
+    def get_balance(self, recurse=False):
         """
-        Returns the balance of the account expressed in account's commodity/currency.
+        Returns the balance of the account (including its children accounts if recurse=True)
+        expressed in account's commodity/currency.
         If this is a stock/fund account, it will return the number of shares held.
         If this is a currency account, it will be in account's currency.
-        """
-        return sum([sp.quantity for sp in self.splits]) * self.sign
 
+        Attributes:
+            recurse (bool): True if the balance should include sub-accounts (children accounts) (default=False)
+
+        """
+        balance = sum([sp.quantity for sp in self.splits]) * self.sign
+        if recurse:
+            balance += sum(acc.get_balance(recurse=recurse) for acc in self.children)
+        return balance
 
     @property
     def sign(self):

@@ -273,6 +273,16 @@ def book_sample(request):
     with open_book(file_template_full) as book:
         yield book
 
+@pytest.yield_fixture()
+def book_complex(request):
+    """
+    Returns a complex sample book for 2.6.N
+    """
+    file_template_full = os.path.join(book_folder, "complex_sample.gnucash")
+
+    with open_book(file_template_full) as book:
+        yield book
+
 
 def is_inmemory_sqlite(book_basic):
     # print book_basic.uri, book_basic.uri.get_dialect(), book_basic.uri.database, type(book_basic.uri), dir(book_basic.uri)
