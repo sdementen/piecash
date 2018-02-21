@@ -1,18 +1,23 @@
 import glob
 import os
+from decimal import Decimal
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.orm import Session
+
 from piecash import create_book, Account, GnucashException, Book, open_book, Commodity
 from piecash.core import Version
 from test_helper import (db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri,
-                         book_transactions, book_investment, book_sample, book_complex,
-                         format_version)
-from decimal import Decimal
+                         book_transactions, book_sample, format_version, book_investment)
 
 # dummy line to avoid removing unused symbols
-a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_transactions, book_sample
+a = (
+    db_sqlite_uri, db_sqlite,
+    new_book, new_book_USD, book_uri, book_transactions, book_sample, book_investment,
+    format_version,
+)
 
 
 class TestBook_create_book(object):
@@ -441,12 +446,3 @@ class TestBook_access_book(object):
 
         # print("Balance:", total_balance)
         assert total == Decimal(13)
-
-    def test_get_balance(self, book_complex):
-        """
-        Tests listing the commodity quantity in the account.
-        """
-
-        account = book_complex.accounts.get(name="Asset")
-        assert account.get_balance() == Decimal('1320')
-        assert account.get_balance(recurse=True) == Decimal('23790')

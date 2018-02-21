@@ -18,6 +18,13 @@ class GncValidationError(GnucashException):
     pass
 
 
+class GncImbalanceError(GncValidationError):
+    pass
+
+class GncConversionError(GnucashException):
+    pass
+
+
 class Recurrence(DeclarativeBase):
     """
     Recurrence information for scheduled transactions
@@ -151,6 +158,3 @@ class CallableList(list):
 
     get = __call__
 
-
-class GncImbalanceError(GncValidationError):
-    pass
