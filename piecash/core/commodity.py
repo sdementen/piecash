@@ -9,7 +9,7 @@ from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT, Index
 from sqlalchemy.orm import relation
 
 from ._commodity_helper import quandl_fx
-from .._common import CallableList
+from .._common import CallableList, GncConversionError
 from .._common import GnucashException, hybrid_property_gncnumeric
 from .._declbase import DeclarativeBaseGuid
 from ..sa_extra import _DateTime, _DateAsDateTime
@@ -192,6 +192,32 @@ class Commodity(DeclarativeBaseGuid):
     @property
     def precision(self):
         return len(str(self.fraction)) - 1
+
+    def currency_conversion(self, currency):
+        """
+        Return the latest conversion factor to convert self to currency
+
+        Attributes:
+            currency (:class:`piecash.core.commodity.Commodity`): the currency to which the Price need to be converted
+
+        Returns:
+            a Decimal that can be multiplied by an amount expressed in self.commodity to get an amount expressed in currency
+
+        Raises:
+            GncConversionError: not possible to convert self to the currency
+
+        """
+        # conversion is done from self.commodity to commodity (if possible)
+        sc2c = self.prices.filter_by(currency=currency).order_by(Price.date.desc()).first()
+        if sc2c:
+            return sc2c.value
+
+        # conversion is done directly from commodity to self.commodity (if possible)
+        c2sc = currency.prices.filter_by(currency=self).order_by(Price.date.desc()).first()
+        if c2sc:
+            return Decimal(1) / c2sc.value
+
+        raise GncConversionError("Cannot convert {} to {}".format(self, currency))
 
     def update_prices(self, start_date=None):
         """

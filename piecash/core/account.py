@@ -1,12 +1,12 @@
 from __future__ import unicode_literals
 
 import uuid
-
 from enum import Enum
+
 from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER
 from sqlalchemy.orm import relation, validates
 
-from .._common import CallableList
+from .._common import CallableList, GncConversionError
 from .._declbase import DeclarativeBaseGuid
 from ..sa_extra import mapped_to_slot_property
 
@@ -252,20 +252,42 @@ class Account(DeclarativeBaseGuid):
         else:
             return u""
 
-    def get_balance(self, recurse=False):
+    def get_balance(self, recurse=True, commodity=None):
         """
         Returns the balance of the account (including its children accounts if recurse=True)
         expressed in account's commodity/currency.
         If this is a stock/fund account, it will return the number of shares held.
         If this is a currency account, it will be in account's currency.
+        In case of recursion, the commodity of children accounts will be transformed to the commodity of the father account using the latest price
+        (if no price is available to convert , it is considered as 0)
 
         Attributes:
-            recurse (bool): True if the balance should include sub-accounts (children accounts) (default=False)
+            recurse (bool, optional): True if the balance should include children accounts (default to True)
+            commodity (:class:`piecash.core.commodity.Commodity`): the currency into which to get the balance (default to None, i.e. the currency of the account)
 
+        Returns:
+            the balance of the account
         """
+        if commodity is None:
+            commodity = self.commodity
+
         balance = sum([sp.quantity for sp in self.splits]) * self.sign
-        if recurse:
-            balance += sum(acc.get_balance(recurse=recurse) for acc in self.children)
+
+        if commodity != self.commodity:
+            try:
+                # conversion is done directly from self.commodity to commodity (if possible)
+                factor = self.commodity.currency_conversion(commodity)
+                balance = balance * factor
+            except GncConversionError:
+                # conversion is done from self.commodity to self.parent.commodity and then to commodity
+                factor1 = self.commodity.currency_conversion(self.parent.commodity)
+                factor2 = self.parent.commodity.currency_conversion(commodity)
+                factor = factor1 * factor2
+                balance = balance * factor
+
+        if recurse and self.children:
+            balance += sum(acc.get_balance(recurse=recurse, commodity=commodity) for acc in self.children)
+
         return balance
 
     @property

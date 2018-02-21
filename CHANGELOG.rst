@@ -5,13 +5,18 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
+Version 0.15.0 (2018-02-21)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 - add piecash CLI (refactor of scripts)
 - add book.invoices to retrieve all invoices in a book
 - expose gnucash rationals as decimals in Entry and Invoice
 - fix issue #65 about "template" (scheduled transactions) appearing in ledger export
 - fix issue #64 about escaping in double quote mnemonic with non alpha characters
 - fix issue #19 allowing to pass the check_same_thread flag for sqlite
-- add argument recurse=True to get_balance (fix #73)
+- add argument recurse to get_balance (fix #73)
+- handle currency conversion in get_balance
+- add Commodity.currency_conversion to get a conversion factor between a commodity and a currency
 
 
 Version 0.14.1 (2018-02-01)
