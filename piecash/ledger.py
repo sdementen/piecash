@@ -18,7 +18,7 @@ def attach_ledger(cls):
 @attach_ledger(Transaction)
 def ledger(tr):
     """Return a ledger-cli alike representation of the transaction"""
-    s = ["{:%Y/%m/%d} * {}{}\n".format(tr.post_date,
+    s = ["{:%Y/%m/%d} {}{}\n".format(tr.post_date,
                                        "({}) ".format(tr.num.replace(")", "")) if tr.num else "",
                                        tr.description)]
     if tr.notes:
@@ -26,7 +26,10 @@ def ledger(tr):
     for split in tr.splits:
         if split.account.commodity.mnemonic == "template":
             return ""
-        s.append("\t{:40} ".format(split.account.fullname))
+        if split.reconcile_state in ['c', 'y']:
+            s.append("\t* {:38} ".format(split.account.fullname))
+        else:
+            s.append("\t{:40} ".format(split.account.fullname))
         if split.account.commodity != tr.currency:
             s.append("{:10.{}f} {} @@ {:.{}f} {}".format(
                 split.quantity,
