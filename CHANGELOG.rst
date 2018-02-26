@@ -5,6 +5,8 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
+- indicate correct reconcile state in ledger output (fix #77)
+
 Version 0.15.0 (2018-02-21)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
