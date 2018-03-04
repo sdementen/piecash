@@ -1,18 +1,23 @@
 from __future__ import division
 from __future__ import unicode_literals
 
+import pytz
+
+_type = type
+
 import datetime
 from decimal import Decimal
 
-import yahoo_finance
 from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT, Index
 from sqlalchemy.orm import relation
+from sqlalchemy.orm.exc import MultipleResultsFound
 
 from ._commodity_helper import quandl_fx
 from .._common import CallableList, GncConversionError
 from .._common import GnucashException, hybrid_property_gncnumeric
 from .._declbase import DeclarativeBaseGuid
-from ..sa_extra import _DateTime, _DateAsDateTime
+from ..sa_extra import _DateAsDateTime
+from ..yahoo_client import get_latest_quote, download_quote
 
 
 class GncCommodityError(GnucashException):
@@ -68,7 +73,7 @@ class Price(DeclarativeBaseGuid):
                  source="user:price"):
         self.commodity = commodity
         self.currency = currency
-        assert isinstance(date, datetime.date) and not isinstance(date, datetime.datetime)
+        assert _type(date) is datetime.date
         self.date = date
         self.value = value
         self.type = type
@@ -79,6 +84,19 @@ class Price(DeclarativeBaseGuid):
                                                        self.value,
                                                        self.currency.mnemonic,
                                                        self.commodity.mnemonic)
+
+    def object_to_validate(self, change):
+        if change[-1] != "deleted":
+            yield self
+
+    def validate(self):
+        # check uniqueness of namespace/mnemonic
+        try:
+            self.book.query(Price).filter_by(commodity=self.commodity,
+                                             currency=self.currency,
+                                             date=self.date).one()
+        except MultipleResultsFound:
+            raise ValueError("{} already exists in this book".format(self))
 
 
 class Commodity(DeclarativeBaseGuid):
@@ -245,7 +263,7 @@ class Commodity(DeclarativeBaseGuid):
             start_date = datetime.datetime.today().date() + datetime.timedelta(days=-7)
 
         if last_price:
-            start_date = max(last_price.date.date() + datetime.timedelta(days=1),
+            start_date = max(last_price.date + datetime.timedelta(days=1),
                              start_date)
 
         if self.namespace == "CURRENCY":
@@ -259,21 +277,35 @@ class Commodity(DeclarativeBaseGuid):
             for q in quotes:
                 p = Price(commodity=self,
                           currency=default_currency,
-                          date=datetime.datetime.strptime(q.date, "%Y-%m-%d"),
+                          date=datetime.datetime.strptime(q.date, "%Y-%m-%d").date(),
                           value=str(q.rate))
 
         else:
             symbol = self.mnemonic
-            share = yahoo_finance.Share(symbol)
-            currency = self.book.currencies(mnemonic=share.data_set["Currency"])
+            share = get_latest_quote(symbol)
+            currency = self.book.currencies(mnemonic=share.currency)
+            tz = pytz.timezone(share.timezone)
 
             # get historical data
-            for q in share.get_historical("{:%Y-%m-%d}".format(start_date),
-                                          "{:%Y-%m-%d}".format(datetime.date.today()),
-                                          ):
-                day, close = q["Date"], q["Close"]
+            for q in download_quote(
+                    symbol,
+                    start_date,
+                    datetime.date.today(),
+                    tz
+            ):
                 Price(commodity=self,
                       currency=currency,
-                      date=datetime.datetime.strptime(day, "%Y-%m-%d"),
-                      value=Decimal(close),
+                      date=q.date,
+                      value=q.close,
                       type='last')
+
+    def object_to_validate(self, change):
+        if change[-1] != "deleted":
+            yield self
+
+    def validate(self):
+        # check uniqueness of namespace/mnemonic
+        try:
+            self.book.query(Commodity).filter_by(namespace=self.namespace, mnemonic=self.mnemonic).one()
+        except MultipleResultsFound:
+            raise ValueError("{} already exists in this book".format(self))

@@ -251,7 +251,6 @@ setup_dict = dict(
                          'pytz',
                          'enum-compat',
                          'tzlocal',
-                         'yahoo-finance',
                          'click',
                      ] + python_version_specific_requires,
     # Allow tests to be run with `python setup.py test'.

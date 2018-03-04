@@ -1,10 +1,8 @@
 # coding=utf-8
 from __future__ import unicode_literals
 
-import yahoo_finance
-
-from .commodity import GncCommodityError
 from .._common import GnucashException
+from ..yahoo_client import get_latest_quote
 
 
 def create_stock_accounts(cdty, broker_account, income_account=None, income_account_types="D/CL/I"):
@@ -122,18 +120,16 @@ def create_stock_from_symbol(symbol, book=None):
     """
     from .commodity import Commodity
 
-    share = yahoo_finance.Share(symbol).data_set
-    currency = share["Currency"]
-    if not currency:
-        raise GncCommodityError("Can't find information on symbol '{}'".format(symbol))
+    share = get_latest_quote(symbol)
 
     stock = Commodity(mnemonic=symbol,
-                      fullname=share["Name"],
+                      fullname=share.name,
                       fraction=10000,
-                      namespace=share["StockExchange"].upper(),
+                      namespace=share.exchange,
                       quote_flag=1,
+                      quote_source="yahoo",
+                      quote_tz=share.timezone,
                       )
-    stock["quoted_currency"] = share["Currency"]
 
     if book:
         book.session.add(stock)
