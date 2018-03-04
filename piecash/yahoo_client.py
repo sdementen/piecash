@@ -102,9 +102,9 @@ def download_quote(symbol, date_from, date_to, tz=None):
     csv_data = list(csv.reader(resp.text.strip().split("\n")))
 
     return [yq
-            for date, *data in csv_data[1:]
-            for yq in [YahooQuote(datetime.datetime.strptime(date, "%Y-%m-%d").date(),
-                                  *[Decimal(f) for f in data])]
+            for data in csv_data[1:]
+            for yq in [YahooQuote(datetime.datetime.strptime(data[0], "%Y-%m-%d").date(),
+                                  *[Decimal(f) for f in data[1:]])]
             if date_from.date() <= yq.date <= date_to.date()]
 
 
