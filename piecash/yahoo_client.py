@@ -94,10 +94,12 @@ def download_quote(symbol, date_from, date_to, tz=None):
         resp = requests.get(link, headers={'Cookie': cookie_str})
         try:
             resp.raise_for_status()
-        except:
+        except Exception as e:
             sleep(2)
         else:
             break
+    else:
+        raise e
 
     csv_data = list(csv.reader(resp.text.strip().split("\n")))
 
