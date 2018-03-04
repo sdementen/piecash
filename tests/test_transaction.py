@@ -332,21 +332,19 @@ class TestTransaction_changes(object):
         assert len(book_transactions.prices) == 6
 
         p = [p for p in book_transactions.prices if p.date.day == 29][0]
-        assert p.value == (sp.value / sp.quantity).quantize(Decimal("0.000001"))
+        p_expected = (sp.value / sp.quantity).quantize(Decimal("0.000001"))
+        assert p.value == p_expected
 
-        print(book_transactions.prices)
-
-        # changing the quantity of the split should change the existing price
+        # changing the quantity of the split should NOT change the existing price
         sp.quantity = (5, 1)
-        print(tr.post_date, tr.enter_date)
-        print(Transaction._post_date, Transaction.enter_date)
-        print(book_transactions.prices)
 
         book_transactions.validate()
-        print(book_transactions.prices)
+
+        p_not_expected = (sp.value / sp.quantity).quantize(Decimal("0.000001"))
 
         assert len(book_transactions.prices) == 6
-        assert p.value == (sp.value / sp.quantity).quantize(Decimal("0.000001"))
+        assert p.value == p_expected
+        assert p_expected != p_not_expected
 
         # changing the post date of the transaction of the split should create a new price
         tr.post_date = date(2015, 1, 29)
