@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from collections import defaultdict
-from datetime import datetime, date
+from datetime import datetime, date, time
 from decimal import Decimal
 
 import pytest
@@ -36,6 +36,43 @@ class TestTransaction_create_transaction(object):
 
         assert isinstance(tr.post_date, date)
 
+    def test_create_basictransaction_validation_date(self, book_basic):
+        EUR = book_basic.commodities(namespace="CURRENCY")
+        racc = book_basic.root_account
+        a = book_basic.accounts(name="asset")
+        e = book_basic.accounts(name="exp")
+
+        splits = [
+            Split(account=a, value=100, memo=u"mémo asset"),
+            Split(account=e, value=-10, memo=u"mémo exp"),
+        ]
+
+        with pytest.raises(GncValidationError):
+            tr = Transaction(currency=EUR, description=u"wire from Hélène", notes=u"on St-Eugène day",
+                             post_date=datetime(2014, 1, 1),
+                             enter_date=datetime(2014, 1, 1),
+                             splits=splits)
+
+        with pytest.raises(GncValidationError):
+            tr = Transaction(currency=EUR, description=u"wire from Hélène", notes=u"on St-Eugène day",
+                             post_date=datetime(2014, 1, 1),
+                             enter_date=time(10, 59, 00),
+                             splits=splits)
+
+        with pytest.raises(GncValidationError):
+            tr = Transaction(currency=EUR, description=u"wire from Hélène", notes=u"on St-Eugène day",
+                             post_date=date(2014, 1, 1),
+                             enter_date=date(2014, 1, 1),
+                             splits=splits)
+
+        tr = Transaction(currency=EUR, description=u"wire from Hélène", notes=u"on St-Eugène day",
+                         post_date=None,
+                         enter_date=None,
+                         splits=splits)
+
+        with pytest.raises(GncImbalanceError):
+            book_basic.flush()
+            book_basic.validate()
 
     def test_create_basictransaction(self, book_basic):
         EUR = book_basic.commodities(namespace="CURRENCY")

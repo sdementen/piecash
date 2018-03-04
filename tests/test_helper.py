@@ -291,5 +291,6 @@ def is_inmemory_sqlite(book_basic):
     return book_basic.uri.database == ":memory:"
 
 
-def is_not_on_web():
-    return bool(os.environ.get("DOGOONWEB", True))
+needweb = pytest.mark.skipif(not bool(os.environ.get("DOGOONWEB", False)),
+                            reason="no access to web")
+

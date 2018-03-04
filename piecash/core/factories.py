@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import yahoo_finance
 
+from piecash.yahoo_client import get_latest_quote
 from .commodity import GncCommodityError
 from .._common import GnucashException
 
@@ -122,18 +123,17 @@ def create_stock_from_symbol(symbol, book=None):
     """
     from .commodity import Commodity
 
-    share = yahoo_finance.Share(symbol).data_set
-    currency = share["Currency"]
-    if not currency:
-        raise GncCommodityError("Can't find information on symbol '{}'".format(symbol))
+    share = get_latest_quote(symbol)
+    currency = share.currency
 
     stock = Commodity(mnemonic=symbol,
-                      fullname=share["Name"],
+                      fullname=share.name,
                       fraction=10000,
-                      namespace=share["StockExchange"].upper(),
+                      namespace=share.exchange,
                       quote_flag=1,
+                      quote_source="yahoo",
+                      quote_tz=share.timezone,
                       )
-    stock["quoted_currency"] = share["Currency"]
 
     if book:
         book.session.add(stock)
