@@ -1,11 +1,8 @@
 # coding=utf-8
 from __future__ import unicode_literals
 
-import yahoo_finance
-
-from piecash.yahoo_client import get_latest_quote
-from .commodity import GncCommodityError
 from .._common import GnucashException
+from ..yahoo_client import get_latest_quote
 
 
 def create_stock_accounts(cdty, broker_account, income_account=None, income_account_types="D/CL/I"):
@@ -124,7 +121,6 @@ def create_stock_from_symbol(symbol, book=None):
     from .commodity import Commodity
 
     share = get_latest_quote(symbol)
-    currency = share.currency
 
     stock = Commodity(mnemonic=symbol,
                       fullname=share.name,
