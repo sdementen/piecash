@@ -5,6 +5,11 @@ What's new
 In development
 ~~~~~~~~~~~~~~
 
+Version 0.16.0 (2018-03-04)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- add a documentation section about piecash on android
+- fix yahoo finance quote retrieval
 - indicate correct reconcile state in ledger output (fix #77)
 
 Version 0.15.0 (2018-02-21)

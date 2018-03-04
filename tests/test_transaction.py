@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from collections import defaultdict
-from datetime import datetime, date
+from datetime import datetime, date, time
 from decimal import Decimal
 
 import pytest
@@ -36,6 +36,43 @@ class TestTransaction_create_transaction(object):
 
         assert isinstance(tr.post_date, date)
 
+    def test_create_basictransaction_validation_date(self, book_basic):
+        EUR = book_basic.commodities(namespace="CURRENCY")
+        racc = book_basic.root_account
+        a = book_basic.accounts(name="asset")
+        e = book_basic.accounts(name="exp")
+
+        splits = [
+            Split(account=a, value=100, memo=u"mémo asset"),
+            Split(account=e, value=-10, memo=u"mémo exp"),
+        ]
+
+        with pytest.raises(GncValidationError):
+            tr = Transaction(currency=EUR, description=u"wire from Hélène", notes=u"on St-Eugène day",
+                             post_date=datetime(2014, 1, 1),
+                             enter_date=datetime(2014, 1, 1),
+                             splits=splits)
+
+        with pytest.raises(GncValidationError):
+            tr = Transaction(currency=EUR, description=u"wire from Hélène", notes=u"on St-Eugène day",
+                             post_date=datetime(2014, 1, 1),
+                             enter_date=time(10, 59, 00),
+                             splits=splits)
+
+        with pytest.raises(GncValidationError):
+            tr = Transaction(currency=EUR, description=u"wire from Hélène", notes=u"on St-Eugène day",
+                             post_date=date(2014, 1, 1),
+                             enter_date=date(2014, 1, 1),
+                             splits=splits)
+
+        tr = Transaction(currency=EUR, description=u"wire from Hélène", notes=u"on St-Eugène day",
+                         post_date=None,
+                         enter_date=None,
+                         splits=splits)
+
+        with pytest.raises(GncImbalanceError):
+            book_basic.flush()
+            book_basic.validate()
 
     def test_create_basictransaction(self, book_basic):
         EUR = book_basic.commodities(namespace="CURRENCY")
@@ -295,21 +332,19 @@ class TestTransaction_changes(object):
         assert len(book_transactions.prices) == 6
 
         p = [p for p in book_transactions.prices if p.date.day == 29][0]
-        assert p.value == (sp.value / sp.quantity).quantize(Decimal("0.000001"))
+        p_expected = (sp.value / sp.quantity).quantize(Decimal("0.000001"))
+        assert p.value == p_expected
 
-        print(book_transactions.prices)
-
-        # changing the quantity of the split should change the existing price
+        # changing the quantity of the split should NOT change the existing price
         sp.quantity = (5, 1)
-        print(tr.post_date, tr.enter_date)
-        print(Transaction._post_date, Transaction.enter_date)
-        print(book_transactions.prices)
 
         book_transactions.validate()
-        print(book_transactions.prices)
+
+        p_not_expected = (sp.value / sp.quantity).quantize(Decimal("0.000001"))
 
         assert len(book_transactions.prices) == 6
-        assert p.value == (sp.value / sp.quantity).quantize(Decimal("0.000001"))
+        assert p.value == p_expected
+        assert p_expected != p_not_expected
 
         # changing the post date of the transaction of the split should create a new price
         tr.post_date = date(2015, 1, 29)
