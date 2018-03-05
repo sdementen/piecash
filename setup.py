@@ -253,6 +253,12 @@ setup_dict = dict(
                          'tzlocal',
                          'click',
                      ] + python_version_specific_requires,
+    extras_require={
+        'prices': ["requests"],
+        'analytics': ["pandas"],
+        'postgres': ["psycopg2"],
+        'mysql':["PyMySQL"],
+    },
     # Allow tests to be run with `python setup.py test'.
     tests_require=[
         'pytest',

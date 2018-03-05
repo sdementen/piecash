@@ -1,0 +1,20 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+
+[packages]
+"-e .[mysql,postgres,analytics,prices]" = "*"
+
+[dev-packages]
+pytest = "*"
+pytest-cov = "*"
+tox = "*"
+py = "*"
+sphinx = "*"
+sphinxcontrib-napoleon = "*"
+sphinx-rtd-theme = "*"
+ipython = "*"
+sphinxcontrib-programoutput = "*"
