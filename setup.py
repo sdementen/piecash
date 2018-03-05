@@ -249,7 +249,6 @@ setup_dict = dict(
                          'SQLAlchemy>=1.0',
                          'SQLAlchemy-Utils>=0.31',
                          'pytz',
-                         'enum-compat',
                          'tzlocal',
                          'click',
                      ] + python_version_specific_requires,
@@ -258,6 +257,7 @@ setup_dict = dict(
         'analytics': ["pandas"],
         'postgres': ["psycopg2"],
         'mysql':["PyMySQL"],
+        ':python_version=="2.7"': ['enum34'],
     },
     # Allow tests to be run with `python setup.py test'.
     tests_require=[
