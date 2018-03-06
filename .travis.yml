@@ -13,8 +13,6 @@ install:
 - hash -r
 - pip install pipenv
 - pipenv install --dev
-- export VENV_HOME_DIR=$(pipenv --venv)
-- source $VENV_HOME_DIR/bin/activate
 
 script:
 - python setup.py test
