@@ -208,30 +208,25 @@ install_requires = [
     'click',
     'enum34;python_version<"3.4"',
 ]
-print(dir())
-
 extras_require = {
-                     'postgres': ["psycopg2"],
-                     'mysql': ["PyMySQL"],
-                     # 'pandas;python_version=="3.4"': ['pandas==0.21.0',],  # no wheels for py34 beyond 0.21.0
-                     # 'pandas==0.21.1;python_version!="3.4"'],
-                     'pandas': [],
-                     'finance-quote': ["requests"],
-                     'test': ['pytest', 'pytest-cov', 'tox',
-                              # '.[pandas,finance-quote,mysql,postgres]',
-                              ],
-                     'doc': ['sphinx',
-                             'sphinxcontrib-napoleon', 'sphinxcontrib-programoutput',
-                             'sphinx-rtd-theme',
-                             'ipython']
-                 },
-# Allow tests to be run with `python setup.py test'.
-tests_require = [
-                    'piecash[pandas,finance-quote,mysql,postgres,test]'
-                ],
-
-# See here for more options:
-# <http://pythonhosted.org/setuptools/setuptools.html>
+    'postgres': ["psycopg2"],
+    'mysql': ["PyMySQL"],
+    'pandas': ['pandas==0.21.0;python_version=="3.4"',  # no wheels for py34 beyond 0.21.0
+               'pandas;python_version!="3.4"',
+               ],
+    'finance-quote': ["requests"],
+    'test': ['pytest', 'pytest-cov', 'tox',
+             ],
+    'doc': ['sphinx',
+            'sphinxcontrib-napoleon', 'sphinxcontrib-programoutput',
+            'sphinx-rtd-theme',
+            'ipython']
+}
+# build an 'all' option covering all options
+extras_require['all'] = sum(extras_require[k] for k in ['postgres', 'mysql', 'pandas', 'finance-quote'])
+# add 'all' for both doc and test
+extras_require['test'].extend(extras_require['all'])
+extras_require['doc'].extend(extras_require['all'])
 
 setup_dict = dict(
     name=metadata.package,
@@ -266,32 +261,10 @@ setup_dict = dict(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     packages=find_packages(exclude=(TESTS_DIRECTORY, DATA_DIRECTORY)),
-    install_requires=[
-        'SQLAlchemy>=1.0',
-        'SQLAlchemy-Utils>=0.31',
-        'pytz',
-        'tzlocal',
-        'click',
-        'enum34;python_version<"3.4"',
-    ],
-    extras_require={
-        'postgres': ["psycopg2"],
-        'mysql': ["PyMySQL"],
-        'pandas': ['pandas==0.21.0;python_version=="3.4"', # no wheels for py34 beyond 0.21.0
-                   'pandas;python_version!="3.4"',
-                   ],
-        'finance-quote': ["requests"],
-        'test': ['pytest', 'pytest-cov', 'tox',
-                 # '.[pandas,finance-quote,mysql,postgres]',
-                 ],
-        'doc': ['sphinx',
-                'sphinxcontrib-napoleon', 'sphinxcontrib-programoutput',
-                'sphinx-rtd-theme',
-                'ipython']
-    },
+    install_requires=install_requires,
+    extras_require=extras_require,
     # Allow tests to be run with `python setup.py test'.
-    tests_require=[
-    ],
+    tests_require=[],
     entry_points={
         'console_scripts': [
             'piecash = piecash.scripts.export:cli',
@@ -304,11 +277,6 @@ setup_dict = dict(
     zip_safe=False,  # don't use eggs
 )
 
-# add to test all the extras
-for k in ['postgres', 'mysql','pandas','finance-quote']:
-    setup_dict["extras_require"]["test"].extend(setup_dict["extras_require"][k])
-
-setup_dict["tests_require"] = setup_dict["extras_require"]["test"]
 
 def main():
     setup(**setup_dict)
