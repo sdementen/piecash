@@ -308,6 +308,7 @@ setup_dict = dict(
 for k in ['postgres', 'mysql','pandas','finance-quote']:
     setup_dict["extras_require"]["test"].extend(setup_dict["extras_require"][k])
 
+setup_dict["tests_require"] = setup_dict["extras_require"]["test"]
 
 def main():
     setup(**setup_dict)
