@@ -291,7 +291,6 @@ setup_dict = dict(
     },
     # Allow tests to be run with `python setup.py test'.
     tests_require=[
-        'piecash[pandas,finance-quote,mysql,postgres,test]'
     ],
     entry_points={
         'console_scripts': [
