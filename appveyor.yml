@@ -105,27 +105,29 @@ install:
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
-  - "pip install --disable-pip-version-check --user --upgrade pip"
+  - "pip install --disable-pip-version-check --upgrade pip"
   - "pip install pipenv"
 
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,
   # pip will build them from source using the MSVC compiler matching the
   # target Python version and architecture
-  - "pipenv install --dev"
+  - "pipenv install -e .[test]"
   - "pipenv graph"
 
 
 
 build_script:
   # Build the compiled extension
-  - "pipenv run setup.py build"
+  - "pipenv graph"
+  - "pipenv run python setup.py build"
 
 test_script:
   # Run the project tests
   - "createdb foo"
   - '"C:\\Program Files\\MySql\\MySQL Server 5.7\\bin\\mysql" -e "create database foo;" --user=root'
-  - "pipenv run setup.py test"
+  - "pipenv graph"
+  - "pipenv run python setup.py test"
 
 after_test:
   # If tests are successful, create binary packages for the project.

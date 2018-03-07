@@ -1,9 +1,9 @@
 language: python
 python:
-#- '2.7'
+- '2.7'
 - '3.4'
-#- '3.5'
-#- '3.6'
+- '3.5'
+- '3.6'
 services:
 - postgresql
 - mysql
@@ -12,7 +12,7 @@ env:
 install:
 - hash -r
 - pip install pipenv
-- pipenv install --dev --verbose
+- pipenv install -e .[test]
 
 script:
 - python setup.py test
