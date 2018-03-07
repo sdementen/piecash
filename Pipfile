@@ -6,9 +6,12 @@ name = "pypi"
 
 
 [packages]
-"-e .[mysql,postgres,analytics,prices]" = "*"
+
+"-e .[mysql,postgres,pandas,finance-quote]" = "*"
+
 
 [dev-packages]
+
 pytest = "*"
 pytest-cov = "*"
 tox = "*"

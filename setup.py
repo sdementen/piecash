@@ -253,11 +253,13 @@ setup_dict = dict(
                          'click',
                      ] + python_version_specific_requires,
     extras_require={
-        'prices': ["requests"],
-        'analytics': ["pandas"],
+        'finance-quote': ["requests"],
+        'pandas': ["pandas"],
         'postgres': ["psycopg2"],
         'mysql':["PyMySQL"],
         ':python_version=="2.7"': ['enum34'],
+        ':python_version=="3.4"': ['pandas==0.21.0'], # no wheels for py34 beyond 0.21.0
+
     },
     # Allow tests to be run with `python setup.py test'.
     tests_require=[
