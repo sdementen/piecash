@@ -5,8 +5,8 @@ import imp
 import os
 import subprocess
 import sys
+
 # # Python 2.6 subprocess.check_output compatibility. Thanks Greg Hewgill!
-from distutils.command.install_scripts import install_scripts
 
 if 'check_output' not in dir(subprocess):
     def check_output(cmd_args, *args, **kwargs):
@@ -199,15 +199,36 @@ def _lint():
     return retcode
 
 
-# define install_requires for specific Python versions
-python_version_specific_requires = []
+## package dependencies
+install_requires = [
+    'SQLAlchemy>=1.0',
+    'SQLAlchemy-Utils>=0.31',
+    'pytz',
+    'tzlocal',
+    'click',
+    'enum34;python_version<"3.4"',
+]
+print(dir())
 
-# as of Python >= 2.7 and >= 3.2, the argparse module is maintained within
-# the Python standard library, otherwise we install it as a separate package
-# if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 3):
-#     python_version_specific_requires.append('argparse')
-
-
+extras_require = {
+                     'postgres': ["psycopg2"],
+                     'mysql': ["PyMySQL"],
+                     # 'pandas;python_version=="3.4"': ['pandas==0.21.0',],  # no wheels for py34 beyond 0.21.0
+                     # 'pandas==0.21.1;python_version!="3.4"'],
+                     'pandas': [],
+                     'finance-quote': ["requests"],
+                     'test': ['pytest', 'pytest-cov', 'tox',
+                              # '.[pandas,finance-quote,mysql,postgres]',
+                              ],
+                     'doc': ['sphinx',
+                             'sphinxcontrib-napoleon', 'sphinxcontrib-programoutput',
+                             'sphinx-rtd-theme',
+                             'ipython']
+                 },
+# Allow tests to be run with `python setup.py test'.
+tests_require = [
+                    'piecash[pandas,finance-quote,mysql,postgres,test]'
+                ],
 
 # See here for more options:
 # <http://pythonhosted.org/setuptools/setuptools.html>
@@ -246,24 +267,31 @@ setup_dict = dict(
     ],
     packages=find_packages(exclude=(TESTS_DIRECTORY, DATA_DIRECTORY)),
     install_requires=[
-                         'SQLAlchemy>=1.0',
-                         'SQLAlchemy-Utils>=0.31',
-                         'pytz',
-                         'tzlocal',
-                         'click',
-                     ] + python_version_specific_requires,
+        'SQLAlchemy>=1.0',
+        'SQLAlchemy-Utils>=0.31',
+        'pytz',
+        'tzlocal',
+        'click',
+        'enum34;python_version<"3.4"',
+    ],
     extras_require={
         'postgres': ["psycopg2"],
-        'mysql':["PyMySQL"],
-        ':python_version=="2.7"': ['enum34'],
-        'pandas:python_version=="3.4"': ['pandas==0.21.0'], # no wheels for py34 beyond 0.21.0
-        'pandas:python_version!="3.4"': ['pandas'], # no wheels for py34 beyond 0.21.0
+        'mysql': ["PyMySQL"],
+        'pandas': ['pandas==0.21.0;python_version=="3.4"', # no wheels for py34 beyond 0.21.0
+                   'pandas;python_version!="3.4"',
+                   ],
         'finance-quote': ["requests"],
+        'test': ['pytest', 'pytest-cov', 'tox',
+                 # '.[pandas,finance-quote,mysql,postgres]',
+                 ],
+        'doc': ['sphinx',
+                'sphinxcontrib-napoleon', 'sphinxcontrib-programoutput',
+                'sphinx-rtd-theme',
+                'ipython']
     },
     # Allow tests to be run with `python setup.py test'.
     tests_require=[
-        'pytest',
-        'py',
+        'piecash[pandas,finance-quote,mysql,postgres,test]'
     ],
     entry_points={
         'console_scripts': [
@@ -276,6 +304,10 @@ setup_dict = dict(
     test_suite="tests",
     zip_safe=False,  # don't use eggs
 )
+
+# add to test all the extras
+for k in ['postgres', 'mysql','pandas','finance-quote']:
+    setup_dict["extras_require"]["test"].extend(setup_dict["extras_require"][k])
 
 
 def main():
