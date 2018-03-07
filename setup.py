@@ -211,6 +211,17 @@ python_version_specific_requires = []
 
 # See here for more options:
 # <http://pythonhosted.org/setuptools/setuptools.html>
+pandas_reqs = [    
+    'pandas==0.21.0;python_version=="3.4"',
+    'pandas;python_version!="3.4"'
+]
+
+test_reqs = [
+    'pytest',
+    'pytest-cov',
+    'py',
+    'tox'
+]
 
 setup_dict = dict(
     name=metadata.package,
@@ -252,19 +263,16 @@ setup_dict = dict(
                          'tzlocal',
                          'click',
                          'enum34;python_version<"3.4"',
-                         'pandas==0.21.0;python_version=="3.4"',  # no wheels for py34 beyond 0.21.0
-                         'pandas;python_version!="3.4"'
                      ] + python_version_specific_requires,
     extras_require={
         'postgres': ["psycopg2"],
         'mysql':["PyMySQL"],
         'finance-quote': ["requests"],
+        'pandas': pandas_reqs,
+        'test': ['psycopg2', 'PyMySQL', 'requests'] + pandas_reqs + test_reqs
     },
     # Allow tests to be run with `python setup.py test'.
-    tests_require=[
-        'pytest',
-        'py',
-    ],
+    tests_require=test_reqs
     entry_points={
         'console_scripts': [
             'piecash = piecash.scripts.export:cli',
