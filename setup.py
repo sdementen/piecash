@@ -251,13 +251,13 @@ setup_dict = dict(
                          'pytz',
                          'tzlocal',
                          'click',
+                         'enum34;python_version<"3.4"',
+                         'pandas==0.21.0;python_version=="3.4"',  # no wheels for py34 beyond 0.21.0
+                         'pandas;python_version!="3.4"'
                      ] + python_version_specific_requires,
     extras_require={
         'postgres': ["psycopg2"],
         'mysql':["PyMySQL"],
-        ':python_version=="2.7"': ['enum34'],
-        'pandas:python_version=="3.4"': ['pandas==0.21.0'], # no wheels for py34 beyond 0.21.0
-        'pandas:python_version!="3.4"': ['pandas'], # no wheels for py34 beyond 0.21.0
         'finance-quote': ["requests"],
     },
     # Allow tests to be run with `python setup.py test'.
