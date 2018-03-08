@@ -223,7 +223,7 @@ extras_require = {
             'ipython']
 }
 # build an 'all' option covering all options
-extras_require['all'] = sum(extras_require[k] for k in ['postgres', 'mysql', 'pandas', 'finance-quote'], [])
+extras_require['all'] = sum((extras_require[k] for k in ['postgres', 'mysql', 'pandas', 'finance-quote']), [])
 # add 'all' for both doc and test
 extras_require['test'].extend(extras_require['all'])
 extras_require['doc'].extend(extras_require['all'])
