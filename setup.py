@@ -223,10 +223,10 @@ extras_require = {
             'ipython']
 }
 # build an 'all' option covering all options
-extras_require['all'] = sum((extras_require[k] for k in ['postgres', 'mysql', 'pandas', 'finance-quote']), [])
+extras_require['all'] = deps_all = sum((extras_require[k] for k in ['postgres', 'mysql', 'pandas', 'finance-quote']), [])
 # add 'all' for both doc and test
-extras_require['test'].extend(extras_require['all'])
-extras_require['doc'].extend(extras_require['all'])
+extras_require['test'].extend(deps_all)
+extras_require['doc'].extend(deps_all)
 
 setup_dict = dict(
     name=metadata.package,
@@ -264,7 +264,7 @@ setup_dict = dict(
     install_requires=install_requires,
     extras_require=extras_require,
     # Allow tests to be run with `python setup.py test'.
-    tests_require=[],
+    tests_require=['pytest'], # + deps_all,
     entry_points={
         'console_scripts': [
             'piecash = piecash.scripts.export:cli',
