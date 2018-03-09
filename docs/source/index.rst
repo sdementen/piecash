@@ -23,6 +23,7 @@ Contents:
    tutorial/index_new.rst
    tutorial/examples.rst
    doc/comparison.rst
+   android.rst
 
 For developers
 ==============
