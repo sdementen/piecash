@@ -1,7 +1,7 @@
 # coding=utf-8
 from __future__ import unicode_literals
 
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
 
 import pytest
@@ -9,12 +9,12 @@ import tzlocal
 
 from piecash import GnucashException, Commodity
 from piecash.core import factories
-from piecash.sa_extra import utc, tz
-from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, is_not_on_web
+from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, needweb
 
 # dummy line to avoid removing unused symbols
 
 a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic
+
 
 class TestFactoriesCommodities(object):
     def test_create_stock_accounts_simple(self, book_basic):
@@ -62,13 +62,25 @@ class TestFactoriesCommodities(object):
                                                             income_account=income,
                                                             income_account_types="D/CL/CS/I")
         assert len(income.children) == 4
-        assert sorted(income.children, key=lambda x: x.guid) == sorted([_acc.parent for _acc in inc_accounts], key=lambda x: x.guid)
+        assert sorted(income.children, key=lambda x: x.guid) == sorted([_acc.parent for _acc in inc_accounts],
+                                                                       key=lambda x: x.guid)
         assert broker.children == [acc]
 
+    @needweb
     def test_create_stock_from_symbol(self, book_basic):
-        if is_not_on_web():
-            return
+        assert len(book_basic.commodities) == 2
+
         factories.create_stock_from_symbol("AAPL", book_basic)
+
+        assert len(book_basic.commodities) == 3
+
+        cdty = book_basic.commodities(mnemonic="AAPL")
+
+        assert cdty.namespace == "NMS"
+        assert cdty.quote_tz == "EST"
+        assert cdty.quote_source == "yahoo"
+        assert cdty.mnemonic == "AAPL"
+        assert cdty.fullname == "Apple Inc."
 
     def test_create_currency_from_ISO(self, book_basic):
         assert factories.create_currency_from_ISO("CAD").fullname == "Canadian Dollar"
@@ -76,10 +88,11 @@ class TestFactoriesCommodities(object):
         with pytest.raises(ValueError):
             factories.create_currency_from_ISO("EFR").fullname
 
+
 class TestFactoriesTransactions(object):
     def test_single_transaction(self, book_basic):
         today = datetime.today()
-        print("today=",today)
+        print("today=", today)
         factories.single_transaction(today.date(),
                                      today,
                                      "my test",

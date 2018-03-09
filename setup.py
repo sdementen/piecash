@@ -5,8 +5,8 @@ import imp
 import os
 import subprocess
 import sys
+
 # # Python 2.6 subprocess.check_output compatibility. Thanks Greg Hewgill!
-from distutils.command.install_scripts import install_scripts
 
 if 'check_output' not in dir(subprocess):
     def check_output(cmd_args, *args, **kwargs):
@@ -199,18 +199,34 @@ def _lint():
     return retcode
 
 
-# define install_requires for specific Python versions
-python_version_specific_requires = []
-
-# as of Python >= 2.7 and >= 3.2, the argparse module is maintained within
-# the Python standard library, otherwise we install it as a separate package
-# if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 3):
-#     python_version_specific_requires.append('argparse')
-
-
-
-# See here for more options:
-# <http://pythonhosted.org/setuptools/setuptools.html>
+## package dependencies
+install_requires = [
+    'SQLAlchemy>=1.0',
+    'SQLAlchemy-Utils>=0.31',
+    'pytz',
+    'tzlocal',
+    'click',
+    'enum34;python_version<"3.4"',
+]
+extras_require = {
+    'postgres': ["psycopg2"],
+    'mysql': ["PyMySQL"],
+    'pandas': ['pandas==0.21.0;python_version=="3.4"',  # no wheels for py34 beyond 0.21.0
+               'pandas;python_version!="3.4"',
+               ],
+    'finance-quote': ["requests"],
+    'test': ['pytest', 'pytest-cov', 'tox',
+             ],
+    'doc': ['sphinx',
+            'sphinxcontrib-napoleon', 'sphinxcontrib-programoutput',
+            'sphinx-rtd-theme',
+            'ipython']
+}
+# build an 'all' option covering all options
+extras_require['all'] = deps_all = sum((extras_require[k] for k in ['postgres', 'mysql', 'pandas', 'finance-quote']), [])
+# add 'all' for both doc and test
+extras_require['test'].extend(deps_all)
+extras_require['doc'].extend(deps_all)
 
 setup_dict = dict(
     name=metadata.package,
@@ -245,20 +261,10 @@ setup_dict = dict(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     packages=find_packages(exclude=(TESTS_DIRECTORY, DATA_DIRECTORY)),
-    install_requires=[
-                         'SQLAlchemy>=1.0',
-                         'SQLAlchemy-Utils>=0.31',
-                         'pytz',
-                         'enum-compat',
-                         'tzlocal',
-                         'yahoo-finance',
-                         'click',
-                     ] + python_version_specific_requires,
+    install_requires=install_requires,
+    extras_require=extras_require,
     # Allow tests to be run with `python setup.py test'.
-    tests_require=[
-        'pytest',
-        'py',
-    ],
+    tests_require=['pytest'], # + deps_all,
     entry_points={
         'console_scripts': [
             'piecash = piecash.scripts.export:cli',
