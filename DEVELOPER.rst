@@ -34,3 +34,4 @@ Some note for developers:
     1. update metadata.py
     2. update changelog
     3. `tag MM.mm.pp`
+    4. python setup.py sdist upload

@@ -188,8 +188,8 @@ class Book(DeclarativeBaseGuid):
         assert None not in txs, "No object should return None to validate. fix the code"
 
         # sort object from local to global (ensure Split checked before Transaction)
-        from . import Account, Transaction, Split
-        sort_order = defaultdict(lambda: 20, {Account: 10, Transaction: 5, Split: 3, })
+        from . import Account, Transaction, Split, Commodity
+        sort_order = defaultdict(lambda: 20, {Account: 10, Transaction: 5, Split: 3, Commodity: 2})
         txs = list(txs)
         txs.sort(key=lambda x: sort_order[type(x)])
 

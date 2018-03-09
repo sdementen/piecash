@@ -151,14 +151,14 @@ class Split(DeclarativeBaseGuid):
 
             value = (self.value / self.quantity).quantize(Decimal("0.000001"))
             try:
-                # find existing price if any
+                # find existing price if any and if so, do nothing
                 pr = self.book.prices(commodity=self.account.commodity,
                                       currency=self.transaction.currency,
                                       date=self.transaction.post_date,
-                                      type="transaction",
-                                      source="user:split-register")
-                pr.value = value
+                                      )
+
             except KeyError:
+                # otherwise, add a price in the database
                 pr = Price(commodity=self.account.commodity,
                            currency=self.transaction.currency,
                            date=self.transaction.post_date,
@@ -224,10 +224,10 @@ class Transaction(DeclarativeBaseGuid):
                  num="",
                  ):
 
-        assert enter_date is None or isinstance(enter_date, datetime.datetime), "enter_date should be a datetime object"
-        assert post_date is None or (
-                isinstance(post_date, datetime.date)
-                and not isinstance(post_date, datetime.datetime)), "post_date should be a date object"
+        if not (enter_date is None or type(enter_date) is datetime.datetime):
+            raise GncValidationError("enter_date should be a datetime object")
+        if not (post_date is None or type(post_date) is datetime.date):
+            raise GncValidationError("post_date should be a date object")
 
         self.currency = currency
         self.description = description
