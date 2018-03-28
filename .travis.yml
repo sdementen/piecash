@@ -11,7 +11,7 @@ env:
 - DONOTGOONWEB=True
 install:
 - hash -r
-- pip install pipenv
+- pip install pipenv==11.0.2
 - pipenv install -e .[test]
 
 script:

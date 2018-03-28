@@ -13,15 +13,17 @@ Information on the official python bindings may be incomplete (information gathe
 |                           |    piecash                 |      official python bindings         |
 |                           |                            |                                       |
 +===========================+============================+=======================================+
-|  environment              |      Python 2.7            |      Python 2.7                       |
+|  environment              |   Python 2.7               |      Python 2.7                       |
 |                           |                            |                                       |
-|                           |      Python 3.3/3.4/3.5    |                                       |
+|                           |   Python 3.3/3.4/3.5/3.6   |                                       |
 +---------------------------+----------------------------+---------------------------------------+
 |  installation             |    pure python package     |    compilation (difficult on windows) |
 |                           |                            |                                       |
 |                           |    'pip install piecash'   |    binaries (available on Linux)      |
 +---------------------------+----------------------------+---------------------------------------+
 |  requires GnuCash         |      no                    |      yes                              |
++---------------------------+----------------------------+---------------------------------------+
+|  runs on Android          |      yes                   |      no                               |
 +---------------------------+----------------------------+---------------------------------------+
 |  gnucash files            |  SQL backend only          |     SQL backend and XML               |
 +---------------------------+----------------------------+---------------------------------------+
