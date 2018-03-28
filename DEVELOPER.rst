@@ -1,6 +1,10 @@
 Some note for developers:
 -------------------------
 
+- to prepare a virtualenv for dev purposes::
+
+    pipenv install -e .[test,doc]
+
 - to generate the sdist dist\piecash-XXX.tar.gz::
 
     python setup.py sdist
@@ -9,16 +13,16 @@ Some note for developers:
 
     twine upload dist\piecash-0.13.0.tar.gz
 
-- to generate the modules `modules.rst` and `piecash.rst` in the \doc folder, go to the \doc folder and::
+- to generate the modules `modules.rst` and `piecash.rst` in the docs\source\doc folder, go to the docs\source\doc folder and::
 
     sphinx-apidoc -o . ../../piecash
 
-- to build the doc (do not forget to `pip install -r requirements-dev.txt` before)::
+- to build the doc (do not forget to `pipenv install -e .[doc]` before)::
 
-    cd docs/source
-    sphinx-build . build
+    cd docs
+    make html
 
-  The documentation will be available through docs/source/build/index.html.
+  The documentation will be available through docs/build/html/index.html.
 
 - to test via tox and conda, create first the different environment with the relevant versions of python::
 
