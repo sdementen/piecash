@@ -8,6 +8,10 @@ In development
 - add a documentation section about piecash on android
 - fix yahoo finance quote retrieval
 - indicate correct reconcile state in ledger output (fix #77)
+- internal refactoring of setup.py
+- add optional packages
+- move to pipenv
+- improve documentation
 
 Version 0.15.0 (2018-02-21)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
