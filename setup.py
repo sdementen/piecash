@@ -214,6 +214,7 @@ extras_require = {
     'pandas': ['pandas==0.21.0;python_version=="3.4"',  # no wheels for py34 beyond 0.21.0
                'pandas;python_version!="3.4"',
                ],
+    'qif': ['qifparse'],
     'finance-quote': ["requests"],
     'test': ['pytest', 'pytest-cov', 'tox',
              ],
@@ -223,7 +224,8 @@ extras_require = {
             'ipython']
 }
 # build an 'all' option covering all options
-extras_require['all'] = deps_all = sum((extras_require[k] for k in ['postgres', 'mysql', 'pandas', 'finance-quote']), [])
+extras_require['all'] = deps_all = sum((extras_require[k] for k in ['postgres', 'mysql', 'pandas', 'finance-quote']),
+                                       [])
 # add 'all' for both doc and test
 extras_require['test'].extend(deps_all)
 extras_require['doc'].extend(deps_all)
@@ -264,7 +266,7 @@ setup_dict = dict(
     install_requires=install_requires,
     extras_require=extras_require,
     # Allow tests to be run with `python setup.py test'.
-    tests_require=['pytest'], # + deps_all,
+    tests_require=['pytest'],  # + deps_all,
     entry_points={
         'console_scripts': [
             'piecash = piecash.scripts.export:cli',
