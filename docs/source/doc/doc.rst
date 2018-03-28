@@ -54,9 +54,24 @@ or to upgrade if piecash is already installed::
 
     $ pip install -U piecash
 
-To install with easy_install::
+piecash comes with 6 extra options (each option depends on extra packages that will be installed only if the option is chosen):
+ - pandas: install also pandas to use :meth:`piecash.core.book.Book.splits_df` and :meth:`piecash.core.book.Book.prices_df`
+ - finance-quote: to retrieve quotes/prices
+ - postgres: to support connecting to a book saved on a postgresql database
+ - mysql: to support connecting to a book saved on a mysql database
+ - qif: to support export to QIF
+For developers, two extra options:
+ - test: to install what is needed for testing piecash
+ - dev: to install what is needed for developing piecash (docs, ...)
 
-    $ easy_install piecash
+To install these options, simply specify them between brackets after the piecash package::
+
+    $ pip install piecash[pandas,qif,postgres]
+
+
+To install with pipenv::
+
+    $ pipenv install piecash
 
 Otherwise, you can install by unpacking the source distribution from PyPI and then::
 

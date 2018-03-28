@@ -45,7 +45,7 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx',
               'sphinxcontrib.programoutput',
               ]
 
-ipython_mplbackend= None
+ipython_mplbackend= ""
 # import piecash and set the folder with gnucash books
 ipython_execlines = ['from piecash import *',
                      'import os',
