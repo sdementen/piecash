@@ -8,6 +8,7 @@ In development
 - add a documentation section about piecash on android
 - fix yahoo finance quote retrieval
 - indicate correct reconcile state in ledger output (fix #77)
+- fix missing extra blank between account name and amount in ledger export (fix #86)
 
 Version 0.15.0 (2018-02-21)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
