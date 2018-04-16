@@ -2,17 +2,24 @@ What's new
 ==========
 
 
-In development
-~~~~~~~~~~~~~~
+Version 0.17.0 (2018-03-16)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- add a documentation section about piecash on android
-- fix yahoo finance quote retrieval
-- indicate correct reconcile state in ledger output (fix #77)
 - internal refactoring of setup.py
 - add optional packages
 - move to pipenv
 - improve documentation
 - fix missing extra blank between account name and amount in ledger export (fix #86)
+
+
+Version 0.16.0 (2018-03-04)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- add a documentation section about piecash on android
+- fix yahoo finance quote retrieval
+- indicate correct reconcile state in ledger output (fix #77)
+
+
 
 Version 0.15.0 (2018-02-21)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
