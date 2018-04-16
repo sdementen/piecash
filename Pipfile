@@ -13,7 +13,8 @@ SQLAlchemy-Utils="*"
 pytz="*"
 tzlocal="*"
 click="*"
-enum34="python_version<'3.4'"
+enum34={markers="python_version < '3.4'"}
+
 
 [dev-packages]
 tox-pipenv = "*"
