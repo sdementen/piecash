@@ -3,9 +3,10 @@ from __future__ import unicode_literals
 
 import locale
 import sys
+from contextlib import contextmanager
 
 import pytest
-from decorator import contextmanager
+
 
 from piecash import create_book, Account, open_book
 from piecash._common import get_system_currency_mnemonic
