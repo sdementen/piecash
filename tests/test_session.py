@@ -5,6 +5,7 @@ import locale
 import sys
 
 import pytest
+from decorator import contextmanager
 
 from piecash import create_book, Account, open_book
 from piecash._common import get_system_currency_mnemonic
@@ -69,23 +70,36 @@ class TestSession_create_book(object):
         assert build_uri(sqlite_file=uri) == sqlite_uri
 
 
-def test_get_system_currency_mnemonic():
-    assert get_system_currency_mnemonic() == "EUR"
-
-
-def test_get_system_currency_mnemonic_US():
-    l = locale.getlocale()
-
-    if sys.platform == "win32":
-        # see https://docs.moodle.org/dev/Table_of_locales
-        locale.setlocale(locale.LC_ALL, 'English_United States.1252')
-    else:
-        locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
-
-    assert get_system_currency_mnemonic() == "USD"
+@contextmanager
+def locale_ctx(l):
+    _l = locale.getlocale()
 
     locale.setlocale(locale.LC_ALL, l)
 
+    yield
 
-def test_get_system_currency_mnemonic_after():
-    assert get_system_currency_mnemonic() == "EUR"
+    locale.setlocale(locale.LC_ALL, _l)
+
+
+if sys.platform == "win32":
+    locales = {
+        (None, None): "EUR",
+        'English_United States.1252': "USD",
+        'French_France.1252': "EUR",
+    }
+else:
+    locales = {
+        (None, None): "EUR",
+        'en_US.UTF-8': "USD",
+        'fr_FR.UTF-8': "EUR",
+    }
+
+
+@pytest.yield_fixture(params=locales)
+def locale_set(request):
+    yield request.param
+
+def test_get_system_currency_mnemonic(locale_set):
+    result = locales[locale_set]
+    with locale_ctx(locale_set):
+        assert get_system_currency_mnemonic() == result
