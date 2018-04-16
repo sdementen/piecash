@@ -2,11 +2,6 @@
 """Basic script to export QIF. Heavily untested ..."""
 import sys
 
-try:
-    import qifparse.qif as _qif
-except ImportError:
-    print("You need to install the qifparse module ('pip install qifparse')")
-    sys.exit()
 # https://github.com/jemmyw/Qif/blob/master/QIF_references
 
 import click
@@ -23,6 +18,13 @@ def qif(book, output):
 
     This scripts export a GnuCash BOOK to the QIF format.
     """
+    try:
+        import qifparse.qif as _qif
+    except ImportError:
+        _qif = None
+        print("You need to install the qifparse module ('pip install qifparse')")
+        sys.exit()
+
     import piecash
 
     map_gnc2qif = {

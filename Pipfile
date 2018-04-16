@@ -1,0 +1,33 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+
+[packages]
+
+sqlalchemy = "*"
+sqlalchemy-utils = "*"
+pytz = "*"
+tzlocal = "*"
+click = "*"
+"enum34" = {markers="python_version < '3.4'"}
+
+
+[dev-packages]
+
+tox-pipenv = "*"
+"psycopg2" = "*"
+pymysql = "*"
+pandas = "*"
+qifparse = "*"
+requests = "*"
+pytest = "*"
+pytest-cov = "*"
+tox = "*"
+sphinx = "*"
+sphinxcontrib-napoleon = "*"
+sphinxcontrib-programoutput = "*"
+sphinx-rtd-theme = "*"
+ipython = "*"
