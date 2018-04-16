@@ -80,7 +80,7 @@ def test_get_system_currency_mnemonic_US():
         # see https://docs.moodle.org/dev/Table_of_locales
         locale.setlocale(locale.LC_ALL, 'English_United States.1252')
     else:
-        locale.setlocale(locale.LC_ALL, 'en_US')
+        locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
     assert get_system_currency_mnemonic() == "USD"
 
