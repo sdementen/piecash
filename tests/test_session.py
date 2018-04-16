@@ -84,15 +84,15 @@ def locale_ctx(l):
 
 if sys.platform == "win32":
     locales = {
-        (None, None): "EUR",
         'English_United States.1252': "USD",
         'French_France.1252': "EUR",
+        'C': "EUR",
     }
 else:
     locales = {
-        (None, None): "EUR",
         'en_US.UTF-8': "USD",
         'fr_FR.UTF-8': "EUR",
+        'C': "EUR",
     }
 
 
