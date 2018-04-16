@@ -12,7 +12,7 @@ env:
 install:
 - hash -r
 - pip install pipenv==11.0.2
-- pipenv install -e .[test]
+- pipenv install -e .[test] --ignore-pipfile
 
 script:
 - python setup.py test
