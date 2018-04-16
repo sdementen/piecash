@@ -1,13 +1,14 @@
-import datetime
 import os
 import shutil
-import socket
 from collections import defaultdict
 
+import datetime
+import socket
 from sqlalchemy import event, Column, VARCHAR, INTEGER, Table, PrimaryKeyConstraint
 from sqlalchemy.sql.ddl import DropConstraint, DropIndex
 from sqlalchemy_utils import database_exists
 
+from piecash.core import factories
 from .book import Book
 from .._common import GnucashException
 from ..sa_extra import create_piecash_engine, DeclarativeBase, Session
@@ -248,9 +249,10 @@ def create_book(sqlite_file=None,
     # create commodities and initial accounts
     from .account import Account
 
-    b.root_account = Account(name="Root Account", type="ROOT", commodity=None, book=b)
+    b.root_account = Account(name="Root Account", type="ROOT",
+                             commodity=factories.create_currency_from_ISO(currency),
+                             book=b)
     b.root_template = Account(name="Template Root", type="ROOT", commodity=None, book=b)
-    b["default-currency"] = b.currencies(mnemonic=currency)
     b.save()
 
     return b

@@ -1,18 +1,19 @@
-import locale
 import warnings
 from collections import defaultdict
 from operator import attrgetter
+
 from sqlalchemy import Column, VARCHAR, ForeignKey
 from sqlalchemy.orm import relation, aliased, joinedload
 from sqlalchemy.orm.base import instance_state
 from sqlalchemy.orm.exc import NoResultFound
+
 from . import factories
 from .account import Account
 from .commodity import Commodity, Price
 from .transaction import Split, Transaction
-from ..business.invoice import Invoice
 from .._common import CallableList, GnucashException
 from .._declbase import DeclarativeBaseGuid
+from ..business.invoice import Invoice
 from ..sa_extra import kvp_attribute
 
 
@@ -108,13 +109,17 @@ class Book(DeclarativeBaseGuid):
                                      to_gnc=lambda v: float(v),
                                      default=0)
 
-    counter_customer = kvp_attribute("counters/gncCustomer", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
+    counter_customer = kvp_attribute("counters/gncCustomer", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v),
+                                     default=0)
     counter_vendor = kvp_attribute("counters/gncVendor", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
-    counter_employee = kvp_attribute("counters/gncEmployee", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
-    counter_invoice = kvp_attribute("counters/gncInvoice", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
+    counter_employee = kvp_attribute("counters/gncEmployee", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v),
+                                     default=0)
+    counter_invoice = kvp_attribute("counters/gncInvoice", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v),
+                                    default=0)
     counter_job = kvp_attribute("counters/gncJob", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
     counter_bill = kvp_attribute("counters/gncBill", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
-    counter_exp_voucher = kvp_attribute("counters/gncExpVoucher", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
+    counter_exp_voucher = kvp_attribute("counters/gncExpVoucher", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v),
+                                        default=0)
     counter_order = kvp_attribute("counters/gncOrder", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
 
     def __init__(self, root_account=None, root_template=None):
@@ -134,14 +139,13 @@ class Book(DeclarativeBaseGuid):
 
     @property
     def default_currency(self):
-        try:
-            return self["default-currency"].value
-        except KeyError:
-            if locale.getlocale() == (None, None):
-                locale.setlocale(locale.LC_ALL, '')
-            mnemonic = locale.localeconv()['int_curr_symbol'].strip() or "EUR"
-            def_curr = self["default-currency"] = self.currencies(mnemonic=mnemonic)
-            return def_curr
+        return self.root_account.commodity
+
+    @default_currency.setter
+    def default_currency(self, value):
+        assert isinstance(value, Commodity) and value.namespace == "CURRENCY"
+
+        self.root_account.commodity = value
 
     @property
     def book(self):
@@ -361,10 +365,8 @@ class Book(DeclarativeBaseGuid):
         gives easy access to all commodities in the book through a :class:`piecash.model_common.CallableList`
         of :class:`piecash.core.commodity.Commodity`
         """
-        from .commodity import Commodity
 
         return CallableList(self.session.query(Invoice))
-
 
     @property
     def currencies(self):
@@ -450,12 +452,11 @@ class Book(DeclarativeBaseGuid):
 
         # load all splits
         splits = self.session.query(Split).join(Transaction).options(
-                                                   joinedload("account"),
-                                                   joinedload("lot")) \
+            joinedload("account"),
+            joinedload("lot")) \
             .order_by(Transaction.post_date, Split.value).all()
 
         return accounts, splits
-
 
     def splits_df(self, additional_fields=None):
         """

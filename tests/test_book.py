@@ -40,7 +40,7 @@ class TestBook_create_book(object):
         assert len(root_accs) == 2
 
         # no slots
-        assert len(new_book.slots) == 1
+        assert len(new_book.slots) == 0
 
     def test_create_save_cancel_flush(self, new_book):
         EUR = new_book.commodities[0]
@@ -237,7 +237,7 @@ class TestBook_access_book(object):
         assert new_book.use_split_action_field == False
         assert new_book.RO_threshold_day == 0
 
-        assert len(new_book.slots) == 1
+        assert len(new_book.slots) == 0
 
         with pytest.raises(KeyError):
             new_book["options"]

@@ -1,9 +1,11 @@
 # -*- coding: latin-1 -*-
 import os
 import sys
-from datetime import date
+
 import pytest
+from datetime import date
 from sqlalchemy_utils import database_exists, drop_database
+
 from piecash import create_book, open_book, Account, Commodity, Employee, Customer, Vendor, Transaction, Split, Price
 
 test_folder = os.path.dirname(os.path.realpath(__file__))
@@ -13,7 +15,8 @@ file_for_test = os.path.join(test_folder, "empty_book_for_test.gnucash")
 file_template_full = os.path.join(book_folder, "test_book.gnucash")
 file_for_test_full = os.path.join(test_folder, "test_book_for_test.gnucash")
 file_ghost_kvp_scheduled_transaction = os.path.join(book_folder, "ghost_kvp_scheduled_transaction.gnucash")
-file_ghost_kvp_scheduled_transaction_for_test = os.path.join(test_folder, "ghost_kvp_scheduled_transaction_for_test.gnucash")
+file_ghost_kvp_scheduled_transaction_for_test = os.path.join(test_folder,
+                                                             "ghost_kvp_scheduled_transaction_for_test.gnucash")
 
 if sys.version_info.major == 3:
     def run_file(fname):
@@ -273,6 +276,7 @@ def book_sample(request):
     with open_book(file_template_full) as book:
         yield book
 
+
 @pytest.yield_fixture()
 def book_complex(request):
     """
@@ -291,6 +295,5 @@ def is_inmemory_sqlite(book_basic):
     return book_basic.uri.database == ":memory:"
 
 
-needweb = pytest.mark.skipif(not bool(os.environ.get("DOGOONWEB", False)),
-                            reason="no access to web")
-
+needweb = pytest.mark.skipif(not (os.environ.get("DOGOONWEB", "False") == "True"),
+                             reason="no access to web")

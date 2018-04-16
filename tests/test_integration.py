@@ -113,7 +113,7 @@ class TestIntegration_EmptyBook(object):
 
     def test_slots_strings_access(self, book):
         b = book
-        del b["default-currency"]
+
         b["a/b/c/d/e"] = 1
         book.book.flush()
         assert b["a"]["b"]["c"]["d"]["e"].value == 1
@@ -170,7 +170,6 @@ class TestIntegration_EmptyBook(object):
         assert {n for (n,) in book.session.query(Slot._name)} == set([])
 
     def test_smart_slots(self, book):
-        del book["default-currency"]
         book["account"] = book.root_account
         assert book.slots[0].guid_val == book.root_account.guid
         assert book["account"].value == book.root_account
