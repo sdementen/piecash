@@ -57,6 +57,7 @@ class Book(DeclarativeBaseGuid):
     Attributes:
         root_account (:class:`piecash.core.account.Account`): the root account of the book
         root_template (:class:`piecash.core.account.Account`): the root template of the book (usage not yet clear...)
+        default_currency (:class:`piecash.core.commodity.Commodity`): the currency of the root account (=default currency of the book)
         uri (str): connection string of the book (set by the GncSession when accessing the book)
         session (:class:`sqlalchemy.orm.session.Session`): the sqlalchemy session encapsulating the book
         use_trading_accounts (bool): true if option "Use trading accounts" is enabled
