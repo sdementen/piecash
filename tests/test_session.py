@@ -92,7 +92,6 @@ else:
     locales = {
         'en_US.UTF-8': "USD",
         'fr_FR.UTF-8': "EUR",
-        'C': "EUR",
     }
 
 
