@@ -75,11 +75,15 @@ def test_get_system_currency_mnemonic():
 
 def test_get_system_currency_mnemonic_US():
     l = locale.getlocale()
+
     if sys.platform == "win32":
+        # see https://docs.moodle.org/dev/Table_of_locales
         locale.setlocale(locale.LC_ALL, 'English_United States.1252')
     else:
         locale.setlocale(locale.LC_ALL, 'en_US')
+
     assert get_system_currency_mnemonic() == "USD"
+
     locale.setlocale(locale.LC_ALL, l)
 
 
