@@ -119,14 +119,14 @@ install:
 
 build_script:
   # Build the compiled extension
-  - "pipenv graph"
+  # - "pipenv graph"
   - "pipenv run python setup.py build"
 
 test_script:
   # Run the project tests
   - "createdb foo"
   - '"C:\\Program Files\\MySql\\MySQL Server 5.7\\bin\\mysql" -e "create database foo;" --user=root'
-  - "pipenv graph"
+  # - "pipenv graph"
   - "pipenv run python setup.py test"
 
 after_test:
