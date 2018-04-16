@@ -9,6 +9,10 @@ Some note for developers:
 
     python setup.py sdist
 
+- to regenerate the requirements-dev.txt used by rtd::
+
+    requirements-dev.txt
+
 - to upload file on PyPI::
 
     twine upload dist\piecash-0.13.0.tar.gz

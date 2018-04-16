@@ -1,5 +1,6 @@
-from decimal import Decimal
+import locale
 
+from decimal import Decimal
 from sqlalchemy import Column, VARCHAR, INTEGER, cast, Float
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -20,6 +21,7 @@ class GncValidationError(GnucashException):
 
 class GncImbalanceError(GncValidationError):
     pass
+
 
 class GncConversionError(GnucashException):
     pass
@@ -158,3 +160,17 @@ class CallableList(list):
 
     get = __call__
 
+
+def get_system_currency_mnemonic():
+    """Returns the mnemonic of the locale currency (and EUR if not defined).
+
+    At the target, it could also look in Gnucash configuration/registry to see if the user
+    has chosen another default currency.
+    """
+
+    if locale.getlocale() == (None, None):
+        locale.setlocale(locale.LC_ALL, '')
+
+    mnemonic = locale.localeconv()['int_curr_symbol'].strip() or "EUR"
+
+    return mnemonic

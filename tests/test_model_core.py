@@ -69,7 +69,7 @@ class TestModelCore_EmptyBook(object):
     def test_slots(self, session):
         # no slots in an empty gnucash file but the default_currency
         slots = session.query(Slot._name).all()
-        assert slots == [('default-currency',)]
+        assert slots == []
 
     def test_versions(self, session):
         # confirm versions of tables
