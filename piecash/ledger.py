@@ -27,9 +27,9 @@ def ledger(tr):
         if split.account.commodity.mnemonic == "template":
             return ""
         if split.reconcile_state in ['c', 'y']:
-            s.append("\t* {:38} ".format(split.account.fullname))
+            s.append("\t* {:38}  ".format(split.account.fullname))
         else:
-            s.append("\t{:40} ".format(split.account.fullname))
+            s.append("\t{:40}  ".format(split.account.fullname))
         if split.account.commodity != tr.currency:
             s.append("{:10.{}f} {} @@ {:.{}f} {}".format(
                 split.quantity,

@@ -12,6 +12,7 @@ In development
 - add optional packages
 - move to pipenv
 - improve documentation
+- fix missing extra blank between account name and amount in ledger export (fix #86)
 
 Version 0.15.0 (2018-02-21)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
