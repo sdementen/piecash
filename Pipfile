@@ -6,27 +6,25 @@ name = "pypi"
 
 
 [packages]
-
-
-SQLAlchemy="*"
-SQLAlchemy-Utils="*"
-pytz="*"
-tzlocal="*"
-click="*"
+SQLAlchemy = "*"
+SQLAlchemy-Utils = "*"
+pytz = "*"
+tzlocal = "*"
+click = "*"
 enum34={markers="python_version < '3.4'"}
 
 
 [dev-packages]
 tox-pipenv = "*"
-psycopg2="*"
-PyMySQL="*"
-pandas="*"
-qifparse="*"
-requests="*"
-pytest="*"
-pytest-cov="*"
-tox="*"
-sphinx="*"
-sphinxcontrib-napoleon="*"
-sphinxcontrib-programoutput="*"
-sphinx-rtd-theme="*"
+psycopg2 = "*"
+PyMySQL = "*"
+pandas = "*"
+qifparse = "*"
+requests = "*"
+pytest = "*"
+pytest-cov = "*"
+tox = "*"
+sphinx = "*"
+sphinxcontrib-napoleon = "*"
+sphinxcontrib-programoutput = "*"
+sphinx-rtd-theme = "*"
