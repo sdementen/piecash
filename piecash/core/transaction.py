@@ -3,7 +3,7 @@ import uuid
 from collections import defaultdict
 from decimal import Decimal
 
-from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, INTEGER
+from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, INTEGER, Index
 from sqlalchemy.orm import relation, validates, foreign
 from sqlalchemy.orm.base import NEVER_SET
 
@@ -34,7 +34,11 @@ class Split(DeclarativeBaseGuid):
     """
     __tablename__ = 'splits'
 
-    __table_args__ = {}
+    __table_args__ = (
+        # indices
+        Index('splits_tx_guid_index', 'tx_guid'),
+        Index('splits_account_guid_index', 'account_guid'),
+    )
 
     # column definitions
     # the transaction_guid is not mandatory at construction time because it can be set through a tr.splits.append(...) operation
@@ -188,7 +192,9 @@ class Transaction(DeclarativeBaseGuid):
     """
     __tablename__ = 'transactions'
 
-    __table_args__ = {}
+    __table_args__ = (
+        Index('tx_post_date_index', 'post_date'),
+    )
 
     # column definitions
     currency_guid = Column('currency_guid', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)

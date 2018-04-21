@@ -5,7 +5,7 @@ import uuid
 from enum import Enum
 from importlib import import_module
 
-from sqlalchemy import Column, VARCHAR, INTEGER, REAL, BIGINT, types, event
+from sqlalchemy import Column, VARCHAR, INTEGER, REAL, BIGINT, types, event, Index
 from sqlalchemy.orm import relation, foreign, object_session, backref
 
 from ._common import CallableList
@@ -149,7 +149,10 @@ class DictWrapper(object):
 class Slot(DeclarativeBase):
     __tablename__ = 'slots'
 
-    __table_args__ = {'sqlite_autoincrement': True}
+    __table_args__ = (
+        Index('slots_guid_index', 'obj_guid'),
+        {'sqlite_autoincrement': True, }
+    )
 
     # column definitions
     id = Column('id', INTEGER(), primary_key=True, nullable=False, autoincrement=True)
@@ -402,8 +405,8 @@ class SlotNumeric(Slot):
     }
     _python_type = (tuple, decimal.Decimal)
 
-    _numeric_val_num = Column('numeric_val_num', BIGINT(), nullable=False, default=0)
-    _numeric_val_denom = Column('numeric_val_denom', BIGINT(), nullable=False, default=1)
+    _numeric_val_num = Column('numeric_val_num', BIGINT(), nullable=True, default=0)
+    _numeric_val_denom = Column('numeric_val_denom', BIGINT(), nullable=True, default=1)
     value = hybrid_property_gncnumeric(_numeric_val_num, _numeric_val_denom)
 
 

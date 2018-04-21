@@ -93,7 +93,7 @@ def compile_datetime(element, compiler, **kw):
 
     note: it went from TEXT(14) in 2.6 to TEXT(19) in 2.8 to accommodate
     for the new ISO format of date in sqlite"""
-    return "TEXT(19)"
+    return "TEXT(14)"
 
 
 class _DateTime(types.TypeDecorator):

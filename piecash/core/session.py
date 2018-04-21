@@ -1,9 +1,9 @@
+import datetime
 import os
 import shutil
+import socket
 from collections import defaultdict
 
-import datetime
-import socket
 from sqlalchemy import event, Column, VARCHAR, INTEGER, Table, PrimaryKeyConstraint
 from sqlalchemy.sql.ddl import DropConstraint, DropIndex
 from sqlalchemy_utils import database_exists
@@ -15,7 +15,7 @@ from ..sa_extra import create_piecash_engine, DeclarativeBase, Session
 
 version_supported = {
     '2.6': {
-        'Gnucash': 2060400,
+        'Gnucash': 2062100,
         'Gnucash-Resave': 19920,
         'accounts': 1,
         'billterms': 2,
@@ -214,10 +214,11 @@ def create_book(sqlite_file=None,
         for n, tbl in DeclarativeBase.metadata.tables.items():
             # drop index constraints
             for idx in tbl.indexes:
-                event.listen(tbl,
-                             "after_create",
-                             DropIndex(idx),
-                             once=True)
+                if idx.name.startswith("ix_") or idx.name.startswith("_"):
+                    event.listen(tbl,
+                                 "after_create",
+                                 DropIndex(idx),
+                                 once=True)
             # drop FK constraints
             for cstr in tbl.constraints:
                 if isinstance(cstr, PrimaryKeyConstraint):

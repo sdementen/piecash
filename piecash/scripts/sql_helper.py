@@ -32,5 +32,5 @@ def sql_create(book):
     """Create an empty book with gnucash
 
     """
-    with piecash.create_book(book) as b:
+    with piecash.create_book(book, overwrite=True,keep_foreign_keys=False) as b:
         b.save()

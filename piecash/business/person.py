@@ -76,11 +76,11 @@ class Customer(DeclarativeBaseGuid):
     # column definitions
     name = Column('name', VARCHAR(length=2048), nullable=False)
     # id is nullable as it is set during validation (happening after flush)
-    id = Column('id', VARCHAR(length=2048), nullable=True)
+    id = Column('id', VARCHAR(length=2048), nullable=False)
     notes = Column('notes', VARCHAR(length=2048), nullable=False)
     active = Column('active', INTEGER(), nullable=False)
-    _discount_num = Column('discount_num', BIGINT())
-    _discount_denom = Column('discount_denom', BIGINT())
+    _discount_num = Column('discount_num', BIGINT(), nullable=False)
+    _discount_denom = Column('discount_denom', BIGINT(), nullable=False)
     discount = hybrid_property_gncnumeric(_discount_num, _discount_denom)
     _credit_num = Column('credit_num', BIGINT(), nullable=False)
     _credit_denom = Column('credit_denom', BIGINT(), nullable=False)
@@ -205,7 +205,7 @@ class Employee(DeclarativeBaseGuid):
     # column definitions
     name = Column('username', VARCHAR(length=2048), nullable=False)
     # id is nullable as it is set during validation (happening after flush)
-    id = Column('id', VARCHAR(length=2048), nullable=True)
+    id = Column('id', VARCHAR(length=2048), nullable=False)
     language = Column('language', VARCHAR(length=2048), nullable=False)
     acl = Column('acl', VARCHAR(length=2048), nullable=False)
     active = Column('active', INTEGER(), nullable=False)
