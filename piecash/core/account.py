@@ -182,11 +182,11 @@ class Account(DeclarativeBaseGuid):
                  type,
                  commodity,
                  parent=None,
-                 description=None,
+                 description='',
                  commodity_scu=None,
                  hidden=0,
                  placeholder=0,
-                 code=None,
+                 code='',
                  book=None,
                  children=None):
         book = book or (commodity and commodity.book) or (parent and parent.book)
@@ -236,6 +236,9 @@ class Account(DeclarativeBaseGuid):
         """
         Ensure update of commodity_scu when commodity is changed
         """
+        print("ok")
+        print(value)
+        print(self.commodity_scu)
         if value and (self.commodity_scu is None or self.non_std_scu == 0):
             self.commodity_scu = value.fraction
 

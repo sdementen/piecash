@@ -1,5 +1,4 @@
 import uuid
-
 from sqlalchemy import Column, VARCHAR, BIGINT, INTEGER, ForeignKey
 from sqlalchemy.orm import relation
 
@@ -25,17 +24,16 @@ class Taxtable(DeclarativeBaseGuid):
                        back_populates='taxtable',
                        cascade='all, delete-orphan',
                        collection_class=CallableList,
-    )
+                       )
     children = relation('Taxtable',
                         back_populates='parent',
                         cascade='all, delete-orphan',
                         collection_class=CallableList,
-    )
+                        )
     parent = relation('Taxtable',
                       back_populates='children',
                       remote_side=guid,
-    )
-
+                      )
 
     def __init__(self, name, entries=None):
         self.name = name
@@ -57,7 +55,7 @@ class TaxtableEntry(DeclarativeBase):
     __table_args__ = {'sqlite_autoincrement': True}
 
     # column definitions
-    id = Column('id', INTEGER(), primary_key=True, nullable=False)
+    id = Column('id', INTEGER(), primary_key=True, nullable=False, autoincrement=True)
     taxtable_guid = Column('taxtable', VARCHAR(length=32),
                            ForeignKey('taxtables.guid'), nullable=False)
     account_guid = Column('account', VARCHAR(length=32), ForeignKey('accounts.guid'), nullable=False)

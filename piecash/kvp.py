@@ -152,7 +152,7 @@ class Slot(DeclarativeBase):
     __table_args__ = {'sqlite_autoincrement': True}
 
     # column definitions
-    id = Column('id', INTEGER(), primary_key=True, nullable=False)
+    id = Column('id', INTEGER(), primary_key=True, nullable=False, autoincrement=True)
     obj_guid = Column('obj_guid', VARCHAR(length=32), nullable=False, index=True)
     _name = Column('name', VARCHAR(length=4096), nullable=False)
 

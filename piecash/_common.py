@@ -46,7 +46,7 @@ class Recurrence(DeclarativeBase):
     __table_args__ = {'sqlite_autoincrement': True}
 
     # column definitions
-    id = Column('id', INTEGER(), primary_key=True, nullable=False)
+    id = Column('id', INTEGER(), primary_key=True, nullable=False, autoincrement=True)
     obj_guid = Column('obj_guid', VARCHAR(length=32), nullable=False)
     recurrence_mult = Column('recurrence_mult', INTEGER(), nullable=False)
     recurrence_period_type = Column('recurrence_period_type', VARCHAR(length=2048), nullable=False)
