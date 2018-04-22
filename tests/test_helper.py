@@ -255,6 +255,35 @@ def book_investment(request):
 
 
 @pytest.yield_fixture()
+def book_reference_2_6_21_fulloptions(request):
+    """
+    Returns the reference book for 2_6_21 with options.
+    """
+    # name = request.param
+    # print(name)
+    file_template_full = os.path.join(book_folder, "reference", "default_2_6_21_full_options.gnucash")
+
+    with open_book(file_template_full) as book:
+        yield book
+
+
+@pytest.yield_fixture()
+def book_reference_2_6_21_basic(request):
+    """
+    Returns the reference book for 2_6_21 with no options.
+    """
+    # name = request.param
+    # print(name)
+    file_template_full = os.path.join(book_folder, "reference", "default_2_6_21_basic.gnucash")
+
+    with open_book(file_template_full) as book:
+        yield book
+
+
+
+
+
+@pytest.yield_fixture()
 def book_invoices(request):
     """
     Returns the book that contains invoices.

@@ -10,6 +10,7 @@ Mostly refactoring:
 - set autoflush to False to prevent weird behavior when using slots (that retrigger a query in the middle of a flush)
 - refactor slots
 - align sql schema 100% with 2.6.21 (based on sqlite reference)
+- support business slots
 
 
 Version 0.17.0 (2018-03-16)

@@ -72,6 +72,13 @@ class Book(DeclarativeBaseGuid):
         counter_bill (int) : counter for :class:`piecash.business.invoice.Bill` id (link to slot "counters/gncBill")
         counter_exp_voucher (int) : counter for :class:`piecash.business.invoice.Invoice` id (link to slot "counters/gncExpVoucher")
         counter_order (int) : counter for :class:`piecash.business.invoice.Order` id (link to slot "counters/gncOrder")
+        business_company_phone (str): phone number of book company (link to slit "options/Business/Company Phone Number")
+        business_company_email (str): email of book company (link to slit "options/Business/Company Email Address")
+        business_company_contact (str): contact person of book company (link to slit "options/Business/Company Contact Person")
+        business_company_ID (str): ID of book company (link to slit "options/Business/Company ID")
+        business_company_name (str): name of book company (link to slit "options/Business/Company Name")
+        business_company_address (str): address of book company (link to slit "options/Business/Company Address")
+        business_company_website (str): website URL of book company (link to slit "options/Business/Company Website URL")
     """
     __tablename__ = 'books'
 
@@ -124,6 +131,21 @@ class Book(DeclarativeBaseGuid):
     counter_exp_voucher = kvp_attribute("counters/gncExpVoucher", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v),
                                         default=0)
     counter_order = kvp_attribute("counters/gncOrder", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
+
+    business_company_phone = kvp_attribute("options/Business/Company Phone Number", from_gnc=lambda v: str(v),
+                                           to_gnc=lambda v: str(v), default="")
+    business_company_email = kvp_attribute("options/Business/Company Email Address", from_gnc=lambda v: str(v),
+                                           to_gnc=lambda v: str(v), default="")
+    business_company_contact = kvp_attribute("options/Business/Company Contact Person", from_gnc=lambda v: str(v),
+                                             to_gnc=lambda v: str(v), default="")
+    business_company_ID = kvp_attribute("options/Business/Company ID", from_gnc=lambda v: str(v),
+                                        to_gnc=lambda v: str(v), default="")
+    business_company_name = kvp_attribute("options/Business/Company Name", from_gnc=lambda v: str(v),
+                                          to_gnc=lambda v: str(v), default="")
+    business_company_address = kvp_attribute("options/Business/Company Address", from_gnc=lambda v: str(v),
+                                             to_gnc=lambda v: str(v), default="")
+    business_company_website = kvp_attribute("options/Business/Company Website URL", from_gnc=lambda v: str(v),
+                                             to_gnc=lambda v: str(v), default="")
 
     def __init__(self, root_account=None, root_template=None):
         self.root_account = root_account
