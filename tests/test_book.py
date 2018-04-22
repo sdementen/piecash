@@ -10,14 +10,15 @@ from sqlalchemy.orm import Session
 from piecash import create_book, Account, GnucashException, Book, open_book, Commodity
 from piecash.core import Version
 from test_helper import (db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri,
-                         book_transactions, book_sample, format_version, book_investment,
-                         book_reference_2_6_21_fulloptions)
+                         book_transactions, book_sample, book_investment,
+                         book_reference_2_6_21_fulloptions, book_reference_2_6_21_basic,
+                         )
 
 # dummy line to avoid removing unused symbols
 a = (
     db_sqlite_uri, db_sqlite,
     new_book, new_book_USD, book_uri, book_transactions, book_sample, book_investment,
-    book_reference_2_6_21_fulloptions,
+    book_reference_2_6_21_fulloptions, book_reference_2_6_21_basic,
     format_version,
 )
 
