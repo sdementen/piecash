@@ -75,7 +75,7 @@ class TestModelCore_EmptyBook(object):
         # confirm versions of tables
         versions = session.query(Version.table_name,
                                  Version.table_version).all()
-        assert set(versions) == {(u'Gnucash', 2060400), (u'Gnucash-Resave', 19920),
+        assert set(versions) == {(u'Gnucash', 2062100), (u'Gnucash-Resave', 19920),
                                  (u'accounts', 1), (u'books', 1),
                                  (u'budgets', 1), (u'budget_amounts', 1), ('jobs', 1), (u'orders', 1),
                                  (u'taxtables', 2), (u'taxtable_entries', 3), (u'vendors', 1), (u'recurrences', 2),

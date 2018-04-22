@@ -110,7 +110,9 @@ class Book(DeclarativeBaseGuid):
                                      to_gnc=lambda v: float(v),
                                      default=0)
 
-    counter_customer = kvp_attribute("counters/gncCustomer", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v),
+    counter_customer = kvp_attribute("counters/gncCustomer",
+                                     from_gnc=lambda v: int(v),
+                                     to_gnc=lambda v: int(v),
                                      default=0)
     counter_vendor = kvp_attribute("counters/gncVendor", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v), default=0)
     counter_employee = kvp_attribute("counters/gncEmployee", from_gnc=lambda v: int(v), to_gnc=lambda v: int(v),
@@ -247,6 +249,7 @@ class Book(DeclarativeBaseGuid):
     def add(self, obj):
         """Add an object to the book (to be used if object not linked in any way to the book)"""
         self.session.add(obj)
+        obj.on_book_add()
 
     def delete(self, obj):
         """Delete an object from the book (to remove permanently an object)"""

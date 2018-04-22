@@ -3,10 +3,10 @@ from __future__ import unicode_literals
 
 from decimal import Decimal
 
-from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, Person
 # dummy line to avoid removing unused symbols
-from piecash import Address, Employee, Account
+from piecash import Address, Employee, Account, Vendor, Customer
 from piecash.business import Taxtable, TaxtableEntry
+from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, Person
 
 a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, Person
 
@@ -30,10 +30,14 @@ class TestBusinessPerson_create_Person(object):
 
         # adding the person to the book does not per se set the id
         book_basic.add(c)
-        assert c.id is None
+        assert c.id == '000001'
         # but validation sets the id if still to None
-        book_basic.validate()
+        assert getattr(book_basic, Person._counter_name) == 1
+
+        print("flushing")
+        book_basic.flush()
         assert c.id == "000001"
+        assert getattr(book_basic, Person._counter_name) == 1
 
     def test_create_person_noid_inbook(self, book_basic, Person):
         EUR = book_basic.commodities(namespace="CURRENCY")

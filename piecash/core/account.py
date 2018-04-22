@@ -236,9 +236,6 @@ class Account(DeclarativeBaseGuid):
         """
         Ensure update of commodity_scu when commodity is changed
         """
-        print("ok")
-        print(value)
-        print(self.commodity_scu)
         if value and (self.commodity_scu is None or self.non_std_scu == 0):
             self.commodity_scu = value.fraction
 

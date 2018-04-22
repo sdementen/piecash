@@ -48,6 +48,10 @@ class DeclarativeBase(object):
         return
         yield
 
+    def on_book_add(self):
+        """Call when the object is added to a book"""
+        pass
+
     def validate(self):
         """This must be reimplemented for object requiring validation
         """

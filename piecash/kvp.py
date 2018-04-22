@@ -101,15 +101,18 @@ class DictWrapper(object):
             # new key
             if len(keys) > 1:
                 if isinstance(self, SlotFrame):
-                    sf = SlotFrame(name=self._name + "/" + key)
+                    sf = SlotFrame(name=self._name + "/" + key,
+                                   obj_guid=self.guid_val)
                 else:
-                    sf = SlotFrame(name=key)
+                    sf = SlotFrame(name=key,
+                                   obj_guid=self.guid)
                 sf[keys[1]] = value
                 self.slots.append(sf)
             else:
                 self.slots.append(slot(parent=self, name=key, value=value))
 
             return
+
         if len(keys) > 1:
             sl[keys[1]] = value
             return
@@ -176,10 +179,12 @@ class Slot(DeclarativeBase):
         'polymorphic_on': slot_type,
     }
 
-    def __init__(self, name, value=None):
+    def __init__(self, name, value=None, obj_guid=None):
         self.name = name
         if value is not None:
             self.value = value
+        if obj_guid is not None:
+            self.obj_guid = obj_guid
 
     def __unirepr__(self):
         return u"<{} {}={!r}>".format(self.__class__.__name__, self.name, self.value)
@@ -265,6 +270,7 @@ class SlotFrame(DictWrapper, Slot):
                      collection_class=CallableList,
                      single_parent=True,
                      backref=backref("parent", remote_side=guid_val),
+
                      )
 
     @property
@@ -371,18 +377,21 @@ def get_all_subclasses(cls):
 def slot(parent, name, value):
     if isinstance(parent, SlotFrame):
         name = parent._name + "/" + name
+        guid_parent = parent.guid_val
+    else:
+        guid_parent = parent.guid
 
     # handle datetime before others (as otherwise can be mixed with date)
     if isinstance(value, datetime.datetime):
-        return SlotTime(name=name, value=value)
+        return SlotTime(name=name, value=value, obj_guid=guid_parent)
 
     for cls in get_all_subclasses(Slot):
         if isinstance(value, cls._python_type) and cls != SlotFrame and cls != SlotList:
-            return cls(name=name, value=value)
+            return cls(name=name, value=value, obj_guid=guid_parent)
 
     if isinstance(value, dict):
         # transform a dict to Frame/Slots
-        sf = SlotFrame(name=name)
+        sf = SlotFrame(name=name, obj_guid=guid_parent)
         for k, v in value.items():
             sl = slot(parent=sf, name=k, value=v)
             sl.parent = sf

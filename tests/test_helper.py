@@ -150,6 +150,7 @@ def book_basic(request):
         Account(name="broker", type="STOCK", commodity=cdty, parent=a)
         Account(name="exp", type="EXPENSE", commodity=curr, parent=b.root_account)
         Account(name="inc", type="INCOME", commodity=curr, parent=b.root_account)
+        b.flush()
 
         yield b
 

@@ -232,7 +232,7 @@ def create_book(sqlite_file=None,
     # create all (tables, fk, ...)
     DeclarativeBase.metadata.create_all(engine)
 
-    s = Session(bind=engine)
+    s = Session(bind=engine, autoflush=False)
 
     # create all rows in version table
     assert version_format in version_supported, "The 'version_format'={} is not supported. " \
@@ -374,14 +374,14 @@ def adapt_session(session, book, readonly):
 
     # add logic to create/delete GnuCash locks
     def delete_lock():
-        session.execute(gnclock.delete(whereclause=(gnclock.c.hostname == socket.gethostname())
-                                                   and (gnclock.c.pid == os.getpid())))
+        session.execute(gnclock.delete(whereclause=(gnclock.c.Hostname == socket.gethostname())
+                                                   and (gnclock.c.PID == os.getpid())))
         session.commit()
 
     session.delete_lock = delete_lock
 
     def create_lock():
-        session.execute(gnclock.insert(values=dict(hostname=socket.gethostname(), pid=os.getpid())))
+        session.execute(gnclock.insert(values=dict(Hostname=socket.gethostname(), PID=os.getpid())))
         session.commit()
 
     session.create_lock = create_lock
