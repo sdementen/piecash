@@ -12,6 +12,7 @@ from piecash.core import Version
 from test_helper import (db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri,
                          book_transactions, book_sample, book_investment,
                          book_reference_2_6_21_fulloptions, book_reference_2_6_21_basic,
+                         format_version,
                          )
 
 # dummy line to avoid removing unused symbols
