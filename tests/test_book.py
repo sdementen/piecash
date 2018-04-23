@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: latin-1 -*-
 import glob
 import os
 from decimal import Decimal
@@ -457,7 +457,7 @@ class TestBook_access_book(object):
         Tests business slots
         :type book_reference_2_6_21_fulloptions: Book
         """
-        assert book_reference_2_6_21_fulloptions.business_company_address == "Rue de la Chenille Ã©clairÃ©e, 22"
+        assert book_reference_2_6_21_fulloptions.business_company_address == u"Rue de la Chenille éclairée, 22"
         assert book_reference_2_6_21_fulloptions.business_company_contact == "John Michu"
         assert book_reference_2_6_21_fulloptions.business_company_email == "woozie@example.com"
         assert book_reference_2_6_21_fulloptions.business_company_ID == "SIREN 123 456 789"
@@ -477,3 +477,25 @@ class TestBook_access_book(object):
         assert book_reference_2_6_21_basic.business_company_name == ""
         assert book_reference_2_6_21_basic.business_company_phone == ""
         assert book_reference_2_6_21_basic.business_company_website == ""
+
+
+    def test_business_writeslots_nooptions(self, book_reference_2_6_21_basic):
+        """
+        Tests business slots
+        :type book_reference_2_6_21_basic: Book
+        """
+        book_reference_2_6_21_basic.business_company_address = u"é"
+        book_reference_2_6_21_basic.business_company_contact = u"à"
+        book_reference_2_6_21_basic.business_company_email = u"ù"
+        book_reference_2_6_21_basic.business_company_ID = u"ö"
+        book_reference_2_6_21_basic.business_company_name = u"µ"
+        book_reference_2_6_21_basic.business_company_phone = u"²"
+        book_reference_2_6_21_basic.business_company_website = u"³"
+
+        assert book_reference_2_6_21_basic.business_company_address == u"é"
+        assert book_reference_2_6_21_basic.business_company_contact == u"à"
+        assert book_reference_2_6_21_basic.business_company_email == u"ù"
+        assert book_reference_2_6_21_basic.business_company_ID == u"ö"
+        assert book_reference_2_6_21_basic.business_company_name == u"µ"
+        assert book_reference_2_6_21_basic.business_company_phone == u"²"
+        assert book_reference_2_6_21_basic.business_company_website == u"³"

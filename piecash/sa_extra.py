@@ -13,8 +13,8 @@ from sqlalchemy.dialects import sqlite
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import sessionmaker, object_session
 from sqlalchemy.orm import exc as orm_exc
+from sqlalchemy.orm import sessionmaker, object_session
 
 # import yaml
 
@@ -247,7 +247,7 @@ def pure_slot_property(slot_name, slot_transform=lambda x: x,
     )
 
 
-def kvp_attribute(name, to_gnc, from_gnc, default=None):
+def kvp_attribute(name, to_gnc=lambda v: v, from_gnc=lambda v: v, default=None):
     def getter(self):
         try:
             return from_gnc(self[name].value)
