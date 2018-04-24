@@ -13,8 +13,8 @@ from sqlalchemy.dialects import sqlite
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import sessionmaker, object_session
 from sqlalchemy.orm import exc as orm_exc
+from sqlalchemy.orm import sessionmaker, object_session
 
 # import yaml
 
@@ -47,6 +47,10 @@ class DeclarativeBase(object):
         """
         return
         yield
+
+    def on_book_add(self):
+        """Call when the object is added to a book"""
+        pass
 
     def validate(self):
         """This must be reimplemented for object requiring validation
@@ -93,7 +97,7 @@ def compile_datetime(element, compiler, **kw):
 
     note: it went from TEXT(14) in 2.6 to TEXT(19) in 2.8 to accommodate
     for the new ISO format of date in sqlite"""
-    return "TEXT(19)"
+    return "TEXT(14)"
 
 
 class _DateTime(types.TypeDecorator):
@@ -243,7 +247,7 @@ def pure_slot_property(slot_name, slot_transform=lambda x: x,
     )
 
 
-def kvp_attribute(name, to_gnc, from_gnc, default=None):
+def kvp_attribute(name, to_gnc=lambda v: v, from_gnc=lambda v: v, default=None):
     def getter(self):
         try:
             return from_gnc(self[name].value)

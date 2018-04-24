@@ -1,6 +1,17 @@
 What's new
 ==========
 
+Version 0.18.0 (2018-04-24)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Mostly refactoring:
+- refactor common parts of vendor, customer and employee into person
+- add 'on_book_add' protocol called when object is added to a book
+- set autoflush to False to prevent weird behavior when using slots (that retrigger a query in the middle of a flush)
+- refactor slots
+- align sql schema 100% with 2.6.21 (based on sqlite reference)
+- support business slots
+
 
 Version 0.17.0 (2018-03-16)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

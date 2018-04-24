@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from sqlalchemy import Column, VARCHAR, INTEGER, BIGINT, ForeignKey
+from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import composite, relation, foreign
 
 from .._common import hybrid_property_gncnumeric, CallableList
@@ -50,7 +51,58 @@ class Address(object):
         return not self.__eq__(other)
 
 
-class Customer(DeclarativeBaseGuid):
+class Person:
+    """A mixin declaring common field for Customer, Vendor and Employee"""
+    active = Column('active', INTEGER(), nullable=False)
+
+    id = Column('id', VARCHAR(length=2048), nullable=False)
+
+    addr_name = Column('addr_name', VARCHAR(length=1024))
+    addr_addr1 = Column('addr_addr1', VARCHAR(length=1024))
+    addr_addr2 = Column('addr_addr2', VARCHAR(length=1024))
+    addr_addr3 = Column('addr_addr3', VARCHAR(length=1024))
+    addr_addr4 = Column('addr_addr4', VARCHAR(length=1024))
+    addr_phone = Column('addr_phone', VARCHAR(length=128))
+    addr_fax = Column('addr_fax', VARCHAR(length=128))
+    addr_email = Column('addr_email', VARCHAR(length=256))
+
+    @declared_attr
+    def address(cls):
+        return composite(Address, cls.addr_name, cls.addr_addr1, cls.addr_addr2, cls.addr_addr3, cls.addr_addr4,
+                         cls.addr_email, cls.addr_fax, cls.addr_phone)
+
+    @declared_attr
+    def currency_guid(cls):
+        return Column('currency', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
+
+    @declared_attr
+    def currency(cls):
+        return relation('Commodity')
+
+    # hold the name of the counter to use for id
+    _counter_name = None
+
+    def _assign_id(self):
+        if not self.id:
+            cnt = getattr(self.book, self._counter_name) + 1
+            setattr(self.book, self._counter_name, cnt)
+            self.id = "{:06d}".format(cnt)
+
+    def object_to_validate(self, change):
+        yield self
+
+    def validate(self):
+        if self.id is None:
+            raise ValueError("You cannot flush a {} that is not added to a book".format(self.__class__.__name__))
+
+    def on_book_add(self):
+        self._assign_id()
+
+    def __unirepr__(self):
+        return u"{}<{}:{}>".format(self.__class__.__name__, self.id, self.name)
+
+
+class Customer(Person, DeclarativeBaseGuid):
     """
     A GnuCash Customer
 
@@ -76,28 +128,14 @@ class Customer(DeclarativeBaseGuid):
     # column definitions
     name = Column('name', VARCHAR(length=2048), nullable=False)
     # id is nullable as it is set during validation (happening after flush)
-    id = Column('id', VARCHAR(length=2048), nullable=True)
     notes = Column('notes', VARCHAR(length=2048), nullable=False)
-    active = Column('active', INTEGER(), nullable=False)
-    _discount_num = Column('discount_num', BIGINT())
-    _discount_denom = Column('discount_denom', BIGINT())
+    _discount_num = Column('discount_num', BIGINT(), nullable=False)
+    _discount_denom = Column('discount_denom', BIGINT(), nullable=False)
     discount = hybrid_property_gncnumeric(_discount_num, _discount_denom)
     _credit_num = Column('credit_num', BIGINT(), nullable=False)
     _credit_denom = Column('credit_denom', BIGINT(), nullable=False)
     credit = hybrid_property_gncnumeric(_credit_num, _credit_denom)
-    currency_guid = Column('currency', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
     tax_override = Column('tax_override', INTEGER(), nullable=False)
-
-    addr_name = Column('addr_name', VARCHAR(length=1024))
-    addr_addr1 = Column('addr_addr1', VARCHAR(length=1024))
-    addr_addr2 = Column('addr_addr2', VARCHAR(length=1024))
-    addr_addr3 = Column('addr_addr3', VARCHAR(length=1024))
-    addr_addr4 = Column('addr_addr4', VARCHAR(length=1024))
-    addr_phone = Column('addr_phone', VARCHAR(length=128))
-    addr_fax = Column('addr_fax', VARCHAR(length=128))
-    addr_email = Column('addr_email', VARCHAR(length=256))
-    address = composite(Address, addr_name, addr_addr1, addr_addr2, addr_addr3, addr_addr4,
-                        addr_email, addr_fax, addr_phone)
 
     shipaddr_name = Column('shipaddr_name', VARCHAR(length=1024))
     shipaddr_addr1 = Column('shipaddr_addr1', VARCHAR(length=1024))
@@ -116,7 +154,6 @@ class Customer(DeclarativeBaseGuid):
 
     # relation definitions
     taxtable = relation('Taxtable')
-    currency = relation('Commodity')
     term = relation('Billterm')
 
     @classmethod
@@ -159,7 +196,6 @@ class Customer(DeclarativeBaseGuid):
         self.shipping_address = shipping_address
 
         if book and id is None:
-            self._assign_id(book)
             book.add(self)
         elif id is not None:
             if isinstance(id, int):
@@ -167,22 +203,10 @@ class Customer(DeclarativeBaseGuid):
             else:
                 self.id = id
 
-    def _assign_id(self, book):
-        book.counter_customer = cnt = book.counter_customer + 1
-        self.id = "{:06d}".format(cnt)
-
-    def object_to_validate(self, change):
-        yield self
-
-    def validate(self):
-        if not self.id:
-            self._assign_id(self.book)
-
-    def __unirepr__(self):
-        return u"Customer<{}:{}>".format(self.id, self.name)
+    _counter_name = "counter_customer"
 
 
-class Employee(DeclarativeBaseGuid):
+class Employee(Person, DeclarativeBaseGuid):
     """
     A GnuCash Employee
 
@@ -205,11 +229,8 @@ class Employee(DeclarativeBaseGuid):
     # column definitions
     name = Column('username', VARCHAR(length=2048), nullable=False)
     # id is nullable as it is set during validation (happening after flush)
-    id = Column('id', VARCHAR(length=2048), nullable=True)
     language = Column('language', VARCHAR(length=2048), nullable=False)
     acl = Column('acl', VARCHAR(length=2048), nullable=False)
-    active = Column('active', INTEGER(), nullable=False)
-    currency_guid = Column('currency', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
     ccard_guid = Column('ccard_guid', VARCHAR(length=32), ForeignKey('accounts.guid'))
     _workday_num = Column('workday_num', BIGINT(), nullable=False)
     _workday_denom = Column('workday_denom', BIGINT(), nullable=False)
@@ -218,19 +239,7 @@ class Employee(DeclarativeBaseGuid):
     _rate_denom = Column('rate_denom', BIGINT(), nullable=False)
     rate = hybrid_property_gncnumeric(_rate_num, _rate_denom)
 
-    addr_name = Column('addr_name', VARCHAR(length=1024))
-    addr_addr1 = Column('addr_addr1', VARCHAR(length=1024))
-    addr_addr2 = Column('addr_addr2', VARCHAR(length=1024))
-    addr_addr3 = Column('addr_addr3', VARCHAR(length=1024))
-    addr_addr4 = Column('addr_addr4', VARCHAR(length=1024))
-    addr_phone = Column('addr_phone', VARCHAR(length=128))
-    addr_fax = Column('addr_fax', VARCHAR(length=128))
-    addr_email = Column('addr_email', VARCHAR(length=256))
-    address = composite(Address, addr_name, addr_addr1, addr_addr2, addr_addr3, addr_addr4,
-                        addr_email, addr_fax, addr_phone)
-
     # relation definitions
-    currency = relation('Commodity')
     creditcard_account = relation('Account')
 
     def __init__(self,
@@ -258,30 +267,18 @@ class Employee(DeclarativeBaseGuid):
         self.address = address
 
         if book and id is None:
-            self._assign_id(book)
             book.add(self)
+
         elif id is not None:
             if isinstance(id, int):
                 self.id = str(id)
             else:
                 self.id = id
 
-    def _assign_id(self, book):
-        book.counter_employee = cnt = book.counter_employee + 1
-        self.id = "{:06d}".format(cnt)
-
-    def object_to_validate(self, change):
-        yield self
-
-    def validate(self):
-        if not self.id:
-            self._assign_id(self.book)
-
-    def __unirepr__(self):
-        return u"Employee<{}:{}>".format(self.id, self.name)
+    _counter_name = "counter_employee"
 
 
-class Vendor(DeclarativeBaseGuid):
+class Vendor(Person, DeclarativeBaseGuid):
     """
     A GnuCash Vendor
 
@@ -304,29 +301,15 @@ class Vendor(DeclarativeBaseGuid):
     # column definitions
     name = Column('name', VARCHAR(length=2048), nullable=False)
     # id is nullable as it is set during validation (happening after flush)
-    id = Column('id', VARCHAR(length=2048), nullable=True)
     notes = Column('notes', VARCHAR(length=2048), nullable=False)
-    currency_guid = Column('currency', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
-    active = Column('active', INTEGER(), nullable=False)
     tax_override = Column('tax_override', INTEGER(), nullable=False)
 
-    addr_name = Column('addr_name', VARCHAR(length=1024))
-    addr_addr1 = Column('addr_addr1', VARCHAR(length=1024))
-    addr_addr2 = Column('addr_addr2', VARCHAR(length=1024))
-    addr_addr3 = Column('addr_addr3', VARCHAR(length=1024))
-    addr_addr4 = Column('addr_addr4', VARCHAR(length=1024))
-    addr_phone = Column('addr_phone', VARCHAR(length=128))
-    addr_fax = Column('addr_fax', VARCHAR(length=128))
-    addr_email = Column('addr_email', VARCHAR(length=256))
-    address = composite(Address, addr_name, addr_addr1, addr_addr2, addr_addr3, addr_addr4,
-                        addr_email, addr_fax, addr_phone)
     term_guid = Column('terms', VARCHAR(length=32), ForeignKey('billterms.guid'))
     tax_included = Column('tax_inc', VARCHAR(length=2048))
     tax_table_guid = Column('tax_table', VARCHAR(length=32), ForeignKey('taxtables.guid'))
 
     # relation definitions
     taxtable = relation('Taxtable')
-    currency = relation('Commodity')
     term = relation('Billterm')
 
     def __init__(self,
@@ -356,7 +339,6 @@ class Vendor(DeclarativeBaseGuid):
         self.address = address
 
         if book and id is None:
-            self._assign_id(book)
             book.add(self)
         elif id is not None:
             if isinstance(id, int):
@@ -364,16 +346,4 @@ class Vendor(DeclarativeBaseGuid):
             else:
                 self.id = id
 
-    def _assign_id(self, book):
-        book.counter_vendor = cnt = book.counter_vendor + 1
-        self.id = "{:06d}".format(cnt)
-
-    def object_to_validate(self, change):
-        yield self
-
-    def validate(self):
-        if not self.id:
-            self._assign_id(self.book)
-
-    def __unirepr__(self):
-        return u"Vendor<{}:{}>".format(self.id, self.name)
+    _counter_name = "counter_vendor"

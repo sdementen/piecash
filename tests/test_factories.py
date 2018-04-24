@@ -62,6 +62,7 @@ class TestFactoriesCommodities(object):
                                                             income_account=income,
                                                             income_account_types="D/CL/CS/I")
         assert len(income.children) == 4
+        book_basic.flush()
         assert sorted(income.children, key=lambda x: x.guid) == sorted([_acc.parent for _acc in inc_accounts],
                                                                        key=lambda x: x.guid)
         assert broker.children == [acc]

@@ -150,6 +150,7 @@ def book_basic(request):
         Account(name="broker", type="STOCK", commodity=cdty, parent=a)
         Account(name="exp", type="EXPENSE", commodity=curr, parent=b.root_account)
         Account(name="inc", type="INCOME", commodity=curr, parent=b.root_account)
+        b.flush()
 
         yield b
 
@@ -251,6 +252,35 @@ def book_investment(request):
 
     with open_book(file_template_full) as book:
         yield book
+
+
+@pytest.yield_fixture()
+def book_reference_2_6_21_fulloptions(request):
+    """
+    Returns the reference book for 2_6_21 with options.
+    """
+    # name = request.param
+    # print(name)
+    file_template_full = os.path.join(book_folder, "reference", "default_2_6_21_full_options.gnucash")
+
+    with open_book(file_template_full) as book:
+        yield book
+
+
+@pytest.yield_fixture()
+def book_reference_2_6_21_basic(request):
+    """
+    Returns the reference book for 2_6_21 with no options.
+    """
+    # name = request.param
+    # print(name)
+    file_template_full = os.path.join(book_folder, "reference", "default_2_6_21_basic.gnucash")
+
+    with open_book(file_template_full) as book:
+        yield book
+
+
+
 
 
 @pytest.yield_fixture()

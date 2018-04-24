@@ -182,11 +182,11 @@ class Account(DeclarativeBaseGuid):
                  type,
                  commodity,
                  parent=None,
-                 description=None,
+                 description='',
                  commodity_scu=None,
                  hidden=0,
                  placeholder=0,
-                 code=None,
+                 code='',
                  book=None,
                  children=None):
         book = book or (commodity and commodity.book) or (parent and parent.book)

@@ -86,7 +86,6 @@ if sys.platform == "win32":
     locales = {
         'English_United States.1252': "USD",
         'French_France.1252': "EUR",
-        'C': "EUR",
     }
 else:
     locales = {

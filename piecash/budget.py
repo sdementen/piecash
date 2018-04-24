@@ -59,10 +59,10 @@ class BudgetAmount(DeclarativeBase):
     """
     __tablename__ = 'budget_amounts'
 
-    __table_args__ = {}
+    __table_args__ = {'sqlite_autoincrement': True}
 
     # column definitions
-    id = Column('id', INTEGER(), primary_key=True, nullable=False)
+    id = Column('id', INTEGER(), primary_key=True, autoincrement=True,nullable=False)
     budget_guid = Column('budget_guid', VARCHAR(length=32),
                          ForeignKey('budgets.guid'), nullable=False)
     account_guid = Column('account_guid', VARCHAR(length=32),
