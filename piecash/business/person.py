@@ -85,9 +85,7 @@ class Person:
     def _assign_id(self):
         if not self.id:
             cnt = getattr(self.book, self._counter_name) + 1
-            print(cnt)
             setattr(self.book, self._counter_name, cnt)
-            print("0 ==== ", getattr(self.book, self._counter_name))
             self.id = "{:06d}".format(cnt)
 
     def object_to_validate(self, change):
