@@ -1,8 +1,8 @@
 What's new
 ==========
 
-In dev
-~~~~~~
+Version 0.18.0 (2018-04-24)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Mostly refactoring:
 - refactor common parts of vendor, customer and employee into person
