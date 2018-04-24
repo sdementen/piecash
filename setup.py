@@ -265,7 +265,7 @@ setup_dict = dict(
     install_requires=install_requires,
     extras_require=extras_require,
     # Allow tests to be run with `python setup.py test'.
-    tests_require=['pytest'],  # + deps_all,
+    tests_require=['pytest'] + deps_all,
     entry_points={
         'console_scripts': [
             'piecash = piecash.scripts.export:cli',
