@@ -186,7 +186,7 @@ class Commodity(DeclarativeBaseGuid):
                  cusip="",
                  quote_flag=0,
                  quote_source=None,
-                 quote_tz=None,
+                 quote_tz='',
                  book=None):
 
         if quote_source is None:

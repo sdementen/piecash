@@ -1,9 +1,9 @@
+import datetime
 import os
 import shutil
+import socket
 from collections import defaultdict
 
-import datetime
-import socket
 from sqlalchemy import event, Column, VARCHAR, INTEGER, Table, PrimaryKeyConstraint
 from sqlalchemy.sql.ddl import DropConstraint, DropIndex
 from sqlalchemy_utils import database_exists
@@ -15,7 +15,7 @@ from ..sa_extra import create_piecash_engine, DeclarativeBase, Session
 
 version_supported = {
     '2.6': {
-        'Gnucash': 2060400,
+        'Gnucash': 2062100,
         'Gnucash-Resave': 19920,
         'accounts': 1,
         'billterms': 2,
@@ -70,8 +70,8 @@ version_supported = {
 
 # this is not a declarative as it is used before binding the session to an engine.
 gnclock = Table(u'gnclock', DeclarativeBase.metadata,
-                Column('hostname', VARCHAR(length=255)),
-                Column('pid', INTEGER()),
+                Column('Hostname', VARCHAR(length=255)),
+                Column('PID', INTEGER()),
                 )
 
 
@@ -214,10 +214,11 @@ def create_book(sqlite_file=None,
         for n, tbl in DeclarativeBase.metadata.tables.items():
             # drop index constraints
             for idx in tbl.indexes:
-                event.listen(tbl,
-                             "after_create",
-                             DropIndex(idx),
-                             once=True)
+                if idx.name.startswith("ix_") or idx.name.startswith("_"):
+                    event.listen(tbl,
+                                 "after_create",
+                                 DropIndex(idx),
+                                 once=True)
             # drop FK constraints
             for cstr in tbl.constraints:
                 if isinstance(cstr, PrimaryKeyConstraint):
@@ -231,7 +232,7 @@ def create_book(sqlite_file=None,
     # create all (tables, fk, ...)
     DeclarativeBase.metadata.create_all(engine)
 
-    s = Session(bind=engine)
+    s = Session(bind=engine, autoflush=False)
 
     # create all rows in version table
     assert version_format in version_supported, "The 'version_format'={} is not supported. " \
@@ -373,14 +374,14 @@ def adapt_session(session, book, readonly):
 
     # add logic to create/delete GnuCash locks
     def delete_lock():
-        session.execute(gnclock.delete(whereclause=(gnclock.c.hostname == socket.gethostname())
-                                                   and (gnclock.c.pid == os.getpid())))
+        session.execute(gnclock.delete(whereclause=(gnclock.c.Hostname == socket.gethostname())
+                                                   and (gnclock.c.PID == os.getpid())))
         session.commit()
 
     session.delete_lock = delete_lock
 
     def create_lock():
-        session.execute(gnclock.insert(values=dict(hostname=socket.gethostname(), pid=os.getpid())))
+        session.execute(gnclock.insert(values=dict(Hostname=socket.gethostname(), PID=os.getpid())))
         session.commit()
 
     session.create_lock = create_lock

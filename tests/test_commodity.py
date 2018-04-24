@@ -1,14 +1,14 @@
 # coding=utf-8
 from __future__ import unicode_literals
 
-from datetime import datetime, date
+from datetime import date
 from decimal import Decimal
 
 import pytest
 
 from piecash import Price, Commodity, GnucashException
 from piecash.core.commodity import GncPriceError
-from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic,  \
+from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, \
     is_inmemory_sqlite, needweb
 
 # dummy line to avoid removing unused symbols
@@ -35,7 +35,6 @@ class TestCommodity_create_commodity(object):
 
         with pytest.raises(ValueError):
             book_basic.save()
-
 
     def test_base_currency_commodity(self, book_basic):
         cdty = Commodity(namespace="AMEX", mnemonic="APPLE", fullname="Apple", book=book_basic)
@@ -127,8 +126,8 @@ class TestCommodity_create_prices(object):
             print("skipping test for {}".format(book_basic))
             return
         cdty = Commodity(mnemonic="AAPL", namespace="NASDAQ", fullname="Apple", book=book_basic)
-        #cdty["quoted_currency"] = "USD"
-        #assert cdty.get("quoted_currency") == "USD"
+        # cdty["quoted_currency"] = "USD"
+        # assert cdty.get("quoted_currency") == "USD"
 
         cdty.update_prices()
         book_basic.flush()
@@ -141,7 +140,6 @@ class TestCommodity_create_prices(object):
         assert len(list(cdty.prices)) == L
 
         book_basic.validate()
-
 
     def test_price_update_on_commodity_no_book(self, book_basic):
         cdty = Commodity(namespace="AMEX", mnemonic="APPLE", fullname="Apple")

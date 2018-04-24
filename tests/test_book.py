@@ -1,3 +1,4 @@
+# -*- coding: latin-1 -*-
 import glob
 import os
 from decimal import Decimal
@@ -10,12 +11,16 @@ from sqlalchemy.orm import Session
 from piecash import create_book, Account, GnucashException, Book, open_book, Commodity
 from piecash.core import Version
 from test_helper import (db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri,
-                         book_transactions, book_sample, format_version, book_investment)
+                         book_transactions, book_sample, book_investment,
+                         book_reference_2_6_21_fulloptions, book_reference_2_6_21_basic,
+                         format_version,
+                         )
 
 # dummy line to avoid removing unused symbols
 a = (
     db_sqlite_uri, db_sqlite,
     new_book, new_book_USD, book_uri, book_transactions, book_sample, book_investment,
+    book_reference_2_6_21_fulloptions, book_reference_2_6_21_basic,
     format_version,
 )
 
@@ -317,7 +322,7 @@ class TestBook_access_book(object):
         assert len(new_book.currencies) == 2
         new_book.delete(nncur)
         assert not new_book.is_saved
-        assert len(new_book.currencies) == 1
+        assert len(new_book.currencies) == 2
         new_book.save()
         assert new_book.is_saved
         assert len(new_book.currencies) == 1
@@ -446,3 +451,51 @@ class TestBook_access_book(object):
 
         # print("Balance:", total_balance)
         assert total == Decimal(13)
+
+    def test_business_slots_options(self, book_reference_2_6_21_fulloptions):
+        """
+        Tests business slots
+        :type book_reference_2_6_21_fulloptions: Book
+        """
+        assert book_reference_2_6_21_fulloptions.business_company_address == u"Rue de la Chenille éclairée, 22"
+        assert book_reference_2_6_21_fulloptions.business_company_contact == "John Michu"
+        assert book_reference_2_6_21_fulloptions.business_company_email == "woozie@example.com"
+        assert book_reference_2_6_21_fulloptions.business_company_ID == "SIREN 123 456 789"
+        assert book_reference_2_6_21_fulloptions.business_company_name == "Woozie Inc"
+        assert book_reference_2_6_21_fulloptions.business_company_phone == "+33 1 33 33 33 33"
+        assert book_reference_2_6_21_fulloptions.business_company_website == "www.woozie.com"
+
+    def test_business_slots_nooptions(self, book_reference_2_6_21_basic):
+        """
+        Tests business slots
+        :type book_reference_2_6_21_basic: Book
+        """
+        assert book_reference_2_6_21_basic.business_company_address == ""
+        assert book_reference_2_6_21_basic.business_company_contact == ""
+        assert book_reference_2_6_21_basic.business_company_email == ""
+        assert book_reference_2_6_21_basic.business_company_ID == ""
+        assert book_reference_2_6_21_basic.business_company_name == ""
+        assert book_reference_2_6_21_basic.business_company_phone == ""
+        assert book_reference_2_6_21_basic.business_company_website == ""
+
+
+    def test_business_writeslots_nooptions(self, book_reference_2_6_21_basic):
+        """
+        Tests business slots
+        :type book_reference_2_6_21_basic: Book
+        """
+        book_reference_2_6_21_basic.business_company_address = u"é"
+        book_reference_2_6_21_basic.business_company_contact = u"à"
+        book_reference_2_6_21_basic.business_company_email = u"ù"
+        book_reference_2_6_21_basic.business_company_ID = u"ö"
+        book_reference_2_6_21_basic.business_company_name = u"µ"
+        book_reference_2_6_21_basic.business_company_phone = u"²"
+        book_reference_2_6_21_basic.business_company_website = u"³"
+
+        assert book_reference_2_6_21_basic.business_company_address == u"é"
+        assert book_reference_2_6_21_basic.business_company_contact == u"à"
+        assert book_reference_2_6_21_basic.business_company_email == u"ù"
+        assert book_reference_2_6_21_basic.business_company_ID == u"ö"
+        assert book_reference_2_6_21_basic.business_company_name == u"µ"
+        assert book_reference_2_6_21_basic.business_company_phone == u"²"
+        assert book_reference_2_6_21_basic.business_company_website == u"³"

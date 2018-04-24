@@ -141,6 +141,7 @@ class TestIntegration_EmptyBook(object):
         with pytest.raises(TypeError):
             b["a/b/c"] = True
 
+        book.flush()
         assert {n for (n,) in book.session.query(Slot._name)} == {'a', 'a/b', 'a/b/c', 'a/b/c/d', 'a/b/c/d/f'}
 
         # delete some elements

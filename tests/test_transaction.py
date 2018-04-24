@@ -349,4 +349,5 @@ class TestTransaction_changes(object):
         # changing the post date of the transaction of the split should create a new price
         tr.post_date = date(2015, 1, 29)
         book_transactions.validate()
+        book_transactions.flush()
         assert len(book_transactions.prices) == 7

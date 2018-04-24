@@ -5,7 +5,7 @@ import uuid
 from enum import Enum
 from importlib import import_module
 
-from sqlalchemy import Column, VARCHAR, INTEGER, REAL, BIGINT, types, event
+from sqlalchemy import Column, VARCHAR, INTEGER, REAL, BIGINT, types, event, Index
 from sqlalchemy.orm import relation, foreign, object_session, backref
 
 from ._common import CallableList
@@ -101,15 +101,18 @@ class DictWrapper(object):
             # new key
             if len(keys) > 1:
                 if isinstance(self, SlotFrame):
-                    sf = SlotFrame(name=self._name + "/" + key)
+                    sf = SlotFrame(name=self._name + "/" + key,
+                                   obj_guid=self.guid_val)
                 else:
-                    sf = SlotFrame(name=key)
+                    sf = SlotFrame(name=key,
+                                   obj_guid=self.guid)
                 sf[keys[1]] = value
                 self.slots.append(sf)
             else:
                 self.slots.append(slot(parent=self, name=key, value=value))
 
             return
+
         if len(keys) > 1:
             sl[keys[1]] = value
             return
@@ -149,10 +152,13 @@ class DictWrapper(object):
 class Slot(DeclarativeBase):
     __tablename__ = 'slots'
 
-    __table_args__ = {'sqlite_autoincrement': True}
+    __table_args__ = (
+        Index('slots_guid_index', 'obj_guid'),
+        {'sqlite_autoincrement': True, }
+    )
 
     # column definitions
-    id = Column('id', INTEGER(), primary_key=True, nullable=False)
+    id = Column('id', INTEGER(), primary_key=True, nullable=False, autoincrement=True)
     obj_guid = Column('obj_guid', VARCHAR(length=32), nullable=False, index=True)
     _name = Column('name', VARCHAR(length=4096), nullable=False)
 
@@ -173,10 +179,12 @@ class Slot(DeclarativeBase):
         'polymorphic_on': slot_type,
     }
 
-    def __init__(self, name, value=None):
+    def __init__(self, name, value=None, obj_guid=None):
         self.name = name
         if value is not None:
             self.value = value
+        if obj_guid is not None:
+            self.obj_guid = obj_guid
 
     def __unirepr__(self):
         return u"<{} {}={!r}>".format(self.__class__.__name__, self.name, self.value)
@@ -262,6 +270,7 @@ class SlotFrame(DictWrapper, Slot):
                      collection_class=CallableList,
                      single_parent=True,
                      backref=backref("parent", remote_side=guid_val),
+
                      )
 
     @property
@@ -368,18 +377,21 @@ def get_all_subclasses(cls):
 def slot(parent, name, value):
     if isinstance(parent, SlotFrame):
         name = parent._name + "/" + name
+        guid_parent = parent.guid_val
+    else:
+        guid_parent = parent.guid
 
     # handle datetime before others (as otherwise can be mixed with date)
     if isinstance(value, datetime.datetime):
-        return SlotTime(name=name, value=value)
+        return SlotTime(name=name, value=value, obj_guid=guid_parent)
 
     for cls in get_all_subclasses(Slot):
         if isinstance(value, cls._python_type) and cls != SlotFrame and cls != SlotList:
-            return cls(name=name, value=value)
+            return cls(name=name, value=value, obj_guid=guid_parent)
 
     if isinstance(value, dict):
         # transform a dict to Frame/Slots
-        sf = SlotFrame(name=name)
+        sf = SlotFrame(name=name, obj_guid=guid_parent)
         for k, v in value.items():
             sl = slot(parent=sf, name=k, value=v)
             sl.parent = sf
@@ -402,8 +414,8 @@ class SlotNumeric(Slot):
     }
     _python_type = (tuple, decimal.Decimal)
 
-    _numeric_val_num = Column('numeric_val_num', BIGINT(), nullable=False, default=0)
-    _numeric_val_denom = Column('numeric_val_denom', BIGINT(), nullable=False, default=1)
+    _numeric_val_num = Column('numeric_val_num', BIGINT(), nullable=True, default=0)
+    _numeric_val_denom = Column('numeric_val_denom', BIGINT(), nullable=True, default=1)
     value = hybrid_property_gncnumeric(_numeric_val_num, _numeric_val_denom)
 
 
