@@ -12,7 +12,6 @@ sqlalchemy-utils = "*"
 pytz = "*"
 tzlocal = "*"
 click = "*"
-"enum34" = {markers="python_version < '3.4'"}
 
 
 [dev-packages]
@@ -20,7 +19,7 @@ click = "*"
 tox-pipenv = "*"
 "psycopg2" = "*"
 pymysql = "*"
-pandas = "*"
+pandas = "==0.21.1"
 qifparse = "*"
 requests = "*"
 pytest = "*"

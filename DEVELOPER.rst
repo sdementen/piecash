@@ -9,10 +9,6 @@ Some note for developers:
 
     python setup.py sdist
 
-- to regenerate the requirements-dev.txt used by rtd::
-
-    requirements-dev.txt
-
 - to upload file on PyPI::
 
     twine upload dist\piecash-0.13.0.tar.gz
@@ -30,8 +26,8 @@ Some note for developers:
 
 - to test via tox and conda, create first the different environment with the relevant versions of python::
 
-    conda create -n py27 python=2.7 virtualenv
     conda create -n py35 python=3.5 virtualenv
+    conda create -n py36 python=3.6 virtualenv
     ...
 
   adapt tox.ini to point to the proper conda envs and then run::

@@ -1,6 +1,12 @@
 What's new
 ==========
 
+Dev
+~~~
+
+- drop support of py27 and py34
+- support gnucash 3.0.x format
+
 Version 0.18.0 (2018-04-24)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
