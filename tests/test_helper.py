@@ -1,9 +1,9 @@
 # -*- coding: latin-1 -*-
 import os
 import sys
+from datetime import date
 
 import pytest
-from datetime import date
 from sqlalchemy_utils import database_exists, drop_database
 
 from piecash import create_book, open_book, Account, Commodity, Employee, Customer, Vendor, Transaction, Split, Price
@@ -22,7 +22,7 @@ if sys.version_info.major == 3:
     def run_file(fname):
         with open(fname) as f:
             code = compile(f.read(), fname, 'exec')
-            exec(code, {})
+            exec (code, {})
 else:
     def run_file(fname):
         return execfile(fname, {})
@@ -261,7 +261,7 @@ def book_reference_2_6_21_fulloptions(request):
     """
     # name = request.param
     # print(name)
-    file_template_full = os.path.join(book_folder, "reference", "default_2_6_21_full_options.gnucash")
+    file_template_full = os.path.join(book_folder, "reference", "2_6", "default_2_6_21_full_options.gnucash")
 
     with open_book(file_template_full) as book:
         yield book
@@ -274,13 +274,10 @@ def book_reference_2_6_21_basic(request):
     """
     # name = request.param
     # print(name)
-    file_template_full = os.path.join(book_folder, "reference", "default_2_6_21_basic.gnucash")
+    file_template_full = os.path.join(book_folder, "reference", "2_6", "default_2_6_21_basic.gnucash")
 
     with open_book(file_template_full) as book:
         yield book
-
-
-
 
 
 @pytest.yield_fixture()
