@@ -34,7 +34,6 @@ class TestBusinessPerson_create_Person(object):
         # but validation sets the id if still to None
         assert getattr(book_basic, Person._counter_name) == 1
 
-        print("flushing")
         book_basic.flush()
         assert c.id == "000001"
         assert getattr(book_basic, Person._counter_name) == 1

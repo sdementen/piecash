@@ -246,11 +246,11 @@ class Account(DeclarativeBaseGuid):
         if self.parent:
             pfn = self.parent.fullname
             if pfn:
-                return u"{}:{}".format(pfn, self.name)
+                return "{}:{}".format(pfn, self.name)
             else:
                 return self.name
         else:
-            return u""
+            return ""
 
     def get_balance(self, recurse=True, commodity=None):
         """
@@ -300,6 +300,6 @@ class Account(DeclarativeBaseGuid):
 
     def __unirepr__(self):
         if self.commodity:
-            return u"Account<{acc.fullname}[{acc.commodity.mnemonic}]>".format(acc=self)
+            return "Account<{acc.fullname}[{acc.commodity.mnemonic}]>".format(acc=self)
         else:
-            return u"Account<{acc.fullname}>".format(acc=self)
+            return "Account<{acc.fullname}>".format(acc=self)

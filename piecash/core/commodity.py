@@ -80,7 +80,7 @@ class Price(DeclarativeBaseGuid):
         self.source = source
 
     def __unirepr__(self):
-        return u"Price<{:%Y-%m-%d} : {} {}/{}>".format(self.date,
+        return "Price<{:%Y-%m-%d} : {} {}/{}>".format(self.date,
                                                        self.value,
                                                        self.currency.mnemonic,
                                                        self.commodity.mnemonic)
@@ -205,7 +205,7 @@ class Commodity(DeclarativeBaseGuid):
         self.quote_tz = quote_tz
 
     def __unirepr__(self):
-        return u"Commodity<{}:{}>".format(self.namespace, self.mnemonic)
+        return "Commodity<{}:{}>".format(self.namespace, self.mnemonic)
 
     @property
     def precision(self):

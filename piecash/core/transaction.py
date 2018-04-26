@@ -98,22 +98,22 @@ class Split(DeclarativeBaseGuid):
                 sched_xaction = self["sched-xaction"]
                 credit = sched_xaction["credit-formula"].value
                 debit = sched_xaction["debit-formula"].value
-                return u"SplitTemplate<{} {} {}>".format(sched_xaction["account"].value,
+                return "SplitTemplate<{} {} {}>".format(sched_xaction["account"].value,
                                                          "credit={}".format(credit) if credit else "",
                                                          "debit={}".format(debit) if debit else "",
 
                                                          )
             elif cur == com:
                 # case of same currency split
-                return u"Split<{} {} {}>".format(acc,
+                return "Split<{} {} {}>".format(acc,
                                                  self.value, cur)
             else:
                 # case of non currency split
-                return u"Split<{} {} {} [{} {}]>".format(acc,
+                return "Split<{} {} {} [{} {}]>".format(acc,
                                                          self.value, cur,
                                                          self.quantity, com)
         except AttributeError:
-            return u"Split<{}>".format(self.account)
+            return "Split<{}>".format(self.account)
 
     def object_to_validate(self, change):
         yield self
@@ -248,7 +248,7 @@ class Transaction(DeclarativeBaseGuid):
             self.splits = splits
 
     def __unirepr__(self):
-        return u"Transaction<[{}] '{}' on {:%Y-%m-%d}{}>".format(self.currency.mnemonic,
+        return "Transaction<[{}] '{}' on {:%Y-%m-%d}{}>".format(self.currency.mnemonic,
                                                                  self.description,
                                                                  self.post_date,
                                                                  " (from sch tx)" if self.scheduled_transaction else "")
@@ -392,7 +392,7 @@ class ScheduledTransaction(DeclarativeBaseGuid):
                           )
 
     def __unirepr__(self):
-        return u"ScheduledTransaction<'{}' {}>".format(self.name, self.recurrence)
+        return "ScheduledTransaction<'{}' {}>".format(self.name, self.recurrence)
 
 
 class Lot(DeclarativeBaseGuid):
@@ -452,4 +452,4 @@ class Lot(DeclarativeBaseGuid):
                 raise ValueError("Split {} is not in the same commodity of the lot {}".format(sp, self))
 
     def __unirepr__(self):
-        return u"Lot<'{}' on {}>".format(self.title, self.account.name)
+        return "Lot<'{}' on {}>".format(self.title, self.account.name)

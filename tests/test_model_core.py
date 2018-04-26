@@ -75,13 +75,13 @@ class TestModelCore_EmptyBook(object):
         # confirm versions of tables
         versions = session.query(Version.table_name,
                                  Version.table_version).all()
-        assert set(versions) == {(u'Gnucash', 2062100), (u'Gnucash-Resave', 19920),
+        assert set(versions) == {(u'Gnucash', 3000000), (u'Gnucash-Resave', 19920),
                                  (u'accounts', 1), (u'books', 1),
                                  (u'budgets', 1), (u'budget_amounts', 1), ('jobs', 1), (u'orders', 1),
                                  (u'taxtables', 2), (u'taxtable_entries', 3), (u'vendors', 1), (u'recurrences', 2),
-                                 (u'slots', 3), (u'transactions', 3), (u'splits', 4), (u'lots', 2), (u'entries', 3),
-                                 (u'billterms', 2), (u'invoices', 3), (u'commodities', 1), (u'schedxactions', 1),
-                                 (u'prices', 2), (u'customers', 2), (u'employees', 2),
+                                 (u'slots', 4), (u'transactions', 4), (u'splits', 4), (u'lots', 2), (u'entries', 4),
+                                 (u'billterms', 2), (u'invoices', 4), (u'commodities', 1), (u'schedxactions', 1),
+                                 (u'prices', 3), (u'customers', 2), (u'employees', 2),
                                  }
 
     def test_readonly_true(self, session_readonly):

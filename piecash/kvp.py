@@ -12,10 +12,6 @@ from ._common import CallableList
 from ._common import hybrid_property_gncnumeric
 from .sa_extra import _DateTime, DeclarativeBase, _Date
 
-if sys.version > '3':
-    str_unicode = str
-else:
-    str_unicode = basestring
 
 
 class KVP_Type(Enum):
@@ -187,7 +183,7 @@ class Slot(DeclarativeBase):
             self.obj_guid = obj_guid
 
     def __unirepr__(self):
-        return u"<{} {}={!r}>".format(self.__class__.__name__, self.name, self.value)
+        return "<{} {}={!r}>".format(self.__class__.__name__, self.name, self.value)
 
 
 class SlotSimple(Slot):
@@ -234,7 +230,7 @@ SlotInt = define_simpleslot(postfix="Int",
                             col_default=0,
                             )
 SlotString = define_simpleslot(postfix="String",
-                               pytype=(str_unicode,),
+                               pytype=(str,),
                                KVPtype=KVP_Type.KVP_TYPE_STRING,
                                field="string_val",
                                col_type=VARCHAR(length=4096),

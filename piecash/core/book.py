@@ -139,7 +139,7 @@ class Book(DeclarativeBaseGuid):
         self.root_template = root_template
 
     def __unirepr__(self):
-        return u"Book<{}>".format(self.uri)
+        return "Book<{}>".format(self.uri)
 
     _control_mode = None
 

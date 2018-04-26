@@ -98,7 +98,7 @@ class Entry(DeclarativeBaseGuid):
     invoice = relation('Invoice', back_populates="entries")
 
     def __unirepr__(self):
-        return u"Entry<{}>".format(self.description)
+        return "Entry<{}>".format(self.description)
 
 
 class Invoice(DeclarativeBaseGuid):
@@ -146,7 +146,7 @@ class Invoice(DeclarativeBaseGuid):
                        )
 
     def __unirepr__(self):
-        return u"Invoice<{}>".format(self.id)
+        return "Invoice<{}>".format(self.id)
 
 
 class Job(DeclarativeBaseGuid):

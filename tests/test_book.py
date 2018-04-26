@@ -13,7 +13,6 @@ from piecash.core import Version
 from test_helper import (db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri,
                          book_transactions, book_sample, book_investment,
                          book_reference_2_6_21_fulloptions, book_reference_2_6_21_basic,
-                         format_version,
                          )
 
 # dummy line to avoid removing unused symbols
@@ -21,7 +20,6 @@ a = (
     db_sqlite_uri, db_sqlite,
     new_book, new_book_USD, book_uri, book_transactions, book_sample, book_investment,
     book_reference_2_6_21_fulloptions, book_reference_2_6_21_basic,
-    format_version,
 )
 
 
@@ -69,10 +67,6 @@ class TestBook_create_book(object):
         CUR = new_book_USD.commodities[0]
         assert CUR.mnemonic == "USD"
         assert CUR.namespace == "CURRENCY"
-
-    def test_create_specific_format(self, format_version):
-        b = create_book(version_format=format_version)
-        v = b.session.query(Version).all()
 
     def test_create_specific_currency(self):
         b = create_book(currency="USD")
@@ -457,7 +451,7 @@ class TestBook_access_book(object):
         Tests business slots
         :type book_reference_2_6_21_fulloptions: Book
         """
-        assert book_reference_2_6_21_fulloptions.business_company_address == u"Rue de la Chenille éclairée, 22"
+        assert book_reference_2_6_21_fulloptions.business_company_address == "Rue de la Chenille éclairée, 22"
         assert book_reference_2_6_21_fulloptions.business_company_contact == "John Michu"
         assert book_reference_2_6_21_fulloptions.business_company_email == "woozie@example.com"
         assert book_reference_2_6_21_fulloptions.business_company_ID == "SIREN 123 456 789"
@@ -478,24 +472,23 @@ class TestBook_access_book(object):
         assert book_reference_2_6_21_basic.business_company_phone == ""
         assert book_reference_2_6_21_basic.business_company_website == ""
 
-
     def test_business_writeslots_nooptions(self, book_reference_2_6_21_basic):
         """
         Tests business slots
         :type book_reference_2_6_21_basic: Book
         """
-        book_reference_2_6_21_basic.business_company_address = u"é"
-        book_reference_2_6_21_basic.business_company_contact = u"à"
-        book_reference_2_6_21_basic.business_company_email = u"ù"
-        book_reference_2_6_21_basic.business_company_ID = u"ö"
-        book_reference_2_6_21_basic.business_company_name = u"µ"
-        book_reference_2_6_21_basic.business_company_phone = u"²"
-        book_reference_2_6_21_basic.business_company_website = u"³"
+        book_reference_2_6_21_basic.business_company_address = "é"
+        book_reference_2_6_21_basic.business_company_contact = "à"
+        book_reference_2_6_21_basic.business_company_email = "ù"
+        book_reference_2_6_21_basic.business_company_ID = "ö"
+        book_reference_2_6_21_basic.business_company_name = "µ"
+        book_reference_2_6_21_basic.business_company_phone = "²"
+        book_reference_2_6_21_basic.business_company_website = "³"
 
-        assert book_reference_2_6_21_basic.business_company_address == u"é"
-        assert book_reference_2_6_21_basic.business_company_contact == u"à"
-        assert book_reference_2_6_21_basic.business_company_email == u"ù"
-        assert book_reference_2_6_21_basic.business_company_ID == u"ö"
-        assert book_reference_2_6_21_basic.business_company_name == u"µ"
-        assert book_reference_2_6_21_basic.business_company_phone == u"²"
-        assert book_reference_2_6_21_basic.business_company_website == u"³"
+        assert book_reference_2_6_21_basic.business_company_address == "é"
+        assert book_reference_2_6_21_basic.business_company_contact == "à"
+        assert book_reference_2_6_21_basic.business_company_email == "ù"
+        assert book_reference_2_6_21_basic.business_company_ID == "ö"
+        assert book_reference_2_6_21_basic.business_company_name == "µ"
+        assert book_reference_2_6_21_basic.business_company_phone == "²"
+        assert book_reference_2_6_21_basic.business_company_website == "³"

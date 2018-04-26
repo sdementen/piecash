@@ -101,7 +101,7 @@ class TestTransaction_create_transaction(object):
         assert str(tr.splits)
         assert repr(tr)
         assert repr(tr.splits)
-        assert tr.notes == u"on St-Eugène day"
+        assert tr.notes == "on St-Eugène day"
 
     def test_create_basictransaction_splitfirst(self, book_basic):
         EUR = book_basic.commodities(namespace="CURRENCY")

@@ -1,6 +1,5 @@
 # -*- coding: latin-1 -*-
 import os
-import sys
 from datetime import date
 
 import pytest
@@ -18,14 +17,12 @@ file_ghost_kvp_scheduled_transaction = os.path.join(book_folder, "ghost_kvp_sche
 file_ghost_kvp_scheduled_transaction_for_test = os.path.join(test_folder,
                                                              "ghost_kvp_scheduled_transaction_for_test.gnucash")
 
-if sys.version_info.major == 3:
-    def run_file(fname):
-        with open(fname) as f:
-            code = compile(f.read(), fname, 'exec')
-            exec (code, {})
-else:
-    def run_file(fname):
-        return execfile(fname, {})
+
+def run_file(fname):
+    with open(fname) as f:
+        code = compile(f.read(), fname, 'exec')
+        exec (code, {})
+
 
 db_sqlite = os.path.join(test_folder, "foozbar.sqlite")
 
@@ -71,11 +68,6 @@ else:
 
 @pytest.yield_fixture(params=[Customer, Vendor, Employee])
 def Person(request):
-    yield request.param
-
-
-@pytest.yield_fixture(params=["2.6", "2.7"])
-def format_version(request):
     yield request.param
 
 

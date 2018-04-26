@@ -99,7 +99,7 @@ class Person:
         self._assign_id()
 
     def __unirepr__(self):
-        return u"{}<{}:{}>".format(self.__class__.__name__, self.id, self.name)
+        return "{}<{}:{}>".format(self.__class__.__name__, self.id, self.name)
 
 
 class Customer(Person, DeclarativeBaseGuid):

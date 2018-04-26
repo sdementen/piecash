@@ -13,6 +13,13 @@ from .book import Book
 from .._common import GnucashException
 from ..sa_extra import create_piecash_engine, DeclarativeBase, Session
 
+# version of tables changed between 2.6 and 3.0
+#   ('invoices', 4)
+#   ('prices', 3)
+#   ('slots', 4)
+#   ('transactions', 4)
+#   ('entries', 4)
+
 version_supported = {
     '2.6': {
         'Gnucash': 2062100,
@@ -40,8 +47,8 @@ version_supported = {
         'transactions': 3,
         'vendors': 1,
     },
-    '2.7': {
-        'Gnucash': 2070200,
+    '3.0': {
+        'Gnucash': 3000000,
         'Gnucash-Resave': 19920,
         'accounts': 1,
         'billterms': 2,
@@ -93,7 +100,7 @@ class Version(DeclarativeBase):
         self.table_version = table_version
 
     def __unirepr__(self):
-        return u"Version<{}={}>".format(self.table_name, self.table_version)
+        return "Version<{}={}>".format(self.table_name, self.table_version)
 
 
 def build_uri(sqlite_file=None,
@@ -168,7 +175,6 @@ def create_book(sqlite_file=None,
                 db_host=None,
                 db_port=None,
                 check_same_thread=True,
-                version_format="2.6",
                 **kwargs):
     """Create a new empty GnuCash book. If both sqlite_file and uri_conn are None, then an "in memory" sqlite book is created.
 
@@ -184,7 +190,6 @@ def create_book(sqlite_file=None,
     :param str db_host: host of database
     :param str db_port: port of database
     :param bool check_same_thread: sqlite flag that restricts connection use to the thread that created (see False for use in ipython/flask/... but read first https://docs.python.org/3/library/sqlite3.html)
-    :param str version_format: the format (2.6 or 2.7) for the schema tables to generate
 
     :return: the document as a gnucash session
     :rtype: :class:`GncSession`
@@ -192,6 +197,8 @@ def create_book(sqlite_file=None,
     :raises GnucashException: if document already exists and overwrite is False
     """
     from sqlalchemy_utils.functions import database_exists, create_database, drop_database
+
+    VERSION_FORMAT = "3.0"
 
     uri_conn = build_uri(sqlite_file, uri_conn,
                          db_type, db_user, db_password, db_name, db_host, db_port,
@@ -235,10 +242,10 @@ def create_book(sqlite_file=None,
     s = Session(bind=engine, autoflush=False)
 
     # create all rows in version table
-    assert version_format in version_supported, "The 'version_format'={} is not supported. " \
-                                                "Choose one of {}".format(version_format,
+    assert VERSION_FORMAT in version_supported, "The 'version_format'={} is not supported. " \
+                                                "Choose one of {}".format(VERSION_FORMAT,
                                                                           list(version_supported.keys()))
-    for table_name, table_version in version_supported[version_format].items():
+    for table_name, table_version in version_supported[VERSION_FORMAT].items():
         s.add(Version(table_name=table_name, table_version=table_version))
 
     # create book and merge with session

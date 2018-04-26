@@ -18,11 +18,6 @@ from sqlalchemy.orm import sessionmaker, object_session
 
 # import yaml
 
-if sys.version > '3':
-    long = int
-else:
-    long = long
-
 
 def __init__blocked(self, *args, **kwargs):
     raise NotImplementedError("Objects of type {} cannot be created from scratch "
@@ -64,19 +59,11 @@ class DeclarativeBase(object):
             return {"STATE_CHANGES": ["unchanged"],
                     "OBJECT": self}
 
-    if sys.version > '3':
-        def __str__(self):
-            return self.__unirepr__()
+    def __str__(self):
+        return self.__unirepr__()
 
-        def __repr__(self):
-            return self.__unirepr__()
-
-    else:
-        def __str__(self):
-            return unicodedata.normalize('NFKD', self.__unirepr__()).encode('ascii', 'ignore')
-
-        def __repr__(self):
-            return self.__unirepr__().encode('ascii', errors='backslashreplace')
+    def __repr__(self):
+        return self.__unirepr__()
 
     def __unicode__(self):
         return self.__unirepr__()
