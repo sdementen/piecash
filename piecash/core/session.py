@@ -70,8 +70,8 @@ version_supported = {
 
 # this is not a declarative as it is used before binding the session to an engine.
 gnclock = Table(u'gnclock', DeclarativeBase.metadata,
-                Column('Hostname', VARCHAR(length=255)),
-                Column('PID', INTEGER()),
+                Column('hostname', VARCHAR(length=255)),
+                Column('pid', INTEGER()),
                 )
 
 
