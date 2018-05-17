@@ -207,6 +207,7 @@ install_requires = [
     'tzlocal',
     'click',
     'enum34;python_version<"3.4"',
+    'requests',
 ]
 extras_require = {
     'postgres': ["psycopg2"],
