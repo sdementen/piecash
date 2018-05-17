@@ -271,6 +271,7 @@ def open_book(sqlite_file=None,
               db_host=None,
               db_port=None,
               check_same_thread=True,
+              check_exists=True,
               **kwargs):
     """Open an existing GnuCash book
 
@@ -288,6 +289,7 @@ def open_book(sqlite_file=None,
     :param str db_host: host of database
     :param str db_port: port of database
     :param bool check_same_thread: sqlite flag that restricts connection use to the thread that created (see False for use in ipython/flask/... but read first https://docs.python.org/3/library/sqlite3.html)
+    :param bool check_exists: check if the database exists before connecting
 
     :return: the document as a gnucash session
     :rtype: :class:`GncSession`
@@ -303,10 +305,11 @@ def open_book(sqlite_file=None,
     if uri_conn == "sqlite:///:memory:":
         raise ValueError("An in memory sqlite gnucash databook cannot be opened, it should be created")
 
-    # create database (if not sqlite in memory)
-    if not database_exists(uri_conn):
-        raise GnucashException("Database '{}' does not exist (please use create_book to create " \
-                               "GnuCash books from scratch)".format(uri_conn))
+    # check if the database exists
+    if check_exists:
+        if not database_exists(uri_conn):
+            raise GnucashException("Database '{}' does not exist (please use create_book to create " \
+                                   "GnuCash books from scratch)".format(uri_conn))
 
     engine = create_piecash_engine(uri_conn, **kwargs)
 
