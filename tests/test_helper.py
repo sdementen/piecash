@@ -271,6 +271,18 @@ def book_reference_2_6_21_basic(request):
     with open_book(file_template_full) as book:
         yield book
 
+@pytest.yield_fixture()
+def book_reference_3_0_0_basic(request):
+    """
+    Returns the reference book for 2_6_21 with no options.
+    """
+    # name = request.param
+    # print(name)
+    file_template_full = os.path.join(book_folder, "reference", "3_0", "default_3_0_0_basic.gnucash")
+
+    with open_book(file_template_full) as book:
+        yield book
+
 
 @pytest.yield_fixture()
 def book_invoices(request):

@@ -341,10 +341,15 @@ def open_book(sqlite_file=None,
     version_book = {v.table_name: v.table_version
                     for v in s.query(Version).all()
                     if "Gnucash" not in v.table_name}
-    assert any(version_book == {k: v
-                                for k, v in vt.items() if
-                                "Gnucash" not in k}
-               for version, vt in version_supported.items()), "Unsupported table versions"
+    for version, vt in version_supported.items():
+        if version_book == {k: v
+                            for k, v in vt.items() if
+                            "Gnucash" not in k}:
+            break
+    else:
+        raise ValueError("Unsupported table versions")
+    assert version == "3.0", "This version of piecash only support books from gnucash 3.0.x " \
+                             "which is not the case for {}".format(uri_conn)
 
     book = s.query(Book).one()
     adapt_session(s, book=book, readonly=readonly)
