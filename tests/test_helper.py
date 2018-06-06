@@ -29,6 +29,7 @@ db_sqlite = os.path.join(test_folder, "foozbar.sqlite")
 TRAVIS = os.environ.get("TRAVIS", False)
 APPVEYOR = os.environ.get("APPVEYOR", False)
 LOCALSERVER = os.environ.get("PIECASH_DBSERVER_TEST", False)
+LOCALSERVER_USERNAME = os.environ.get("PIECASH_DBSERVER_TEST_USERNAME", "")
 
 db_sqlite_uri = "sqlite:///{}".format(db_sqlite)
 databases_to_check = [None,
@@ -38,7 +39,7 @@ db_config = {
     "sqlite_in_mem": dict(sqlite_file=None),
 }
 
-if TRAVIS or LOCALSERVER:
+if TRAVIS:
     pg_password = os.environ.get("PG_PASSWORD", "")
     db_user = "travis"
     databases_to_check.append("postgresql://postgres:{pwd}@localhost:5432/foo".format(pwd=pg_password))
@@ -50,6 +51,15 @@ if TRAVIS or LOCALSERVER:
         "mysql": dict(db_type="mysql", db_name="foo",
                       db_user="travis", db_password="",
                       db_host="localhost", db_port=3306),
+    })
+elif LOCALSERVER:
+    pg_password = os.environ.get("PG_PASSWORD", "")
+    db_user = "travis"
+    databases_to_check.append("postgresql://{username}:{pwd}@localhost:5432/foo".format(username=LOCALSERVER_USERNAME, pwd=pg_password))
+    db_config.update({
+        "postgres": dict(db_type="postgres", db_name="foo",
+                         db_user=LOCALSERVER_USERNAME, db_password=pg_password,
+                         db_host="localhost", db_port=5432),
     })
 elif APPVEYOR:
     databases_to_check.append("postgresql://postgres:Password12!@localhost:5432/foo")
@@ -306,6 +316,7 @@ def book_sample(request):
 
     with open_book(file_template_full) as book:
         yield book
+
 
 
 @pytest.yield_fixture()
