@@ -111,7 +111,7 @@ class _DateTime(types.TypeDecorator):
             if not value.tzinfo:
                 value = tz.localize(value)
 
-            return value.astimezone(utc)
+            return value.astimezone(utc).replace(tzinfo=None)
 
     def process_result_value(self, value, dialect):
         if value is not None:
@@ -145,7 +145,7 @@ class _DateAsDateTime(types.TypeDecorator):
             else:
                 result = tz.localize(datetime.datetime.combine(value, datetime.time(0, 0, 0))) \
                     .astimezone(utc)
-            return result
+            return result.replace(tzinfo=None)
 
     def process_result_value(self, value, dialect):
         if value is not None:

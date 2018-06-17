@@ -7,6 +7,7 @@ Dev
 - drop support of py27 and py34
 - support gnucash 3.0.x format
 - set autoflush to False for open_book (was only done for create_book before) (fix #93)
+- remove tz info when serialising DateTime to SQL (issue with postgresql doing some TZ conversion)
 
 
 Version 0.18.0 (2018-04-24)
