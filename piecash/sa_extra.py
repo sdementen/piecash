@@ -274,7 +274,7 @@ def get_foreign_keys(metadata, engine):
             yield constraint
 
 
-Session = sessionmaker(autoflush=True)
+Session = sessionmaker(autoflush=False)
 
 
 def create_piecash_engine(uri_conn, **kwargs):

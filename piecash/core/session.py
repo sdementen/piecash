@@ -239,7 +239,7 @@ def create_book(sqlite_file=None,
     # create all (tables, fk, ...)
     DeclarativeBase.metadata.create_all(engine)
 
-    s = Session(bind=engine, autoflush=False)
+    s = Session(bind=engine)
 
     # create all rows in version table
     assert VERSION_FORMAT in version_supported, "The 'version_format'={} is not supported. " \
