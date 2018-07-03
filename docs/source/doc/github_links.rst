@@ -6,7 +6,7 @@ This page lists all projects found by searching 'gnucash' on github (generated o
 +--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
 |                     Language                     |                  # of projects                   |     # of projects updated in last 12 months      |
 +==================================================+==================================================+==================================================+
-|                  :ref:`Python`                   |                        94                        |                        19                        |
+|                  :ref:`Python`                   |                        95                        |                        20                        |
 +--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
 |                  :ref:`Unknown`                  |                        30                        |                        9                         |
 +--------------------------------------------------+--------------------------------------------------+--------------------------------------------------+
@@ -84,6 +84,8 @@ Python
 	A quick and dirty script to convert an AceMoney .XML into a GnuCash .XML
 \* `alchemy <https://github.com/zmoog/alchemy>`__ by zmoog (last updated on  2016-05-08)
 	A very simple Gnucash-inspired web application
+\* `csv2cash <https://github.com/u2berggeist/csv2cash>`__ by u2berggeist (last updated on  2018-07-03)
+	A flexible csv parser for importing to GNUCash.
 \* `BankCSVtoQif <https://github.com/niknow/BankCSVtoQif>`__ by niknow (last updated on  2017-02-07)
 	Converts csv files from a bank to qif and replaces descriptions and target accounts according to predefined customizable rules along the way. Intended to work as a tool for gnucash.
 \* `django-openbudget <https://github.com/evandavey/django-openbudget>`__ by evandavey (last updated on  2017-01-20)
