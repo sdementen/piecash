@@ -95,7 +95,7 @@ class _DateTime(types.TypeDecorator):
     def load_dialect_impl(self, dialect):
         if dialect.name == "sqlite":
             return sqlite.DATETIME(
-                storage_format="%(year)04d%(month)02d%(day)02d%(hour)02d%(minute)02d%(second)02d",
+                storage_format="%(year)04d-%(month)02d-%(day)02d %(hour)02d:%(minute)02d:%(second)02d",
                 regexp=r"(\d{4})-?(\d{2})-?(\d{2}) ?(\d{2}):?(\d{2}):?(\d{2})",
             )
         else:
