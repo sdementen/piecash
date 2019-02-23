@@ -94,6 +94,7 @@ class Price(DeclarativeBaseGuid):
         try:
             self.book.query(Price).filter_by(commodity=self.commodity,
                                              currency=self.currency,
+                                             source=self.source,
                                              date=self.date).one()
         except MultipleResultsFound:
             raise ValueError("{} already exists in this book".format(self))
