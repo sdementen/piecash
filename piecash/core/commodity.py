@@ -257,7 +257,7 @@ class Commodity(DeclarativeBaseGuid):
             raise GncPriceError("Cannot update price for a commodity not attached to a book")
 
         # get last_price updated
-        last_price = self.prices.order_by(-Price.date).limit(1).first()
+        last_price = self.prices.order_by(Price.date.desc()).limit(1).first()
 
         if start_date is None:
             start_date = datetime.datetime.today().date() + datetime.timedelta(days=-7)
