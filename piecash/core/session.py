@@ -150,7 +150,7 @@ def build_uri(sqlite_file=None,
     if uri_conn is None:
         # fallback on sqlite
         if sqlite_file:
-            if sqlite_file.startswith("sqlite:///"):
+            if isinstance(sqlite_file, str) and sqlite_file.startswith("sqlite:///"):
                 # already have the protocol specified.
                 uri_conn = sqlite_file
             else:
