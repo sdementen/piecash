@@ -164,7 +164,14 @@ class Job(DeclarativeBaseGuid):
 
     # relation definitions
     # todo: owner_guid/type links to Vendor or Customer
+    def __init__(self, name, reference="", active=1, owner=None):
+        self.name = name
+        self.reference = reference
+        self.active = active
 
+
+    def __unirepr__(self):
+        return "Job<{self.name}>".format(self=self)
 
 # This class exists in code but not in the GUI (to confirm?)
 
