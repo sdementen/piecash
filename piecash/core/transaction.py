@@ -199,7 +199,7 @@ class Transaction(DeclarativeBaseGuid):
     # column definitions
     currency_guid = Column('currency_guid', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
     num = Column('num', VARCHAR(length=2048), nullable=False)
-    _post_date = Column('post_date', _DateAsDateTime(neutral_time=True), index=True)
+    _post_date = Column('post_date', _DateAsDateTime(neutral_time=True))
     post_date = mapped_to_slot_property(_post_date,
                                         slot_name="date-posted",
                                         # slot_transform=lambda x: x.date() if x else None
