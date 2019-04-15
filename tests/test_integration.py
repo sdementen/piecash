@@ -280,6 +280,7 @@ class TestIntegration_EmptyBook(object):
         map_fullname_account = {account.fullname: account for account in book.query(Account).all()}
 
         # use it to retrieve the current assets account
+        print(map_fullname_account)
         acc_cur = map_fullname_account["Assets:Current Assets"]
 
         # retrieve EUR currency

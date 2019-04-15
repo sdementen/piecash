@@ -12,7 +12,7 @@ from piecash import create_book, Account, GnucashException, Book, open_book, Com
 from piecash.core import Version
 from test_helper import (db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri,
                          book_transactions, book_sample, book_investment,
-                         book_reference_2_6_21_fulloptions, book_reference_2_6_21_basic,
+                         book_reference_3_0_0_fulloptions,
                          book_reference_3_0_0_basic,
                          )
 
@@ -20,7 +20,7 @@ from test_helper import (db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_
 a = (
     db_sqlite_uri, db_sqlite,
     new_book, new_book_USD, book_uri, book_transactions, book_sample, book_investment,
-    book_reference_2_6_21_fulloptions, book_reference_2_6_21_basic,
+    book_reference_3_0_0_fulloptions,
     book_reference_3_0_0_basic
 )
 
@@ -448,18 +448,18 @@ class TestBook_access_book(object):
         # print("Balance:", total_balance)
         assert total == Decimal(13)
 
-    def test_business_slots_options(self, book_reference_2_6_21_fulloptions):
+    def test_business_slots_options(self, book_reference_3_0_0_fulloptions):
         """
         Tests business slots
         :type book_reference_2_6_21_fulloptions: Book
         """
-        assert book_reference_2_6_21_fulloptions.business_company_address == "Rue de la Chenille éclairée, 22"
-        assert book_reference_2_6_21_fulloptions.business_company_contact == "John Michu"
-        assert book_reference_2_6_21_fulloptions.business_company_email == "woozie@example.com"
-        assert book_reference_2_6_21_fulloptions.business_company_ID == "SIREN 123 456 789"
-        assert book_reference_2_6_21_fulloptions.business_company_name == "Woozie Inc"
-        assert book_reference_2_6_21_fulloptions.business_company_phone == "+33 1 33 33 33 33"
-        assert book_reference_2_6_21_fulloptions.business_company_website == "www.woozie.com"
+        assert book_reference_3_0_0_fulloptions.business_company_address == "Rue de la Chenille éclairée, 22"
+        assert book_reference_3_0_0_fulloptions.business_company_contact == "John Michu"
+        assert book_reference_3_0_0_fulloptions.business_company_email == "woozie@example.com"
+        assert book_reference_3_0_0_fulloptions.business_company_ID == "SIREN 123 456 789"
+        assert book_reference_3_0_0_fulloptions.business_company_name == "Woozie Inc"
+        assert book_reference_3_0_0_fulloptions.business_company_phone == "+33 1 33 33 33 33"
+        assert book_reference_3_0_0_fulloptions.business_company_website == "www.woozie.com"
 
     def test_business_slots_nooptions(self, book_reference_3_0_0_basic):
         """

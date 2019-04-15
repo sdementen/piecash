@@ -1,27 +1,31 @@
 # -*- coding: latin-1 -*-
 import os
 from datetime import date
+from pathlib import PurePath, Path
 
 import pytest
 from sqlalchemy_utils import database_exists, drop_database
 
 from piecash import create_book, open_book, Account, Commodity, Employee, Customer, Vendor, Transaction, Split, Price
 
-test_folder = os.path.dirname(os.path.realpath(__file__))
-book_folder = os.path.join(test_folder, "..", "gnucash_books")
-file_template = os.path.join(book_folder, "empty_book.gnucash")
-file_for_test = os.path.join(test_folder, "empty_book_for_test.gnucash")
-file_template_full = os.path.join(book_folder, "test_book.gnucash")
-file_for_test_full = os.path.join(test_folder, "test_book_for_test.gnucash")
-file_ghost_kvp_scheduled_transaction = os.path.join(book_folder, "ghost_kvp_scheduled_transaction.gnucash")
-file_ghost_kvp_scheduled_transaction_for_test = os.path.join(test_folder,
-                                                             "ghost_kvp_scheduled_transaction_for_test.gnucash")
+test_folder = Path(__file__).parent
+# book_folder = test_folder / ".." / "gnucash_books"
+book_folder = test_folder / "books"
+file_template = book_folder / "empty_book.gnucash"
+file_template = book_folder / "default_3_0_0_basic.gnucash"
+file_for_test = test_folder / "empty_book_for_test.gnucash"
+file_template_full = book_folder / "test_book.gnucash"
+# file_template_full = book_folder / "reference" / "3_0" / "default_3_0_0_full_options.gnucash"
+file_template_full = book_folder / "all-accounts.gnucash"
+file_for_test_full = test_folder / "test_book_for_test.gnucash"
+file_ghost_kvp_scheduled_transaction = book_folder / "ghost_kvp_scheduled_transaction.gnucash"
+file_ghost_kvp_scheduled_transaction_for_test = test_folder / "ghost_kvp_scheduled_transaction_for_test.gnucash"
 
 
 def run_file(fname):
     with open(fname) as f:
-        code = compile(f.read(), fname, 'exec')
-        exec (code, {})
+        code = compile(f.read(), fname, "exec")
+        exec(code, {})
 
 
 db_sqlite = os.path.join(test_folder, "foozbar.sqlite")
@@ -32,46 +36,70 @@ LOCALSERVER = os.environ.get("PIECASH_DBSERVER_TEST", False)
 LOCALSERVER_USERNAME = os.environ.get("PIECASH_DBSERVER_TEST_USERNAME", "")
 
 db_sqlite_uri = "sqlite:///{}".format(db_sqlite)
-databases_to_check = [None,
-                      db_sqlite_uri]
-db_config = {
-    "sqlite": dict(sqlite_file=db_sqlite),
-    "sqlite_in_mem": dict(sqlite_file=None),
-}
+databases_to_check = [None, db_sqlite_uri]
+db_config = {"sqlite": dict(sqlite_file=db_sqlite), "sqlite_in_mem": dict(sqlite_file=None)}
 
 if TRAVIS:
     pg_password = os.environ.get("PG_PASSWORD", "")
     db_user = "travis"
     databases_to_check.append("postgresql://postgres:{pwd}@localhost:5432/foo".format(pwd=pg_password))
     databases_to_check.append("mysql+pymysql://travis:@localhost/foo?charset=utf8")
-    db_config.update({
-        "postgres": dict(db_type="postgres", db_name="foo",
-                         db_user="postgres", db_password=pg_password,
-                         db_host="localhost", db_port=5432),
-        "mysql": dict(db_type="mysql", db_name="foo",
-                      db_user="travis", db_password="",
-                      db_host="localhost", db_port=3306),
-    })
+    db_config.update(
+        {
+            "postgres": dict(
+                db_type="postgres",
+                db_name="foo",
+                db_user="postgres",
+                db_password=pg_password,
+                db_host="localhost",
+                db_port=5432,
+            ),
+            "mysql": dict(
+                db_type="mysql", db_name="foo", db_user="travis", db_password="", db_host="localhost", db_port=3306
+            ),
+        }
+    )
 elif LOCALSERVER:
     pg_password = os.environ.get("PG_PASSWORD", "")
     db_user = "travis"
-    databases_to_check.append("postgresql://{username}:{pwd}@localhost:5432/foo".format(username=LOCALSERVER_USERNAME, pwd=pg_password))
-    db_config.update({
-        "postgres": dict(db_type="postgres", db_name="foo",
-                         db_user=LOCALSERVER_USERNAME, db_password=pg_password,
-                         db_host="localhost", db_port=5432),
-    })
+    databases_to_check.append(
+        "postgresql://{username}:{pwd}@localhost:5432/foo".format(username=LOCALSERVER_USERNAME, pwd=pg_password)
+    )
+    db_config.update(
+        {
+            "postgres": dict(
+                db_type="postgres",
+                db_name="foo",
+                db_user=LOCALSERVER_USERNAME,
+                db_password=pg_password,
+                db_host="localhost",
+                db_port=5432,
+            )
+        }
+    )
 elif APPVEYOR:
     databases_to_check.append("postgresql://postgres:Password12!@localhost:5432/foo")
     databases_to_check.append("mysql+pymysql://root:Password12!@localhost/foo?charset=utf8")
-    db_config.update({
-        "postgres": dict(db_type="postgres", db_name="foo",
-                         db_user="postgres", db_password="Password12!",
-                         db_host="localhost", db_port=5432),
-        "mysql": dict(db_type="mysql", db_name="foo",
-                      db_user="root", db_password="Password12!",
-                      db_host="localhost", db_port=3306),
-    })
+    db_config.update(
+        {
+            "postgres": dict(
+                db_type="postgres",
+                db_name="foo",
+                db_user="postgres",
+                db_password="Password12!",
+                db_host="localhost",
+                db_port=5432,
+            ),
+            "mysql": dict(
+                db_type="mysql",
+                db_name="foo",
+                db_user="root",
+                db_password="Password12!",
+                db_host="localhost",
+                db_port=3306,
+            ),
+        }
+    )
 else:
     pass
 
@@ -178,63 +206,53 @@ def book_transactions(request):
         expense = Account(name="exp", type="EXPENSE", commodity=curr, parent=b.root_account)
         income = Account(name="inc", type="INCOME", commodity=curr, parent=b.root_account)
 
-        tr1 = Transaction(post_date=date(2015, 10, 21),
-                          description="my revenue",
-                          currency=curr,
-                          splits=[
-                              Split(account=asset, value=(1000, 1)),
-                              Split(account=income, value=(-1000, 1)),
-                          ]
-                          )
-        tr2 = Transaction(post_date=date(2015, 10, 25),
-                          description="my expense",
-                          currency=curr,
-                          splits=[
-                              Split(account=asset, value=(-100, 1)),
-                              Split(account=expense, value=(20, 1), memo="cost of X"),
-                              Split(account=expense, value=(80, 1), memo="cost of Y"),
-                          ]
-                          )
-        tr_stock = Transaction(post_date=date(2015, 10, 29),
-                               description="my purchase of stock",
-                               currency=curr,
-                               splits=[
-                                   Split(account=asset, value=(-200, 1)),
-                                   Split(account=expense, value=(15, 1), memo="transaction costs"),
-                                   Split(account=stock, value=(185, 1), quantity=(6, 1), memo="purchase of stock"),
-                               ]
-                               )
-        tr_to_foreign = Transaction(post_date=date(2015, 10, 30),
-                                    description="transfer to foreign asset",
-                                    currency=curr,
-                                    splits=[
-                                        Split(account=asset, value=(-200, 1)),
-                                        Split(account=foreign_asset, value=(200, 1), quantity=(135, 1)),
-                                    ]
-                                    )
-        tr_from_foreign = Transaction(post_date=date(2015, 10, 31),
-                                      description="transfer from foreign asset",
-                                      currency=other_curr,
-                                      splits=[
-                                          Split(account=asset, value=(135, 1), quantity=(215, 1)),
-                                          Split(account=foreign_asset, value=(-135, 1)),
-                                      ]
-                                      )
-        Price(commodity=cdty,
-              currency=other_curr,
-              date=date(2015, 11, 1),
-              value=(123, 100),
-              )
-        Price(commodity=cdty,
-              currency=other_curr,
-              date=date(2015, 11, 4),
-              value=(127, 100),
-              )
-        Price(commodity=cdty,
-              currency=curr,
-              date=date(2015, 11, 2),
-              value=(234, 100),
-              )
+        tr1 = Transaction(
+            post_date=date(2015, 10, 21),
+            description="my revenue",
+            currency=curr,
+            splits=[Split(account=asset, value=(1000, 1)), Split(account=income, value=(-1000, 1))],
+        )
+        tr2 = Transaction(
+            post_date=date(2015, 10, 25),
+            description="my expense",
+            currency=curr,
+            splits=[
+                Split(account=asset, value=(-100, 1)),
+                Split(account=expense, value=(20, 1), memo="cost of X"),
+                Split(account=expense, value=(80, 1), memo="cost of Y"),
+            ],
+        )
+        tr_stock = Transaction(
+            post_date=date(2015, 10, 29),
+            description="my purchase of stock",
+            currency=curr,
+            splits=[
+                Split(account=asset, value=(-200, 1)),
+                Split(account=expense, value=(15, 1), memo="transaction costs"),
+                Split(account=stock, value=(185, 1), quantity=(6, 1), memo="purchase of stock"),
+            ],
+        )
+        tr_to_foreign = Transaction(
+            post_date=date(2015, 10, 30),
+            description="transfer to foreign asset",
+            currency=curr,
+            splits=[
+                Split(account=asset, value=(-200, 1)),
+                Split(account=foreign_asset, value=(200, 1), quantity=(135, 1)),
+            ],
+        )
+        tr_from_foreign = Transaction(
+            post_date=date(2015, 10, 31),
+            description="transfer from foreign asset",
+            currency=other_curr,
+            splits=[
+                Split(account=asset, value=(135, 1), quantity=(215, 1)),
+                Split(account=foreign_asset, value=(-135, 1)),
+            ],
+        )
+        Price(commodity=cdty, currency=other_curr, date=date(2015, 11, 1), value=(123, 100))
+        Price(commodity=cdty, currency=other_curr, date=date(2015, 11, 4), value=(127, 100))
+        Price(commodity=cdty, currency=curr, date=date(2015, 11, 2), value=(234, 100))
 
         b.save()
         yield b
@@ -244,64 +262,13 @@ def book_transactions(request):
 
 
 @pytest.yield_fixture()
-def book_investment(request):
-    """
-    Returns the book that contains investment accounts and transactions.
-    """
-    # name = request.param
-    # print(name)
-    file_template_full = os.path.join(book_folder, "investment.gnucash")
-
-    with open_book(file_template_full) as book:
-        yield book
-
-
-@pytest.yield_fixture()
-def book_reference_2_6_21_fulloptions(request):
-    """
-    Returns the reference book for 2_6_21 with options.
-    """
-    # name = request.param
-    # print(name)
-    file_template_full = os.path.join(book_folder, "reference", "2_6", "default_2_6_21_full_options.gnucash")
-
-    with open_book(file_template_full) as book:
-        yield book
-
-
-@pytest.yield_fixture()
-def book_reference_2_6_21_basic(request):
-    """
-    Returns the reference book for 2_6_21 with no options.
-    """
-    # name = request.param
-    # print(name)
-    file_template_full = os.path.join(book_folder, "reference", "2_6", "default_2_6_21_basic.gnucash")
-
-    with open_book(file_template_full) as book:
-        yield book
-
-@pytest.yield_fixture()
-def book_reference_3_0_0_basic(request):
-    """
-    Returns the reference book for 2_6_21 with no options.
-    """
-    # name = request.param
-    # print(name)
-    file_template_full = os.path.join(book_folder, "reference", "3_0", "default_3_0_0_basic.gnucash")
-
-    with open_book(file_template_full) as book:
-        yield book
-
-
-@pytest.yield_fixture()
 def book_invoices(request):
     """
     Returns the book that contains invoices.
     """
     # name = request.param
     # print(name)
-    file_template_full = os.path.join(book_folder, "invoices.gnucash")
+    file_template_full = book_folder /  "invoices.gnucash"
 
     with open_book(file_template_full) as book:
         yield book
@@ -318,18 +285,6 @@ def book_sample(request):
         yield book
 
 
-
-@pytest.yield_fixture()
-def book_complex(request):
-    """
-    Returns a complex sample book for 2.6.N
-    """
-    file_template_full = os.path.join(book_folder, "complex_sample.gnucash")
-
-    with open_book(file_template_full) as book:
-        yield book
-
-
 def is_inmemory_sqlite(book_basic):
     # print book_basic.uri, book_basic.uri.get_dialect(), book_basic.uri.database, type(book_basic.uri), dir(book_basic.uri)
     # print "sqlite" in book_basic.uri and ":memory:" in book_basic.uri
@@ -337,5 +292,27 @@ def is_inmemory_sqlite(book_basic):
     return book_basic.uri.database == ":memory:"
 
 
-needweb = pytest.mark.skipif(not (os.environ.get("DOGOONWEB", "False") == "True"),
-                             reason="no access to web")
+needweb = pytest.mark.skipif(not (os.environ.get("DOGOONWEB", "False") == "True"), reason="no access to web")
+
+
+def generate_book_fixture(name, filename):
+    @pytest.yield_fixture(scope="module")
+    def my_fixture():
+        file_template = book_folder / filename
+
+        with open_book(file_template) as book:
+            yield book
+
+    globals()[name] = my_fixture
+
+
+generate_book_fixture(
+    "book_reference_3_0_0_fulloptions", PurePath() / "default_3_0_0_full_options.gnucash"
+)
+
+generate_book_fixture("book_reference_3_0_0_basic", PurePath() / "default_3_0_0_basic.gnucash")
+
+# complex 2.6 book sample
+generate_book_fixture("book_complex", PurePath() / "complex_sample.gnucash")
+
+generate_book_fixture("book_investment", PurePath() / "investment.gnucash")
