@@ -55,7 +55,7 @@ def use_copied_book(request, template_filename, test_filename, check_same_thread
     @request.addfinalizer
     def finalizer():
         s.close()
-        os.remove(test_filename)
+        os.remove(str(test_filename))
 
     return s
 
