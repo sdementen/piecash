@@ -56,7 +56,7 @@ class Recurrence(DeclarativeBase):
 
     # relation definitions
     # added from the DeclarativeBaseGUID object (as linked from different objects like the slots)
-    def __unirepr__(self):
+    def __str__(self):
         return "{}*{} from {} [{}]".format(self.recurrence_period_type, self.recurrence_mult,
                                             self.recurrence_period_start,
                                             self.recurrence_weekend_adjust)

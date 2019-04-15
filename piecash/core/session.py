@@ -99,7 +99,7 @@ class Version(DeclarativeBase):
         self.table_name = table_name
         self.table_version = table_version
 
-    def __unirepr__(self):
+    def __str__(self):
         return "Version<{}={}>".format(self.table_name, self.table_version)
 
 

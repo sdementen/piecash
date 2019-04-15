@@ -182,7 +182,7 @@ class Slot(DeclarativeBase):
         if obj_guid is not None:
             self.obj_guid = obj_guid
 
-    def __unirepr__(self):
+    def __str__(self):
         return "<{} {}={!r}>".format(self.__class__.__name__, self.name, self.value)
 
 

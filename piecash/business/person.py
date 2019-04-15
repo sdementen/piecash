@@ -100,7 +100,7 @@ class Person:
         for job in self.jobs:
             job.on_book_add()
 
-    def __unirepr__(self):
+    def __str__(self):
         return "{}<{}:{}>".format(self.__class__.__name__, self.id, self.name)
 
     @classmethod

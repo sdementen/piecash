@@ -99,7 +99,7 @@ class Entry(DeclarativeBaseGuid):
     order = relation('Order', back_populates="entries")
     invoice = relation('Invoice', back_populates="entries")
 
-    def __unirepr__(self):
+    def __str__(self):
         return "Entry<{}>".format(self.description)
 
 
@@ -147,7 +147,7 @@ class Invoice(DeclarativeBaseGuid):
                        collection_class=CallableList,
                        )
 
-    def __unirepr__(self):
+    def __str__(self):
         return "Invoice<{}>".format(self.id)
 
 
@@ -175,7 +175,7 @@ class Job(DeclarativeBaseGuid):
         if owner.book:
             owner.book.add(self)
 
-    def __unirepr__(self):
+    def __str__(self):
         return "Job<{self.name}>".format(self=self)
 
     def on_book_add(self):

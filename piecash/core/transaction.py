@@ -88,7 +88,7 @@ class Split(DeclarativeBaseGuid):
         self.reconcile_state = reconcile_state
         self.lot = lot
 
-    def __unirepr__(self):
+    def __str__(self):
         try:
             cur = self.transaction.currency.mnemonic
             acc = self.account
@@ -247,7 +247,7 @@ class Transaction(DeclarativeBaseGuid):
         if splits:
             self.splits = splits
 
-    def __unirepr__(self):
+    def __str__(self):
         return "Transaction<[{}] '{}' on {:%Y-%m-%d}{}>".format(self.currency.mnemonic,
                                                                  self.description,
                                                                  self.post_date,
@@ -391,7 +391,7 @@ class ScheduledTransaction(DeclarativeBaseGuid):
                           uselist=False,
                           )
 
-    def __unirepr__(self):
+    def __str__(self):
         return "ScheduledTransaction<'{}' {}>".format(self.name, self.recurrence)
 
 
@@ -451,5 +451,5 @@ class Lot(DeclarativeBaseGuid):
             if sp.account != self.account:
                 raise ValueError("Split {} is not in the same commodity of the lot {}".format(sp, self))
 
-    def __unirepr__(self):
+    def __str__(self):
         return "Lot<'{}' on {}>".format(self.title, self.account.name)

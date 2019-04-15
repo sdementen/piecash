@@ -43,7 +43,7 @@ class Budget(DeclarativeBaseGuid):
     )
 
 
-    def __unirepr__(self):
+    def __str__(self):
         return "Budget<{}({}) for {} periods following pattern '{}' >".format(self.name, self.description,
                                                                                self.num_periods, self.recurrence)
 
@@ -77,7 +77,7 @@ class BudgetAmount(DeclarativeBase):
     account = relation('Account', back_populates='budget_amounts')
     budget = relation('Budget', back_populates="amounts")
 
-    def __unirepr__(self):
+    def __str__(self):
         return "BudgetAmount<{}={}>".format(self.period_num, self.amount)
 
 

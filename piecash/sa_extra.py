@@ -59,14 +59,8 @@ class DeclarativeBase(object):
             return {"STATE_CHANGES": ["unchanged"],
                     "OBJECT": self}
 
-    def __str__(self):
-        return self.__unirepr__()
-
     def __repr__(self):
-        return self.__unirepr__()
-
-    def __unicode__(self):
-        return self.__unirepr__()
+        return str(self)
 
 
 tz = tzlocal.get_localzone()
