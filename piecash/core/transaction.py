@@ -43,8 +43,8 @@ class Split(DeclarativeBaseGuid):
     # column definitions
     # the transaction_guid is not mandatory at construction time because it can be set through a tr.splits.append(...) operation
     # however, in the validation of the object, we raise an error if there is no transaction set at that time
-    transaction_guid = Column('tx_guid', VARCHAR(length=32), ForeignKey('transactions.guid'), index=True)
-    account_guid = Column('account_guid', VARCHAR(length=32), ForeignKey('accounts.guid'), nullable=False, index=True)
+    transaction_guid = Column('tx_guid', VARCHAR(length=32), ForeignKey('transactions.guid'))
+    account_guid = Column('account_guid', VARCHAR(length=32), ForeignKey('accounts.guid'), nullable=False)
     memo = Column('memo', VARCHAR(length=2048), nullable=False)
     action = Column('action', VARCHAR(length=2048), nullable=False)
 
