@@ -2,8 +2,10 @@ import uuid
 
 from sqlalchemy import Column, INTEGER, BIGINT, VARCHAR, ForeignKey
 from sqlalchemy.orm import composite, relation
+
+from .person import PersonType
+
 # change of the __doc__ string as getting error in sphinx ==> should be reported to SA project
-from sqlalchemy_utils import generic_relationship
 
 composite.__doc__ = None  # composite.__doc__.replace(":ref:`mapper_composite`", "")
 
@@ -164,14 +166,30 @@ class Job(DeclarativeBaseGuid):
 
     # relation definitions
     # todo: owner_guid/type links to Vendor or Customer
-    def __init__(self, name, reference="", active=1, owner=None):
+    def __init__(self, name, owner, reference="", active=1):
         self.name = name
         self.reference = reference
         self.active = active
-
+        self.owner_type = PersonType[type(owner)]
+        self.owner_guid = owner.guid
+        if owner.book:
+            owner.book.add(self)
 
     def __unirepr__(self):
         return "Job<{self.name}>".format(self=self)
+
+    def on_book_add(self):
+        self._assign_id()
+
+    # hold the name of the counter to use for id
+    _counter_name = "counter_job"
+
+    def _assign_id(self):
+        if not self.id:
+            cnt = getattr(self.book, self._counter_name) + 1
+            setattr(self.book, self._counter_name, cnt)
+            self.id = "{:06d}".format(cnt)
+
 
 # This class exists in code but not in the GUI (to confirm?)
 
