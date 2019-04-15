@@ -19,7 +19,7 @@ def session(request):
 
 @pytest.fixture
 def session_readonly(request):
-    shutil.copyfile(file_template, file_for_test)
+    shutil.copyfile(str(file_template), str(file_for_test))
 
     # default session is readonly
     s = open_book(file_for_test)
@@ -27,14 +27,14 @@ def session_readonly(request):
     @request.addfinalizer
     def close_s():
         s.close()
-        os.remove(file_for_test)
+        file_for_test.unlink()
 
     return s
 
 
 @pytest.fixture
 def book_readonly_lock(request):
-    shutil.copyfile(file_template, file_for_test)
+    shutil.copyfile(str(file_template), str(file_for_test))
 
     # default session is readonly
     book = open_book(file_for_test)
@@ -42,7 +42,7 @@ def book_readonly_lock(request):
     @request.addfinalizer
     def close_s():
         book.close()
-        os.remove(file_for_test)
+        file_for_test.unlink()
 
     return book
 
