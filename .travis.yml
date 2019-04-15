@@ -2,6 +2,7 @@ language: python
 python:
 - '3.5'
 - '3.6'
+- '3.7'
 services:
 - postgresql
 - mysql
@@ -28,4 +29,4 @@ deploy:
     distributions: sdist bdist_wheel
     repo: sdementen/piecash
     all_branches: master
-    condition: $PYTHON_VERSION=3.5
+    condition: $PYTHON_VERSION=3.6
