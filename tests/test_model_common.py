@@ -98,7 +98,7 @@ class TestModelCommon(object):
         s.flush()
         assert a.time
 
-        assert str(list(s.bind.execute("select time from d_table"))[0][0]) == "20100412030405"
+        assert str(list(s.bind.execute("select time from d_table"))[0][0]) == "2010-04-12 03:04:05"
 
     def test_float_in_gncnumeric(self):
         Mock = collections.namedtuple('Mock', 'name')
