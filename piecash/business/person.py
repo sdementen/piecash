@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from sqlalchemy import Column, VARCHAR, INTEGER, BIGINT, ForeignKey
+from sqlalchemy import Column, VARCHAR, INTEGER, BIGINT, ForeignKey, and_, event
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import composite, relation, foreign
 
@@ -97,9 +97,31 @@ class Person:
 
     def on_book_add(self):
         self._assign_id()
+        for job in self.jobs:
+            job.on_book_add()
 
-    def __unirepr__(self):
-        return u"{}<{}:{}>".format(self.__class__.__name__, self.id, self.name)
+    def __str__(self):
+        return "{}<{}:{}>".format(self.__class__.__name__, self.id, self.name)
+
+    @classmethod
+    def __declare_last__(cls):
+        from .invoice import Job
+        owner_type = PersonType.get(cls, None)
+        if owner_type:
+            cls.jobs = relation('Job',
+                                primaryjoin=and_(
+                                    cls.guid == foreign(Job.owner_guid),
+                                    owner_type == Job.owner_type,
+                                ),
+                                cascade='all, delete-orphan',
+                                collection_class=CallableList,
+                                )
+
+            @event.listens_for(cls.jobs, "append")
+            def add(target, value, initiator):
+                value.owner_type = owner_type
+                value.owner_guid = target.guid
+                value._assign_id()
 
 
 class Customer(Person, DeclarativeBaseGuid):
@@ -155,15 +177,6 @@ class Customer(Person, DeclarativeBaseGuid):
     # relation definitions
     taxtable = relation('Taxtable')
     term = relation('Billterm')
-
-    @classmethod
-    def __declare_last__(cls):
-        from .invoice import Job
-        cls.jobs = relation('Job',
-                            primaryjoin=cls.guid == foreign(Job.owner_guid),
-                            cascade='all, delete-orphan',
-                            collection_class=CallableList,
-                            )
 
     def __init__(self,
                  name,
@@ -277,6 +290,9 @@ class Employee(Person, DeclarativeBaseGuid):
 
     _counter_name = "counter_employee"
 
+    def on_book_add(self):
+        self._assign_id()
+
 
 class Vendor(Person, DeclarativeBaseGuid):
     """
@@ -347,3 +363,9 @@ class Vendor(Person, DeclarativeBaseGuid):
                 self.id = id
 
     _counter_name = "counter_vendor"
+
+
+PersonType = {
+    Vendor: 4,
+    Customer: 2
+}

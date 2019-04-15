@@ -4,7 +4,7 @@ from decimal import Decimal
 from sqlalchemy import Column, VARCHAR, INTEGER, cast, Float
 from sqlalchemy.ext.hybrid import hybrid_property
 
-from .sa_extra import DeclarativeBase, _Date, long
+from .sa_extra import DeclarativeBase, _Date
 
 
 class GnucashException(Exception):
@@ -56,8 +56,8 @@ class Recurrence(DeclarativeBase):
 
     # relation definitions
     # added from the DeclarativeBaseGUID object (as linked from different objects like the slots)
-    def __unirepr__(self):
-        return u"{}*{} from {} [{}]".format(self.recurrence_period_type, self.recurrence_mult,
+    def __str__(self):
+        return "{}*{} from {} [{}]".format(self.recurrence_period_type, self.recurrence_mult,
                                             self.recurrence_period_start,
                                             self.recurrence_weekend_adjust)
 
@@ -83,7 +83,7 @@ def hybrid_property_gncnumeric(num_col, denom_col):
         else:
             if isinstance(d, tuple):
                 d = Decimal(d[0]) / d[1]
-            elif isinstance(d, (int, long, str)):
+            elif isinstance(d, (int, int, str)):
                 d = Decimal(d)
             elif isinstance(d, float):
                 raise TypeError(("Received a floating-point number {} where a decimal is expected. " +

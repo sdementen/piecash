@@ -22,5 +22,5 @@ class TestInvoice(object):
         assert invoice.charge_amt == 0
         assert len(invoice.entries) == 2
         entry = invoice.entries[0]
-        assert entry.quantity == Decimal('50')
+        assert entry.quantity == Decimal('25')
         assert entry.invoice == invoice

@@ -17,15 +17,6 @@ environment:
     # a later point release.
     # See: http://www.appveyor.com/docs/installed-software#python
 
-    - PYTHON: "C:\\Python27"
-      PYTHON_VERSION: "2.7.x" # currently 2.7.9
-      PYTHON_ARCH: "32"
-      PYTHON_PYPI: true
-
-    - PYTHON: "C:\\Python34"
-      PYTHON_VERSION: "3.4.x" # currently 3.4.3
-      PYTHON_ARCH: "32"
-
     # does not work as compilation problems with psycopg2
     - PYTHON: "C:\\Python35"
       PYTHON_VERSION: "3.5.x" # currently 3.5
@@ -35,16 +26,6 @@ environment:
     - PYTHON: "C:\\Python36"
       PYTHON_VERSION: "3.6.x" # currently 3.5
       PYTHON_ARCH: "32"
-
-    - PYTHON: "C:\\Python27-x64"
-      PYTHON_VERSION: "2.7.x" # currently 2.7.9
-      PYTHON_ARCH: "64"
-      WINDOWS_SDK_VERSION: "v7.0"
-
-    - PYTHON: "C:\\Python34-x64"
-      PYTHON_VERSION: "3.4.x" # currently 3.4.3
-      PYTHON_ARCH: "64"
-      WINDOWS_SDK_VERSION: "v7.1"
 
     # does not work as compilation problems with psycopg2
     - PYTHON: "C:\\Python35-x64"
@@ -105,7 +86,7 @@ install:
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
-  - "pip install --disable-pip-version-check --user --upgrade pip==9.0.3"
+#  - "pip install --disable-pip-version-check --user --upgrade pip==9.0.3"
   - "pip install pipenv==11.0.2 "
 
   # Install the build dependencies of the project. If some dependencies contain

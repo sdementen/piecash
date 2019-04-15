@@ -38,7 +38,7 @@ Piecash provides a simple and pythonic interface to GnuCash files stored in SQL 
 :PyPI: https://pypi.python.org/pypi/piecash
 
 
-It is a pure python package, tested on python 2.7 and 3.4/3.5/3.6, that can be used as an alternative to:
+It is a pure python package, tested on python 3.5/3.6, that can be used as an alternative to:
 
 - the official python bindings (as long as no advanced book modifications and/or engine calculations are needed).
   This is specially useful on Windows where the official python bindings may be tricky to install or if you want to work with
@@ -74,6 +74,11 @@ A simple example of a piecash script:
                 print(sp.transaction.description)
 
 The project has reached beta stage.
+
+.. important::
+
+   If you want to work with python 2.7/3.4 and books from gnucash 2.6.x series, you can use piecash 0.19.0.
+   Versions of piecash as of 1.0.0 supports python >=3.5 and books from gnucash 3.0.x series.
 
 .. warning::
 

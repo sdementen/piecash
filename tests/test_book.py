@@ -2,6 +2,7 @@
 import glob
 import os
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 from sqlalchemy import create_engine
@@ -10,18 +11,31 @@ from sqlalchemy.orm import Session
 
 from piecash import create_book, Account, GnucashException, Book, open_book, Commodity
 from piecash.core import Version
-from test_helper import (db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri,
-                         book_transactions, book_sample, book_investment,
-                         book_reference_2_6_21_fulloptions, book_reference_2_6_21_basic,
-                         format_version,
-                         )
+from test_helper import (
+    db_sqlite_uri,
+    db_sqlite,
+    new_book,
+    new_book_USD,
+    book_uri,
+    book_transactions,
+    book_sample,
+    book_investment,
+    book_reference_3_0_0_fulloptions,
+    book_reference_3_0_0_basic,
+)
 
 # dummy line to avoid removing unused symbols
 a = (
-    db_sqlite_uri, db_sqlite,
-    new_book, new_book_USD, book_uri, book_transactions, book_sample, book_investment,
-    book_reference_2_6_21_fulloptions, book_reference_2_6_21_basic,
-    format_version,
+    db_sqlite_uri,
+    db_sqlite,
+    new_book,
+    new_book_USD,
+    book_uri,
+    book_transactions,
+    book_sample,
+    book_investment,
+    book_reference_3_0_0_fulloptions,
+    book_reference_3_0_0_basic,
 )
 
 
@@ -31,7 +45,7 @@ class TestBook_create_book(object):
         assert isinstance(new_book.session, Session)
         assert new_book.uri is not None
         assert new_book.session.bind.name in ["sqlite", "postgresql", "mysql"]
-        assert repr(new_book.query(Version).filter_by(table_name='commodities').one()) == "Version<commodities=1>"
+        assert repr(new_book.query(Version).filter_by(table_name="commodities").one()) == "Version<commodities=1>"
 
         EUR = new_book.commodities[0]
         assert EUR.mnemonic == "EUR"
@@ -70,10 +84,6 @@ class TestBook_create_book(object):
         assert CUR.mnemonic == "USD"
         assert CUR.namespace == "CURRENCY"
 
-    def test_create_specific_format(self, format_version):
-        b = create_book(version_format=format_version)
-        v = b.session.query(Version).all()
-
     def test_create_specific_currency(self):
         b = create_book(currency="USD")
         CUR = b.commodities[0]
@@ -90,8 +100,9 @@ class TestBook_create_book(object):
 
     def test_create_named_sqlite_book(self):
         # remove file if left from previous test
-        if os.path.exists(db_sqlite):
-            os.remove(db_sqlite)
+        assert isinstance(db_sqlite, Path)
+        if db_sqlite.exists():
+            db_sqlite.unlink()
 
         # assert error if both sqlite_file and uri_conn are defined
         with pytest.raises(ValueError):
@@ -99,26 +110,26 @@ class TestBook_create_book(object):
 
         # assert creation of file
         b = create_book(db_sqlite)
-        assert os.path.exists(db_sqlite)
-        t = os.path.getmtime(db_sqlite)
+        assert db_sqlite.exists()
+        t = db_sqlite.stat().st_mtime
 
         # ensure error if no overwrite
         with pytest.raises(GnucashException):
             b = create_book(db_sqlite)
-        assert os.path.getmtime(db_sqlite) == t
+        assert db_sqlite.stat().st_mtime == t
         with pytest.raises(GnucashException):
             b = create_book(uri_conn="sqlite:///{}".format(db_sqlite))
-        assert os.path.getmtime(db_sqlite) == t
+        assert db_sqlite.stat().st_mtime == t
         with pytest.raises(GnucashException):
             b = create_book(db_sqlite, overwrite=False)
-        assert os.path.getmtime(db_sqlite) == t
+        assert db_sqlite.stat().st_mtime == t
 
         # if overwrite, DB is recreated
         b = create_book(db_sqlite, overwrite=True)
-        assert os.path.getmtime(db_sqlite) > t
+        assert db_sqlite.stat().st_mtime > t
 
         # clean test
-        os.remove(db_sqlite)
+        db_sqlite.unlink()
 
     def test_create_with_FK(self):
         # create and keep FK
@@ -182,7 +193,7 @@ class TestBook_open_book(object):
 
         elif engine_type == "sqlite":
             # delete all potential existing backup files
-            url = book_uri[len("sqlite:///"):]
+            url = book_uri[len("sqlite:///") :]
             for fn in glob.glob("{}.[0-9]*.gnucash".format(url)):
                 os.remove(fn)
 
@@ -215,8 +226,7 @@ class TestBook_open_book(object):
             pass
 
         # open book specifying open_if_lock as True and RW to delete lock
-        with open_book \
-                    (uri_conn=book_uri, open_if_lock=True, readonly=False, do_backup=False) as b:
+        with open_book(uri_conn=book_uri, open_if_lock=True, readonly=False, do_backup=False) as b:
             b.session.delete_lock()
             b.save()
 
@@ -248,23 +258,29 @@ class TestBook_access_book(object):
             new_book["options"]
 
         new_book.use_trading_accounts = True
-        assert new_book["options"].value == {'Accounts': {'Use Trading Accounts': 't'}}
+        assert new_book["options"].value == {"Accounts": {"Use Trading Accounts": "t"}}
 
         new_book.use_split_action_field = True
         assert new_book["options"].value == {
-            'Accounts': {'Use Split Action Field for Number': 't', 'Use Trading Accounts': 't'}}
+            "Accounts": {"Use Split Action Field for Number": "t", "Use Trading Accounts": "t"}
+        }
 
         new_book.RO_threshold_day = 50
-        assert new_book["options"].value == {'Accounts': {'Day Threshold for Read-Only Transactions (red line)': 50.0,
-                                                          'Use Split Action Field for Number': 't',
-                                                          'Use Trading Accounts': 't'}}
+        assert new_book["options"].value == {
+            "Accounts": {
+                "Day Threshold for Read-Only Transactions (red line)": 50.0,
+                "Use Split Action Field for Number": "t",
+                "Use Trading Accounts": "t",
+            }
+        }
 
         new_book.RO_threshold_day = 0
-        assert new_book["options"].value == {'Accounts': {'Use Split Action Field for Number': 't',
-                                                          'Use Trading Accounts': 't'}}
+        assert new_book["options"].value == {
+            "Accounts": {"Use Split Action Field for Number": "t", "Use Trading Accounts": "t"}
+        }
 
         new_book.use_split_action_field = False
-        assert new_book["options"].value == {'Accounts': {'Use Trading Accounts': 't'}}
+        assert new_book["options"].value == {"Accounts": {"Use Trading Accounts": "t"}}
 
         del new_book["options"]
         with pytest.raises(KeyError):
@@ -384,7 +400,7 @@ class TestBook_access_book(object):
     def test_splits_df_with_additional(self, book_transactions):
         # Adding in two additional memo fields here. If it works for non-unique it should
         # be fine for unique fields.
-        df = book_transactions.splits_df(additional_fields=['memo', 'memo']).reset_index()
+        df = book_transactions.splits_df(additional_fields=["memo", "memo"]).reset_index()
 
         # remove guid columns as not comparable from run to run
         for col in df.columns:
@@ -452,50 +468,49 @@ class TestBook_access_book(object):
         # print("Balance:", total_balance)
         assert total == Decimal(13)
 
-    def test_business_slots_options(self, book_reference_2_6_21_fulloptions):
+    def test_business_slots_options(self, book_reference_3_0_0_fulloptions):
         """
         Tests business slots
         :type book_reference_2_6_21_fulloptions: Book
         """
-        assert book_reference_2_6_21_fulloptions.business_company_address == u"Rue de la Chenille éclairée, 22"
-        assert book_reference_2_6_21_fulloptions.business_company_contact == "John Michu"
-        assert book_reference_2_6_21_fulloptions.business_company_email == "woozie@example.com"
-        assert book_reference_2_6_21_fulloptions.business_company_ID == "SIREN 123 456 789"
-        assert book_reference_2_6_21_fulloptions.business_company_name == "Woozie Inc"
-        assert book_reference_2_6_21_fulloptions.business_company_phone == "+33 1 33 33 33 33"
-        assert book_reference_2_6_21_fulloptions.business_company_website == "www.woozie.com"
+        assert book_reference_3_0_0_fulloptions.business_company_address == "Rue de la Chenille éclairée, 22"
+        assert book_reference_3_0_0_fulloptions.business_company_contact == "John Michu"
+        assert book_reference_3_0_0_fulloptions.business_company_email == "woozie@example.com"
+        assert book_reference_3_0_0_fulloptions.business_company_ID == "SIREN 123 456 789"
+        assert book_reference_3_0_0_fulloptions.business_company_name == "Woozie Inc"
+        assert book_reference_3_0_0_fulloptions.business_company_phone == "+33 1 33 33 33 33"
+        assert book_reference_3_0_0_fulloptions.business_company_website == "www.woozie.com"
 
-    def test_business_slots_nooptions(self, book_reference_2_6_21_basic):
+    def test_business_slots_nooptions(self, book_reference_3_0_0_basic):
         """
         Tests business slots
-        :type book_reference_2_6_21_basic: Book
+        :type book_reference_3_0_0_basic: Book
         """
-        assert book_reference_2_6_21_basic.business_company_address == ""
-        assert book_reference_2_6_21_basic.business_company_contact == ""
-        assert book_reference_2_6_21_basic.business_company_email == ""
-        assert book_reference_2_6_21_basic.business_company_ID == ""
-        assert book_reference_2_6_21_basic.business_company_name == ""
-        assert book_reference_2_6_21_basic.business_company_phone == ""
-        assert book_reference_2_6_21_basic.business_company_website == ""
+        assert book_reference_3_0_0_basic.business_company_address == ""
+        assert book_reference_3_0_0_basic.business_company_contact == ""
+        assert book_reference_3_0_0_basic.business_company_email == ""
+        assert book_reference_3_0_0_basic.business_company_ID == ""
+        assert book_reference_3_0_0_basic.business_company_name == ""
+        assert book_reference_3_0_0_basic.business_company_phone == ""
+        assert book_reference_3_0_0_basic.business_company_website == ""
 
-
-    def test_business_writeslots_nooptions(self, book_reference_2_6_21_basic):
+    def test_business_writeslots_nooptions(self, book_reference_3_0_0_basic):
         """
         Tests business slots
-        :type book_reference_2_6_21_basic: Book
+        :type book_reference_3_0_0_basic: Book
         """
-        book_reference_2_6_21_basic.business_company_address = u"é"
-        book_reference_2_6_21_basic.business_company_contact = u"à"
-        book_reference_2_6_21_basic.business_company_email = u"ù"
-        book_reference_2_6_21_basic.business_company_ID = u"ö"
-        book_reference_2_6_21_basic.business_company_name = u"µ"
-        book_reference_2_6_21_basic.business_company_phone = u"²"
-        book_reference_2_6_21_basic.business_company_website = u"³"
+        book_reference_3_0_0_basic.business_company_address = "é"
+        book_reference_3_0_0_basic.business_company_contact = "à"
+        book_reference_3_0_0_basic.business_company_email = "ù"
+        book_reference_3_0_0_basic.business_company_ID = "ö"
+        book_reference_3_0_0_basic.business_company_name = "µ"
+        book_reference_3_0_0_basic.business_company_phone = "²"
+        book_reference_3_0_0_basic.business_company_website = "³"
 
-        assert book_reference_2_6_21_basic.business_company_address == u"é"
-        assert book_reference_2_6_21_basic.business_company_contact == u"à"
-        assert book_reference_2_6_21_basic.business_company_email == u"ù"
-        assert book_reference_2_6_21_basic.business_company_ID == u"ö"
-        assert book_reference_2_6_21_basic.business_company_name == u"µ"
-        assert book_reference_2_6_21_basic.business_company_phone == u"²"
-        assert book_reference_2_6_21_basic.business_company_website == u"³"
+        assert book_reference_3_0_0_basic.business_company_address == "é"
+        assert book_reference_3_0_0_basic.business_company_contact == "à"
+        assert book_reference_3_0_0_basic.business_company_email == "ù"
+        assert book_reference_3_0_0_basic.business_company_ID == "ö"
+        assert book_reference_3_0_0_basic.business_company_name == "µ"
+        assert book_reference_3_0_0_basic.business_company_phone == "²"
+        assert book_reference_3_0_0_basic.business_company_website == "³"

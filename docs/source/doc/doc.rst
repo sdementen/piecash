@@ -5,7 +5,7 @@ Documentation
 This project provides a simple and pythonic interface to GnuCash files stored in SQL (sqlite3, Pandostgres and MySQL)
 for Linux and Windows (not tested on Mac OS).
 
-piecash is a pure python package, tested on python 2.7 and 3.3/3.4/3.5, that can be used as an alternative to:
+piecash is a pure python package, tested on python 3.5/3.6/3.7, that can be used as an alternative to:
 
 - the official python bindings (as long as no advanced book modifications and/or engine calculations are needed).
   This is specially useful on Windows where the official python bindings may be tricky to install or if you want to work with
@@ -78,15 +78,14 @@ Otherwise, you can install by unpacking the source distribution from PyPI and th
     $ python setup.py install
 
 If you are on MS Windows and not so familiar with python, we would suggest you to install the miniconda python distribution
-from Continuum Analytics available at http://conda.pydata.org/miniconda.html (you can choose whatever version -- 2.7 or 3.X --
+from Continuum Analytics available at http://conda.pydata.org/miniconda.html (you can choose whatever version 3.X
 of python you would like) and then run the following command in the command prompt (cmd.exe)::
 
-    $ conda create -n piecash_venv python=2 pip sqlalchemy
+    $ conda create -n piecash_venv python=3 pip sqlalchemy
     $ activate piecash_venv
     $ pip install piecash
 
-The first command create a new python environment named "piecash_venv" with python 2.7, pip and sqlalchemy installed (if you want to
-test piecash on python 3 you can replace "python=2" by "python=3", irrespective of the version of miniconda you installed).
+The first command create a new python environment named "piecash_venv" with python 3.7, pip and sqlalchemy installed.
 
 The second command activates the newly created piecash_venv. Afterwards, you only need to execute this command before using
 python through the command line.

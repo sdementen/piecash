@@ -1,9 +1,9 @@
+dist: xenial
 language: python
 python:
-- '2.7'
-- '3.4'
 - '3.5'
 - '3.6'
+- '3.7'
 services:
 - postgresql
 - mysql
@@ -13,7 +13,7 @@ install:
 - hash -r
 - pip install pipenv==11.0.2
 - pipenv install -e .[test] --ignore-pipfile
-- locale-gen en_US.UTF-8
+# - locale-gen en_US.UTF-8
 
 script:
 - python setup.py test
@@ -30,4 +30,4 @@ deploy:
     distributions: sdist bdist_wheel
     repo: sdementen/piecash
     all_branches: master
-    condition: $PYTHON_VERSION=3.5
+    condition: $PYTHON_VERSION=3.6

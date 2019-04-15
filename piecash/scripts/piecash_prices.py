@@ -12,18 +12,12 @@ Example of a valid CSV file:
 """
 import argparse
 import csv
+import sys
 from datetime import datetime
 from decimal import Decimal
-import sys
-import codecs
-from piecash import Price
 
 import piecash
-
-if sys.version_info.major == 2:
-    out = codecs.getwriter('UTF-8')(sys.stdout)
-else:
-    out = sys.stdout
+from piecash import Price
 
 parser = argparse.ArgumentParser(description="""
 Import and export prices to and from a gnucash book.
@@ -38,7 +32,7 @@ The format used is a standard CSV (comma as separator) with the following column
  - type (string, optional)
  - value (float)
  - type (string, optional)
-""",formatter_class=argparse.RawTextHelpFormatter )
+""", formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument("gnucash_filename",
                     help="the name of the gnucash file")
 parser.add_argument("--import", dest="operation",
@@ -49,20 +43,22 @@ args = parser.parse_args()
 
 if args.operation is None:
     # export the prices
-    out.write("date,type,value,value_num, value_denom, currency,commodity,source\n")
+    sys.stdout.write("date,type,value,value_num, value_denom, currency,commodity,source\n")
     with piecash.open_book(args.gnucash_filename, open_if_lock=True) as book:
-        out.writelines("{p.date:%Y-%m-%d},{p.type},{p.value},{p._value_num},{p._value_denom},{p.currency.mnemonic},{p.commodity.mnemonic},{p.source}\n".format(p=p) for p in book.prices)
+        sys.stdout.writelines(
+            "{p.date:%Y-%m-%d},{p.type},{p.value},{p._value_num},{p._value_denom},{p.currency.mnemonic},{p.commodity.mnemonic},{p.source}\n".format(
+                p=p) for p in book.prices)
 else:
     # import the prices
     with piecash.open_book(args.gnucash_filename, open_if_lock=True, readonly=False) as book:
         cdty = book.commodities
         importFile = open(args.operation, 'r')
-        
+
         for l in csv.DictReader(importFile):
             cur = cdty(mnemonic=l['currency'])
             com = cdty(mnemonic=l['commodity'])
-            type = l.get('type',None)
-            date = datetime.strptime(l['date'],"%Y-%m-%d")
+            type = l.get('type', None)
+            date = datetime.strptime(l['date'], "%Y-%m-%d")
             v = Decimal(l['value'])
             Price(currency=cur,
                   commodity=com,

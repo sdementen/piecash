@@ -206,14 +206,11 @@ install_requires = [
     'pytz',
     'tzlocal',
     'click',
-    'enum34;python_version<"3.4"',
 ]
 extras_require = {
     'postgres': ["psycopg2"],
     'mysql': ["PyMySQL"],
-    'pandas': ['pandas==0.21.0;python_version=="3.4"',  # no wheels for py34 beyond 0.21.0
-               'pandas;python_version!="3.4"',
-               ],
+    'pandas': ['pandas'],
     'qif': ['qifparse'],
     'finance-quote': ["requests"],
     'test': ['pytest', 'pytest-cov', 'tox',
@@ -252,10 +249,9 @@ setup_dict = dict(
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Office/Business',
         'Topic :: Office/Business :: Financial',
         'Topic :: Office/Business :: Financial :: Accounting',

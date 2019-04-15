@@ -18,11 +18,6 @@ from sqlalchemy.orm import sessionmaker, object_session
 
 # import yaml
 
-if sys.version > '3':
-    long = int
-else:
-    long = long
-
 
 def __init__blocked(self, *args, **kwargs):
     raise NotImplementedError("Objects of type {} cannot be created from scratch "
@@ -64,22 +59,8 @@ class DeclarativeBase(object):
             return {"STATE_CHANGES": ["unchanged"],
                     "OBJECT": self}
 
-    if sys.version > '3':
-        def __str__(self):
-            return self.__unirepr__()
-
-        def __repr__(self):
-            return self.__unirepr__()
-
-    else:
-        def __str__(self):
-            return unicodedata.normalize('NFKD', self.__unirepr__()).encode('ascii', 'ignore')
-
-        def __repr__(self):
-            return self.__unirepr__().encode('ascii', errors='backslashreplace')
-
-    def __unicode__(self):
-        return self.__unirepr__()
+    def __repr__(self):
+        return str(self)
 
 
 tz = tzlocal.get_localzone()
@@ -108,7 +89,7 @@ class _DateTime(types.TypeDecorator):
     def load_dialect_impl(self, dialect):
         if dialect.name == "sqlite":
             return sqlite.DATETIME(
-                storage_format="%(year)04d%(month)02d%(day)02d%(hour)02d%(minute)02d%(second)02d",
+                storage_format="%(year)04d-%(month)02d-%(day)02d %(hour)02d:%(minute)02d:%(second)02d",
                 regexp=r"(\d{4})-?(\d{2})-?(\d{2}) ?(\d{2}):?(\d{2}):?(\d{2})",
             )
         else:
@@ -124,7 +105,7 @@ class _DateTime(types.TypeDecorator):
             if not value.tzinfo:
                 value = tz.localize(value)
 
-            return value.astimezone(utc)
+            return value.astimezone(utc).replace(tzinfo=None)
 
     def process_result_value(self, value, dialect):
         if value is not None:
@@ -143,7 +124,7 @@ class _DateAsDateTime(types.TypeDecorator):
     def load_dialect_impl(self, dialect):
         if dialect.name == "sqlite":
             return sqlite.DATETIME(
-                storage_format="%(year)04d%(month)02d%(day)02d%(hour)02d%(minute)02d%(second)02d",
+                storage_format="%(year)04d-%(month)02d-%(day)02d %(hour)02d:%(minute)02d:%(second)02d",
                 regexp=r"(\d{4})-?(\d{2})-?(\d{2}) ?(\d{2}):?(\d{2}):?(\d{2})",
             )
         else:
@@ -158,7 +139,7 @@ class _DateAsDateTime(types.TypeDecorator):
             else:
                 result = tz.localize(datetime.datetime.combine(value, datetime.time(0, 0, 0))) \
                     .astimezone(utc)
-            return result
+            return result.replace(tzinfo=None)
 
     def process_result_value(self, value, dialect):
         if value is not None:
@@ -287,7 +268,7 @@ def get_foreign_keys(metadata, engine):
             yield constraint
 
 
-Session = sessionmaker(autoflush=True)
+Session = sessionmaker(autoflush=False)
 
 
 def create_piecash_engine(uri_conn, **kwargs):

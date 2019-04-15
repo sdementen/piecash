@@ -13,6 +13,13 @@ from .book import Book
 from .._common import GnucashException
 from ..sa_extra import create_piecash_engine, DeclarativeBase, Session
 
+# version of tables changed between 2.6 and 3.0
+#   ('invoices', 4)
+#   ('prices', 3)
+#   ('slots', 4)
+#   ('transactions', 4)
+#   ('entries', 4)
+
 version_supported = {
     '2.6': {
         'Gnucash': 2062100,
@@ -40,8 +47,8 @@ version_supported = {
         'transactions': 3,
         'vendors': 1,
     },
-    '2.7': {
-        'Gnucash': 2070200,
+    '3.0': {
+        'Gnucash': 3000000,
         'Gnucash-Resave': 19920,
         'accounts': 1,
         'billterms': 2,
@@ -92,8 +99,8 @@ class Version(DeclarativeBase):
         self.table_name = table_name
         self.table_version = table_version
 
-    def __unirepr__(self):
-        return u"Version<{}={}>".format(self.table_name, self.table_version)
+    def __str__(self):
+        return "Version<{}={}>".format(self.table_name, self.table_version)
 
 
 def build_uri(sqlite_file=None,
@@ -143,7 +150,7 @@ def build_uri(sqlite_file=None,
     if uri_conn is None:
         # fallback on sqlite
         if sqlite_file:
-            if sqlite_file.startswith("sqlite:///"):
+            if isinstance(sqlite_file, str) and sqlite_file.startswith("sqlite:///"):
                 # already have the protocol specified.
                 uri_conn = sqlite_file
             else:
@@ -168,7 +175,6 @@ def create_book(sqlite_file=None,
                 db_host=None,
                 db_port=None,
                 check_same_thread=True,
-                version_format="2.6",
                 **kwargs):
     """Create a new empty GnuCash book. If both sqlite_file and uri_conn are None, then an "in memory" sqlite book is created.
 
@@ -184,7 +190,6 @@ def create_book(sqlite_file=None,
     :param str db_host: host of database
     :param str db_port: port of database
     :param bool check_same_thread: sqlite flag that restricts connection use to the thread that created (see False for use in ipython/flask/... but read first https://docs.python.org/3/library/sqlite3.html)
-    :param str version_format: the format (2.6 or 2.7) for the schema tables to generate
 
     :return: the document as a gnucash session
     :rtype: :class:`GncSession`
@@ -192,6 +197,8 @@ def create_book(sqlite_file=None,
     :raises GnucashException: if document already exists and overwrite is False
     """
     from sqlalchemy_utils.functions import database_exists, create_database, drop_database
+
+    VERSION_FORMAT = "3.0"
 
     uri_conn = build_uri(sqlite_file, uri_conn,
                          db_type, db_user, db_password, db_name, db_host, db_port,
@@ -232,13 +239,13 @@ def create_book(sqlite_file=None,
     # create all (tables, fk, ...)
     DeclarativeBase.metadata.create_all(engine)
 
-    s = Session(bind=engine, autoflush=False)
+    s = Session(bind=engine)
 
     # create all rows in version table
-    assert version_format in version_supported, "The 'version_format'={} is not supported. " \
-                                                "Choose one of {}".format(version_format,
+    assert VERSION_FORMAT in version_supported, "The 'version_format'={} is not supported. " \
+                                                "Choose one of {}".format(VERSION_FORMAT,
                                                                           list(version_supported.keys()))
-    for table_name, table_version in version_supported[version_format].items():
+    for table_name, table_version in version_supported[VERSION_FORMAT].items():
         s.add(Version(table_name=table_name, table_version=table_version))
 
     # create book and merge with session
@@ -334,10 +341,15 @@ def open_book(sqlite_file=None,
     version_book = {v.table_name: v.table_version
                     for v in s.query(Version).all()
                     if "Gnucash" not in v.table_name}
-    assert any(version_book == {k: v
-                                for k, v in vt.items() if
-                                "Gnucash" not in k}
-               for version, vt in version_supported.items()), "Unsupported table versions"
+    for version, vt in version_supported.items():
+        if version_book == {k: v
+                            for k, v in vt.items() if
+                            "Gnucash" not in k}:
+            break
+    else:
+        raise ValueError("Unsupported table versions")
+    assert version == "3.0", "This version of piecash only support books from gnucash 3.0.x " \
+                             "which is not the case for {}".format(uri_conn)
 
     book = s.query(Book).one()
     adapt_session(s, book=book, readonly=readonly)

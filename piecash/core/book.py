@@ -138,8 +138,8 @@ class Book(DeclarativeBaseGuid):
         self.root_account = root_account
         self.root_template = root_template
 
-    def __unirepr__(self):
-        return u"Book<{}>".format(self.uri)
+    def __str__(self):
+        return "Book<{}>".format(self.uri)
 
     _control_mode = None
 

@@ -7,6 +7,7 @@ import os
 import shutil
 import threading
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 import sqlalchemy
@@ -15,8 +16,13 @@ from piecash import create_book, Account, ACCOUNT_TYPES, open_book, Price
 from piecash._common import GnucashException
 from piecash.core.account import _is_parent_child_types_consistent, root_types
 from piecash.kvp import Slot
-from test_helper import file_template_full, file_for_test_full, run_file, file_ghost_kvp_scheduled_transaction, \
-    file_ghost_kvp_scheduled_transaction_for_test
+from test_helper import (
+    file_template_full,
+    file_for_test_full,
+    run_file,
+    file_ghost_kvp_scheduled_transaction,
+    file_ghost_kvp_scheduled_transaction_for_test,
+)
 
 
 @pytest.fixture
@@ -29,23 +35,19 @@ def book(request):
 def realbook_session(request):
     return use_copied_book(request, file_template_full, file_for_test_full)
 
+
 @pytest.fixture
 def realbook_session_multithread(request):
-    return use_copied_book(request, file_template_full, file_for_test_full,
-                           check_same_thread=False)
+    return use_copied_book(request, file_template_full, file_for_test_full, check_same_thread=False)
 
 
 @pytest.fixture
 def ghost_kvp_scheduled_transaction_session(request):
-    return use_copied_book(request,
-                           file_ghost_kvp_scheduled_transaction,
-                           file_ghost_kvp_scheduled_transaction_for_test)
+    return use_copied_book(request, file_ghost_kvp_scheduled_transaction, file_ghost_kvp_scheduled_transaction_for_test)
 
 
-def use_copied_book(request, template_filename, test_filename,
-                    check_same_thread=True):
-    shutil.copy(template_filename,
-                test_filename)
+def use_copied_book(request, template_filename, test_filename, check_same_thread=True):
+    shutil.copy(str(template_filename), str(test_filename))
 
     # default book is readonly
     s = open_book(test_filename, check_same_thread=check_same_thread)
@@ -53,7 +55,7 @@ def use_copied_book(request, template_filename, test_filename,
     @request.addfinalizer
     def finalizer():
         s.close()
-        os.remove(test_filename)
+        test_filename.unlink()
 
     return s
 
@@ -86,18 +88,9 @@ class TestIntegration_EmptyBook(object):
             "vstr": "hello",
             "vdate": datetime.datetime.now().date(),
             "vtime": datetime.datetime.now(),
-            "vnum": Decimal('4.53'),
+            "vnum": Decimal("4.53"),
             "vlist": ["stri", 4, dict(foo=23)],
-            "vdct": {
-                "spl": 2.3,
-                "vfr": {
-                    "vfr2": {
-                        "foo": 33,
-                        "baz": "hello"
-                    },
-                    "coo": Decimal('4.53')
-                },
-            }
+            "vdct": {"spl": 2.3, "vfr": {"vfr2": {"foo": 33, "baz": "hello"}, "coo": Decimal("4.53")}},
         }
         for k, v in kv.items():
             book[k] = v
@@ -142,12 +135,12 @@ class TestIntegration_EmptyBook(object):
             b["a/b/c"] = True
 
         book.flush()
-        assert {n for (n,) in book.session.query(Slot._name)} == {'a', 'a/b', 'a/b/c', 'a/b/c/d', 'a/b/c/d/f'}
+        assert {n for (n,) in book.session.query(Slot._name)} == {"a", "a/b", "a/b/c", "a/b/c/d", "a/b/c/d/f"}
 
         # delete some elements
         del b["a"]["b"][:]
         book.flush()
-        assert {n for (n,) in book.session.query(Slot._name)} == {'a', 'a/b'}
+        assert {n for (n,) in book.session.query(Slot._name)} == {"a", "a/b"}
 
         book.flush()
         assert len(b["a"].slots) == 1
@@ -189,13 +182,7 @@ class TestIntegration_EmptyBook(object):
         assert all(acc.type == "ROOT" for acc in accs)
 
     def test_is_parent_child_types_consistent(self):
-        combi_OK = [
-            ("ROOT", "BANK"),
-            (None, "ROOT"),
-            ("ROOT", "EQUITY"),
-            ("ROOT", "ASSET"),
-            ("ROOT", "EXPENSE"),
-        ]
+        combi_OK = [("ROOT", "BANK"), (None, "ROOT"), ("ROOT", "EQUITY"), ("ROOT", "ASSET"), ("ROOT", "EXPENSE")]
 
         combi_not_OK = [
             ("ROOT", "ROOT"),
@@ -266,12 +253,15 @@ class TestIntegration_EmptyBook(object):
         # example 1, print all stock prices in the Book
         # display all prices
         for price in book.query(Price).all():
-            print("{}/{} on {} = {} {}".format(price.commodity.namespace,
-                                               price.commodity.mnemonic,
-                                               price.date,
-                                               float(price.value_num) / price.value_denom,
-                                               price.currency.mnemonic,
-                                               ))
+            print(
+                "{}/{} on {} = {} {}".format(
+                    price.commodity.namespace,
+                    price.commodity.mnemonic,
+                    price.date,
+                    float(price.value_num) / price.value_denom,
+                    price.currency.mnemonic,
+                )
+            )
 
         for account in book.accounts:
             print(account)
@@ -280,10 +270,11 @@ class TestIntegration_EmptyBook(object):
         map_fullname_account = {account.fullname: account for account in book.query(Account).all()}
 
         # use it to retrieve the current assets account
+        print(map_fullname_account)
         acc_cur = map_fullname_account["Assets:Current Assets"]
 
         # retrieve EUR currency
-        EUR = book.commodities.get(mnemonic='EUR')
+        EUR = book.commodities.get(mnemonic="EUR")
 
         # add a new subaccount to this account of type ASSET with currency EUR
         Account(name="new savings account", type="ASSET", parent=acc_cur, commodity=EUR)
@@ -322,7 +313,6 @@ class TestIntegration_Thread(object):
         thr.start()
         thr.join()
 
-
     def test_check_same_thread_False_allow_thread_use(self, realbook_session_multithread):
         book = realbook_session_multithread
 
@@ -333,5 +323,3 @@ class TestIntegration_Thread(object):
         thr = MyThread()
         thr.start()
         thr.join()
-
-
