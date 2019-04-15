@@ -28,7 +28,7 @@ def run_file(fname):
         exec(code, {})
 
 
-db_sqlite = os.path.join(test_folder, "foozbar.sqlite")
+db_sqlite = test_folder / "foozbar.sqlite"
 
 TRAVIS = os.environ.get("TRAVIS", False)
 APPVEYOR = os.environ.get("APPVEYOR", False)
