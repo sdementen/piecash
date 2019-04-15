@@ -279,7 +279,7 @@ def book_sample(request):
     """
     Returns a simple sample book for 2.6.N
     """
-    file_template_full = os.path.join(book_folder, "simple_sample{}.gnucash".format(request.param))
+    file_template_full = (book_folder / "simple_sample{}.gnucash".format(request.param))
 
     with open_book(file_template_full) as book:
         yield book
