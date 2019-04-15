@@ -11,7 +11,7 @@ Some note for developers:
 
 - to upload file on PyPI::
 
-    twine upload dist\piecash-0.13.0.tar.gz
+    python setup.py sdist upload
 
 - to generate the modules `modules.rst` and `piecash.rst` in the docs\source\doc folder, go to the docs\source\doc folder and::
 

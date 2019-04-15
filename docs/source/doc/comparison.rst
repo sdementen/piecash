@@ -16,7 +16,7 @@ Gnucash 3.0.x series
 +------------------+----------------------------------+------------------------------------------+
 | book format      | gnucash 3.0.n                    | gnucash 3.0.n                            |
 +------------------+----------------------------------+------------------------------------------+
-| environment      | Python 3.5/3.6                   | Python 3                                 |
+| environment      | Python 3.5/3.6/3.7               | Python 3                                 |
 +------------------+----------------------------------+------------------------------------------+
 | installation     | pure python package              | compilation (difficult on windows)       |
 |                  | 'pip install piecash'            | binaries (available on Linux)            |
