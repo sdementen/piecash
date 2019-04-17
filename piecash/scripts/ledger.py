@@ -24,7 +24,8 @@ from piecash.scripts.cli import cli
 @click.option('--accounts', default=False, is_flag=True)
 @click.option('--prices', default=False, is_flag=True)
 @click.option('--transactions', default=False, is_flag=True)
-def ledger(book, output, commodities, accounts, prices, transactions):
+@click.option('--with-exchange', default=False, is_flag=True)
+def ledger(book, output, commodities, accounts, prices, transactions, with_exchange):
     """
     Export to ledger-cli format.
     This scripts export a GnuCash BOOK to the ledget-cli format.
@@ -38,5 +39,6 @@ def ledger(book, output, commodities, accounts, prices, transactions):
 
     with piecash.open_book(book, open_if_lock=True) as data:
         #output.write(piecash.ledger(data, commodities))
-        result = piecash.get_ledger_output(data, commodities, accounts, prices, transactions)
+        result = piecash.get_ledger_output(data, commodities, accounts, prices, transactions,
+            with_exchange)
         output.write(result)
