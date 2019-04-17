@@ -50,13 +50,18 @@ def ledger(tr):
 
 
 def format_commodity(commodity):
-    mnemonic = commodity.mnemonic
+    """ Export the namespace for non-currency commodities. """
+    if commodity.namespace == "CURRENCY":
+        symbol = commodity.mnemonic
+    else:
+        symbol = f"{commodity.namespace}.{commodity.mnemonic}"
+
     try:
-        if mnemonic.encode('ascii').isalpha():
-            return mnemonic
+        if symbol.encode('ascii').isalpha():
+            return symbol
     except:
         pass
-    return "\"{}\"".format(mnemonic)  # TODO: escape " char in mnemonic
+    return "\"{}\"".format(symbol)  # TODO: escape " char in symbol
 
 
 @attach_ledger(Commodity)
