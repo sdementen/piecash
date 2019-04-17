@@ -42,9 +42,9 @@ class Taxtable(DeclarativeBaseGuid):
         if entries is not None:
             self.entries[:] = entries
 
-    def __unirepr__(self):
+    def __str__(self):
         if self.entries:
-            return "TaxTable<{}:{}>".format(self.name, [te.__unirepr__() for te in self.entries])
+            return "TaxTable<{}:{}>".format(self.name, [te.__str__() for te in self.entries])
         else:
             return "TaxTable<{}>".format(self.name)
 
@@ -75,5 +75,5 @@ class TaxtableEntry(DeclarativeBase):
         if taxtable:
             self.taxtable = taxtable
 
-    def __unirepr__(self):
+    def __str__(self):
         return "TaxEntry<{} {} in {}>".format(self.amount, self.type, self.account.name)

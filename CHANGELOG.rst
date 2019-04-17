@@ -1,12 +1,14 @@
 What's new
 ==========
 
-Dev
-~~~
+Version 1.0.0 (2019-04-15)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - drop support of py27 and py34
-- support gnucash 3.0.x format
+- support gnucash 3.0.x format (code + test and book migration)
 - set autoflush to False for open_book (was only done for create_book before) (fix #93)
+- remove tz info when serialising DateTime to SQL (issue with postgresql doing some TZ conversion)
+- add basic support for Jobs
 
 
 Version 0.18.0 (2018-04-24)

@@ -79,7 +79,7 @@ class Price(DeclarativeBaseGuid):
         self.type = type
         self.source = source
 
-    def __unirepr__(self):
+    def __str__(self):
         return "Price<{:%Y-%m-%d} : {} {}/{}>".format(self.date,
                                                        self.value,
                                                        self.currency.mnemonic,
@@ -95,6 +95,7 @@ class Price(DeclarativeBaseGuid):
             self.book.query(Price).filter_by(commodity=self.commodity,
                                              currency=self.currency,
                                              date=self.date).first()
+
         except MultipleResultsFound:
             raise ValueError("{} already exists in this book".format(self))
 
@@ -204,7 +205,7 @@ class Commodity(DeclarativeBaseGuid):
         self.quote_source = quote_source
         self.quote_tz = quote_tz
 
-    def __unirepr__(self):
+    def __str__(self):
         return "Commodity<{}:{}>".format(self.namespace, self.mnemonic)
 
     @property

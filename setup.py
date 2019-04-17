@@ -251,6 +251,7 @@ setup_dict = dict(
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Office/Business',
         'Topic :: Office/Business :: Financial',
         'Topic :: Office/Business :: Financial :: Accounting',

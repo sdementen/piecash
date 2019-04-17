@@ -77,7 +77,7 @@ The project has reached beta stage.
 
 .. important::
 
-   If you want to work with python 2.7/3.4 and books from gnucash 2.6.x series, you can use piecash 0.18.0.
+   If you want to work with python 2.7/3.4 and books from gnucash 2.6.x series, you can use piecash 0.19.0.
    Versions of piecash as of 1.0.0 supports python >=3.5 and books from gnucash 3.0.x series.
 
 .. warning::

@@ -92,6 +92,19 @@ class TestCommodity_create_prices(object):
         with pytest.raises(ValueError):
             book_basic.validate()
 
+    def test_create_duplicateprice_different_source(self, book_basic):
+        EUR = book_basic.commodities(namespace="CURRENCY")
+        USD = book_basic.currencies(mnemonic="USD")
+        p = Price(commodity=USD, currency=EUR, date=date(2014, 2, 22), value=Decimal('0.54321'), source="user:price")
+        p1 = Price(commodity=USD, currency=EUR, date=date(2014, 2, 22), value=Decimal('0.12345'), source="other:price")
+
+        book_basic.flush()
+        assert USD.prices.filter_by(value=Decimal('0')).all() == []
+        assert USD.prices.filter_by(value=Decimal('0.12345')).one() == p1
+
+        # validation should work as different sources
+        book_basic.validate()
+
     @needweb
     def test_update_currency_prices(self, book_basic):
         if not is_inmemory_sqlite(book_basic):

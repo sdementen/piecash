@@ -19,13 +19,13 @@ a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic
 class TestFactoriesCommodities(object):
     def test_create_stock_accounts_simple(self, book_basic):
         with pytest.raises(GnucashException):
-            factories.create_stock_accounts(book_basic.default_currency,
-                                            broker_account=book_basic.accounts(name="broker"))
+            factories.create_stock_accounts(
+                book_basic.default_currency, broker_account=book_basic.accounts(name="broker")
+            )
 
         broker = book_basic.accounts(name="broker")
         appl = Commodity(namespace="NMS", mnemonic="AAPL", fullname="Apple")
-        acc, inc_accounts = factories.create_stock_accounts(appl,
-                                                            broker_account=broker)
+        acc, inc_accounts = factories.create_stock_accounts(appl, broker_account=broker)
 
         assert inc_accounts == []
         assert broker.children == [acc]
@@ -36,35 +36,31 @@ class TestFactoriesCommodities(object):
 
         appl = Commodity(namespace="NMS", mnemonic="AAPL", fullname="Apple")
         appl["quoted_currency"] = "USD"
-        acc, inc_accounts = factories.create_stock_accounts(appl,
-                                                            broker_account=broker,
-                                                            income_account=income,
-                                                            income_account_types="D")
+        acc, inc_accounts = factories.create_stock_accounts(
+            appl, broker_account=broker, income_account=income, income_account_types="D"
+        )
         assert len(inc_accounts) == 1
 
-        acc, inc_accounts = factories.create_stock_accounts(appl,
-                                                            broker_account=broker,
-                                                            income_account=income,
-                                                            income_account_types="CL")
+        acc, inc_accounts = factories.create_stock_accounts(
+            appl, broker_account=broker, income_account=income, income_account_types="CL"
+        )
         assert len(inc_accounts) == 1
-        acc, inc_accounts = factories.create_stock_accounts(appl,
-                                                            broker_account=broker,
-                                                            income_account=income,
-                                                            income_account_types="CS")
+        acc, inc_accounts = factories.create_stock_accounts(
+            appl, broker_account=broker, income_account=income, income_account_types="CS"
+        )
         assert len(inc_accounts) == 1
-        acc, inc_accounts = factories.create_stock_accounts(appl,
-                                                            broker_account=broker,
-                                                            income_account=income,
-                                                            income_account_types="I")
+        acc, inc_accounts = factories.create_stock_accounts(
+            appl, broker_account=broker, income_account=income, income_account_types="I"
+        )
         assert len(inc_accounts) == 1
-        acc, inc_accounts = factories.create_stock_accounts(appl,
-                                                            broker_account=broker,
-                                                            income_account=income,
-                                                            income_account_types="D/CL/CS/I")
+        acc, inc_accounts = factories.create_stock_accounts(
+            appl, broker_account=broker, income_account=income, income_account_types="D/CL/CS/I"
+        )
         assert len(income.children) == 4
         book_basic.flush()
-        assert sorted(income.children, key=lambda x: x.guid) == sorted([_acc.parent for _acc in inc_accounts],
-                                                                       key=lambda x: x.guid)
+        assert sorted(income.children, key=lambda x: x.guid) == sorted(
+            [_acc.parent for _acc in inc_accounts], key=lambda x: x.guid
+        )
         assert broker.children == [acc]
 
     @needweb
@@ -94,12 +90,14 @@ class TestFactoriesTransactions(object):
     def test_single_transaction(self, book_basic):
         today = datetime.today()
         print("today=", today)
-        factories.single_transaction(today.date(),
-                                     today,
-                                     "my test",
-                                     Decimal(100),
-                                     from_account=book_basic.accounts(name="inc"),
-                                     to_account=book_basic.accounts(name="asset"))
+        factories.single_transaction(
+            today.date(),
+            today,
+            "my test",
+            Decimal(100),
+            from_account=book_basic.accounts(name="inc"),
+            to_account=book_basic.accounts(name="asset"),
+        )
         book_basic.save()
         tr = book_basic.transactions(description="my test")
         assert len(tr.splits) == 2
@@ -116,12 +114,14 @@ class TestFactoriesTransactions(object):
 
     def test_single_transaction_tz(self, book_basic):
         today = tzlocal.get_localzone().localize(datetime.today())
-        factories.single_transaction(today.date(),
-                                     today,
-                                     "my test",
-                                     Decimal(100),
-                                     from_account=book_basic.accounts(name="inc"),
-                                     to_account=book_basic.accounts(name="asset"))
+        tr = factories.single_transaction(
+            today.date(),
+            today,
+            "my test",
+            Decimal(100),
+            from_account=book_basic.accounts(name="inc"),
+            to_account=book_basic.accounts(name="asset"),
+        )
         book_basic.save()
         tr = book_basic.transactions(description="my test")
         assert tr.post_date == today.date()
@@ -129,12 +129,14 @@ class TestFactoriesTransactions(object):
 
     def test_single_transaction_rollback(self, book_basic):
         today = tzlocal.get_localzone().localize(datetime.today())
-        factories.single_transaction(today.date(),
-                                     today,
-                                     "my test",
-                                     Decimal(100),
-                                     from_account=book_basic.accounts(name="inc"),
-                                     to_account=book_basic.accounts(name="asset"))
+        factories.single_transaction(
+            today.date(),
+            today,
+            "my test",
+            Decimal(100),
+            from_account=book_basic.accounts(name="inc"),
+            to_account=book_basic.accounts(name="asset"),
+        )
         book_basic.validate()
         assert len(book_basic.transactions) == 1
         book_basic.cancel()

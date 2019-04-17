@@ -99,7 +99,7 @@ class Version(DeclarativeBase):
         self.table_name = table_name
         self.table_version = table_version
 
-    def __unirepr__(self):
+    def __str__(self):
         return "Version<{}={}>".format(self.table_name, self.table_version)
 
 
@@ -150,7 +150,7 @@ def build_uri(sqlite_file=None,
     if uri_conn is None:
         # fallback on sqlite
         if sqlite_file:
-            if sqlite_file.startswith("sqlite:///"):
+            if isinstance(sqlite_file, str) and sqlite_file.startswith("sqlite:///"):
                 # already have the protocol specified.
                 uri_conn = sqlite_file
             else:

@@ -43,8 +43,8 @@ class Split(DeclarativeBaseGuid):
     # column definitions
     # the transaction_guid is not mandatory at construction time because it can be set through a tr.splits.append(...) operation
     # however, in the validation of the object, we raise an error if there is no transaction set at that time
-    transaction_guid = Column('tx_guid', VARCHAR(length=32), ForeignKey('transactions.guid'), index=True)
-    account_guid = Column('account_guid', VARCHAR(length=32), ForeignKey('accounts.guid'), nullable=False, index=True)
+    transaction_guid = Column('tx_guid', VARCHAR(length=32), ForeignKey('transactions.guid'))
+    account_guid = Column('account_guid', VARCHAR(length=32), ForeignKey('accounts.guid'), nullable=False)
     memo = Column('memo', VARCHAR(length=2048), nullable=False)
     action = Column('action', VARCHAR(length=2048), nullable=False)
 
@@ -88,7 +88,7 @@ class Split(DeclarativeBaseGuid):
         self.reconcile_state = reconcile_state
         self.lot = lot
 
-    def __unirepr__(self):
+    def __str__(self):
         try:
             cur = self.transaction.currency.mnemonic
             acc = self.account
@@ -199,7 +199,7 @@ class Transaction(DeclarativeBaseGuid):
     # column definitions
     currency_guid = Column('currency_guid', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
     num = Column('num', VARCHAR(length=2048), nullable=False)
-    _post_date = Column('post_date', _DateAsDateTime(neutral_time=True), index=True)
+    _post_date = Column('post_date', _DateAsDateTime(neutral_time=True))
     post_date = mapped_to_slot_property(_post_date,
                                         slot_name="date-posted",
                                         # slot_transform=lambda x: x.date() if x else None
@@ -247,7 +247,7 @@ class Transaction(DeclarativeBaseGuid):
         if splits:
             self.splits = splits
 
-    def __unirepr__(self):
+    def __str__(self):
         return "Transaction<[{}] '{}' on {:%Y-%m-%d}{}>".format(self.currency.mnemonic,
                                                                  self.description,
                                                                  self.post_date,
@@ -391,7 +391,7 @@ class ScheduledTransaction(DeclarativeBaseGuid):
                           uselist=False,
                           )
 
-    def __unirepr__(self):
+    def __str__(self):
         return "ScheduledTransaction<'{}' {}>".format(self.name, self.recurrence)
 
 
@@ -451,5 +451,5 @@ class Lot(DeclarativeBaseGuid):
             if sp.account != self.account:
                 raise ValueError("Split {} is not in the same commodity of the lot {}".format(sp, self))
 
-    def __unirepr__(self):
+    def __str__(self):
         return "Lot<'{}' on {}>".format(self.title, self.account.name)

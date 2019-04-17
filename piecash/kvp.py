@@ -155,7 +155,7 @@ class Slot(DeclarativeBase):
 
     # column definitions
     id = Column('id', INTEGER(), primary_key=True, nullable=False, autoincrement=True)
-    obj_guid = Column('obj_guid', VARCHAR(length=32), nullable=False, index=True)
+    obj_guid = Column('obj_guid', VARCHAR(length=32), nullable=False)
     _name = Column('name', VARCHAR(length=4096), nullable=False)
 
     @property
@@ -182,7 +182,7 @@ class Slot(DeclarativeBase):
         if obj_guid is not None:
             self.obj_guid = obj_guid
 
-    def __unirepr__(self):
+    def __str__(self):
         return "<{} {}={!r}>".format(self.__class__.__name__, self.name, self.value)
 
 

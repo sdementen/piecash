@@ -298,7 +298,7 @@ class Account(DeclarativeBaseGuid):
     def is_template(self):
         return self.commodity.namespace == 'template'
 
-    def __unirepr__(self):
+    def __str__(self):
         if self.commodity:
             return "Account<{acc.fullname}[{acc.commodity.mnemonic}]>".format(acc=self)
         else:
