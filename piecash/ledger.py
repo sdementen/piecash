@@ -115,6 +115,7 @@ def ledger(book):
         res.append(ledger(price))
     res.append("\n")
 
+    # Transactions
     for trans in sorted(book.transactions, key=lambda x: x.post_date):
         res.append(ledger(trans))
         res.append("\n")
@@ -124,3 +125,38 @@ def ledger(book):
 
 def ledger(obj):
     return obj.__ledger__()
+
+
+def get_ledger_output(book, commodities, accounts, prices, transactions):
+    """ Returns the specified parts of the book in ledger format """
+    res = []
+
+    # Commodities
+    if commodities:
+        res.append("; Commodities\n")
+        for commodity in book.commodities:
+            res.append(ledger(commodity))
+        res.append("\n")
+
+    # Accounts
+    if accounts:
+        res.append("; Accounts\n")
+        for acc in book.accounts:
+            res.append(ledger(acc))
+            res.append("\n")
+
+    # Prices
+    if prices:
+        res.append("; Prices\n")
+        for price in sorted(book.prices, key=lambda x: x.date):
+            res.append(ledger(price))
+        res.append("\n")
+
+    # Transactions
+    if transactions:
+        res.append("; Transactions\n")
+        for trans in sorted(book.transactions, key=lambda x: x.post_date):
+            res.append(ledger(trans))
+            res.append("\n")
+
+    return "".join(res)    
