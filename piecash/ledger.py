@@ -127,7 +127,7 @@ def ledger(obj):
     return obj.__ledger__()
 
 
-def get_ledger_output(book, commodities, accounts, prices, transactions):
+def get_ledger_output(book, commodities=True, accounts=True, prices=True, transactions=True):
     """ Returns the specified parts of the book in ledger format """
     res = []
 
