@@ -18,7 +18,7 @@ from piecash.scripts.cli import cli
 
 @cli.command()
 @click.argument('book', type=click.Path(exists=True))
-@click.option('--output', type=click.File('w'), default="-",
+@click.option('--output', type=click.File('w', encoding="utf-8"), default="-",
               help="File to which to export the data (default=stdout)")
 def ledger(book, output):
     """Export to ledger-cli format.
