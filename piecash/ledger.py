@@ -54,7 +54,9 @@ def format_commodity(commodity):
     if commodity.namespace == "CURRENCY":
         symbol = commodity.mnemonic
     else:
-        symbol = f"{commodity.namespace}.{commodity.mnemonic}"
+        # Python 3.6 syntax
+        #symbol = f"{commodity.namespace}.{commodity.mnemonic}"
+        symbol = "{}.{}".format(commodity.namespace, commodity.mnemonic)
 
     try:
         if symbol.encode('ascii').isalpha():
