@@ -18,7 +18,7 @@ from .core import Transaction, Account, Commodity, Price, Book
 # @attach_ledger(Transaction)
 # def ledger(tr):
 #     """Return a ledger-cli alike representation of the transaction"""
-#     s = ["{:%Y/%m/%d} {}{}\n".format(tr.post_date,
+#     s = ["{:%Y-%m-%d} {}{}\n".format(tr.post_date,
 #                                        "({}) ".format(tr.num.replace(")", "")) if tr.num else "",
 #                                        tr.description)]
 #     if tr.notes:
@@ -97,7 +97,7 @@ from .core import Transaction, Account, Commodity, Price, Book
 # @attach_ledger(Price)
 # def ledger(price):
 #     """Return a ledger-cli alike representation of the price"""
-#     return "P {:%Y/%m/%d %H:%M:%S} {} {} {}\n".format(price.date,
+#     return "P {:%Y-%m-%d %H:%M:%S} {} {} {}\n".format(price.date,
 #                                                       format_commodity(price.commodity),
 #                                                       price.value,
 #                                                       format_commodity(price.currency))
@@ -174,7 +174,7 @@ class GnuCash2LedgerParser:
 
     def parse_transaction(self, tr):
         """Return a ledger-cli alike representation of the transaction"""
-        s = ["{:%Y/%m/%d} {}{}\n".format(tr.post_date,
+        s = ["{:%Y-%m-%d} {}{}\n".format(tr.post_date,
                                         "({}) ".format(tr.num.replace(")", "")) if tr.num else "",
                                         tr.description)]
         if tr.notes:
@@ -206,7 +206,7 @@ class GnuCash2LedgerParser:
 
     def parse_price(self, price):
         """Return a ledger-cli alike representation of the price"""
-        return "P {:%Y/%m/%d %H:%M:%S} {} {} {}\n".format(price.date,
+        return "P {:%Y-%m-%d %H:%M:%S} {} {} {}\n".format(price.date,
                                                         self.format_commodity(price.commodity),
                                                         price.value,
                                                         self.format_commodity(price.currency))
@@ -227,7 +227,7 @@ class GnuCash2LedgerParser:
         return res
 
 
-def get_ledger_output(book, commodities=True, accounts=True, prices=True, transactions=True,
+def get_ledger_output(book, commodities=True, accounts=True, prices=True, journal=True,
     with_exchange=False):
     """ Returns the specified parts of the book in ledger format """
     res = []
@@ -260,7 +260,7 @@ def get_ledger_output(book, commodities=True, accounts=True, prices=True, transa
         res.append("\n")
 
     # Transactions
-    if transactions:
+    if journal:
         res.append("; Transactions\n")
         for trans in sorted(book.transactions, key=lambda x: x.post_date):
             #res.append(ledger(trans))
