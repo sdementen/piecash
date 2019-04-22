@@ -18,7 +18,7 @@ def attach_ledger(cls):
 @attach_ledger(Transaction)
 def ledger(tr):
     """Return a ledger-cli alike representation of the transaction"""
-    s = ["{:%Y/%m/%d} {}{}\n".format(tr.post_date,
+    s = ["{:%Y-%m-%d} {}{}\n".format(tr.post_date,
                                        "({}) ".format(tr.num.replace(")", "")) if tr.num else "",
                                        tr.description)]
     if tr.notes:
@@ -90,7 +90,7 @@ def ledger(acc):
 @attach_ledger(Price)
 def ledger(price):
     """Return a ledger-cli alike representation of the price"""
-    return "P {:%Y/%m/%d %H:%M:%S} {} {} {}\n".format(price.date,
+    return "P {:%Y-%m-%d %H:%M:%S} {} {} {}\n".format(price.date,
                                                       format_commodity(price.commodity),
                                                       price.value,
                                                       format_commodity(price.currency))
