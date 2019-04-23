@@ -67,6 +67,14 @@ class Split(DeclarativeBaseGuid):
     lot = relation('Lot', back_populates='splits')
     transaction = relation('Transaction', back_populates='splits')
 
+    @property
+    def is_credit(self):
+        return self.value < 0
+
+    @property
+    def is_debit(self):
+        return self.value > 0
+
     def __init__(self,
                  account,
                  value,
@@ -99,19 +107,19 @@ class Split(DeclarativeBaseGuid):
                 credit = sched_xaction["credit-formula"].value
                 debit = sched_xaction["debit-formula"].value
                 return "SplitTemplate<{} {} {}>".format(sched_xaction["account"].value,
-                                                         "credit={}".format(credit) if credit else "",
-                                                         "debit={}".format(debit) if debit else "",
+                                                        "credit={}".format(credit) if credit else "",
+                                                        "debit={}".format(debit) if debit else "",
 
-                                                         )
+                                                        )
             elif cur == com:
                 # case of same currency split
                 return "Split<{} {} {}>".format(acc,
-                                                 self.value, cur)
+                                                self.value, cur)
             else:
                 # case of non currency split
                 return "Split<{} {} {} [{} {}]>".format(acc,
-                                                         self.value, cur,
-                                                         self.quantity, com)
+                                                        self.value, cur,
+                                                        self.quantity, com)
         except AttributeError:
             return "Split<{}>".format(self.account)
 
@@ -249,9 +257,9 @@ class Transaction(DeclarativeBaseGuid):
 
     def __str__(self):
         return "Transaction<[{}] '{}' on {:%Y-%m-%d}{}>".format(self.currency.mnemonic,
-                                                                 self.description,
-                                                                 self.post_date,
-                                                                 " (from sch tx)" if self.scheduled_transaction else "")
+                                                                self.description,
+                                                                self.post_date,
+                                                                " (from sch tx)" if self.scheduled_transaction else "")
 
     def object_to_validate(self, change):
         yield self

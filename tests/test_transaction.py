@@ -351,3 +351,28 @@ class TestTransaction_changes(object):
         book_transactions.validate()
         book_transactions.flush()
         assert len(book_transactions.prices) == 7
+
+
+class TestSplit_credit_debit(object):
+    def test_delete_existing_transaction(self, book_transactions):
+        asset = book_transactions.accounts.get(name="asset")
+        inc = book_transactions.accounts.get(name="inc")
+        exp = book_transactions.accounts.get(name="exp")
+
+        # revenue item
+        revenue = book_transactions.transactions(description="my revenue")
+        revenue_split_asset = revenue.splits(account=asset)
+        revenue_split_inc = revenue.splits(account=inc)
+        assert revenue_split_asset.is_credit is False
+        assert revenue_split_asset.is_debit is True
+        assert revenue_split_inc.is_credit is True
+        assert revenue_split_inc.is_debit is False
+
+        # expense item
+        expense = book_transactions.transactions(description="my expense")
+        expense_split_asset = expense.splits(account=asset)
+        expense_split_inc = expense.splits(account=exp)
+        assert expense_split_asset.is_credit is True
+        assert expense_split_asset.is_debit is False
+        assert expense_split_inc.is_credit is False
+        assert expense_split_inc.is_debit is True
