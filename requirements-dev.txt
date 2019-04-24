@@ -54,3 +54,7 @@ urllib3==1.22
 virtualenv-clone==0.3.0
 virtualenv==15.2.0
 wcwidth==0.1.7
+sqlalchemy
+sqlalchemy-utils
+tzlocal
+click
