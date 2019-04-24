@@ -30,8 +30,8 @@ For a given transaction, the following attributes are accessible:
 
     # identifying which split is a credit or a debit
     for sp in tr.splits:
-        type = "credit" if sp.is_credit else "debit"
-        print(f"{sp} is a {type}")
+        split_type = "credit" if sp.is_credit else "debit"
+        print(f"{sp} is a {split_type}")
 
     # accessing the scheduled transaction
     [ sp for sp in tr.scheduled_transaction.template_account.splits]
