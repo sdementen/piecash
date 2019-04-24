@@ -252,18 +252,20 @@ class Account(DeclarativeBaseGuid):
         else:
             return ""
 
-    def get_balance(self, recurse=True, commodity=None):
+    def get_balance(self, recurse=True, commodity=None, natural_sign=True):
         """
         Returns the balance of the account (including its children accounts if recurse=True)
         expressed in account's commodity/currency.
         If this is a stock/fund account, it will return the number of shares held.
         If this is a currency account, it will be in account's currency.
         In case of recursion, the commodity of children accounts will be transformed to the commodity of the father account using the latest price
-        (if no price is available to convert , it is considered as 0)
+        (if no price is available to convert , it is considered as 0).
+        If natural_sign is True, the sign of the balance is reverted for the account with type {'LIABILITY', 'PAYABLE', 'CREDIT', 'INCOME', 'EQUITY'}
 
         Attributes:
             recurse (bool, optional): True if the balance should include children accounts (default to True)
             commodity (:class:`piecash.core.commodity.Commodity`): the currency into which to get the balance (default to None, i.e. the currency of the account)
+            natural_sign (bool, optional): True if the balance sign is reversed for accounts of type {'LIABILITY', 'PAYABLE', 'CREDIT', 'INCOME', 'EQUITY'} (default to True)
 
         Returns:
             the balance of the account
@@ -271,7 +273,7 @@ class Account(DeclarativeBaseGuid):
         if commodity is None:
             commodity = self.commodity
 
-        balance = sum([sp.quantity for sp in self.splits]) * self.sign
+        balance = sum([sp.quantity for sp in self.splits])
 
         if commodity != self.commodity:
             try:
@@ -286,9 +288,12 @@ class Account(DeclarativeBaseGuid):
                 balance = balance * factor
 
         if recurse and self.children:
-            balance += sum(acc.get_balance(recurse=recurse, commodity=commodity) for acc in self.children)
+            balance += sum(acc.get_balance(recurse=recurse, commodity=commodity, natural_sign=False) for acc in self.children)
 
-        return balance
+        if natural_sign:
+            return balance * self.sign
+        else:
+            return balance
 
     @property
     def sign(self):

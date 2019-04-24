@@ -15,12 +15,16 @@ Accessing the accounts (:class:`piecash.core.account.Account`)::
         print(acc)
 
         # accessing attributes of an account
-        print("Account name={acc.name}\n"
-              "        commodity={acc.commodity.namespace}/{acc.commodity.mnemonic}\n"
-              "        fullname={acc.fullname}\n"
-              "        type={acc.type}".format(acc=acc))
+        print(f"Account name={acc.name}\n"
+              f"        commodity={acc.commodity.namespace}/{acc.commodity.mnemonic}\n"
+              f"        fullname={acc.fullname}\n"
+              f"        type={acc.type}")
+
+        # calculating the balance of the accounts:
+        for acc in root.children:
+            print(f"Account balance for {acc.name}: {acc.get_balance()} (without sign reversal: {acc.get_balance(natural_sign=False)}")
 
         # accessing all splits related to an account
         for sp in acc.splits:
-            print("account <{}> is involved in transaction '{}'".format(acc.fullname, sp.transaction.description))
+            print(f"account <{acc.fullname}> is involved in transaction '{sp.transaction.description}'")
 

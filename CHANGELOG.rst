@@ -6,6 +6,8 @@ Version 1.1.0 (in development)
 
 - fix use of ISO date for ledger export (fix #115 by @MisterY)
 - add field is_credit and is_debit to split (fix #105)
+- fix get_balance sign when recursing + add natural_sign keyword to specify if sign should be reverse or not
+
 
 Version 1.0.0 (2019-04-15)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
