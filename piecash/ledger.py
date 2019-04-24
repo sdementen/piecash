@@ -127,7 +127,7 @@ def ledger(obj):
     return obj.__ledger__()
 
 
-def get_ledger_output(book, commodities=True, accounts=True, prices=True, transactions=True):
+def get_ledger_output(book, commodities=True, accounts=True, prices=True, journal=True):
     """ Returns the specified parts of the book in ledger format """
     res = []
 
@@ -153,7 +153,7 @@ def get_ledger_output(book, commodities=True, accounts=True, prices=True, transa
         res.append("\n")
 
     # Transactions
-    if transactions:
+    if journal:
         res.append("; Transactions\n")
         for trans in sorted(book.transactions, key=lambda x: x.post_date):
             res.append(ledger(trans))
