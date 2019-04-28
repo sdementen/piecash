@@ -36,3 +36,5 @@ For a given transaction, the following attributes are accessible:
     # accessing the scheduled transaction
     [ sp for sp in tr.scheduled_transaction.template_account.splits]
 
+    # closing the book
+    book.close()
