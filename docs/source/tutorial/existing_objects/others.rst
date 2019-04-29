@@ -1,18 +1,24 @@
 Other objects
 -------------
 
-In fact, any object can be retrieved from the session through a generic ``get(**kwargs)`` method::
+In fact, any object can be retrieved from the session through a generic ``get(**kwargs)`` method:
+
+.. ipython:: python
+
+    book = open_book(gnucash_books + "invoices.gnucash", open_if_lock=True)
 
     from piecash import Account, Commodity, Budget, Vendor
 
     # accessing specific objects through the get method
-    acc = book.get(Account, name="Asset", parent=book.root_account)
-    cdty = book.get(Commodity, namespace="CURRENCY", mnemonic="EUR")
-    bdgt = book.get(Budget, name="my first budget")
-    invoice = book.get(Vendor, name="Looney")
+    book.get(Account, name="Assets", parent=book.root_account)
+    book.get(Commodity, namespace="CURRENCY", mnemonic="EUR")
+    book.get(Budget, name="my first budget")
+    book.get(Vendor, name="Looney")
 
 If you know SQLAlchemy, you can get access to the underlying :class:`~sqlalchemy.orm.session.Session` as ``book.session`` and execute
-queries using the piecash classes::
+queries using the piecash classes:
+
+.. ipython:: python
 
     from piecash import Account, Commodity, Budget, Vendor
 
