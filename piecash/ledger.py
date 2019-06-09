@@ -54,7 +54,7 @@ def _(tr, **kwargs):
             if kwargs.get("locale"):
                 _locale = locale.getdefaultlocale()[0]
                 if Money is None:
-                    raise ValueError(f"You must install Money ('pip install money') to export to ledger in your locale '{_locale}")
+                    raise ValueError("You must install Money ('pip install money') to export to ledger in your locale '{_locale}".format(_locale=_locale))
                 s.append(Money(amount=split.value, currency=format_commodity(tr.currency)).format(_locale))
             else:
                 if Money:
