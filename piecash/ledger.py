@@ -55,11 +55,11 @@ def _(tr, **kwargs):
                 _locale = locale.getdefaultlocale()[0]
                 if Money is None:
                     raise ValueError(f"You must install Money ('pip install money') to export to ledger in your locale '{_locale}")
-                s.append(Money(amount=split.value, currency=format_commodity(tr.currency)).format(_locale))
+                s.append(Money(amount=split.value, currency=tr.currency.mnemonic).format(_locale))
             else:
                 if Money:
                     # vesion from Money
-                    s.append(str(Money(amount=split.value, currency=format_commodity(tr.currency))))
+                    s.append(str(Money(amount=split.value, currency=tr.currency.mnemonic)))
                 else:
                     # local hand made version
                     s.append("{:10.{}f} {}".format(split.value, tr.currency.precision, format_commodity(tr.currency)))

@@ -197,6 +197,18 @@ To export a GnuCash book to the ledger-cli format:
 
 .. command-output:: piecash ledger -h
 
+Or in python
+
+
+.. ipython:: python
+
+    book = open_book(gnucash_books + "simple_sample.gnucash", open_if_lock=True)
+
+    from piecash import ledger
+
+    # accessing specific objects through the get method
+    print(ledger(book, locale=True))
+
 For more information on how to use piecash, please refer to the Tutorials on
 :doc:`Using existing objects <../tutorial/index_existing>` and
 :doc:`Creating new objects <../tutorial/index_new>`,
