@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
-import locale
 from functools import singledispatch
+from locale import getdefaultlocale
 
 from .core import Transaction, Account, Commodity, Price, Book
 
@@ -22,8 +22,26 @@ def ledger(obj, **kwargs):
     raise NotImplemented
 
 
+def format_currency(amount, decimals, currency, locale=False):
+    if locale:
+        if locale is True:
+            locale = getdefaultlocale()[0]
+        if Money is None:
+            raise ValueError(
+                f"You must install Money ('pip install money') to export to ledger in your locale '{locale}"
+            )
+        return Money(amount=amount, currency=currency).format(locale)
+    else:
+        if Money and False:
+            # version from Money
+            return str(Money(amount=amount, currency=currency))
+        else:
+            # local hand made version
+            return "{:10.{}f} {}".format(amount, decimals, currency)
+
+
 @ledger.register(Transaction)
-def _(tr, **kwargs):
+def _(tr, locale=False, **kwargs):
     """Return a ledger-cli alike representation of the transaction"""
     s = [
         "{:%Y-%m-%d} {}{}\n".format(
@@ -41,28 +59,19 @@ def _(tr, **kwargs):
             s.append("\t{:40}  ".format(split.account.fullname))
         if split.account.commodity != tr.currency:
             s.append(
-                "{:10.{}f} {} @@ {:.{}f} {}".format(
-                    split.quantity,
-                    split.account.commodity.precision,
-                    format_commodity(split.account.commodity),
-                    abs(split.value),
-                    tr.currency.precision,
-                    format_commodity(tr.currency),
+                "{quantity} @@ {amount}".format(
+                    quantity=format_currency(
+                        split.quantity,
+                        split.account.commodity.precision,
+                        split.account.commodity.mnemonic,
+                        locale=False,
+                    ),
+                    amount=format_currency(abs(split.value), tr.currency.precision, tr.currency.mnemonic, locale),
                 )
             )
         else:
-            if kwargs.get("locale"):
-                _locale = locale.getdefaultlocale()[0]
-                if Money is None:
-                    raise ValueError(f"You must install Money ('pip install money') to export to ledger in your locale '{_locale}")
-                s.append(Money(amount=split.value, currency=tr.currency.mnemonic).format(_locale))
-            else:
-                if Money:
-                    # vesion from Money
-                    s.append(str(Money(amount=split.value, currency=tr.currency.mnemonic)))
-                else:
-                    # local hand made version
-                    s.append("{:10.{}f} {}".format(split.value, tr.currency.precision, format_commodity(tr.currency)))
+            s.append(format_currency(split.value, tr.currency.precision, tr.currency.mnemonic, locale))
+
         if split.memo:
             s.append(" ;   {:20}".format(split.memo))
         s.append("\n")
@@ -109,10 +118,12 @@ def _(acc, **kwargs):
 
 
 @ledger.register(Price)
-def _(price, **kwargs):
+def _(price, locale=False, **kwargs):
     """Return a ledger-cli alike representation of the price"""
-    return "P {:%Y-%m-%d %H:%M:%S} {} {} {}\n".format(
-        price.date, format_commodity(price.commodity), price.value, format_commodity(price.currency)
+    return "P {:%Y-%m-%d %H:%M:%S} {} {}\n".format(
+        price.date,
+        format_commodity(price.commodity),
+        format_currency(price.value, price.currency.precision, price.currency.mnemonic, locale),
     )
 
 
