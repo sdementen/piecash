@@ -206,7 +206,10 @@ Or in python
 
     from piecash import ledger
 
-    # accessing specific objects through the get method
+    # printing the ledger-cli (https://www.ledger-cli.org/) representation of the book
+    print(ledger(book))
+
+    # printing the ledger-cli (https://www.ledger-cli.org/) representation of the book using regional settings (locale) for currency output
     print(ledger(book, locale=True))
 
 For more information on how to use piecash, please refer to the Tutorials on
