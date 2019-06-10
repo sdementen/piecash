@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import re
 from functools import singledispatch
 from locale import getdefaultlocale
 
@@ -32,12 +33,16 @@ def format_currency(amount, decimals, currency, locale=False):
             )
         return Money(amount=amount, currency=currency).format(locale)
     else:
-        if Money and False:
-            # version from Money
-            return str(Money(amount=amount, currency=currency))
+        if Money:
+            try:
+                # version from Money
+                return str(Money(amount=amount, currency=currency))
+            except ValueError:
+                # local hand made version
+                return "{:.{}f} {}".format(amount, decimals, currency)
         else:
             # local hand made version
-            return "{:10.{}f} {}".format(amount, decimals, currency)
+            return "{:.{}f} {}".format(amount, decimals, currency)
 
 
 @ledger.register(Transaction)
@@ -79,30 +84,41 @@ def _(tr, locale=False, **kwargs):
     return "".join(s)
 
 
-def format_commodity(commodity):
-    mnemonic = commodity.mnemonic
-    try:
-        if mnemonic.encode("ascii").isalpha():
+CURRENCY_RE = re.compile("^[A-Z]{3}$")
+NUMBER_RE = re.compile("[0-9\., ]")
+
+
+def format_commodity(mnemonic, locale):
+    if CURRENCY_RE.match(mnemonic):
+        # format the commodity
+        s = format_currency(0, 0, mnemonic, locale)
+
+        # remove the non currency part and real white spaces
+        return NUMBER_RE.sub("", s)
+    else:
+        print(mnemonic, NUMBER_RE.search(mnemonic))
+        if NUMBER_RE.search(mnemonic):
+            return '"{}"'.format(mnemonic)
+        else:
             return mnemonic
-    except:
-        pass
-    return '"{}"'.format(mnemonic)  # TODO: escape " char in mnemonic
+
+    return NUMBER_RE.sub("", s)
 
 
 @ledger.register(Commodity)
-def _(cdty, **kwargs):
+def _(cdty, locale=False, notes=False, **kwargs):
     """Return a ledger-cli alike representation of the commodity"""
     if cdty.mnemonic in ["", "template"]:
         return ""
-    res = "commodity {}\n".format(format_commodity(cdty))
-    if cdty.fullname != "":
-        res += "\tnote {}\n".format(cdty.fullname)
+    res = "commodity {}\n".format(format_commodity(cdty.mnemonic, locale))
+    if cdty.fullname != "" and notes:
+        res += "\tnote {}\n".format(cdty.fullname, locale)
     res += "\n"
     return res
 
 
 @ledger.register(Account)
-def _(acc, **kwargs):
+def _(acc, locale=False, **kwargs):
     """Return a ledger-cli alike representation of the account"""
     # ignore "dummy" accounts
     if acc.type is None or acc.parent is None:
@@ -113,7 +129,7 @@ def _(acc, **kwargs):
     if acc.description != "":
         res += "\tnote {}\n".format(acc.description)
 
-    res += '\tcheck commodity == "{}"\n'.format(format_commodity(acc.commodity).replace('"', '\\"'))
+    res += '\tcheck commodity == "{}"\n'.format(format_commodity(acc.commodity.mnemonic, locale).replace('"', '\\"'))
     return res
 
 
@@ -122,7 +138,7 @@ def _(price, locale=False, **kwargs):
     """Return a ledger-cli alike representation of the price"""
     return "P {:%Y-%m-%d %H:%M:%S} {} {}\n".format(
         price.date,
-        format_commodity(price.commodity),
+        format_commodity(price.commodity.mnemonic, locale),
         format_currency(price.value, price.currency.precision, price.currency.mnemonic, locale),
     )
 
