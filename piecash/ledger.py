@@ -23,6 +23,26 @@ def ledger(obj, **kwargs):
     raise NotImplemented
 
 
+CURRENCY_RE = re.compile("^[A-Z]{3}$")
+NUMBER_RE = re.compile("[0-9\., ]")
+
+
+def format_commodity(mnemonic, locale):
+    if CURRENCY_RE.match(mnemonic):
+        # format the commodity
+        s = format_currency(0, 0, mnemonic, locale)
+
+        # remove the non currency part and real white spaces
+        return NUMBER_RE.sub("", s)
+    else:
+        if NUMBER_RE.search(mnemonic):
+            return '"{}"'.format(mnemonic)
+        else:
+            return mnemonic
+
+    return NUMBER_RE.sub("", s)
+
+
 def format_currency(amount, decimals, currency, locale=False):
     if locale:
         if locale is True:
@@ -39,7 +59,7 @@ def format_currency(amount, decimals, currency, locale=False):
                 return str(Money(amount=amount, currency=currency))
             except ValueError:
                 # local hand made version
-                return "{:.{}f} {}".format(amount, decimals, currency)
+                return "{:.{}f} {}".format(amount, decimals, format_commodity(currency, locale))
         else:
             # local hand made version
             return "{:.{}f} {}".format(amount, decimals, currency)
@@ -84,34 +104,13 @@ def _(tr, locale=False, **kwargs):
     return "".join(s)
 
 
-CURRENCY_RE = re.compile("^[A-Z]{3}$")
-NUMBER_RE = re.compile("[0-9\., ]")
-
-
-def format_commodity(mnemonic, locale):
-    if CURRENCY_RE.match(mnemonic):
-        # format the commodity
-        s = format_currency(0, 0, mnemonic, locale)
-
-        # remove the non currency part and real white spaces
-        return NUMBER_RE.sub("", s)
-    else:
-        print(mnemonic, NUMBER_RE.search(mnemonic))
-        if NUMBER_RE.search(mnemonic):
-            return '"{}"'.format(mnemonic)
-        else:
-            return mnemonic
-
-    return NUMBER_RE.sub("", s)
-
-
 @ledger.register(Commodity)
-def _(cdty, locale=False, notes=False, **kwargs):
+def _(cdty, locale=False, commodity_notes=False, **kwargs):
     """Return a ledger-cli alike representation of the commodity"""
     if cdty.mnemonic in ["", "template"]:
         return ""
     res = "commodity {}\n".format(format_commodity(cdty.mnemonic, locale))
-    if cdty.fullname != "" and notes:
+    if cdty.fullname != "" and commodity_notes:
         res += "\tnote {}\n".format(cdty.fullname, locale)
     res += "\n"
     return res
@@ -129,7 +128,7 @@ def _(acc, locale=False, **kwargs):
     if acc.description != "":
         res += "\tnote {}\n".format(acc.description)
 
-    res += '\tcheck commodity == "{}"\n'.format(format_commodity(acc.commodity.mnemonic, locale).replace('"', '\\"'))
+    res += '\tcheck commodity == "{}"\n'.format(acc.commodity.mnemonic)  # .replace('"', '\\"'))
     return res
 
 
