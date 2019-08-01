@@ -11,7 +11,8 @@ env:
 - DONOTGOONWEB=True
 install:
 - hash -r
-- pip install pipenv==11.0.2
+- pip install flake8 pipenv==11.0.2
+- flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 - pipenv install -e .[test] --ignore-pipfile
 # - locale-gen en_US.UTF-8
 
