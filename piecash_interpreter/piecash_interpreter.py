@@ -9,7 +9,7 @@ if sys.version_info.major==3:
             exec(code, {})
 else:
     def run_file(fname):
-        return execfile(fname, {})
+        return execfile(fname, {})  # noqa: F821
 
 if len(sys.argv)==1:
     print("Specify as argument the path to the script to run")
