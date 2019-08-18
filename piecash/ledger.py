@@ -16,7 +16,7 @@ def attach_ledger(cls):
 
 
 @attach_ledger(Transaction)
-def ledger(tr):
+def ledger(tr, full_names=True):
     """Return a ledger-cli alike representation of the transaction"""
     s = ["{:%Y-%m-%d} {}{}\n".format(tr.post_date,
                                        "({}) ".format(tr.num.replace(")", "")) if tr.num else "",
@@ -27,9 +27,9 @@ def ledger(tr):
         if split.account.commodity.mnemonic == "template":
             return ""
         if split.reconcile_state in ['c', 'y']:
-            s.append("\t* {:38}  ".format(split.account.fullname))
+            s.append("\t* {:38}  ".format(split.account.fullname if full_names else split.account.name))
         else:
-            s.append("\t{:40}  ".format(split.account.fullname))
+            s.append("\t{:40}  ".format(split.account.fullname if full_names else split.account.name))
         if split.account.commodity != tr.currency:
             s.append("{:10.{}f} {} @@ {:.{}f} {}".format(
                 split.quantity,
@@ -60,7 +60,7 @@ def format_commodity(commodity):
 
 
 @attach_ledger(Commodity)
-def ledger(cdty):
+def ledger(cdty, full_names=True):
     """Return a ledger-cli alike representation of the commodity"""
     if cdty.mnemonic in ["", "template"]:
         return ""
@@ -72,14 +72,14 @@ def ledger(cdty):
 
 
 @attach_ledger(Account)
-def ledger(acc):
+def ledger(acc, full_names=True):
     """Return a ledger-cli alike representation of the account"""
     # ignore "dummy" accounts
     if acc.type is None or acc.parent is None:
         return ""
     if acc.commodity.mnemonic == "template":
         return ""
-    res = "account {}\n".format(acc.fullname, )
+    res = "account {}\n".format(acc.fullname if full_names else split.account.name)
     if acc.description != "":
         res += "\tnote {}\n".format(acc.description, )
 
@@ -88,7 +88,7 @@ def ledger(acc):
 
 
 @attach_ledger(Price)
-def ledger(price):
+def ledger(price, full_names=True):
     """Return a ledger-cli alike representation of the price"""
     return "P {:%Y-%m-%d %H:%M:%S} {} {} {}\n".format(price.date,
                                                       format_commodity(price.commodity),
@@ -97,7 +97,7 @@ def ledger(price):
 
 
 @attach_ledger(Book)
-def ledger(book):
+def ledger(book, full_names=True):
     """Return a ledger-cli alike representation of the book"""
     res = []
 
@@ -122,5 +122,5 @@ def ledger(book):
     return "".join(res)
 
 
-def ledger(obj):
-    return obj.__ledger__()
+def ledger(obj, full_names=True):
+    return obj.__ledger__(full_names)

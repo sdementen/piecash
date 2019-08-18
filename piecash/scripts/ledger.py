@@ -20,10 +20,12 @@ from piecash.scripts.cli import cli
 @click.argument('book', type=click.Path(exists=True))
 @click.option('--output', type=click.File('w', encoding="utf-8"), default="-",
               help="File to which to export the data (default=stdout)")
+@click.option('--short-names', is_flag=True,
+              help="Use short account names instead of full hierarchical names")
 def ledger(book, output):
     """Export to ledger-cli format.
 
     This scripts export a GnuCash BOOK to the ledget-cli format.
     """
     with piecash.open_book(book, open_if_lock=True) as data:
-        output.write(piecash.ledger(data))
+        output.write(piecash.ledger(data, short_names))
