@@ -74,8 +74,8 @@ class TestFactoriesCommodities(object):
         cdty = book_basic.commodities(mnemonic="AAPL")
 
         assert cdty.namespace == "NMS"
-        assert cdty.quote_tz == "EST"
-        assert cdty.quote_source == "yahoo"
+        assert cdty.quote_tz == "America/New_York"
+        assert cdty.quote_source == "yahoo_json"
         assert cdty.mnemonic == "AAPL"
         assert cdty.fullname == "Apple Inc."
 

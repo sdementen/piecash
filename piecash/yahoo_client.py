@@ -41,10 +41,10 @@ def get_latest_quote(symbol):
         data['longName'],
         data['symbol'],
         data['exchange'],
-        data['exchangeTimezoneShortName'],
+        data['exchangeTimezoneName'],
         data['currency'],
         datetime.datetime.fromtimestamp(data['regularMarketTime']).astimezone(
-            pytz.timezone(data['exchangeTimezoneShortName'])),
+            pytz.timezone(data['exchangeTimezoneName'])),
         data['regularMarketPrice'],
     )
 
