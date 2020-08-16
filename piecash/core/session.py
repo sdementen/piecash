@@ -21,57 +21,57 @@ from ..sa_extra import create_piecash_engine, DeclarativeBase, Session
 #   ('entries', 4)
 
 version_supported = {
-    "2.6": {
-        "Gnucash": 2062100,
-        "Gnucash-Resave": 19920,
-        "accounts": 1,
-        "billterms": 2,
-        "books": 1,
-        "budget_amounts": 1,
-        "budgets": 1,
-        "commodities": 1,
-        "customers": 2,
-        "employees": 2,
-        "entries": 3,
-        "invoices": 3,
-        "jobs": 1,
-        "lots": 2,
-        "orders": 1,
-        "prices": 2,
-        "recurrences": 2,
-        "schedxactions": 1,
-        "slots": 3,
-        "splits": 4,
-        "taxtable_entries": 3,
-        "taxtables": 2,
-        "transactions": 3,
-        "vendors": 1,
+    '2.6': {
+        'Gnucash': 2062100,
+        'Gnucash-Resave': 19920,
+        'accounts': 1,
+        'billterms': 2,
+        'books': 1,
+        'budget_amounts': 1,
+        'budgets': 1,
+        'commodities': 1,
+        'customers': 2,
+        'employees': 2,
+        'entries': 3,
+        'invoices': 3,
+        'jobs': 1,
+        'lots': 2,
+        'orders': 1,
+        'prices': 2,
+        'recurrences': 2,
+        'schedxactions': 1,
+        'slots': 3,
+        'splits': 4,
+        'taxtable_entries': 3,
+        'taxtables': 2,
+        'transactions': 3,
+        'vendors': 1,
     },
-    "3.0": {
-        "Gnucash": 3000001,
-        "Gnucash-Resave": 19920,
-        "accounts": 1,
-        "billterms": 2,
-        "books": 1,
-        "budget_amounts": 1,
-        "budgets": 1,
-        "commodities": 1,
-        "customers": 2,
-        "employees": 2,
-        "entries": 4,
-        "invoices": 4,
-        "jobs": 1,
-        "lots": 2,
-        "orders": 1,
-        "prices": 3,
-        "recurrences": 2,
-        "schedxactions": 1,
-        "slots": 4,
-        "splits": 5,
-        "taxtable_entries": 3,
-        "taxtables": 2,
-        "transactions": 4,
-        "vendors": 1,
+    '3.0': {
+        'Gnucash': 3000001,
+        'Gnucash-Resave': 19920,
+        'accounts': 1,
+        'billterms': 2,
+        'books': 1,
+        'budget_amounts': 1,
+        'budgets': 1,
+        'commodities': 1,
+        'customers': 2,
+        'employees': 2,
+        'entries': 4,
+        'invoices': 4,
+        'jobs': 1,
+        'lots': 2,
+        'orders': 1,
+        'prices': 3,
+        'recurrences': 2,
+        'schedxactions': 1,
+        'slots': 4,
+        'splits': 5,
+        'taxtable_entries': 3,
+        'taxtables': 2,
+        'transactions': 4,
+        'vendors': 1,
     },
 }
 
@@ -83,8 +83,8 @@ gnclock = Table(u'gnclock', DeclarativeBase.metadata,
 
 
 class Version(DeclarativeBase):
-    """The declarative class for the 'versions' table.
-    """
+    '''The declarative class for the 'versions' table.
+    '''
     __tablename__ = 'versions'
 
     __table_args__ = {}
@@ -100,7 +100,7 @@ class Version(DeclarativeBase):
         self.table_version = table_version
 
     def __str__(self):
-        return "Version<{}={}>".format(self.table_name, self.table_version)
+        return 'Version<{}={}>'.format(self.table_name, self.table_version)
 
 
 def build_uri(sqlite_file=None,
@@ -113,11 +113,11 @@ def build_uri(sqlite_file=None,
               db_port=None,
               check_same_thread=True,
               ):
-    """Create the connection string in function of some choices.
+    '''Create the connection string in function of some choices.
 
     :param str sqlite_file: a path to an sqlite3 file (only used if uri_conn is None)
     :param str uri_conn: a sqlalchemy connection string
-    :param str db_type: type of database in ["postgres","mysql"]
+    :param str db_type: type of database in ['postgres','mysql']
     :param str db_user: username of database
     :param str db_password: password for the use of database
     :param str db_name: name of database
@@ -127,45 +127,45 @@ def build_uri(sqlite_file=None,
 
     :return: the connection string
     :rtype: str
-    """
+    '''
     db_config = (db_type, db_host, db_port, db_name, db_user, db_password)
     db_config_isdefined = map(lambda x: x is not None, db_config[:-1])
     if any(db_config_isdefined):
         if not all(db_config_isdefined):
-            raise ValueError("When using db_* arguments, all must be specified : {}".format(db_config))
+            raise ValueError('When using db_* arguments, all must be specified : {}'.format(db_config))
 
-        uri_conn = {"postgres": "postgresql://{username}:{password}@{host}:{port}/{name}",
-                    "mysql": "mysql+pymysql://{username}:{password}@{host}:{port}/{name}?charset=utf8",
+        uri_conn = {'postgres': 'postgresql://{username}:{password}@{host}:{port}/{name}',
+                    'mysql': 'mysql+pymysql://{username}:{password}@{host}:{port}/{name}?charset=utf8',
                     }[db_type].format(username=db_user, password=db_password,
                                       host=db_host, port=db_port,
                                       name=db_name)
 
-    # db_postgres_uri = "postgresql://postgres:{pwd}@localhost:5432/foo".format(pwd=pg_password)
-    # db_mysql_uri = "mysql+pymysql://travis:@localhost/foo?charset=utf8"
-    # db_sqlite_uri = "sqlite:///{}".format(db_sqlite)
+    # db_postgres_uri = 'postgresql://postgres:{pwd}@localhost:5432/foo'.format(pwd=pg_password)
+    # db_mysql_uri = 'mysql+pymysql://travis:@localhost/foo?charset=utf8'
+    # db_sqlite_uri = 'sqlite:///{}'.format(db_sqlite)
 
     if sqlite_file and uri_conn:
-        raise ValueError("Only one of 'sqlite_file' or 'uri_conn' argument can be defined")
+        raise ValueError('Only one of 'sqlite_file' or 'uri_conn' argument can be defined')
 
     if uri_conn is None:
         # fallback on sqlite
         if sqlite_file:
-            if isinstance(sqlite_file, str) and sqlite_file.startswith("sqlite:///"):
+            if isinstance(sqlite_file, str) and sqlite_file.startswith('sqlite:///'):
                 # already have the protocol specified.
                 uri_conn = sqlite_file
             else:
-                uri_conn = "sqlite:///{}".format(sqlite_file)
+                uri_conn = 'sqlite:///{}'.format(sqlite_file)
         else:
-            uri_conn = "sqlite:///:memory:"
+            uri_conn = 'sqlite:///:memory:'
         if check_same_thread is False:
-            uri_conn = uri_conn + "?check_same_thread=False"
+            uri_conn = uri_conn + '?check_same_thread=False'
 
     return uri_conn
 
 
 def create_book(sqlite_file=None,
                 uri_conn=None,
-                currency="EUR",
+                currency='EUR',
                 overwrite=False,
                 keep_foreign_keys=False,
                 db_type=None,
@@ -176,14 +176,14 @@ def create_book(sqlite_file=None,
                 db_port=None,
                 check_same_thread=True,
                 **kwargs):
-    """Create a new empty GnuCash book. If both sqlite_file and uri_conn are None, then an "in memory" sqlite book is created.
+    '''Create a new empty GnuCash book. If both sqlite_file and uri_conn are None, then an 'in memory' sqlite book is created.
 
     :param str sqlite_file: a path to an sqlite3 file (only used if uri_conn is None)
     :param str uri_conn: a sqlalchemy connection string
     :param str currency: the ISO symbol of the default currency of the book
     :param bool overwrite: True if book should be deleted and recreated if it exists already
     :param bool keep_foreign_keys: True if the foreign keys should be kept (may not work at all with GnuCash)
-    :param str db_type: type of database in ["postgres","mysql"]
+    :param str db_type: type of database in ['postgres','mysql']
     :param str db_user: username of database
     :param str db_password: password for the use of database
     :param str db_name: name of database
@@ -195,10 +195,10 @@ def create_book(sqlite_file=None,
     :rtype: :class:`GncSession`
 
     :raises GnucashException: if document already exists and overwrite is False
-    """
+    '''
     from sqlalchemy_utils.functions import database_exists, create_database, drop_database
 
-    VERSION_FORMAT = "3.0"
+    VERSION_FORMAT = '3.0'
 
     uri_conn = build_uri(sqlite_file, uri_conn,
                          db_type, db_user, db_password, db_name, db_host, db_port,
@@ -206,12 +206,12 @@ def create_book(sqlite_file=None,
                          )
 
     # create database (if DB is not a sqlite in memory)
-    if uri_conn != "sqlite:///:memory:":
+    if uri_conn != 'sqlite:///:memory:':
         if database_exists(uri_conn):
             if overwrite:
                 drop_database(uri_conn)
             else:
-                raise GnucashException("'{}' db already exists".format(uri_conn))
+                raise GnucashException(''{}' db already exists'.format(uri_conn))
         create_database(uri_conn)
 
     engine = create_piecash_engine(uri_conn, **kwargs)
@@ -221,9 +221,9 @@ def create_book(sqlite_file=None,
         for n, tbl in DeclarativeBase.metadata.tables.items():
             # drop index constraints
             for idx in tbl.indexes:
-                if idx.name.startswith("ix_") or idx.name.startswith("_"):
+                if idx.name.startswith('ix_') or idx.name.startswith('_'):
                     event.listen(tbl,
-                                 "after_create",
+                                 'after_create',
                                  DropIndex(idx),
                                  once=True)
             # drop FK constraints
@@ -232,7 +232,7 @@ def create_book(sqlite_file=None,
                     continue
                 else:
                     event.listen(tbl,
-                                 "before_drop",
+                                 'before_drop',
                                  DropConstraint(cstr),
                                  once=True)
     #
@@ -242,8 +242,8 @@ def create_book(sqlite_file=None,
     s = Session(bind=engine)
 
     # create all rows in version table
-    assert VERSION_FORMAT in version_supported, "The 'version_format'={} is not supported. " \
-                                                "Choose one of {}".format(VERSION_FORMAT,
+    assert VERSION_FORMAT in version_supported, 'The 'version_format'={} is not supported. ' \
+                                                'Choose one of {}'.format(VERSION_FORMAT,
                                                                           list(version_supported.keys()))
     for table_name, table_version in version_supported[VERSION_FORMAT].items():
         s.add(Version(table_name=table_name, table_version=table_version))
@@ -257,10 +257,10 @@ def create_book(sqlite_file=None,
     # create commodities and initial accounts
     from .account import Account
 
-    b.root_account = Account(name="Root Account", type="ROOT",
+    b.root_account = Account(name='Root Account', type='ROOT',
                              commodity=factories.create_currency_from_ISO(currency),
                              book=b)
-    b.root_template = Account(name="Template Root", type="ROOT", commodity=None, book=b)
+    b.root_template = Account(name='Template Root', type='ROOT', commodity=None, book=b)
     b.save()
 
     return b
@@ -279,7 +279,7 @@ def open_book(sqlite_file=None,
               db_port=None,
               check_same_thread=True,
               **kwargs):
-    """Open an existing GnuCash book
+    '''Open an existing GnuCash book
 
     :param str sqlite_file: a path to an sqlite3 file (only used if uri_conn is None)
     :param str uri_conn: a sqlalchemy connection string
@@ -288,7 +288,7 @@ def open_book(sqlite_file=None,
         (using open_if_lock=True with readonly=False is not recommended)
     :param bool do_backup: do a backup if the file written in RW (i.e. readonly=False)
         (this only works with the sqlite backend and copy the file with .{:%Y%m%d%H%M%S}.gnucash appended to it)
-    :param str db_type: type of database in ["postgres","mysql"]
+    :param str db_type: type of database in ['postgres','mysql']
     :param str db_user: username of database
     :param str db_password: password for the use of database
     :param str db_name: name of database
@@ -301,31 +301,31 @@ def open_book(sqlite_file=None,
     :raises GnucashException: if the document does not exist
     :raises GnucashException: if there is a lock on the file and open_if_lock is False
 
-    """
+    '''
     uri_conn = build_uri(sqlite_file, uri_conn,
                          db_type, db_user, db_password, db_name, db_host, db_port,
                          check_same_thread,
                          )
 
-    if uri_conn == "sqlite:///:memory:":
-        raise ValueError("An in memory sqlite gnucash databook cannot be opened, it should be created")
+    if uri_conn == 'sqlite:///:memory:':
+        raise ValueError('An in memory sqlite gnucash databook cannot be opened, it should be created')
 
     # create database (if not sqlite in memory)
     if not database_exists(uri_conn):
-        raise GnucashException("Database '{}' does not exist (please use create_book to create " \
-                               "GnuCash books from scratch)".format(uri_conn))
+        raise GnucashException('Database '{}' does not exist (please use create_book to create ' \
+                               'GnuCash books from scratch)'.format(uri_conn))
 
     engine = create_piecash_engine(uri_conn, **kwargs)
 
     # backup database if readonly=False and do_backup=True
     if not readonly and do_backup:
-        if engine.name != "sqlite":
+        if engine.name != 'sqlite':
             raise GnucashException(
-                "Cannot do a backup for engine '{}'. Do yourself a backup and then specify do_backup=False".format(
+                'Cannot do a backup for engine '{}'. Do yourself a backup and then specify do_backup=False'.format(
                     engine.name))
 
-        url = uri_conn[len("sqlite:///"):].replace("?check_same_thread=False", "")
-        url_backup = url + ".{:%Y%m%d%H%M%S}.gnucash".format(datetime.datetime.now())
+        url = uri_conn[len('sqlite:///'):].replace('?check_same_thread=False', '')
+        url_backup = url + '.{:%Y%m%d%H%M%S}.gnucash'.format(datetime.datetime.now())
 
         shutil.copyfile(url, url_backup)
 
@@ -333,23 +333,23 @@ def open_book(sqlite_file=None,
 
     # ensure the file is not locked by GnuCash itself
     if locks and not open_if_lock:
-        raise GnucashException("Lock on the file")
+        raise GnucashException('Lock on the file')
 
     s = Session(bind=engine)
 
     # check the versions in the table versions is consistent with the API
     version_book = {v.table_name: v.table_version
                     for v in s.query(Version).all()
-                    if "Gnucash" not in v.table_name}
+                    if 'Gnucash' not in v.table_name}
     for version, vt in version_supported.items():
         if version_book == {k: v
                             for k, v in vt.items() if
-                            "Gnucash" not in k}:
+                            'Gnucash' not in k}:
             break
     else:
-        raise ValueError("Unsupported table versions")
-    assert version == "3.0", "This version of piecash only support books from gnucash 3.0.x " \
-                             "which is not the case for {}".format(uri_conn)
+        raise ValueError('Unsupported table versions')
+    assert version == '3.0', 'This version of piecash only support books from gnucash 3.0.x ' \
+                             'which is not the case for {}'.format(uri_conn)
 
     book = s.query(Book).one()
     adapt_session(s, book=book, readonly=readonly)
@@ -358,14 +358,14 @@ def open_book(sqlite_file=None,
 
 
 def adapt_session(session, book, readonly):
-    """
+    '''
     Change the SA session object to add some features.
 
     :param session: the SA session object that will be modified in place
     :param book: the gnucash singleton book linked to the SA session
     :param readonly: True if the session should not allow commits.
     :return:
-    """
+    '''
     # link session and book together
     book.session = session
     session.book = book
@@ -374,12 +374,12 @@ def adapt_session(session, book, readonly):
     # def new_flush(*args, **kwargs):
     # if session.dirty or session.new or session.deleted:
     # session.rollback()
-    # raise GnucashException("You cannot change the DB, it is locked !")
+    # raise GnucashException('You cannot change the DB, it is locked !')
 
     # add logic to make session readonly
     def readonly_commit(*args, **kwargs):
         # session.rollback()
-        raise GnucashException("You cannot change the DB, it was opened as readonly!")
+        raise GnucashException('You cannot change the DB, it was opened as readonly!')
 
     if readonly:
         session.commit = readonly_commit
@@ -416,7 +416,7 @@ def adapt_session(session, book, readonly):
 
     session.__class__.is_saved = property(
         fget=lambda self: not (self._is_modified or self.dirty or self.deleted or self.new),
-        doc="True if nothing has yet been changed (False otherwise)")
+        doc='True if nothing has yet been changed (False otherwise)')
 
 
 event.listen(Session, 'before_commit', Book.validate_book)
