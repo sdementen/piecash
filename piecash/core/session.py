@@ -72,6 +72,32 @@ version_supported = {
         'taxtables': 2,
         'transactions': 4,
         'vendors': 1,
+    },
+    '3.7': {
+        'Gnucash': 3000001,
+        'Gnucash-Resave': 19920,
+        'accounts': 1,
+        'billterms': 2,
+        'books': 1,
+        'budget_amounts': 1,
+        'budgets': 1,
+        'commodities': 1,
+        'customers': 2,
+        'employees': 2,
+        'entries': 4,
+        'invoices': 4,
+        'jobs': 1,
+        'lots': 2,
+        'orders': 1,
+        'prices': 3,
+        'recurrences': 2,
+        'schedxactions': 1,
+        'slots': 4,
+        'splits': 5,
+        'taxtable_entries': 3,
+        'taxtables': 2,
+        'transactions': 4,
+        'vendors': 1,
     }
 }
 
@@ -348,7 +374,7 @@ def open_book(sqlite_file=None,
             break
     else:
         raise ValueError("Unsupported table versions")
-    assert version == "3.0", "This version of piecash only support books from gnucash 3.0.x " \
+    assert version == "3.0" or version == "3.7", "This version of piecash only support books from gnucash 3.0.x " \
                              "which is not the case for {}".format(uri_conn)
 
     book = s.query(Book).one()
