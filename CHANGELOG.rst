@@ -7,7 +7,7 @@ Version 1.1.0 (in development)
 - fix use of ISO date for ledger export (fix #115 by @MisterY)
 - add field is_credit and is_debit to split (fix #105)
 - fix get_balance sign when recursing + add natural_sign keyword to specify if sign should be reverse or not
-- add support for Gnucash 4.1 (fix #115)
+- add support for Gnucash 4.1 (fix #136)
 - fix table names not matching in case (fix #137)
 
 
