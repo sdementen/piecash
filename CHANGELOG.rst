@@ -9,8 +9,10 @@ Version 1.1.0 (in development)
 - fix get_balance sign when recursing + add natural_sign keyword to specify if sign should be reverse or not
 - add support for Gnucash 4.1 (fix #136)
 - fix table names not matching in case (fix #137)
-- fix test suite to support 3.8 & 3.9
+- fix test suite to support 3.8
 - deprecate python 3.5
+- quandl will retrieve API KEY from environment variable QUANDL_API_KEY (if defined)
+- yahoo will use exchangeTimezoneName for timezone (vs exchangeTimezoneShortName before), thanks @geoffwright240
 
 Version 1.0.0 (2019-04-15)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -194,7 +194,7 @@ class Commodity(DeclarativeBaseGuid):
             quote_source = "currency" if namespace == "CURRENCY" else "yahoo"
 
         if book is not None:
-            book.session.add(self)
+            book.add(self)
 
         self.namespace = namespace
         self.mnemonic = mnemonic
@@ -204,6 +204,9 @@ class Commodity(DeclarativeBaseGuid):
         self.quote_flag = quote_flag
         self.quote_source = quote_source
         self.quote_tz = quote_tz
+
+        if book is not None:
+            book.flush()
 
     def __str__(self):
         return "Commodity<{}:{}>".format(self.namespace, self.mnemonic)

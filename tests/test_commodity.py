@@ -68,6 +68,7 @@ class TestCommodity_create_prices(object):
         EUR = book_basic.commodities(namespace="CURRENCY")
         USD = book_basic.currencies(mnemonic="USD")
         p = Price(commodity=USD, currency=EUR, date=date(2014, 2, 22), value=Decimal('0.54321'))
+        book_basic.flush()
 
         # check price exist
         np = USD.prices.first()

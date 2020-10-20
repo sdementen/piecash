@@ -43,3 +43,4 @@ pip-log.txt
 /.cache/
 /data/
 /pg_data/
+/.env
