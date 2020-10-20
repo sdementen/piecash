@@ -9,7 +9,8 @@ Version 1.1.0 (in development)
 - fix get_balance sign when recursing + add natural_sign keyword to specify if sign should be reverse or not
 - add support for Gnucash 4.1 (fix #136)
 - fix table names not matching in case (fix #137)
-
+- fix test suite to support 3.8 & 3.9
+- deprecate python 3.5
 
 Version 1.0.0 (2019-04-15)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

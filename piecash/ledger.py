@@ -49,7 +49,7 @@ def format_currency(amount, decimals, currency, locale=False):
             locale = getdefaultlocale()[0]
         if Money is None:
             raise ValueError(
-                f"You must install Money ('pip install money') to export to ledger in your locale '{locale}"
+                f"You must install Money ('pip install money') to export to ledger in your locale '{locale}'"
             )
         return Money(amount=amount, currency=currency).format(locale)
     else:

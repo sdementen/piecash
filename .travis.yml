@@ -1,18 +1,22 @@
 dist: xenial
 language: python
 python:
-- '3.5'
 - '3.6'
 - '3.7'
+- '3.8'
+- '3.9'
+
 services:
 - postgresql
 - mysql
+
 env:
 - DONOTGOONWEB=True
+
 install:
 - hash -r
 - pip install pipenv==11.0.2
-- pipenv install -e .[test] --ignore-pipfile
+- pipenv install -e .[test,ledger] --ignore-pipfile
 # - locale-gen en_US.UTF-8
 
 script:
