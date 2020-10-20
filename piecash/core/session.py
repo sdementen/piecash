@@ -129,8 +129,8 @@ version_supported = {
 
 # this is not a declarative as it is used before binding the session to an engine.
 gnclock = Table(u'gnclock', DeclarativeBase.metadata,
-                Column('Hostname', VARCHAR(length=255)),
-                Column('PID', INTEGER()),
+                Column('hostname', VARCHAR(length=255)),
+                Column('pid', INTEGER()),
                 )
 
 
@@ -438,14 +438,14 @@ def adapt_session(session, book, readonly):
 
     # add logic to create/delete GnuCash locks
     def delete_lock():
-        session.execute(gnclock.delete(whereclause=(gnclock.c.Hostname == socket.gethostname())
-                                                   and (gnclock.c.PID == os.getpid())))
+        session.execute(gnclock.delete(whereclause=(gnclock.c.hostname == socket.gethostname())
+                                                   and (gnclock.c.pid == os.getpid())))
         session.commit()
 
     session.delete_lock = delete_lock
 
     def create_lock():
-        session.execute(gnclock.insert(values=dict(Hostname=socket.gethostname(), PID=os.getpid())))
+        session.execute(gnclock.insert(values=dict(hostname=socket.gethostname(), pid=os.getpid())))
         session.commit()
 
     session.create_lock = create_lock
