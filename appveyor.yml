@@ -29,14 +29,10 @@ environment:
       PYTHON_VERSION: "3.8.x"
       PYTHON_ARCH: "32"
 
-    - PYTHON: "C:\\Python39"
-      PYTHON_VERSION: "3.9.x"
-      PYTHON_ARCH: "32"
+#    - PYTHON: "C:\\Python39"
+#      PYTHON_VERSION: "3.9.x"
+#      PYTHON_ARCH: "32"
 
-    - PYTHON: "C:\\Python35-x64"
-      PYTHON_VERSION: "3.5.x"
-      PYTHON_ARCH: "64"
-      WINDOWS_SDK_VERSION: "v7.1"
 
     - PYTHON: "C:\\Python36-x64"
       PYTHON_VERSION: "3.6.x"
@@ -96,13 +92,14 @@ install:
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
 #  - "pip install --disable-pip-version-check --user --upgrade pip==9.0.3"
-  - "pip install pipenv==11.0.2 "
+#  - "pip install pipenv==11.0.2 "
 
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,
   # pip will build them from source using the MSVC compiler matching the
   # target Python version and architecture
-  - "pipenv install .[test] --ignore-pipfile"
+#  - "pipenv install .[test] --ignore-pipfile"
+  - "python setup.py -e .[test]"
   # - "pipenv graph"
 
 
