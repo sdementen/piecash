@@ -39,3 +39,6 @@ pip-log.txt
 
 ## paver generated files
 /paver-minilib.zip
+/.pytest_cache/
+/.cache/
+/data/

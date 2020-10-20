@@ -1,25 +1,21 @@
 [[source]]
-
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
-
 [packages]
-
 sqlalchemy = "*"
 sqlalchemy-utils = "*"
 pytz = "*"
 tzlocal = "*"
 click = "*"
 
-
 [dev-packages]
-
+money = "*"
 tox-pipenv = "*"
-"psycopg2" = "*"
+psycopg2 = "*"
 pymysql = "*"
-pandas = "==0.21.1"
+pandas = "*"
 qifparse = "*"
 requests = "*"
 pytest = "*"
