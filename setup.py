@@ -212,7 +212,7 @@ extras_require = {
 }
 # build an 'all' option covering all options
 extras_require["all"] = deps_all = sum(
-    (extras_require[k] for k in ["postgres", "mysql", "pandas", "finance-quote", "money"]), []
+    (extras_require[k] for k in ["postgres", "mysql", "pandas", "finance-quote", "ledger"]), []
 )
 # add 'all' for both doc and test
 extras_require["test"].extend(deps_all)
