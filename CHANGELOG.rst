@@ -1,14 +1,19 @@
 What's new
 ==========
 
-Version 1.1.0 (in development)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Version 1.1.0
+~~~~~~~~~~~~~
 
 - fix use of ISO date for ledger export (fix #115 by @MisterY)
 - add field is_credit and is_debit to split (fix #105)
 - fix get_balance sign when recursing + add natural_sign keyword to specify if sign should be reverse or not
 - add support for Gnucash 4.1 (fix #136)
 - fix table names not matching in case (fix #137)
+- fix test suite to support 3.8
+- deprecate python 3.5
+- quandl will retrieve API KEY from environment variable QUANDL_API_KEY (if defined)
+- yahoo will use exchangeTimezoneName for timezone (vs exchangeTimezoneShortName before), thanks @geoffwright240
+- add possibility to export accounts with their short name in ledger (fix #123)
 
 
 Version 1.0.0 (2019-04-15)

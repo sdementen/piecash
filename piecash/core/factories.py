@@ -132,7 +132,8 @@ def create_stock_from_symbol(symbol, book=None):
                       )
 
     if book:
-        book.session.add(stock)
+        book.add(stock)
+        book.flush()
 
     return stock
 

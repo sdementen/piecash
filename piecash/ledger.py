@@ -49,7 +49,7 @@ def format_currency(amount, decimals, currency, locale=False):
             locale = getdefaultlocale()[0]
         if Money is None:
             raise ValueError(
-                f"You must install Money ('pip install money') to export to ledger in your locale '{locale}"
+                f"You must install Money ('pip install money') to export to ledger in your locale '{locale}'"
             )
         return Money(amount=amount, currency=currency).format(locale)
     else:
@@ -75,7 +75,9 @@ def _(tr, locale=False, **kwargs):
     ]
     if tr.notes:
         s.append("\t;{}\n".format(tr.notes))
-    for split in tr.splits:
+    for split in sorted(
+        tr.splits, key=lambda split: (split.value, split.transaction_guid, split.account_guid)
+    ):
         if split.account.commodity.mnemonic == "template":
             return ""
         if split.reconcile_state in ["c", "y"]:
@@ -91,11 +93,15 @@ def _(tr, locale=False, **kwargs):
                         split.account.commodity.mnemonic,
                         locale=False,
                     ),
-                    amount=format_currency(abs(split.value), tr.currency.precision, tr.currency.mnemonic, locale),
+                    amount=format_currency(
+                        abs(split.value), tr.currency.precision, tr.currency.mnemonic, locale
+                    ),
                 )
             )
         else:
-            s.append(format_currency(split.value, tr.currency.precision, tr.currency.mnemonic, locale))
+            s.append(
+                format_currency(split.value, tr.currency.precision, tr.currency.mnemonic, locale)
+            )
 
         if split.memo:
             s.append(" ;   {:20}".format(split.memo))
@@ -117,14 +123,19 @@ def _(cdty, locale=False, commodity_notes=False, **kwargs):
 
 
 @ledger.register(Account)
-def _(acc, locale=False, **kwargs):
+def _(acc, short_account_names=False, **kwargs):
     """Return a ledger-cli alike representation of the account"""
     # ignore "dummy" accounts
     if acc.type is None or acc.parent is None:
         return ""
     if acc.commodity.mnemonic == "template":
         return ""
-    res = "account {}\n".format(acc.fullname)
+
+    if short_account_names:
+        res = "account {}\n".format(acc.name)
+    else:
+        res = "account {}\n".format(acc.fullname)
+
     if acc.description != "":
         res += "\tnote {}\n".format(acc.description)
 
@@ -148,20 +159,27 @@ def _(book, **kwargs):
     res = []
 
     # Commodities
-    for commodity in book.commodities:
+    for commodity in sorted(book.commodities, key=lambda cdty: cdty.mnemonic):
         res.append(ledger(commodity, **kwargs))
 
     # Accounts
+    if kwargs.get("short_account_names"):  # check that no ambiguity in account names
+        accounts = [acc.name for acc in book.accounts]
+        if len(accounts) != len(set(accounts)):
+            raise ValueError(
+                "You have duplicate short names in your book. "
+                "You cannot use the 'short_account_names' option."
+            )
     for acc in book.accounts:
         res.append(ledger(acc, **kwargs))
         res.append("\n")
 
     # Prices
-    for price in sorted(book.prices, key=lambda x: x.date):
+    for price in sorted(book.prices, key=lambda x: (x.commodity_guid, x.currency_guid, x.date)):
         res.append(ledger(price, **kwargs))
     res.append("\n")
 
-    for trans in sorted(book.transactions, key=lambda x: x.post_date):
+    for trans in sorted(book.transactions, key=lambda x: (x.currency_guid, x.post_date)):
         res.append(ledger(trans, **kwargs))
         res.append("\n")
 

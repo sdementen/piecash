@@ -203,7 +203,7 @@ install_requires = ["SQLAlchemy>=1.0", "SQLAlchemy-Utils>=0.31", "pytz", "tzloca
 extras_require = {
     "postgres": ["psycopg2"],
     "mysql": ["PyMySQL"],
-    "money": ["Money"],
+    "ledger": ["money", "babel"],
     "pandas": ["pandas"],
     "qif": ["qifparse"],
     "finance-quote": ["requests"],
@@ -212,7 +212,7 @@ extras_require = {
 }
 # build an 'all' option covering all options
 extras_require["all"] = deps_all = sum(
-    (extras_require[k] for k in ["postgres", "mysql", "pandas", "finance-quote", "money"]), []
+    (extras_require[k] for k in ["postgres", "mysql", "pandas", "finance-quote", "ledger"]), []
 )
 # add 'all' for both doc and test
 extras_require["test"].extend(deps_all)
@@ -241,9 +241,10 @@ setup_dict = dict(
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Topic :: Office/Business",
         "Topic :: Office/Business :: Financial",
         "Topic :: Office/Business :: Financial :: Accounting",
