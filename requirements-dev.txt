@@ -17,7 +17,7 @@ idna==2.10
 imagesize==1.2.0
 importlib-metadata==2.0.0
 iniconfig==1.1.1
-ipython==7.18.1
+ipython==7.16.1
 ipython-genutils==0.2.0
 jedi==0.17.2
 Jinja2==2.11.2

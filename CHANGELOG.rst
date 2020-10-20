@@ -1,8 +1,8 @@
 What's new
 ==========
 
-Version 1.1.0
-~~~~~~~~~~~~~
+Version 1.1.0 (2020-10-20)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - fix use of ISO date for ledger export (fix #115 by @MisterY)
 - add field is_credit and is_debit to split (fix #105)
