@@ -99,7 +99,7 @@ install:
   # pip will build them from source using the MSVC compiler matching the
   # target Python version and architecture
 #  - "pipenv install .[test] --ignore-pipfile"
-  - "python setup.py -e .[test]"
+  - "pip install -e .[test]"
   # - "pipenv graph"
 
 
