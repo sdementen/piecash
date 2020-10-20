@@ -42,3 +42,4 @@ pip-log.txt
 /.pytest_cache/
 /.cache/
 /data/
+/pg_data/
