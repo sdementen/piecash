@@ -16,6 +16,7 @@ filelock==3.0.12
 idna==2.10
 imagesize==1.2.0
 importlib-metadata==2.0.0
+importlib-resources==3.0.0
 iniconfig==1.1.1
 ipython==7.16.1
 ipython-genutils==0.2.0
@@ -60,7 +61,7 @@ SQLAlchemy-Utils==0.36.8
 toml==0.10.1
 tox==3.20.1
 tox-pipenv==1.10.1
-traitlets==5.0.5
+traitlets==4.3.3
 tzlocal==2.1
 urllib3==1.25.11
 virtualenv==20.0.35
