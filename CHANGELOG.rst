@@ -13,6 +13,8 @@ Version 1.1.0 (in development)
 - deprecate python 3.5
 - quandl will retrieve API KEY from environment variable QUANDL_API_KEY (if defined)
 - yahoo will use exchangeTimezoneName for timezone (vs exchangeTimezoneShortName before), thanks @geoffwright240
+- add possibility to export accounts with their short name in ledger (fix #123)
+
 
 Version 1.0.0 (2019-04-15)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
