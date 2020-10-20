@@ -20,15 +20,20 @@ from piecash.scripts.cli import cli
     help="Include the commodity_notes for the commodity (hledger does not support commodity commodity_notes",
 )
 @click.option(
+    "--short-account-names/--no-short-account-names",
+    default=False,
+    help="Use the short name for the accounts instead of the full hierarchical name.",
+)
+@click.option(
     "--output",
     type=click.File("w", encoding="UTF-8"),
     default="-",
     help="File to which to export the data (default=stdout)",
 )
-def ledger(book, output, locale, commodity_notes):
+def ledger(book, output, locale, commodity_notes, short_account_names):
     """Export to ledger-cli format.
 
     This scripts export a GnuCash BOOK to the ledget-cli format.
     """
     with piecash.open_book(book, open_if_lock=True) as data:
-        output.write(piecash.ledger(data, locale=locale, commodity_notes=commodity_notes))
+        output.write(piecash.ledger(data, locale=locale, commodity_notes=commodity_notes,short_account_names=short_account_names))

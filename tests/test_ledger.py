@@ -1,20 +1,43 @@
 # -*- coding: latin-1 -*-
 
-import sys
+from pathlib import Path
+
+import pytest
 
 import piecash
-from test_helper import file_template_full
+from test_helper import book_complex
+
+# dummy line to avoid removing unused symbols
+a = book_complex
+
+REFERENCE = Path(__file__).parent / "references"
 
 
-class TestLedger_out_write(object):
-    def test_out_write(self):
-        with piecash.open_book(file_template_full, open_if_lock=True) as data:
-            sys.stdout.write(piecash.ledger(data))
+@pytest.mark.parametrize(
+    "options",
+    [dict(), dict(locale=True), dict(commodity_notes=True), dict(short_account_names=True)],
+)
+def test_out_write(book_complex, options):
+    ledger_output = piecash.ledger(book_complex, **options)
 
-    def test_out_write_locale(self):
-        with piecash.open_book(file_template_full, open_if_lock=True) as data:
-            sys.stdout.write(piecash.ledger(data, locale=True))
+    file_name = "file_template_full" + "".join(f".{k}_{v}" for k, v in options.items()) + ".ledger"
 
-    def test_out_write_no_commodity_notes(self):
-        with piecash.open_book(file_template_full, open_if_lock=True) as data:
-            sys.stdout.write(piecash.ledger(data, commodity_notes=False))
+    # to generate the first time the expected output of the test
+    # (REFERENCE / file_name).write_text(ledger_output,encoding="utf-8")
+
+    assert ledger_output == (REFERENCE / file_name).read_text(encoding="utf-8")
+
+
+def test_short_account_names_raise_error_when_duplicate_account_names(book_complex):
+    # no exception
+    piecash.ledger(book_complex, short_account_names=True)
+
+    # exception as two accounts have the same short name
+    book_complex.accounts[0].name = book_complex.accounts[1].name
+    book_complex.flush()
+    with pytest.raises(
+        ValueError,
+        match="You have duplicate short names in your book. "
+        "You cannot use the 'short_account_names' option.",
+    ):
+        piecash.ledger(book_complex, short_account_names=True)

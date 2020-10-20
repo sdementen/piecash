@@ -1,0 +1,119 @@
+commodity  €
+
+commodity  AED
+
+commodity  FOO
+
+commodity  ADF
+
+commodity  $US
+
+account Asset
+	check commodity == "EUR"
+
+account Asset:Current
+	check commodity == "EUR"
+
+account Asset:Current:Cash
+	check commodity == "EUR"
+
+account Asset:Current:Savings
+	check commodity == "EUR"
+
+account Asset:Current:Checking
+	check commodity == "EUR"
+
+account Asset:Fixed
+	check commodity == "EUR"
+
+account Asset:Fixed:House
+	check commodity == "EUR"
+
+account Asset:Broker
+	check commodity == "AED"
+
+account Asset:Broker:Foo stock
+	check commodity == "FOO"
+
+account Liability
+	check commodity == "EUR"
+
+account Income
+	check commodity == "EUR"
+
+account Expense
+	check commodity == "EUR"
+
+account Equity
+	check commodity == "EUR"
+
+account Equity:Opening Balances - EUR
+	check commodity == "EUR"
+
+account Mouvements
+	check commodity == "FOO"
+
+account Mouvements:NASDAQ
+	check commodity == "FOO"
+
+account Mouvements:NASDAQ:FOO
+	check commodity == "FOO"
+
+account Mouvements:CURRENCY
+	check commodity == "EUR"
+
+account Mouvements:CURRENCY:EUR5
+	check commodity == "EUR"
+
+P 2018-02-21 00:00:00  ADF 1,50 AED
+P 2018-02-21 00:00:00  € 1,11 AED
+P 2018-02-21 00:00:00  $US 1,40 €
+P 2018-02-21 00:00:00  FOO 0,90 AED
+
+2014-12-24 income 1
+	Asset:Current:Cash                        150,00 €
+	Income                                    -150,00 €
+
+2014-12-24 initial load
+	Asset:Current:Checking                    1 000,00 €
+	Liability                                 -1 000,00 €
+
+2014-12-24 expense 1
+	Expense                                   200,00 €
+	Asset:Current:Checking                    -200,00 €
+
+2014-12-24 loan payment
+	Liability                                 100,00 € ;   capital             
+	Expense                                   30,00 € ;   interest            
+	Asset:Current:Checking                    -130,00 € ;   monthly payment     
+
+2018-02-20 Transfer current
+	Asset:Current:Cash                        100,00 €
+	Asset:Current:Checking                    -100,00 €
+
+2018-02-20 Purchase
+	Expense                                   30,00 €
+	Asset:Current:Cash                        -30,00 €
+
+2018-02-20 transfer intra
+	Asset:Current:Checking                    250,00 €
+	Asset:Current:Savings                     -250,00 €
+
+2018-02-20 Opening Balance
+	Asset:Current:Savings                     2 500,00 €
+	Equity:Opening Balances - EUR             -2 500,00 €
+
+2018-02-20 house load
+	Asset:Fixed:House                         20 000,00 €
+	Liability                                 -20 000,00 €
+
+2018-02-21 buy foo
+	Asset:Broker:Foo stock                    FOO 130.00 @@ 1 200,00 €
+	Mouvements:CURRENCY:EUR5                  1 200,00 €
+	Asset:Current:Savings                     -1 200,00 €
+	Mouvements:NASDAQ:FOO                     FOO -130.00 @@ 1 200,00 €
+
+2018-02-21 Opening Balance
+	Asset:Current:Savings                     2 500,00 €
+	Equity:Opening Balances - EUR             -2 500,00 €
+

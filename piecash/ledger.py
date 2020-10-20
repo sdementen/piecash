@@ -117,14 +117,19 @@ def _(cdty, locale=False, commodity_notes=False, **kwargs):
 
 
 @ledger.register(Account)
-def _(acc, locale=False, **kwargs):
+def _(acc, short_account_names=False, **kwargs):
     """Return a ledger-cli alike representation of the account"""
     # ignore "dummy" accounts
     if acc.type is None or acc.parent is None:
         return ""
     if acc.commodity.mnemonic == "template":
         return ""
-    res = "account {}\n".format(acc.fullname)
+
+    if short_account_names:
+        res = "account {}\n".format(acc.name)
+    else:
+        res = "account {}\n".format(acc.fullname)
+
     if acc.description != "":
         res += "\tnote {}\n".format(acc.description)
 
@@ -152,6 +157,11 @@ def _(book, **kwargs):
         res.append(ledger(commodity, **kwargs))
 
     # Accounts
+    if kwargs.get("short_account_names"):
+        accounts = [acc.name for acc in book.accounts]
+        if len(accounts) != len(set(accounts)):
+            raise ValueError("You have duplicate short names in your book. "
+                             "You cannot use the 'short_account_names' option.")
     for acc in book.accounts:
         res.append(ledger(acc, **kwargs))
         res.append("\n")
