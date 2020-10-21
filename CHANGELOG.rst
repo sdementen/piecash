@@ -1,6 +1,12 @@
 What's new
 ==========
 
+
+Version 1.1.1 (2020-10-21)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- add a check_exists flag to allow bypassing check existence of DB on opening (fix #91, tx @williamjacksn)
+
 Version 1.1.0 (2020-10-20)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
