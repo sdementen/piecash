@@ -31,7 +31,7 @@ file_template_full = book_folder / "all-accounts.gnucash"
 file_for_test_full = test_folder / "test_book_for_test.gnucash"
 file_ghost_kvp_scheduled_transaction = book_folder / "ghost_kvp_scheduled_transaction.gnucash"
 file_ghost_kvp_scheduled_transaction_for_test = (
-    test_folder / "ghost_kvp_scheduled_transaction_for_test.gnucash"
+        test_folder / "ghost_kvp_scheduled_transaction_for_test.gnucash"
 )
 
 
@@ -81,10 +81,11 @@ if TRAVIS:
     )
 elif LOCALSERVER:
     pg_password = os.environ.get("PG_PASSWORD", "")
+    pg_port = os.environ.get("PIECASH_DBSERVER_TEST_PORT", "5432")
     db_user = "travis"
     databases_to_check.append(
-        "postgresql://{username}:{pwd}@localhost:5432/foo".format(
-            username=LOCALSERVER_USERNAME, pwd=pg_password
+        "postgresql://{username}:{pwd}@localhost:{pg_port}/foo".format(
+            username=LOCALSERVER_USERNAME, pwd=pg_password, pg_port=pg_port
         )
     )
     db_config.update(
@@ -95,7 +96,7 @@ elif LOCALSERVER:
                 db_user=LOCALSERVER_USERNAME,
                 db_password=pg_password,
                 db_host="localhost",
-                db_port=5432,
+                db_port=pg_port,
             )
         }
     )
