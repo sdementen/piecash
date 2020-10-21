@@ -488,7 +488,7 @@ class TestBook_access_book(object):
         """
         assert (
             book_reference_3_0_0_fulloptions.business_company_address
-            == "Rue de la Chenille Ã©clairÃ©e, 22"
+            == "Rue de la Chenille éclairée, 22"
         )
         assert book_reference_3_0_0_fulloptions.business_company_contact == "John Michu"
         assert book_reference_3_0_0_fulloptions.business_company_email == "woozie@example.com"
@@ -515,18 +515,18 @@ class TestBook_access_book(object):
         Tests business slots
         :type book_reference_3_0_0_basic: Book
         """
-        book_reference_3_0_0_basic.business_company_address = "Ã©"
-        book_reference_3_0_0_basic.business_company_contact = "Ã "
-        book_reference_3_0_0_basic.business_company_email = "Ã¹"
-        book_reference_3_0_0_basic.business_company_ID = "Ã¶"
-        book_reference_3_0_0_basic.business_company_name = "Âµ"
-        book_reference_3_0_0_basic.business_company_phone = "Â²"
-        book_reference_3_0_0_basic.business_company_website = "Â³"
+        book_reference_3_0_0_basic.business_company_address = "é"
+        book_reference_3_0_0_basic.business_company_contact = "à"
+        book_reference_3_0_0_basic.business_company_email = "ù"
+        book_reference_3_0_0_basic.business_company_ID = "ö"
+        book_reference_3_0_0_basic.business_company_name = "µ"
+        book_reference_3_0_0_basic.business_company_phone = "²"
+        book_reference_3_0_0_basic.business_company_website = "³"
 
-        assert book_reference_3_0_0_basic.business_company_address == "Ã©"
-        assert book_reference_3_0_0_basic.business_company_contact == "Ã "
-        assert book_reference_3_0_0_basic.business_company_email == "Ã¹"
-        assert book_reference_3_0_0_basic.business_company_ID == "Ã¶"
-        assert book_reference_3_0_0_basic.business_company_name == "Âµ"
-        assert book_reference_3_0_0_basic.business_company_phone == "Â²"
-        assert book_reference_3_0_0_basic.business_company_website == "Â³"
+        assert book_reference_3_0_0_basic.business_company_address == "é"
+        assert book_reference_3_0_0_basic.business_company_contact == "à"
+        assert book_reference_3_0_0_basic.business_company_email == "ù"
+        assert book_reference_3_0_0_basic.business_company_ID == "ö"
+        assert book_reference_3_0_0_basic.business_company_name == "µ"
+        assert book_reference_3_0_0_basic.business_company_phone == "²"
+        assert book_reference_3_0_0_basic.business_company_website == "³"
