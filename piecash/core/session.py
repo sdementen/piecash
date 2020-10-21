@@ -174,7 +174,7 @@ def build_uri(sqlite_file=None,
     :param str db_password: password for the use of database
     :param str db_name: name of database
     :param str db_host: host of database
-    :param str db_port: port of database
+    :param int db_port: port of database
     :param bool check_same_thread: sqlite flag that restricts connection use to the thread that created (see False for use in ipython/flask/... but read first https://docs.python.org/3/library/sqlite3.html)
 
     :return: the connection string
@@ -240,7 +240,7 @@ def create_book(sqlite_file=None,
     :param str db_password: password for the use of database
     :param str db_name: name of database
     :param str db_host: host of database
-    :param str db_port: port of database
+    :param int db_port: port of database
     :param bool check_same_thread: sqlite flag that restricts connection use to the thread that created (see False for use in ipython/flask/... but read first https://docs.python.org/3/library/sqlite3.html)
 
     :return: the document as a gnucash session
