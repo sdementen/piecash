@@ -185,12 +185,13 @@ class TestBook_open_book(object):
             assert b.default_currency.mnemonic == "EUR"
 
         # open book with checking existence
+        book_uri_fail = book_uri.replace("foo", "foofail")
         with pytest.raises(GnucashException, match="Database .* does not exist"):
-            open_book(uri_conn=book_uri + ".fail")
+            open_book(uri_conn=book_uri_fail)
 
         # open book without checking existence
         with pytest.raises(OperationalError):
-            open_book(uri_conn=book_uri + ".fail", check_exists=False)
+            open_book(uri_conn=book_uri_fail, check_exists=False)
 
     def test_open_RW_backup(self, book_uri):
         # create book
