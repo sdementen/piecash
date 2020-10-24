@@ -199,20 +199,20 @@ def _lint():
 
 
 ## package dependencies
-install_requires = ["SQLAlchemy>=1.0", "SQLAlchemy-Utils>=0.31", "pytz", "tzlocal", "click"]
+install_requires = ["SQLAlchemy>=1.0", "SQLAlchemy-Utils!=0.36.8", "pytz", "tzlocal", "click"]
 extras_require = {
     "postgres": ["psycopg2"],
     "mysql": ["PyMySQL"],
     "ledger": ["money", "babel"],
     "pandas": ["pandas"],
     "qif": ["qifparse"],
-    "finance-quote": ["requests"],
+    "yahoo": ["requests"],
     "test": ["pytest", "pytest-cov", "tox"],
     "doc": ["sphinx", "sphinxcontrib-napoleon", "sphinxcontrib-programoutput", "sphinx-rtd-theme", "ipython"],
 }
 # build an 'all' option covering all options
 extras_require["all"] = deps_all = sum(
-    (extras_require[k] for k in ["postgres", "mysql", "pandas", "finance-quote", "ledger"]), []
+    (extras_require[k] for k in ["postgres", "mysql", "pandas", "yahoo", "ledger"]), []
 )
 # add 'all' for both doc and test
 extras_require["test"].extend(deps_all)
