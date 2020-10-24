@@ -1,6 +1,12 @@
 What's new
 ==========
 
+Version 1.1.2 (2020-10-24)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- import requests from functions using it to avoid making it a required dependency (fix #90)
+- adapt setup.py to avoid depending on SQLAlchemy-Utils 0.36.8 (fix #91)
+
 
 Version 1.1.1 (2020-10-21)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
