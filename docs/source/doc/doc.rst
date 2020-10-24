@@ -56,7 +56,7 @@ or to upgrade if piecash is already installed::
 
 piecash comes with 6 extra options (each option depends on extra packages that will be installed only if the option is chosen):
  - pandas: install also pandas to use :meth:`piecash.core.book.Book.splits_df` and :meth:`piecash.core.book.Book.prices_df`
- - finance-quote: to retrieve quotes/prices
+ - yahoo: to retrieve quotes/prices
  - postgres: to support connecting to a book saved on a postgresql database
  - mysql: to support connecting to a book saved on a mysql database
  - qif: to support export to QIF
