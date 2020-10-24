@@ -20,6 +20,7 @@ if __name__ == "__main__":
             continue
         languages.setdefault(project.language, []).append(project)
 
+
     with open("docs/source/doc/github_links.rst", "w", encoding="UTF-8") as fo:
         list_of_projects = sorted(
             [(k or "", v) for k, v in languages.items()],
@@ -36,7 +37,7 @@ if __name__ == "__main__":
         print(file=fo)
         print(
             "This page lists all projects found by searching 'gnucash' on github (generated on {}) "
-            "excluding mirrors of the gnucash repository. Projects with a '\*' are projects"
+            "excluding mirrors of the gnucash repository. Projects with a '\*' are projects "
             "that have not been updated since 12 months.".format(
                 datetime.datetime.today().replace(microsecond=0)
             ),
@@ -57,7 +58,7 @@ if __name__ == "__main__":
             (
                 lang or "Unknown",
                 projects,
-                {pr.html_url for pr in projects if pr.updated_at >= last12month},
+                {pr.html_url for pr in projects if pr.pushed_at >= last12month},
             )
             for (lang, projects) in list_of_projects
         ]
@@ -81,20 +82,16 @@ if __name__ == "__main__":
             print("-" * len(lang or "Unknown"), file=fo)
             print(file=fo)
             for project in sorted(projects, key=lambda pr: pr.name.lower()):
-                updated_at = project.updated_at
-                user = project.owner.login
                 description = project.description or "(No description available)"
-                name = project.name
-                html_url = project.html_url
                 print(
-                    "{}`{name} <{html_url}>`__ by {user} (last updated on  {updated_at:<10})\n"
+                    "{}`{name} <{html_url}>`__ by {user} (last commit on  {pushed_at:%Y-%m-%d})\n"
                     "\t{description}".format(
                         "" if project.html_url in recent_projects else "\* ",
-                        user=user,
-                        updated_at=updated_at,
+                        user=project.owner.login,
+                        pushed_at=project.pushed_at,
                         description=description,
-                        name=name,
-                        html_url=html_url,
+                        name=project.name,
+                        html_url=project.html_url,
                     ),
                     file=fo,
                 )
