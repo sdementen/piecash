@@ -12,7 +12,7 @@ from decimal import Decimal
 from time import sleep
 
 import pytz
-import requests
+
 
 MAX_ATTEMPT = 5
 
@@ -23,6 +23,8 @@ YahooQuote = namedtuple("YahooQuote", "date,open,high,low,close,adj_close,volume
 
 
 def get_latest_quote(symbol):
+    import requests
+
     resp = requests.get("{}/quote".format(YAHOO_BASE_URL), params={"symbols": symbol})
     resp.raise_for_status()
 
@@ -52,6 +54,8 @@ quote_link = "https://query1.finance.yahoo.com/v7/finance/download/{}?period1={}
 
 
 def get_crumble_and_cookie(symbol):
+    import requests
+
     link = crumble_link.format(symbol)
     response = requests.get(link)
     cookie_str = response.headers["set-cookie"]
@@ -62,6 +66,8 @@ def get_crumble_and_cookie(symbol):
 
 
 def download_quote(symbol, date_from, date_to, tz=None):
+    import requests
+
     def normalize(d):
         if isinstance(d, datetime.datetime):
             pass
