@@ -252,7 +252,7 @@ class Account(DeclarativeBaseGuid):
         else:
             return ""
 
-    def get_balance(self, recurse=True, commodity=None, natural_sign=True):
+    def get_balance(self, recurse=True, commodity=None, natural_sign=True, date=None):
         """
         Returns the balance of the account (including its children accounts if recurse=True)
         expressed in account's commodity/currency.
@@ -273,7 +273,10 @@ class Account(DeclarativeBaseGuid):
         if commodity is None:
             commodity = self.commodity
 
-        balance = sum([sp.quantity for sp in self.splits])
+        if date is None:
+            balance = sum([sp.quantity for sp in self.splits])
+        else:
+            balance = sum([sp.quantity for sp in self.splits if sp.transaction.post_date <= date])
 
         if commodity != self.commodity:
             try:
@@ -288,7 +291,7 @@ class Account(DeclarativeBaseGuid):
                 balance = balance * factor
 
         if recurse and self.children:
-            balance += sum(acc.get_balance(recurse=recurse, commodity=commodity, natural_sign=False) for acc in self.children)
+            balance += sum(acc.get_balance(recurse=recurse, commodity=commodity, natural_sign=False, date=date) for acc in self.children)
 
         if natural_sign:
             return balance * self.sign

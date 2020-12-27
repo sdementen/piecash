@@ -1,6 +1,11 @@
 What's new
 ==========
 
+Version 1.1.3 (2020-12-27)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- add a date argument to the account.get_balance() function to support getting the balance as of date
+
 Version 1.1.2 (2020-10-24)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
