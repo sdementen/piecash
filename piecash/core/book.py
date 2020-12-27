@@ -280,7 +280,10 @@ class Book(DeclarativeBaseGuid):
 
     @property
     def is_saved(self):
-        """Save the changes to the file/DB (=commit transaction)
+        """Are all the changes saved to the file/DB?
+
+        You can check a session has changes (new, deleted, changed objects)
+        by getting the ``book.is_saved`` property.
         """
         return self.session.is_saved
 
@@ -392,7 +395,7 @@ class Book(DeclarativeBaseGuid):
         def fallback(mnemonic):
             cur = factories.create_currency_from_ISO(isocode=mnemonic)
             self.add(cur)
-            # self.flush()
+            self.flush()
             return cur
 
         cl = CallableList(self.session.query(Commodity).filter_by(namespace="CURRENCY"))

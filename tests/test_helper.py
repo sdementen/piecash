@@ -6,7 +6,18 @@ from pathlib import PurePath, Path
 import pytest
 from sqlalchemy_utils import database_exists, drop_database
 
-from piecash import create_book, open_book, Account, Commodity, Employee, Customer, Vendor, Transaction, Split, Price
+from piecash import (
+    create_book,
+    open_book,
+    Account,
+    Commodity,
+    Employee,
+    Customer,
+    Vendor,
+    Transaction,
+    Split,
+    Price,
+)
 
 test_folder = Path(__file__).parent
 # book_folder = test_folder / ".." / "gnucash_books"
@@ -19,7 +30,9 @@ file_template_full = book_folder / "test_book.gnucash"
 file_template_full = book_folder / "all-accounts.gnucash"
 file_for_test_full = test_folder / "test_book_for_test.gnucash"
 file_ghost_kvp_scheduled_transaction = book_folder / "ghost_kvp_scheduled_transaction.gnucash"
-file_ghost_kvp_scheduled_transaction_for_test = test_folder / "ghost_kvp_scheduled_transaction_for_test.gnucash"
+file_ghost_kvp_scheduled_transaction_for_test = (
+        test_folder / "ghost_kvp_scheduled_transaction_for_test.gnucash"
+)
 
 
 def run_file(fname):
@@ -42,7 +55,9 @@ db_config = {"sqlite": dict(sqlite_file=db_sqlite), "sqlite_in_mem": dict(sqlite
 if TRAVIS:
     pg_password = os.environ.get("PG_PASSWORD", "")
     db_user = "travis"
-    databases_to_check.append("postgresql://postgres:{pwd}@localhost:5432/foo".format(pwd=pg_password))
+    databases_to_check.append(
+        "postgresql://postgres:{pwd}@localhost:5432/foo".format(pwd=pg_password)
+    )
     databases_to_check.append("mysql+pymysql://travis:@localhost/foo?charset=utf8")
     db_config.update(
         {
@@ -55,15 +70,23 @@ if TRAVIS:
                 db_port=5432,
             ),
             "mysql": dict(
-                db_type="mysql", db_name="foo", db_user="travis", db_password="", db_host="localhost", db_port=3306
+                db_type="mysql",
+                db_name="foo",
+                db_user="travis",
+                db_password="",
+                db_host="localhost",
+                db_port=3306,
             ),
         }
     )
 elif LOCALSERVER:
     pg_password = os.environ.get("PG_PASSWORD", "")
+    pg_port = os.environ.get("PIECASH_DBSERVER_TEST_PORT", "5432")
     db_user = "travis"
     databases_to_check.append(
-        "postgresql://{username}:{pwd}@localhost:5432/foo".format(username=LOCALSERVER_USERNAME, pwd=pg_password)
+        "postgresql://{username}:{pwd}@localhost:{pg_port}/foo".format(
+            username=LOCALSERVER_USERNAME, pwd=pg_password, pg_port=pg_port
+        )
     )
     db_config.update(
         {
@@ -73,7 +96,7 @@ elif LOCALSERVER:
                 db_user=LOCALSERVER_USERNAME,
                 db_password=pg_password,
                 db_host="localhost",
-                db_port=5432,
+                db_port=pg_port,
             )
         }
     )
@@ -199,9 +222,13 @@ def book_transactions(request):
         # create some accounts
         curr = b.default_currency
         other_curr = b.currencies(mnemonic="USD")
-        cdty = Commodity(namespace=u"BEL20", mnemonic=u"GnuCash Inc.", fullname=u"GnuCash Inc. stock")
+        cdty = Commodity(
+            namespace=u"BEL20", mnemonic=u"GnuCash Inc.", fullname=u"GnuCash Inc. stock"
+        )
         asset = Account(name="asset", type="ASSET", commodity=curr, parent=b.root_account)
-        foreign_asset = Account(name="foreign asset", type="ASSET", commodity=other_curr, parent=b.root_account)
+        foreign_asset = Account(
+            name="foreign asset", type="ASSET", commodity=other_curr, parent=b.root_account
+        )
         stock = Account(name="broker", type="STOCK", commodity=cdty, parent=asset)
         expense = Account(name="exp", type="EXPENSE", commodity=curr, parent=b.root_account)
         income = Account(name="inc", type="INCOME", commodity=curr, parent=b.root_account)
@@ -268,7 +295,7 @@ def book_invoices(request):
     """
     # name = request.param
     # print(name)
-    file_template_full = book_folder /  "invoices.gnucash"
+    file_template_full = book_folder / "invoices.gnucash"
 
     with open_book(file_template_full) as book:
         yield book
@@ -279,7 +306,7 @@ def book_sample(request):
     """
     Returns a simple sample book for 2.6.N
     """
-    file_template_full = (book_folder / "simple_sample{}.gnucash".format(request.param))
+    file_template_full = book_folder / "simple_sample{}.gnucash".format(request.param)
 
     with open_book(file_template_full) as book:
         yield book
@@ -292,10 +319,12 @@ def is_inmemory_sqlite(book_basic):
     return book_basic.uri.database == ":memory:"
 
 
-needweb = pytest.mark.skipif(not (os.environ.get("DOGOONWEB", "False") == "True"), reason="no access to web")
+needweb = pytest.mark.skipif(
+    not (os.environ.get("DOGOONWEB", "False") == "True"), reason="no access to web"
+)
 
 
-def generate_book_fixture(name, filename):
+def generate_book_fixture(filename):
     @pytest.yield_fixture(scope="module")
     def my_fixture():
         file_template = book_folder / filename
@@ -303,16 +332,16 @@ def generate_book_fixture(name, filename):
         with open_book(file_template) as book:
             yield book
 
-    globals()[name] = my_fixture
+    return my_fixture
 
 
-generate_book_fixture(
-    "book_reference_3_0_0_fulloptions", PurePath() / "default_3_0_0_full_options.gnucash"
+book_reference_3_0_0_fulloptions = generate_book_fixture(
+    PurePath() / "default_3_0_0_full_options.gnucash"
 )
 
-generate_book_fixture("book_reference_3_0_0_basic", PurePath() / "default_3_0_0_basic.gnucash")
+book_reference_3_0_0_basic = generate_book_fixture(PurePath() / "default_3_0_0_basic.gnucash")
 
 # complex 2.6 book sample
-generate_book_fixture("book_complex", PurePath() / "complex_sample.gnucash")
+book_complex = generate_book_fixture(PurePath() / "complex_sample.gnucash")
 
-generate_book_fixture("book_investment", PurePath() / "investment.gnucash")
+book_investment = generate_book_fixture(PurePath() / "investment.gnucash")

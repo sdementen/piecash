@@ -8,16 +8,14 @@ import sys
 
 # # Python 2.6 subprocess.check_output compatibility. Thanks Greg Hewgill!
 
-if 'check_output' not in dir(subprocess):
+if "check_output" not in dir(subprocess):
+
     def check_output(cmd_args, *args, **kwargs):
-        proc = subprocess.Popen(
-            cmd_args, *args,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)
+        proc = subprocess.Popen(cmd_args, *args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)
         out, err = proc.communicate()
         if proc.returncode != 0:
             raise subprocess.CalledProcessError(args)
         return out
-
 
     subprocess.check_output = check_output
 
@@ -27,8 +25,9 @@ from setuptools.command.test import test as TestCommand
 
 # from setuptools.command.test import test
 
+
 class PyTest(TestCommand):
-    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
+    user_options = [("pytest-args=", "a", "Arguments to pass to py.test")]
 
     def initialize_options(self):
         TestCommand.initialize_options(self)
@@ -41,6 +40,7 @@ class PyTest(TestCommand):
 
     def run_tests(self):
         import pytest
+
         errno = pytest.main(self.pytest_args)
         sys.exit(errno)
 
@@ -56,14 +56,14 @@ except ImportError:
     pass
 
 # Add the current directory to the module search path.
-sys.path.append('.')
+sys.path.append(".")
 
 # # Constants
-CODE_DIRECTORY = 'piecash'
-DOCS_DIRECTORY = 'docs'
-TESTS_DIRECTORY = 'tests'
-DATA_DIRECTORY = 'gnucash_books'
-PYTEST_FLAGS = ['--doctest-modules']
+CODE_DIRECTORY = "piecash"
+DOCS_DIRECTORY = "docs"
+TESTS_DIRECTORY = "tests"
+DATA_DIRECTORY = "gnucash_books"
+PYTEST_FLAGS = ["--doctest-modules"]
 
 # Import metadata. Normally this would just be:
 #
@@ -76,11 +76,11 @@ PYTEST_FLAGS = ['--doctest-modules']
 # instead, effectively side-stepping the dependency problem. Please make sure
 # metadata has no dependencies, otherwise they will need to be added to
 # the setup_requires keyword.
-metadata = imp.load_source(
-    'metadata', os.path.join(CODE_DIRECTORY, 'metadata.py'))
+metadata = imp.load_source("metadata", os.path.join(CODE_DIRECTORY, "metadata.py"))
 
 
 # # Miscellaneous helper functions
+
 
 def get_project_files():
     """Retrieve a list of project files, ignoring hidden files.
@@ -92,13 +92,13 @@ def get_project_files():
         return get_git_project_files()
 
     project_files = []
-    for top, subdirs, files in os.walk('.'):
+    for top, subdirs, files in os.walk("."):
         for subdir in subdirs:
-            if subdir.startswith('.'):
+            if subdir.startswith("."):
                 subdirs.remove(subdir)
 
         for f in files:
-            if f.startswith('.'):
+            if f.startswith("."):
                 continue
             project_files.append(os.path.join(top, f))
 
@@ -106,7 +106,7 @@ def get_project_files():
 
 
 def is_git_project():
-    return os.path.isdir('.git')
+    return os.path.isdir(".git")
 
 
 def get_git_project_files():
@@ -117,11 +117,12 @@ def get_git_project_files():
     :rtype: :class:`list`
     """
     cached_and_untracked_files = git_ls_files(
-        '--cached',  # All files cached in the index
-        '--others',  # Untracked files
+        "--cached",  # All files cached in the index
+        "--others",  # Untracked files
         # Exclude untracked files that would be excluded by .gitignore, etc.
-        '--exclude-standard')
-    uncommitted_deleted_files = git_ls_files('--deleted')
+        "--exclude-standard",
+    )
+    uncommitted_deleted_files = git_ls_files("--deleted")
 
     # Since sorting of files in a set is arbitrary, return a sorted list to
     # provide a well-defined order to tools like flake8, etc.
@@ -135,7 +136,7 @@ def git_ls_files(*cmd_args):
     :return: set of file names
     :rtype: :class:`set`
     """
-    cmd = ['git', 'ls-files']
+    cmd = ["git", "ls-files"]
     cmd.extend(cmd_args)
     return set(subprocess.check_output(cmd).splitlines())
 
@@ -163,8 +164,7 @@ def print_failure_message(message):
     try:
         import colorama
 
-        print(colorama.Fore.RED + message + colorama.Fore.RESET,
-              file=sys.stderr)
+        print(colorama.Fore.RED + message + colorama.Fore.RESET, file=sys.stderr)
     except ImportError:
         print(message, file=sys.stderr)
 
@@ -189,42 +189,34 @@ def _lint():
     # Python 3 compat:
     # - The result of subprocess call outputs are byte strings, meaning we need
     # to pass a byte string to endswith.
-    project_python_files = [filename for filename in get_project_files()
-                            if filename.endswith(b'.py')]
+    project_python_files = [filename for filename in get_project_files() if filename.endswith(b".py")]
     retcode = subprocess.call(
-        ['flake8', '--ignore=E126,E121', '--max-line-length=99', '--max-complexity=10']
-        + project_python_files)
+        ["flake8", "--ignore=E126,E121", "--max-line-length=99", "--max-complexity=10"] + project_python_files
+    )
     if retcode == 0:
-        print_success_message('No style errors')
+        print_success_message("No style errors")
     return retcode
 
 
 ## package dependencies
-install_requires = [
-    'SQLAlchemy>=1.0',
-    'SQLAlchemy-Utils>=0.31',
-    'pytz',
-    'tzlocal',
-    'click',
-]
+install_requires = ["SQLAlchemy>=1.0", "SQLAlchemy-Utils!=0.36.8", "pytz", "tzlocal", "click"]
 extras_require = {
-    'postgres': ["psycopg2"],
-    'mysql': ["PyMySQL"],
-    'pandas': ['pandas'],
-    'qif': ['qifparse'],
-    'finance-quote': ["requests"],
-    'test': ['pytest', 'pytest-cov', 'tox',
-             ],
-    'doc': ['sphinx',
-            'sphinxcontrib-napoleon', 'sphinxcontrib-programoutput',
-            'sphinx-rtd-theme',
-            'ipython']
+    "postgres": ["psycopg2"],
+    "mysql": ["PyMySQL"],
+    "ledger": ["money", "babel"],
+    "pandas": ["pandas"],
+    "qif": ["qifparse"],
+    "yahoo": ["requests"],
+    "test": ["pytest", "pytest-cov", "tox"],
+    "doc": ["sphinx", "sphinxcontrib-napoleon", "sphinxcontrib-programoutput", "sphinx-rtd-theme", "ipython"],
 }
 # build an 'all' option covering all options
-extras_require['all'] = deps_all = sum((extras_require[k] for k in ['postgres', 'mysql', 'pandas', 'finance-quote']), [])
+extras_require["all"] = deps_all = sum(
+    (extras_require[k] for k in ["postgres", "mysql", "pandas", "yahoo", "ledger"]), []
+)
 # add 'all' for both doc and test
-extras_require['test'].extend(deps_all)
-extras_require['doc'].extend(deps_all)
+extras_require["test"].extend(deps_all)
+extras_require["doc"].extend(deps_all)
 
 setup_dict = dict(
     name=metadata.package,
@@ -235,41 +227,36 @@ setup_dict = dict(
     maintainer_email=metadata.emails[0],
     url=metadata.url,
     description=metadata.description,
-    long_description=read('README.rst'),
-    keywords=['GnuCash', 'python', 'binding', 'interface', 'sqlalchemy'],
-    license='MIT',
-    platforms='any',
+    long_description=read("README.rst"),
+    keywords=["GnuCash", "python", "binding", "interface", "sqlalchemy"],
+    license="MIT",
+    platforms="any",
     # Find a list of classifiers here:
     # <http://pypi.python.org/pypi?%3Aaction=list_classifiers>
     classifiers=[
-        'Development Status :: 4 - Beta',
-        'Environment :: Console',
-        'Intended Audience :: Developers',
-        'Intended Audience :: Financial and Insurance Industry',
-        'License :: OSI Approved :: MIT License',
-        'Natural Language :: English',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Topic :: Office/Business',
-        'Topic :: Office/Business :: Financial',
-        'Topic :: Office/Business :: Financial :: Accounting',
-        'Topic :: Software Development :: Libraries :: Python Modules',
+        "Development Status :: 5 - Production/Stable",
+        "Environment :: Console",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Financial and Insurance Industry",
+        "License :: OSI Approved :: MIT License",
+        "Natural Language :: English",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Topic :: Office/Business",
+        "Topic :: Office/Business :: Financial",
+        "Topic :: Office/Business :: Financial :: Accounting",
+        "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     packages=find_packages(exclude=(TESTS_DIRECTORY, DATA_DIRECTORY)),
     install_requires=install_requires,
     extras_require=extras_require,
     # Allow tests to be run with `python setup.py test'.
-    tests_require=['pytest'] + deps_all,
-    entry_points={
-        'console_scripts': [
-            'piecash = piecash.scripts.export:cli',
-        ]
-    },
-    cmdclass={
-        'test': PyTest,
-    },
+    tests_require=["pytest"] + deps_all,
+    entry_points={"console_scripts": ["piecash = piecash.scripts.export:cli"]},
+    cmdclass={"test": PyTest},
     test_suite="tests",
     zip_safe=False,  # don't use eggs
 )
@@ -279,5 +266,5 @@ def main():
     setup(**setup_dict)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

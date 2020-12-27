@@ -5,7 +5,7 @@ Documentation
 This project provides a simple and pythonic interface to GnuCash files stored in SQL (sqlite3, Pandostgres and MySQL)
 for Linux and Windows (not tested on Mac OS).
 
-piecash is a pure python package, tested on python 3.5/3.6/3.7, that can be used as an alternative to:
+piecash is a pure python package, tested on python 3.6/3.7/3.8, that can be used as an alternative to:
 
 - the official python bindings (as long as no advanced book modifications and/or engine calculations are needed).
   This is specially useful on Windows where the official python bindings may be tricky to install or if you want to work with
@@ -56,7 +56,7 @@ or to upgrade if piecash is already installed::
 
 piecash comes with 6 extra options (each option depends on extra packages that will be installed only if the option is chosen):
  - pandas: install also pandas to use :meth:`piecash.core.book.Book.splits_df` and :meth:`piecash.core.book.Book.prices_df`
- - finance-quote: to retrieve quotes/prices
+ - yahoo: to retrieve quotes/prices
  - postgres: to support connecting to a book saved on a postgresql database
  - mysql: to support connecting to a book saved on a mysql database
  - qif: to support export to QIF
@@ -196,6 +196,21 @@ To export specific entities out of a GnuCash book:
 To export a GnuCash book to the ledger-cli format:
 
 .. command-output:: piecash ledger -h
+
+Or in python
+
+
+.. ipython:: python
+
+    book = open_book(gnucash_books + "simple_sample.gnucash", open_if_lock=True)
+
+    from piecash import ledger
+
+    # printing the ledger-cli (https://www.ledger-cli.org/) representation of the book
+    print(ledger(book))
+
+    # printing the ledger-cli (https://www.ledger-cli.org/) representation of the book using regional settings (locale) for currency output
+    print(ledger(book, locale=True))
 
 For more information on how to use piecash, please refer to the Tutorials on
 :doc:`Using existing objects <../tutorial/index_existing>` and

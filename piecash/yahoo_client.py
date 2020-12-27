@@ -12,49 +12,50 @@ from decimal import Decimal
 from time import sleep
 
 import pytz
-import requests
+
 
 MAX_ATTEMPT = 5
 
 YAHOO_BASE_URL = "https://query1.finance.yahoo.com/v7/finance"
 
-YahooSymbol = namedtuple("YahooSymbol",
-                         "name,symbol,exchange,timezone,currency,date,price")
-YahooQuote = namedtuple("YahooQuote",
-                        "date,open,high,low,close,adj_close,volume")
+YahooSymbol = namedtuple("YahooSymbol", "name,symbol,exchange,timezone,currency,date,price")
+YahooQuote = namedtuple("YahooQuote", "date,open,high,low,close,adj_close,volume")
 
 
 def get_latest_quote(symbol):
-    resp = requests.get("{}/quote".format(YAHOO_BASE_URL),
-                        params={
-                            "symbols": symbol
-                        })
+    import requests
+
+    resp = requests.get("{}/quote".format(YAHOO_BASE_URL), params={"symbols": symbol})
     resp.raise_for_status()
 
     try:
-        data = resp.json()['quoteResponse']['result'][0]
+        data = resp.json()["quoteResponse"]["result"][0]
     except IndexError:
         from .core.commodity import GncCommodityError
+
         raise GncCommodityError("Can't find information on symbol '{}' on yahoo".format(symbol))
 
+    tz = data["exchangeTimezoneName"]
+
     return YahooSymbol(
-        data['longName'],
-        data['symbol'],
-        data['exchange'],
-        data['exchangeTimezoneShortName'],
-        data['currency'],
-        datetime.datetime.fromtimestamp(data['regularMarketTime']).astimezone(
-            pytz.timezone(data['exchangeTimezoneShortName'])),
-        data['regularMarketPrice'],
+        data["longName"],
+        data["symbol"],
+        data["exchange"],
+        tz,
+        data["currency"],
+        datetime.datetime.fromtimestamp(data["regularMarketTime"]).astimezone(pytz.timezone(tz)),
+        data["regularMarketPrice"],
     )
 
 
-crumble_link = 'https://finance.yahoo.com/quote/{0}/history?p={0}'
+crumble_link = "https://finance.yahoo.com/quote/{0}/history?p={0}"
 crumble_regex = r'CrumbStore":{"crumb":"(.*?)"}'
-quote_link = 'https://query1.finance.yahoo.com/v7/finance/download/{}?period1={}&period2={}&interval=1d&events=history&crumb={}'
+quote_link = "https://query1.finance.yahoo.com/v7/finance/download/{}?period1={}&period2={}&interval=1d&events=history&crumb={}"
 
 
 def get_crumble_and_cookie(symbol):
+    import requests
+
     link = crumble_link.format(symbol)
     response = requests.get(link)
     cookie_str = response.headers["set-cookie"]
@@ -65,6 +66,8 @@ def get_crumble_and_cookie(symbol):
 
 
 def download_quote(symbol, date_from, date_to, tz=None):
+    import requests
+
     def normalize(d):
         if isinstance(d, datetime.datetime):
             pass
@@ -91,7 +94,7 @@ def download_quote(symbol, date_from, date_to, tz=None):
 
         link = quote_link.format(symbol, time_stamp_from, time_stamp_to, crumble_str)
 
-        resp = requests.get(link, headers={'Cookie': cookie_str})
+        resp = requests.get(link, headers={"Cookie": cookie_str})
         try:
             resp.raise_for_status()
         except Exception as e:
@@ -103,18 +106,24 @@ def download_quote(symbol, date_from, date_to, tz=None):
 
     csv_data = list(csv.reader(resp.text.strip().split("\n")))
 
-    return [yq
-            for data in csv_data[1:]
-            for yq in [YahooQuote(datetime.datetime.strptime(data[0], "%Y-%m-%d").date(),
-                                  *[Decimal(f) for f in data[1:]])]
-            if date_from.date() <= yq.date <= date_to.date()]
+    return [
+        yq
+        for data in csv_data[1:]
+        for yq in [
+            YahooQuote(
+                datetime.datetime.strptime(data[0], "%Y-%m-%d").date(),
+                *[Decimal(f) for f in data[1:]]
+            )
+        ]
+        if date_from.date() <= yq.date <= date_to.date()
+    ]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print(get_latest_quote("KO"))
 
-    print(download_quote('ENGI.PA', '2018-02-26', '2018-03-01', tz=pytz.timezone("CET")))
+    print(download_quote("ENGI.PA", "2018-02-26", "2018-03-01", tz=pytz.timezone("CET")))
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print(get_latest_quote("ENGI.PA"))
     print(get_latest_quote("AAPL"))
