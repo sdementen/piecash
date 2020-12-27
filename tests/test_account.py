@@ -1,5 +1,6 @@
 # -*- coding: latin-1 -*-
 import pytest
+import datetime
 
 from piecash import Account, Commodity
 from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri
@@ -67,6 +68,7 @@ class TestAccount_create_account(object):
         assert acc.non_std_scu == 0
         assert acc.commodity_scu == EUR.fraction
         assert acc.get_balance() == 0
+        assert acc.get_balance(at_date=datetime.date.today()) == 0
         assert acc.sign == 1
         assert not acc.is_template
 
@@ -81,6 +83,7 @@ class TestAccount_create_account(object):
         assert acc.non_std_scu == 0
         assert acc.commodity_scu == EUR.fraction
         assert acc.get_balance() == 0
+        assert acc.get_balance(at_date=datetime.date.today()) == 0
         assert acc.sign == -1
         assert not acc.is_template
 
