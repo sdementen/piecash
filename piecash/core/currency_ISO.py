@@ -1961,7 +1961,7 @@ The codes assigned for transactions where no currency is involved
 </CcyTbl>
 </ISO_4217>
 """
-ISO_currencies = {cur.findtext("Ccy"): ISO_type(*[e.text for e in cur.getchildren()])
+ISO_currencies = {cur.findtext("Ccy"): ISO_type(*[e.text for e in list(cur)])
                   for cur in ElementTree.fromstring(ISO_currencies_XML).findall(".//CcyNtry")
                   if cur.findtext("CcyMnrUnts")
                   }
