@@ -1,6 +1,15 @@
 What's new
 ==========
 
+Version 1.1.3 (2021-01-17)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- requires sqlalchemy < 1.4 (fix #149)
+- fix example with wrong post_date type
+- update currency_ISO
+- update use of deprecated function in xml (fix #147, tx @bxbrenden)
+- add example of program to modify an existing transaction
+
 Version 1.1.2 (2020-10-24)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 

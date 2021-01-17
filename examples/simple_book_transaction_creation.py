@@ -49,7 +49,7 @@ with open_book("../gnucash_books/simple_book_transaction_creation.gnucash",
     from_account = mybook.accounts(fullname="Assets:Current Assets:Checking")
     # create the transaction with its two splits
     Transaction(
-        post_date=today,
+        post_date=today.date(),
         enter_date=today,
         currency=USD,
         description="Transaction Description!",
