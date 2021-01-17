@@ -17,8 +17,12 @@ Creating a transaction
 ----------------------
 .. literalinclude:: ../../../examples/simple_test.py
 
-Simple changes on a newly created book
+Modifying existing transactions/splits
 --------------------------------------
+.. literalinclude:: ../../../examples/simple_transaction_split_change.py
+
+Save/cancel changes in a book
+-----------------------------
 .. literalinclude:: ../../../examples/simple_book.py
 
 Create a book with some accounts and add a transaction
