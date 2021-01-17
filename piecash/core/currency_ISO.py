@@ -5,7 +5,7 @@ from xml.etree import ElementTree
 ISO_type = namedtuple("ISO_type", "country	currency	mnemonic	cusip	fraction".split("\t"))
 
 # https://www.currency-iso.org/dam/downloads/lists/list_one.xml
-ISO_currencies_XML = """<ISO_4217 Pblshd="2017-01-01">
+ISO_currencies_XML = """<ISO_4217 Pblshd="2018-08-29">
 <CcyTbl>
 <CcyNtry>
 <CtryNm>AFGHANISTAN</CtryNm>
@@ -111,7 +111,7 @@ ISO_currencies_XML = """<ISO_4217 Pblshd="2017-01-01">
 </CcyNtry>
 <CcyNtry>
 <CtryNm>AZERBAIJAN</CtryNm>
-<CcyNm>Azerbaijanian Manat</CcyNm>
+<CcyNm>Azerbaijan Manat</CcyNm>
 <Ccy>AZN</Ccy>
 <CcyNbr>944</CcyNbr>
 <CcyMnrUnts>2</CcyMnrUnts>
@@ -377,7 +377,7 @@ ISO_currencies_XML = """<ISO_4217 Pblshd="2017-01-01">
 </CcyNtry>
 <CcyNtry>
 <CtryNm>COMOROS (THE)</CtryNm>
-<CcyNm>Comoro Franc</CcyNm>
+<CcyNm>Comorian Franc </CcyNm>
 <Ccy>KMF</Ccy>
 <CcyNbr>174</CcyNbr>
 <CcyMnrUnts>0</CcyMnrUnts>
@@ -453,7 +453,7 @@ ISO_currencies_XML = """<ISO_4217 Pblshd="2017-01-01">
 <CcyMnrUnts>2</CcyMnrUnts>
 </CcyNtry>
 <CcyNtry>
-<CtryNm>CZECH REPUBLIC (THE)</CtryNm>
+<CtryNm>CZECHIA</CtryNm>
 <CcyNm>Czech Koruna</CcyNm>
 <Ccy>CZK</Ccy>
 <CcyNbr>203</CcyNbr>
@@ -534,6 +534,13 @@ ISO_currencies_XML = """<ISO_4217 Pblshd="2017-01-01">
 <CcyNm>Euro</CcyNm>
 <Ccy>EUR</Ccy>
 <CcyNbr>978</CcyNbr>
+<CcyMnrUnts>2</CcyMnrUnts>
+</CcyNtry>
+<CcyNtry>
+<CtryNm>ESWATINI</CtryNm>
+<CcyNm>Lilangeni</CcyNm>
+<Ccy>SZL</Ccy>
+<CcyNbr>748</CcyNbr>
 <CcyMnrUnts>2</CcyMnrUnts>
 </CcyNtry>
 <CcyNtry>
@@ -699,7 +706,7 @@ ISO_currencies_XML = """<ISO_4217 Pblshd="2017-01-01">
 </CcyNtry>
 <CcyNtry>
 <CtryNm>GUINEA</CtryNm>
-<CcyNm>Guinea Franc</CcyNm>
+<CcyNm>Guinean Franc</CcyNm>
 <Ccy>GNF</Ccy>
 <CcyNbr>324</CcyNbr>
 <CcyMnrUnts>0</CcyMnrUnts>
@@ -789,7 +796,7 @@ ISO_currencies_XML = """<ISO_4217 Pblshd="2017-01-01">
 <CcyMnrUnts>2</CcyMnrUnts>
 </CcyNtry>
 <CcyNtry>
-<CtryNm>INTERNATIONAL MONETARY FUND (IMF)</CtryNm>
+<CtryNm>INTERNATIONAL MONETARY FUND (IMF) </CtryNm>
 <CcyNm>SDR (Special Drawing Right)</CcyNm>
 <Ccy>XDR</Ccy>
 <CcyNbr>960</CcyNbr>
@@ -916,7 +923,7 @@ ISO_currencies_XML = """<ISO_4217 Pblshd="2017-01-01">
 </CcyNtry>
 <CcyNtry>
 <CtryNm>LAO PEOPLE’S DEMOCRATIC REPUBLIC (THE)</CtryNm>
-<CcyNm>Kip</CcyNm>
+<CcyNm>Lao Kip</CcyNm>
 <Ccy>LAK</Ccy>
 <CcyNbr>418</CcyNbr>
 <CcyMnrUnts>2</CcyMnrUnts>
@@ -992,7 +999,7 @@ ISO_currencies_XML = """<ISO_4217 Pblshd="2017-01-01">
 <CcyMnrUnts>2</CcyMnrUnts>
 </CcyNtry>
 <CcyNtry>
-<CtryNm>MACEDONIA (THE FORMER YUGOSLAV REPUBLIC OF)</CtryNm>
+<CtryNm>NORTH MACEDONIA</CtryNm>
 <CcyNm>Denar</CcyNm>
 <Ccy>MKD</Ccy>
 <CcyNbr>807</CcyNbr>
@@ -1057,8 +1064,8 @@ ISO_currencies_XML = """<ISO_4217 Pblshd="2017-01-01">
 <CcyNtry>
 <CtryNm>MAURITANIA</CtryNm>
 <CcyNm>Ouguiya</CcyNm>
-<Ccy>MRO</Ccy>
-<CcyNbr>478</CcyNbr>
+<Ccy>MRU</Ccy>
+<CcyNbr>929</CcyNbr>
 <CcyMnrUnts>2</CcyMnrUnts>
 </CcyNtry>
 <CcyNtry>
@@ -1076,9 +1083,7 @@ ISO_currencies_XML = """<ISO_4217 Pblshd="2017-01-01">
 <CcyMnrUnts>2</CcyMnrUnts>
 </CcyNtry>
 <CcyNtry>
-<CtryNm>
-MEMBER COUNTRIES OF THE AFRICAN DEVELOPMENT BANK GROUP
-</CtryNm>
+<CtryNm>MEMBER COUNTRIES OF THE AFRICAN DEVELOPMENT BANK GROUP</CtryNm>
 <CcyNm>ADB Unit of Account</CcyNm>
 <Ccy>XUA</Ccy>
 <CcyNbr>965</CcyNbr>
@@ -1455,8 +1460,8 @@ MEMBER COUNTRIES OF THE AFRICAN DEVELOPMENT BANK GROUP
 <CcyNtry>
 <CtryNm>SAO TOME AND PRINCIPE</CtryNm>
 <CcyNm>Dobra</CcyNm>
-<Ccy>STD</Ccy>
-<CcyNbr>678</CcyNbr>
+<Ccy>STN</Ccy>
+<CcyNbr>930</CcyNbr>
 <CcyMnrUnts>2</CcyMnrUnts>
 </CcyNtry>
 <CcyNtry>
@@ -1509,9 +1514,7 @@ MEMBER COUNTRIES OF THE AFRICAN DEVELOPMENT BANK GROUP
 <CcyMnrUnts>2</CcyMnrUnts>
 </CcyNtry>
 <CcyNtry>
-<CtryNm>
-SISTEMA UNITARIO DE COMPENSACION REGIONAL DE PAGOS "SUCRE"
-</CtryNm>
+<CtryNm>SISTEMA UNITARIO DE COMPENSACION REGIONAL DE PAGOS "SUCRE"</CtryNm>
 <CcyNm>Sucre</CcyNm>
 <Ccy>XSU</Ccy>
 <CcyNbr>994</CcyNbr>
@@ -1596,13 +1599,6 @@ SISTEMA UNITARIO DE COMPENSACION REGIONAL DE PAGOS "SUCRE"
 <CcyNm>Norwegian Krone</CcyNm>
 <Ccy>NOK</Ccy>
 <CcyNbr>578</CcyNbr>
-<CcyMnrUnts>2</CcyMnrUnts>
-</CcyNtry>
-<CcyNtry>
-<CtryNm>SWAZILAND</CtryNm>
-<CcyNm>Lilangeni</CcyNm>
-<Ccy>SZL</Ccy>
-<CcyNbr>748</CcyNbr>
 <CcyMnrUnts>2</CcyMnrUnts>
 </CcyNtry>
 <CcyNtry>
@@ -1760,9 +1756,7 @@ SISTEMA UNITARIO DE COMPENSACION REGIONAL DE PAGOS "SUCRE"
 <CcyMnrUnts>2</CcyMnrUnts>
 </CcyNtry>
 <CcyNtry>
-<CtryNm>
-UNITED KINGDOM OF GREAT BRITAIN AND NORTHERN IRELAND (THE)
-</CtryNm>
+<CtryNm>UNITED KINGDOM OF GREAT BRITAIN AND NORTHERN IRELAND (THE)</CtryNm>
 <CcyNm>Pound Sterling</CcyNm>
 <Ccy>GBP</Ccy>
 <CcyNbr>826</CcyNbr>
@@ -1798,10 +1792,17 @@ UNITED KINGDOM OF GREAT BRITAIN AND NORTHERN IRELAND (THE)
 </CcyNtry>
 <CcyNtry>
 <CtryNm>URUGUAY</CtryNm>
-<CcyNm IsFund="true">Uruguay Peso en Unidades Indexadas (URUIURUI)</CcyNm>
+<CcyNm IsFund="true">Uruguay Peso en Unidades Indexadas (UI)</CcyNm>
 <Ccy>UYI</Ccy>
 <CcyNbr>940</CcyNbr>
 <CcyMnrUnts>0</CcyMnrUnts>
+</CcyNtry>
+<CcyNtry>
+<CtryNm>URUGUAY</CtryNm>
+<CcyNm>Unidad Previsional</CcyNm>
+<Ccy>UYW</Ccy>
+<CcyNbr>927</CcyNbr>
+<CcyMnrUnts>4</CcyMnrUnts>
 </CcyNtry>
 <CcyNtry>
 <CtryNm>UZBEKISTAN</CtryNm>
@@ -1819,9 +1820,9 @@ UNITED KINGDOM OF GREAT BRITAIN AND NORTHERN IRELAND (THE)
 </CcyNtry>
 <CcyNtry>
 <CtryNm>VENEZUELA (BOLIVARIAN REPUBLIC OF)</CtryNm>
-<CcyNm>Bolívar</CcyNm>
-<Ccy>VEF</Ccy>
-<CcyNbr>937</CcyNbr>
+<CcyNm>Bolívar Soberano</CcyNm>
+<Ccy>VES</Ccy>
+<CcyNbr>928</CcyNbr>
 <CcyMnrUnts>2</CcyMnrUnts>
 </CcyNtry>
 <CcyNtry>
@@ -1889,27 +1890,21 @@ UNITED KINGDOM OF GREAT BRITAIN AND NORTHERN IRELAND (THE)
 </CcyNtry>
 <CcyNtry>
 <CtryNm>ZZ02_Bond Markets Unit European_EMU-6</CtryNm>
-<CcyNm>
-Bond Markets Unit European Monetary Unit (E.M.U.-6)
-</CcyNm>
+<CcyNm>Bond Markets Unit European Monetary Unit (E.M.U.-6)</CcyNm>
 <Ccy>XBB</Ccy>
 <CcyNbr>956</CcyNbr>
 <CcyMnrUnts>N.A.</CcyMnrUnts>
 </CcyNtry>
 <CcyNtry>
 <CtryNm>ZZ03_Bond Markets Unit European_EUA-9</CtryNm>
-<CcyNm>
-Bond Markets Unit European Unit of Account 9 (E.U.A.-9)
-</CcyNm>
+<CcyNm>Bond Markets Unit European Unit of Account 9 (E.U.A.-9)</CcyNm>
 <Ccy>XBC</Ccy>
 <CcyNbr>957</CcyNbr>
 <CcyMnrUnts>N.A.</CcyMnrUnts>
 </CcyNtry>
 <CcyNtry>
 <CtryNm>ZZ04_Bond Markets Unit European_EUA-17</CtryNm>
-<CcyNm>
-Bond Markets Unit European Unit of Account 17 (E.U.A.-17)
-</CcyNm>
+<CcyNm>Bond Markets Unit European Unit of Account 17 (E.U.A.-17)</CcyNm>
 <Ccy>XBD</Ccy>
 <CcyNbr>958</CcyNbr>
 <CcyMnrUnts>N.A.</CcyMnrUnts>
@@ -1923,9 +1918,7 @@ Bond Markets Unit European Unit of Account 17 (E.U.A.-17)
 </CcyNtry>
 <CcyNtry>
 <CtryNm>ZZ07_No_Currency</CtryNm>
-<CcyNm>
-The codes assigned for transactions where no currency is involved
-</CcyNm>
+<CcyNm>The codes assigned for transactions where no currency is involved</CcyNm>
 <Ccy>XXX</Ccy>
 <CcyNbr>999</CcyNbr>
 <CcyMnrUnts>N.A.</CcyMnrUnts>
@@ -1961,7 +1954,8 @@ The codes assigned for transactions where no currency is involved
 </CcyTbl>
 </ISO_4217>
 """
-ISO_currencies = {cur.findtext("Ccy"): ISO_type(*[e.text for e in cur.getchildren()])
+ISO_currencies = {cur.findtext("Ccy"): ISO_type(*[e.text for e in cur])
                   for cur in ElementTree.fromstring(ISO_currencies_XML).findall(".//CcyNtry")
                   if cur.findtext("CcyMnrUnts")
                   }
+print(ISO_currencies)
