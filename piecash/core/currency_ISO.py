@@ -1958,4 +1958,3 @@ ISO_currencies = {cur.findtext("Ccy"): ISO_type(*[e.text for e in cur])
                   for cur in ElementTree.fromstring(ISO_currencies_XML).findall(".//CcyNtry")
                   if cur.findtext("CcyMnrUnts")
                   }
-print(ISO_currencies)
