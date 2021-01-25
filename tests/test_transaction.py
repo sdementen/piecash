@@ -240,6 +240,24 @@ class TestTransaction_create_transaction(object):
         assert d["cur"] == 0
         assert all([v == Decimal(0) for k, v in d.items() if k != "cur"])
 
+    def test_tag_split_zero_quantity(self, book_transactions):
+        broker = book_transactions.accounts(name="broker")
+        asset = book_transactions.accounts.get(name="asset")
+        inc = book_transactions.accounts.get(name="inc")
+        currency = book_transactions.default_currency
+
+        value = Decimal(250)
+        splits = [
+            Split(asset, value),
+            Split(inc, -value),
+            Split(broker, value=0, quantity=0),  # tag split for assigning dividend income to stock
+        ]
+
+        Transaction(currency, description='Dividend income', splits=splits)
+
+        book_transactions.validate()
+
+
 
 class TestTransaction_lots(object):
     def test_create_simpletlot_addsplits(self, book_basic):
