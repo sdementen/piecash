@@ -150,8 +150,8 @@ class Split(DeclarativeBaseGuid):
             if self.quantity is None:
                 raise GncValidationError(
                     "The split quantity is not defined while the split is on a commodity different from the transaction")
-            if (self.quantity.is_signed() != self.value.is_signed() and
-                self.value != 0 and self.quantity != 0):
+            # Allow for either value to be 0.0 (or -0.0).
+            if self.quantity * self.value < 0:
                 raise GncValidationError("The split quantity has not the same sign as the split value")
 
         # everything is fine, let us normalise the value with respect to the currency/commodity precisions
