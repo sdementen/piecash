@@ -202,7 +202,7 @@ def _lint():
 install_requires = ["SQLAlchemy>=1.0, <1.4", "SQLAlchemy-Utils!=0.36.8", "pytz", "tzlocal", "click"]
 extras_require = {
     "postgres": ["psycopg2"],
-    "mysql": ["PyMySQL"],
+    "mysql": ["PyMySQL[rsa]"],
     "ledger": ["money", "babel"],
     "pandas": ["pandas"],
     "qif": ["qifparse"],
