@@ -44,6 +44,7 @@ def run_file(fname):
 db_sqlite = test_folder / "foozbar.sqlite"
 
 TRAVIS = os.environ.get("TRAVIS", False)
+GITHUB_ACTIONS = os.environ.get("CI", False)
 APPVEYOR = os.environ.get("APPVEYOR", False)
 LOCALSERVER = os.environ.get("PIECASH_DBSERVER_TEST", False)
 LOCALSERVER_USERNAME = os.environ.get("PIECASH_DBSERVER_TEST_USERNAME", "")
@@ -77,6 +78,32 @@ if TRAVIS:
                 db_host="localhost",
                 db_port=3306,
             ),
+        }
+    )
+elif GITHUB_ACTIONS:
+    pg_password = "postgres_password_CI"
+    databases_to_check.append(
+        "postgresql://postgres:{pwd}@localhost:5432/foo".format(pwd=pg_password)
+    )
+    # databases_to_check.append("mysql+pymysql://travis:@localhost/foo?charset=utf8")
+    db_config.update(
+        {
+            "postgres": dict(
+                db_type="postgres",
+                db_name="foo",
+                db_user="postgres",
+                db_password=pg_password,
+                db_host="localhost",
+                db_port=5432,
+            ),
+            # "mysql": dict(
+            #     db_type="mysql",
+            #     db_name="foo",
+            #     db_user="travis",
+            #     db_password="",
+            #     db_host="localhost",
+            #     db_port=3306,
+            # ),
         }
     )
 elif LOCALSERVER:
