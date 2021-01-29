@@ -27,8 +27,8 @@ jobs:
           - 3306:3306
         env:
           MYSQL_ALLOW_EMPTY_PASSWORD: yes
-          MYSQL_USER: gha_user
-          MYSQL_PASSWORD: gha_password
+#          MYSQL_USER: gha_user
+          MYSQL_ROOT_PASSWORD: root
         options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
 
     strategy:
