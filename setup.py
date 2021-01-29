@@ -207,7 +207,7 @@ extras_require = {
     "pandas": ["pandas"],
     "qif": ["qifparse"],
     "yahoo": ["requests"],
-    "test": ["pytest", "pytest-cov", "tox"],
+    "test": ["pytest", "pytest-cov", "tox", "flake8"],
     "doc": ["sphinx", "sphinxcontrib-napoleon", "sphinxcontrib-programoutput", "sphinx-rtd-theme", "ipython"],
 }
 # build an 'all' option covering all options
