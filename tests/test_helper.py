@@ -127,12 +127,12 @@ else:
     pass
 
 
-@pytest.yield_fixture(params=[Customer, Vendor, Employee])
+@pytest.fixture(params=[Customer, Vendor, Employee])
 def Person(request):
     yield request.param
 
 
-@pytest.yield_fixture(params=db_config.items())
+@pytest.fixture(params=db_config.items())
 def book_db_config(request):
     from piecash.core.session import build_uri
 
@@ -148,7 +148,7 @@ def book_db_config(request):
         drop_database(name)
 
 
-@pytest.yield_fixture(params=databases_to_check[1:])
+@pytest.fixture(params=databases_to_check[1:])
 def book_uri(request):
     name = request.param
 
@@ -160,7 +160,7 @@ def book_uri(request):
         drop_database(name)
 
 
-@pytest.yield_fixture(params=databases_to_check)
+@pytest.fixture(params=databases_to_check)
 def new_book(request):
     name = request.param
 
@@ -174,7 +174,7 @@ def new_book(request):
         drop_database(name)
 
 
-@pytest.yield_fixture(params=databases_to_check)
+@pytest.fixture(params=databases_to_check)
 def new_book_USD(request):
     name = request.param
 
@@ -188,7 +188,7 @@ def new_book_USD(request):
         drop_database(name)
 
 
-@pytest.yield_fixture(params=databases_to_check)
+@pytest.fixture(params=databases_to_check)
 def book_basic(request):
     name = request.param
 
@@ -211,7 +211,7 @@ def book_basic(request):
         drop_database(name)
 
 
-@pytest.yield_fixture(params=databases_to_check)
+@pytest.fixture(params=databases_to_check)
 def book_transactions(request):
     name = request.param
 
@@ -288,7 +288,7 @@ def book_transactions(request):
         drop_database(name)
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def book_invoices(request):
     """
     Returns the book that contains invoices.
@@ -301,7 +301,7 @@ def book_invoices(request):
         yield book
 
 
-@pytest.yield_fixture(params=["", ".272"])
+@pytest.fixture(params=["", ".272"])
 def book_sample(request):
     """
     Returns a simple sample book for 2.6.N
@@ -325,7 +325,7 @@ needweb = pytest.mark.skipif(
 
 
 def generate_book_fixture(filename):
-    @pytest.yield_fixture(scope="module")
+    @pytest.fixture(scope="module")
     def my_fixture():
         file_template = book_folder / filename
 
