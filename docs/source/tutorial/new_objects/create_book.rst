@@ -23,7 +23,7 @@ To create a file-based sqlite3 document:
     # or equivalently
     book = piecash.create_book(uri_conn="sqlite:///example_file.gnucash", overwrite=True)
 
-and for a postgres document (needs a pacakge installable via "pip install psycopg2")::
+and for a postgres document (needs the psycopg2 package installable via "pip install psycopg2")::
 
     book = piecash.create_book(uri_conn="postgres://user:passwd@localhost/example_gnucash_db")
 
