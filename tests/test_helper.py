@@ -93,7 +93,7 @@ elif GITHUB_ACTIONS:
                 db_name="foo",
                 db_user="postgres",
                 db_password=pg_password,
-                db_host="localhost",
+                db_host="postgres",
                 db_port=5432,
             ),
             # "mysql": dict(
