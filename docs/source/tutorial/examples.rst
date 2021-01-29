@@ -21,6 +21,10 @@ Modifying existing transactions/splits
 --------------------------------------
 .. literalinclude:: ../../../examples/simple_transaction_split_change.py
 
+Delete an account in a book
+---------------------------
+.. literalinclude:: ../../../examples/simple_delete_account.py
+
 Save/cancel changes in a book
 -----------------------------
 .. literalinclude:: ../../../examples/simple_book.py
@@ -29,6 +33,10 @@ Create a book with some accounts and add a transaction
 ------------------------------------------------------
 .. literalinclude:: ../../../examples/simple_book_transaction_creation.py
 
+Export transactions to a CSV file
+---------------------------------
+.. literalinclude:: ../../../examples/simple_export_transaction_csv.py
+
 Extract Split information as pandas DataFrame
 ---------------------------------------------
 .. literalinclude:: ../../../examples/simple_extract_splits_to_pandas.py
@@ -36,4 +44,3 @@ Extract Split information as pandas DataFrame
 Filtered transaction reports
 ----------------------------
 .. literalinclude:: ../../../examples/filtered_transaction_report.py
-
