@@ -227,6 +227,7 @@ def create_book(sqlite_file=None,
                 db_host=None,
                 db_port=None,
                 check_same_thread=True,
+                pg_template="template0",
                 **kwargs):
     """Create a new empty GnuCash book. If both sqlite_file and uri_conn are None, then an "in memory" sqlite book is created.
 
@@ -242,7 +243,7 @@ def create_book(sqlite_file=None,
     :param str db_host: host of database
     :param int db_port: port of database
     :param bool check_same_thread: sqlite flag that restricts connection use to the thread that created (see False for use in ipython/flask/... but read first https://docs.python.org/3/library/sqlite3.html)
-
+    :param str pg_template: the postgres template to use when creating the database. One of template1 or template0 (default template0). Irrelevant for other databases than postgres.
     :return: the document as a gnucash session
     :rtype: :class:`GncSession`
 
@@ -264,7 +265,7 @@ def create_book(sqlite_file=None,
                 drop_database(uri_conn)
             else:
                 raise GnucashException("'{}' db already exists".format(uri_conn))
-        create_database(uri_conn)
+        create_database(uri_conn, template=pg_template)
 
     engine = create_piecash_engine(uri_conn, **kwargs)
 
