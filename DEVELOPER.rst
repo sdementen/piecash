@@ -38,7 +38,7 @@ Some note for developers:
     1. update metadata.py
     2. update changelog
     3. `tag MM.mm.pp`
-    4. python setup.py sdist upload
+    4. twine upload dist/* --repository piecash
 
 - to release a new version with gitflow:
     0. git flow release start 0.18.0
