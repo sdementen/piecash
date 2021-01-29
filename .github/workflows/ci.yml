@@ -26,12 +26,8 @@ jobs:
         ports:
           - 3306:3306
         env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
           MYSQL_USER: gha_user
-          MYSQL_PASSWORD: gha_password
-          # since github action for test only
-          # we should make another file for other ci purpose
-          MYSQL_DATABASE: foo
-          MYSQL_ROOT_PASSWORD: adminpwd
         options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
 
     strategy:
