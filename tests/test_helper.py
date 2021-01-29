@@ -96,14 +96,14 @@ elif GITHUB_ACTIONS:
                 db_host="postgres",
                 db_port=5432,
             ),
-            # "mysql": dict(
-            #     db_type="mysql",
-            #     db_name="foo",
-            #     db_user="travis",
-            #     db_password="",
-            #     db_host="localhost",
-            #     db_port=3306,
-            # ),
+            "mysql": dict(
+                db_type="mysql",
+                db_name="foo",
+                db_user="gha_user",
+                db_password="gha_password",
+                db_host="mysql",
+                db_port=3306,
+            ),
         }
     )
 elif LOCALSERVER:
