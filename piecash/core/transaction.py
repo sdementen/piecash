@@ -158,7 +158,7 @@ class Split(DeclarativeBaseGuid):
         self._quantity_denom_basis = self.account.commodity_scu
         self._value_denom_basis = self.transaction.currency.fraction
 
-        if self.transaction.currency != self.account.commodity and self.quantity != 0:
+        if self.transaction.currency != self.account.commodity and self.quantity:
             # let us also add a Price
             from piecash import Price
 
