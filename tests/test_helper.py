@@ -83,9 +83,9 @@ if TRAVIS:
 elif GITHUB_ACTIONS:
     pg_password = "postgres_password_CI"
     databases_to_check.append(
-        "postgresql://postgres:{pwd}@postgres:5432/foo".format(pwd=pg_password)
+        "postgresql://postgres:{pwd}@localhost:5432/foo".format(pwd=pg_password)
     )
-    # databases_to_check.append("mysql+pymysql://travis:@localhost/foo?charset=utf8")
+    databases_to_check.append("mysql+pymysql://gha_user:gha_password@localhost/foo?charset=utf8")
     db_config.update(
         {
             "postgres": dict(
@@ -93,7 +93,7 @@ elif GITHUB_ACTIONS:
                 db_name="foo",
                 db_user="postgres",
                 db_password=pg_password,
-                db_host="postgres",
+                db_host="localhost",
                 db_port=5432,
             ),
             "mysql": dict(
@@ -101,7 +101,7 @@ elif GITHUB_ACTIONS:
                 db_name="foo",
                 db_user="gha_user",
                 db_password="gha_password",
-                db_host="mysql",
+                db_host="localhost",
                 db_port=3306,
             ),
         }
