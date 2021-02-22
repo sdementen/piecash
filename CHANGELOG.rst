@@ -1,6 +1,23 @@
 What's new
 ==========
 
+Version 1.1.4 (2021-01-29)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- allow tags with zero quantity by fixing unit price calculation (fix #153, tx @croth1)
+- allow tags with zero quantity of value by fixing validation control (fix #154, tx @stoklund)
+- use template0 when creating new books in postgres (vs template1 before) to fix encoding issues
+- add examples for deleting an account and exporting transactions to a CSV file
+
+Version 1.1.3 (2021-01-17)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- requires sqlalchemy < 1.4 (fix #149)
+- fix example with wrong post_date type
+- update currency_ISO
+- update use of deprecated function in xml (fix #147, tx @bxbrenden)
+- add example of program to modify an existing transaction
+
 Version 1.1.2 (2020-10-24)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 

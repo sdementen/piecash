@@ -240,6 +240,80 @@ class TestTransaction_create_transaction(object):
         assert d["cur"] == 0
         assert all([v == Decimal(0) for k, v in d.items() if k != "cur"])
 
+    def test_tag_split_zero_quantity(self, book_transactions):
+        broker = book_transactions.accounts(name="broker")
+        asset = book_transactions.accounts.get(name="asset")
+        inc = book_transactions.accounts.get(name="inc")
+        currency = book_transactions.default_currency
+
+        value = Decimal(250)
+        splits = [
+            Split(asset, value),
+            Split(inc, -value),
+            Split(broker, value=0, quantity=0),  # tag split for assigning dividend income to stock
+        ]
+
+        Transaction(currency, description='Dividend income', splits=splits)
+
+        book_transactions.validate()
+
+    def test_tag_split_zero_quantity_with_value(self, book_transactions):
+        broker = book_transactions.accounts(name="broker")
+        inc = book_transactions.accounts.get(name="inc")
+        value = Decimal(250)
+
+        # Transaction recording capital gains.
+        splits = [
+            Split(broker, value, quantity=0),
+            Split(inc, -value),
+        ]
+        Transaction(inc.commodity, description='Capital gains', splits=splits)
+        book_transactions.validate()
+
+        # Transaction recording capital loss.
+        splits = [
+            Split(broker, -value, quantity=0),
+            Split(inc, value),
+        ]
+        Transaction(inc.commodity, description='Capital loss', splits=splits)
+        book_transactions.validate()
+
+        # Do the same tests with a -0.0 quantity. This Decimal has is_signed=True.
+        mzero = Decimal('-0.00')
+
+        # Transaction recording capital gains.
+        splits = [
+            Split(broker, value, quantity=mzero),
+            Split(inc, -value),
+        ]
+        Transaction(inc.commodity, description='Capital gains', splits=splits)
+        book_transactions.validate()
+
+        # Transaction recording capital loss.
+        splits = [
+            Split(broker, -value, quantity=mzero),
+            Split(inc, value),
+        ]
+        Transaction(inc.commodity, description='Capital loss', splits=splits)
+        book_transactions.validate()
+
+    def test_tag_split_zero_value(self, book_transactions):
+        broker = book_transactions.accounts(name="broker")
+        asset = book_transactions.accounts.get(name="asset")
+        currency = book_transactions.default_currency
+
+        # Give away 250 shares for free.
+        quantity = Decimal(-250)
+        splits = [
+            Split(asset, 0),
+            Split(broker, 0, quantity=quantity),
+        ]
+
+        Transaction(currency, description='donation', splits=splits)
+
+        book_transactions.validate()
+
+
 
 class TestTransaction_lots(object):
     def test_create_simpletlot_addsplits(self, book_basic):

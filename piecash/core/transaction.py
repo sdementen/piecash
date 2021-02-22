@@ -150,14 +150,15 @@ class Split(DeclarativeBaseGuid):
             if self.quantity is None:
                 raise GncValidationError(
                     "The split quantity is not defined while the split is on a commodity different from the transaction")
-            if self.quantity.is_signed() != self.value.is_signed():
+            # Allow for either value to be 0.0 (or -0.0).
+            if self.quantity * self.value < 0:
                 raise GncValidationError("The split quantity has not the same sign as the split value")
 
         # everything is fine, let us normalise the value with respect to the currency/commodity precisions
         self._quantity_denom_basis = self.account.commodity_scu
         self._value_denom_basis = self.transaction.currency.fraction
 
-        if self.transaction.currency != self.account.commodity:
+        if self.transaction.currency != self.account.commodity and self.quantity:
             # let us also add a Price
             from piecash import Price
 

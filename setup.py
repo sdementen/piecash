@@ -199,7 +199,7 @@ def _lint():
 
 
 ## package dependencies
-install_requires = ["SQLAlchemy>=1.0", "SQLAlchemy-Utils!=0.36.8", "pytz", "tzlocal", "click"]
+install_requires = ["SQLAlchemy>=1.0, <1.4", "SQLAlchemy-Utils!=0.36.8", "pytz", "tzlocal", "click"]
 extras_require = {
     "postgres": ["psycopg2"],
     "mysql": ["PyMySQL"],
