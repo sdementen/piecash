@@ -1,8 +1,8 @@
 # -*- coding: latin-1 -*-
 import pytest
-import datetime import datetime
+from datetime import datetime, date
 
-from piecash import Account, Commodity, Split, Transaction
+from piecash import Account, Commodity, Split, Transaction, GncValidationError
 from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic
 
 # dummy line to avoid removing unused symbols
@@ -68,34 +68,34 @@ class TestAccount_create_account(object):
         assert acc.non_std_scu == 0
         assert acc.commodity_scu == EUR.fraction
         assert acc.get_balance() == 0
-        assert acc.get_balance(at_date=datetime.date.today()) == 0
+        assert acc.get_balance(at_date=date.today()) == 0
         assert acc.sign == 1
         assert not acc.is_template
 
     def test_account_balance_on_date(self, book_basic):
         EUR = book_basic.commodities(namespace="CURRENCY")
         racc = book_basic.root_account
-        a = book_basic.accounts(name="asset")
-        e = book_basic.accounts(name="exp")
+        acc = book_basic.accounts(name="asset")
+        exp = book_basic.accounts(name="exp")
 
         splits = [
-            Split(account=a, value=100, memo=u"mémo asset"),
-            Split(account=e, value=-100, memo=u"mémo exp"),
+            Split(account=acc, value=100, memo=u"mémo asset"),
+            Split(account=exp, value=-100, memo=u"mémo exp"),
         ]
 
-        with pytest.raises(ValueError):
+        with pytest.raises(GncValidationError):
             tr = Transaction(currency=EUR, description=u"wire from Hélène", notes=u"on St-Eugène day",
                              post_date=datetime(2014, 1, 1),
                              enter_date=datetime(2014, 1, 1),
                              splits=splits)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(GncValidationError):
             tr = Transaction(currency=EUR, description=u"wire from Hélène", notes=u"on St-Eugène day",
                              post_date=datetime(2014, 1, 2),
                              enter_date=datetime(2014, 1, 2),
                              splits=splits)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(GncValidationError):
             tr = Transaction(currency=EUR, description=u"wire from Hélène", notes=u"on St-Eugène day",
                              post_date=datetime(2014, 1, 3),
                              enter_date=datetime(2014, 1, 3),
