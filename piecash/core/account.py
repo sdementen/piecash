@@ -266,6 +266,7 @@ class Account(DeclarativeBaseGuid):
             recurse (bool, optional): True if the balance should include children accounts (default to True)
             commodity (:class:`piecash.core.commodity.Commodity`): the currency into which to get the balance (default to None, i.e. the currency of the account)
             natural_sign (bool, optional): True if the balance sign is reversed for accounts of type {'LIABILITY', 'PAYABLE', 'CREDIT', 'INCOME', 'EQUITY'} (default to True)
+            at_date (:class:`datetime.datetime`): the sum() balance of the account at a given date based on transaction post date
 
         Returns:
             the balance of the account
