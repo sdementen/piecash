@@ -1,8 +1,8 @@
 # -*- coding: latin-1 -*-
 import pytest
-import datetime
+import datetime import datetime
 
-from piecash import Account, Commodity
+from piecash import Account, Commodity, Split, Transaction
 from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic
 
 # dummy line to avoid removing unused symbols
@@ -83,19 +83,19 @@ class TestAccount_create_account(object):
             Split(account=e, value=-100, memo=u"mémo exp"),
         ]
 
-        with pytest.raises(GncValidationError):
+        with pytest.raises(ValueError):
             tr = Transaction(currency=EUR, description=u"wire from Hélène", notes=u"on St-Eugène day",
                              post_date=datetime(2014, 1, 1),
                              enter_date=datetime(2014, 1, 1),
                              splits=splits)
 
-        with pytest.raises(GncValidationError):
+        with pytest.raises(ValueError):
             tr = Transaction(currency=EUR, description=u"wire from Hélène", notes=u"on St-Eugène day",
                              post_date=datetime(2014, 1, 2),
                              enter_date=datetime(2014, 1, 2),
                              splits=splits)
 
-        with pytest.raises(GncValidationError):
+        with pytest.raises(ValueError):
             tr = Transaction(currency=EUR, description=u"wire from Hélène", notes=u"on St-Eugène day",
                              post_date=datetime(2014, 1, 3),
                              enter_date=datetime(2014, 1, 3),
