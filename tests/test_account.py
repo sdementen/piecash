@@ -1,9 +1,9 @@
 # -*- coding: latin-1 -*-
 import pytest
-import datetime
+from datetime import datetime, date
 
-from piecash import Account, Commodity
-from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic
+from piecash import Account, Commodity, Split, Transaction, GncValidationError
+from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_transactions
 
 # dummy line to avoid removing unused symbols
 
@@ -68,46 +68,14 @@ class TestAccount_create_account(object):
         assert acc.non_std_scu == 0
         assert acc.commodity_scu == EUR.fraction
         assert acc.get_balance() == 0
-        assert acc.get_balance(at_date=datetime.date.today()) == 0
+        assert acc.get_balance(at_date=date.today()) == 0
         assert acc.sign == 1
         assert not acc.is_template
 
-    def test_account_balance_on_date(self, book_basic):
-        EUR = book_basic.commodities(namespace="CURRENCY")
-        racc = book_basic.root_account
-        a = book_basic.accounts(name="asset")
-        e = book_basic.accounts(name="exp")
-
-        splits = [
-            Split(account=a, value=100, memo=u"mémo asset"),
-            Split(account=e, value=-100, memo=u"mémo exp"),
-        ]
-
-        with pytest.raises(GncValidationError):
-            tr = Transaction(currency=EUR, description=u"wire from Hélène", notes=u"on St-Eugène day",
-                             post_date=datetime(2014, 1, 1),
-                             enter_date=datetime(2014, 1, 1),
-                             splits=splits)
-
-        with pytest.raises(GncValidationError):
-            tr = Transaction(currency=EUR, description=u"wire from Hélène", notes=u"on St-Eugène day",
-                             post_date=datetime(2014, 1, 2),
-                             enter_date=datetime(2014, 1, 2),
-                             splits=splits)
-
-        with pytest.raises(GncValidationError):
-            tr = Transaction(currency=EUR, description=u"wire from Hélène", notes=u"on St-Eugène day",
-                             post_date=datetime(2014, 1, 3),
-                             enter_date=datetime(2014, 1, 3),
-                             splits=splits)
-
-        book_basic.flush()
-
-        assert acc.get_balance(at_date=datetime(2014, 1, 1)) == 100
-        assert acc.get_balance(at_date=datetime(2014, 1, 2)) == 200
-        assert acc.get_balance(at_date=datetime(2014, 1, 3)) == 300
-        assert acc.get_balance(at_date=datetime(2014, 1, 4)) == 300
-
+    def test_account_balance_on_date(self, book_transactions):
+        a = book_transactions.accounts(name="asset")
+        assert a.get_balance(at_date=date(2015, 10, 21)) == 1000
+        assert a.get_balance(at_date=date(2015, 10, 25)) == 900
 
     def test_create_standardliability_account(self, new_book):
         EUR = new_book.commodities[0]
