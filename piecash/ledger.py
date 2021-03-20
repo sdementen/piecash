@@ -191,7 +191,7 @@ def _(book, **kwargs):
         res.append(ledger(price, **kwargs))
     res.append("\n")
 
-    for trans in sorted(book.transactions, key=lambda x: (x.currency_guid, x.post_date)):
+    for trans in sorted(book.transactions, key=lambda x: x.post_date):
         res.append(ledger(trans, **kwargs))
         res.append("\n")
 
