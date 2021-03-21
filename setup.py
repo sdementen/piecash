@@ -203,7 +203,7 @@ install_requires = ["SQLAlchemy>=1.0, <1.4", "SQLAlchemy-Utils!=0.36.8", "pytz",
 extras_require = {
     "postgres": ["psycopg2"],
     "mysql": ["PyMySQL"],
-    "ledger": ["money", "babel"],
+    "ledger": ["babel"],
     "pandas": ["pandas"],
     "qif": ["qifparse"],
     "yahoo": ["requests"],
