@@ -1,13 +1,8 @@
 # -*- coding: latin-1 -*-
 import pytest
 from datetime import datetime, date
-
-from piecash import Account, Commodity, Split, Transaction, GncValidationError
-<<<<<<< HEAD
+from piecash import Account, Commodity, Split, Transaction
 from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_transactions
-=======
-from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic
->>>>>>> d159a935168463874fd2a3fca5d62c91f0853051
 
 # dummy line to avoid removing unused symbols
 
@@ -81,7 +76,7 @@ class TestAccount_create_account(object):
         assert a.get_balance(at_date=date(2015, 10, 21)) == 1000
         assert a.get_balance(at_date=date(2015, 10, 25)) == 900
 
-def test_create_standardliability_account(self, new_book):
+    def test_create_standardliability_account(self, new_book):
         EUR = new_book.commodities[0]
         racc = new_book.root_account
 
