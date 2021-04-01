@@ -12,7 +12,7 @@ click = "*"
 
 
 [dev-packages]
-money = "*"
+babel = "*"
 tox-pipenv = "*"
 psycopg2 = "*"
 pymysql = "*"

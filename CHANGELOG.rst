@@ -1,6 +1,12 @@
 What's new
 ==========
 
+Version 1.1.5 (2021-03-21)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- fix ledger export truncation of prices (fix #158)
+- fix ledger export to order transactions by date (fix #159)
+
 Version 1.1.4 (2021-01-29)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -67,7 +67,7 @@ account Mouvements:CURRENCY:EUR5
 
 P 2018-02-21 00:00:00  FOO 0,90 AED
 P 2018-02-21 00:00:00  $US 1,40 €
-P 2018-02-21 00:00:00  € 1,11 AED
+P 2018-02-21 00:00:00  € 1,111111111111111111111111111 AED
 P 2018-02-21 00:00:00  ADF 1,50 AED
 
 2014-12-24 income 1
@@ -108,9 +108,9 @@ P 2018-02-21 00:00:00  ADF 1,50 AED
 	Asset:Fixed:House                         20 000,00 €
 
 2018-02-21 buy foo
-	Mouvements:NASDAQ:FOO                     FOO -130.00 @@ 1 200,00 €
+	Mouvements:NASDAQ:FOO                     -130,00 FOO @@ 1 200,00 €
 	Asset:Current:Savings                     -1 200,00 €
-	Asset:Broker:Foo stock                    FOO 130.00 @@ 1 200,00 €
+	Asset:Broker:Foo stock                    130,00 FOO @@ 1 200,00 €
 	Mouvements:CURRENCY:EUR5                  1 200,00 €
 
 2018-02-21 Opening Balance

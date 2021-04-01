@@ -13,9 +13,11 @@ from .core import Transaction, Account, Commodity, Price, Book
 """
 
 try:
-    from money import Money
+    import babel
+    import babel.numbers
+    BABEL_AVAILABLE = True
 except ImportError:
-    Money = None
+    BABEL_AVAILABLE = False
 
 
 @singledispatch
@@ -43,27 +45,30 @@ def format_commodity(mnemonic, locale):
     return NUMBER_RE.sub("", s)
 
 
-def format_currency(amount, decimals, currency, locale=False):
-    if locale:
-        if locale is True:
-            locale = getdefaultlocale()[0]
-        if Money is None:
+def format_currency(amount, decimals, currency, locale=False, decimal_quantization=True):
+    if locale is True:
+        locale = getdefaultlocale()[0]
+        if BABEL_AVAILABLE is False:
             raise ValueError(
-                f"You must install Money ('pip install money') to export to ledger in your locale '{locale}'"
+                f"You must install babel ('pip install babel') to export to ledger in your locale '{locale}'"
             )
-        return Money(amount=amount, currency=currency).format(locale)
-    else:
-        if Money:
-            try:
-                # version from Money
-                return str(Money(amount=amount, currency=currency))
-            except ValueError:
-                # local hand made version
-                return "{:.{}f} {}".format(amount, decimals, format_commodity(currency, locale))
         else:
-            # local hand made version
-            return "{:.{}f} {}".format(amount, decimals, currency)
-
+            return babel.numbers.format_currency(
+                amount,
+                currency,
+                format=None,
+                locale=locale,
+                currency_digits=True,
+                format_type='standard',
+                decimal_quantization=decimal_quantization
+            )
+    else:
+        # local hand made version
+        if decimal_quantization:
+            digits = decimals
+        else:
+            digits = max(decimals, len((str(amount)+'.').split('.')[1].rstrip('0')))
+        return "{} {:,.{}f}".format(currency, amount, digits)
 
 @ledger.register(Transaction)
 def _(tr, locale=False, **kwargs):
@@ -91,7 +96,8 @@ def _(tr, locale=False, **kwargs):
                         split.quantity,
                         split.account.commodity.precision,
                         split.account.commodity.mnemonic,
-                        locale=False,
+                        locale,
+                        decimal_quantization=False
                     ),
                     amount=format_currency(
                         abs(split.value), tr.currency.precision, tr.currency.mnemonic, locale
@@ -149,7 +155,13 @@ def _(price, locale=False, **kwargs):
     return "P {:%Y-%m-%d %H:%M:%S} {} {}\n".format(
         price.date,
         format_commodity(price.commodity.mnemonic, locale),
-        format_currency(price.value, price.currency.precision, price.currency.mnemonic, locale),
+        format_currency(
+            price.value,
+            price.currency.precision,
+            price.currency.mnemonic,
+            locale,
+            decimal_quantization=False
+        )
     )
 
 
@@ -179,7 +191,7 @@ def _(book, **kwargs):
         res.append(ledger(price, **kwargs))
     res.append("\n")
 
-    for trans in sorted(book.transactions, key=lambda x: (x.currency_guid, x.post_date)):
+    for trans in sorted(book.transactions, key=lambda x: x.post_date):
         res.append(ledger(trans, **kwargs))
         res.append("\n")
 
