@@ -1,6 +1,11 @@
 What's new
 ==========
 
+Version 1.1.6 (2021-04-03)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- add `at_date` parameter to `Account.get_balance` (tx @rvijayc, @gregwalters)
+
 Version 1.1.5 (2021-03-21)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
