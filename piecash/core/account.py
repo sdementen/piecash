@@ -252,7 +252,7 @@ class Account(DeclarativeBaseGuid):
         else:
             return ""
 
-    def get_balance(self, recurse=True, commodity=None, natural_sign=True):
+    def get_balance(self, recurse=True, commodity=None, natural_sign=True, at_date=None):
         """
         Returns the balance of the account (including its children accounts if recurse=True)
         expressed in account's commodity/currency.
@@ -266,6 +266,7 @@ class Account(DeclarativeBaseGuid):
             recurse (bool, optional): True if the balance should include children accounts (default to True)
             commodity (:class:`piecash.core.commodity.Commodity`): the currency into which to get the balance (default to None, i.e. the currency of the account)
             natural_sign (bool, optional): True if the balance sign is reversed for accounts of type {'LIABILITY', 'PAYABLE', 'CREDIT', 'INCOME', 'EQUITY'} (default to True)
+            at_date (:class:`datetime.datetime`): the sum() balance of the account at a given date based on transaction post date
 
         Returns:
             the balance of the account
@@ -273,7 +274,14 @@ class Account(DeclarativeBaseGuid):
         if commodity is None:
             commodity = self.commodity
 
-        balance = sum([sp.quantity for sp in self.splits])
+        if at_date is None:
+            balance = sum([ sp.quantity for sp in self.splits ])
+        else:
+            balance = sum([
+                sp.quantity
+                for sp in self.splits
+                if sp.transaction.post_date <= at_date 
+                ])
 
         if commodity != self.commodity:
             try:
@@ -288,7 +296,10 @@ class Account(DeclarativeBaseGuid):
                 balance = balance * factor
 
         if recurse and self.children:
-            balance += sum(acc.get_balance(recurse=recurse, commodity=commodity, natural_sign=False) for acc in self.children)
+            balance += sum(
+                    acc.get_balance(recurse=recurse, commodity=commodity, natural_sign=False, at_date=at_date) 
+                    for acc in self.children
+                    )
 
         if natural_sign:
             return balance * self.sign

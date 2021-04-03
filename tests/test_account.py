@@ -1,8 +1,8 @@
 # -*- coding: latin-1 -*-
 import pytest
-
-from piecash import Account, Commodity
-from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri
+from datetime import datetime, date
+from piecash import Account, Commodity, Split, Transaction
+from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_transactions
 
 # dummy line to avoid removing unused symbols
 
@@ -67,8 +67,14 @@ class TestAccount_create_account(object):
         assert acc.non_std_scu == 0
         assert acc.commodity_scu == EUR.fraction
         assert acc.get_balance() == 0
+        assert acc.get_balance(at_date=date.today()) == 0
         assert acc.sign == 1
         assert not acc.is_template
+
+    def test_account_balance_on_date(self, book_transactions):
+        a = book_transactions.accounts(name="asset")
+        assert a.get_balance(at_date=date(2015, 10, 21)) == 1000
+        assert a.get_balance(at_date=date(2015, 10, 25)) == 900
 
     def test_create_standardliability_account(self, new_book):
         EUR = new_book.commodities[0]
