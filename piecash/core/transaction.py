@@ -65,7 +65,7 @@ class Split(DeclarativeBaseGuid):
     # relation definitions
     account = relation('Account', back_populates='splits')
     lot = relation('Lot', back_populates='splits')
-    transaction = relation('Transaction', back_populates='splits')
+    transaction = relation('Transaction', back_populates='splits', cascade="refresh-expire")
 
     @property
     def is_credit(self):
@@ -144,7 +144,7 @@ class Split(DeclarativeBaseGuid):
 
         if self.transaction.currency == self.account.commodity:
             if self.quantity != self.value:
-                raise GncValidationError("The split has a quantity diffeerent from value "
+                raise GncValidationError("The split has a quantity different from value "
                                          "while the transaction currency and the account commodity is the same")
         else:
             if self.quantity is None:
@@ -183,6 +183,15 @@ class Split(DeclarativeBaseGuid):
             if self.action == "":
                 self.action = "Sell" if self.quantity.is_signed() else "Buy"
 
+
+# @event.listens_for(Split.transaction, "set")
+# def set_item(obj, value, previous, initiator):
+#     print("hello",obj,value,previous,initiator)
+#     if obj.transaction is not None:
+#         previous = None if previous == attributes.NO_VALUE else previous
+#         print(obj.transaction.splits)
+#         # obj.transaction.splits.append([value] = obj
+#         # obj.transaction.splits.pop(previous)
 
 class Transaction(DeclarativeBaseGuid):
     """
@@ -290,7 +299,8 @@ class Transaction(DeclarativeBaseGuid):
             if value_imbalance:
                 # raise exception instead of creating an imbalance entry as probably an error
                 # (in the gnucash GUI, another decision taken because need of "save unfinished transaction")
-                raise GncImbalanceError("The transaction {} is not balanced on its value".format(self))
+                raise GncImbalanceError(
+                    "The transaction {} is not balanced on its value (delta={})".format(self, value_imbalance))
 
             if any(quantity_imbalances.values()) and self.book.use_trading_accounts:
                 self.normalize_trading_accounts()

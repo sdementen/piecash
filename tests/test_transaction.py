@@ -388,6 +388,33 @@ class TestTransaction_lots(object):
 
 
 class TestTransaction_changes(object):
+
+    def test_delete__replace_existing_split(self, book_transactions):
+        s = len(book_transactions.splits)
+        split = book_transactions.splits[0]
+        transaction = split.transaction
+        assert len(transaction.splits)==2
+        print(transaction.splits)
+        splits = [Split(account=split.account,
+                  value=split.value,
+                  quantity=split.quantity,
+                  ) for split in list(transaction.splits)]
+        print("--")
+        print([hex(id(s)) for s in transaction.splits])
+        print([hex(id(s)) for s in splits])
+
+        assert len(transaction.splits)==2
+        del transaction.splits[:]
+        transaction.splits[:] = splits
+        # del transaction.splits[0]
+        # book_transactions.delete(split)
+        print("should be none", split.transaction)
+        assert len(transaction.splits)==2
+        book_transactions.flush()
+        book_transactions.save()
+        ns = len(book_transactions.splits)
+        assert ns == s
+
     def test_delete_existing_transaction(self, book_transactions):
         l = len(book_transactions.transactions)
         s = len(book_transactions.splits)
