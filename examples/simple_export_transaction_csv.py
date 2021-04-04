@@ -19,9 +19,9 @@ CSV_EXPORT = "export.csv"
 REPORTING_YEAR = 2019
 
 # open the book and the export file
-with open_book(GNUCASH_BOOK, readonly=True, open_if_lock=True) as mybook, Path(CSV_EXPORT).open(
-    "w", newline=""
-) as f:
+with open_book(GNUCASH_BOOK, readonly=True, open_if_lock=True) as mybook, Path(
+    CSV_EXPORT
+).open("w", newline="") as f:
     # initialise the CSV writer
     csv_writer = csv.DictWriter(f, fieldnames=fields)
     csv_writer.writeheader()

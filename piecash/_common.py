@@ -41,25 +41,31 @@ class Recurrence(DeclarativeBase):
             falls on weekend / non-working day.
     """
 
-    __tablename__ = 'recurrences'
+    __tablename__ = "recurrences"
 
-    __table_args__ = {'sqlite_autoincrement': True}
+    __table_args__ = {"sqlite_autoincrement": True}
 
     # column definitions
-    id = Column('id', INTEGER(), primary_key=True, nullable=False, autoincrement=True)
-    obj_guid = Column('obj_guid', VARCHAR(length=32), nullable=False)
-    recurrence_mult = Column('recurrence_mult', INTEGER(), nullable=False)
-    recurrence_period_type = Column('recurrence_period_type', VARCHAR(length=2048), nullable=False)
-    recurrence_period_start = Column('recurrence_period_start', _Date(), nullable=False)
-    recurrence_weekend_adjust = Column('recurrence_weekend_adjust', VARCHAR(length=2048),
-                                       nullable=False)
+    id = Column("id", INTEGER(), primary_key=True, nullable=False, autoincrement=True)
+    obj_guid = Column("obj_guid", VARCHAR(length=32), nullable=False)
+    recurrence_mult = Column("recurrence_mult", INTEGER(), nullable=False)
+    recurrence_period_type = Column(
+        "recurrence_period_type", VARCHAR(length=2048), nullable=False
+    )
+    recurrence_period_start = Column("recurrence_period_start", _Date(), nullable=False)
+    recurrence_weekend_adjust = Column(
+        "recurrence_weekend_adjust", VARCHAR(length=2048), nullable=False
+    )
 
     # relation definitions
     # added from the DeclarativeBaseGUID object (as linked from different objects like the slots)
     def __str__(self):
-        return "{}*{} from {} [{}]".format(self.recurrence_period_type, self.recurrence_mult,
-                                            self.recurrence_period_start,
-                                            self.recurrence_weekend_adjust)
+        return "{}*{} from {} [{}]".format(
+            self.recurrence_period_type,
+            self.recurrence_mult,
+            self.recurrence_period_start,
+            self.recurrence_weekend_adjust,
+        )
 
 
 MAX_NUMBER = 2 ** 63 - 1
@@ -86,11 +92,19 @@ def hybrid_property_gncnumeric(num_col, denom_col):
             elif isinstance(d, (int, int, str)):
                 d = Decimal(d)
             elif isinstance(d, float):
-                raise TypeError(("Received a floating-point number {} where a decimal is expected. " +
-                                 "Use a Decimal, str, or int instead").format(d))
+                raise TypeError(
+                    (
+                        "Received a floating-point number {} where a decimal is expected. "
+                        + "Use a Decimal, str, or int instead"
+                    ).format(d)
+                )
             elif not isinstance(d, Decimal):
-                raise TypeError(("Received an unknown type {} where a decimal is expected. " +
-                                 "Use a Decimal, str, or int instead").format(type(d).__name__))
+                raise TypeError(
+                    (
+                        "Received an unknown type {} where a decimal is expected. "
+                        + "Use a Decimal, str, or int instead"
+                    ).format(type(d).__name__)
+                )
 
             sign, digits, exp = d.as_tuple()
             denom = 10 ** max(-exp, 0)
@@ -100,9 +114,15 @@ def hybrid_property_gncnumeric(num_col, denom_col):
                 denom = denom_basis
 
             num = int(d * denom)
-            if not ((-MAX_NUMBER < num < MAX_NUMBER) and (-MAX_NUMBER < denom < MAX_NUMBER)):
-                raise ValueError(("The amount '{}' cannot be represented in GnuCash. " +
-                                  "Either it is too large or it has too many decimals").format(d))
+            if not (
+                (-MAX_NUMBER < num < MAX_NUMBER) and (-MAX_NUMBER < denom < MAX_NUMBER)
+            ):
+                raise ValueError(
+                    (
+                        "The amount '{}' cannot be represented in GnuCash. "
+                        + "Either it is too large or it has too many decimals"
+                    ).format(d)
+                )
 
         setattr(self, num_name, num)
         setattr(self, denom_name, denom)
@@ -132,6 +152,7 @@ class CallableList(list):
     It can be used as the collection_class of a sqlalchemy relationship or to wrap any list (see examples
     in :class:`piecash.core.session.GncSession`)
     """
+
     fallback = None
 
     def __init__(self, *args):
@@ -156,7 +177,9 @@ class CallableList(list):
             if self.fallback:
                 return self.fallback(**kwargs)
             else:
-                raise KeyError("Could not find object with {} in {}".format(kwargs, self))
+                raise KeyError(
+                    "Could not find object with {} in {}".format(kwargs, self)
+                )
 
     get = __call__
 
@@ -169,8 +192,8 @@ def get_system_currency_mnemonic():
     """
 
     if locale.getlocale() == (None, None):
-        locale.setlocale(locale.LC_ALL, '')
+        locale.setlocale(locale.LC_ALL, "")
 
-    mnemonic = locale.localeconv()['int_curr_symbol'].strip() or "EUR"
+    mnemonic = locale.localeconv()["int_curr_symbol"].strip() or "EUR"
 
     return mnemonic

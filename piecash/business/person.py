@@ -8,11 +8,7 @@ from .._common import hybrid_property_gncnumeric, CallableList
 from .._declbase import DeclarativeBaseGuid
 from ..sa_extra import ChoiceType
 
-TaxIncludedType = [
-    (1, "YES"),
-    (2, "NO"),
-    (3, "USEGLOBAL")
-]
+TaxIncludedType = [(1, "YES"), (2, "NO"), (3, "USEGLOBAL")]
 
 
 class Address(object):
@@ -28,9 +24,29 @@ class Address(object):
         fax (str): self explanatory
         phone (str): self explanatory
     """
-    _address_fields = ['name', 'addr1', 'addr2', 'addr3', 'addr4', 'email', 'fax', 'phone']
 
-    def __init__(self, name="", addr1="", addr2="", addr3="", addr4="", email="", fax="", phone=""):
+    _address_fields = [
+        "name",
+        "addr1",
+        "addr2",
+        "addr3",
+        "addr4",
+        "email",
+        "fax",
+        "phone",
+    ]
+
+    def __init__(
+        self,
+        name="",
+        addr1="",
+        addr2="",
+        addr3="",
+        addr4="",
+        email="",
+        fax="",
+        phone="",
+    ):
         self.name = name
         self.addr1 = addr1
         self.addr2 = addr2
@@ -45,7 +61,8 @@ class Address(object):
 
     def __eq__(self, other):
         return isinstance(other, Address) and all(
-            getattr(other, fld) == getattr(self, fld) for fld in Address._address_fields)
+            getattr(other, fld) == getattr(self, fld) for fld in Address._address_fields
+        )
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -53,31 +70,46 @@ class Address(object):
 
 class Person:
     """A mixin declaring common field for Customer, Vendor and Employee"""
-    active = Column('active', INTEGER(), nullable=False)
 
-    id = Column('id', VARCHAR(length=2048), nullable=False)
+    active = Column("active", INTEGER(), nullable=False)
 
-    addr_name = Column('addr_name', VARCHAR(length=1024))
-    addr_addr1 = Column('addr_addr1', VARCHAR(length=1024))
-    addr_addr2 = Column('addr_addr2', VARCHAR(length=1024))
-    addr_addr3 = Column('addr_addr3', VARCHAR(length=1024))
-    addr_addr4 = Column('addr_addr4', VARCHAR(length=1024))
-    addr_phone = Column('addr_phone', VARCHAR(length=128))
-    addr_fax = Column('addr_fax', VARCHAR(length=128))
-    addr_email = Column('addr_email', VARCHAR(length=256))
+    id = Column("id", VARCHAR(length=2048), nullable=False)
+
+    addr_name = Column("addr_name", VARCHAR(length=1024))
+    addr_addr1 = Column("addr_addr1", VARCHAR(length=1024))
+    addr_addr2 = Column("addr_addr2", VARCHAR(length=1024))
+    addr_addr3 = Column("addr_addr3", VARCHAR(length=1024))
+    addr_addr4 = Column("addr_addr4", VARCHAR(length=1024))
+    addr_phone = Column("addr_phone", VARCHAR(length=128))
+    addr_fax = Column("addr_fax", VARCHAR(length=128))
+    addr_email = Column("addr_email", VARCHAR(length=256))
 
     @declared_attr
     def address(cls):
-        return composite(Address, cls.addr_name, cls.addr_addr1, cls.addr_addr2, cls.addr_addr3, cls.addr_addr4,
-                         cls.addr_email, cls.addr_fax, cls.addr_phone)
+        return composite(
+            Address,
+            cls.addr_name,
+            cls.addr_addr1,
+            cls.addr_addr2,
+            cls.addr_addr3,
+            cls.addr_addr4,
+            cls.addr_email,
+            cls.addr_fax,
+            cls.addr_phone,
+        )
 
     @declared_attr
     def currency_guid(cls):
-        return Column('currency', VARCHAR(length=32), ForeignKey('commodities.guid'), nullable=False)
+        return Column(
+            "currency",
+            VARCHAR(length=32),
+            ForeignKey("commodities.guid"),
+            nullable=False,
+        )
 
     @declared_attr
     def currency(cls):
-        return relation('Commodity')
+        return relation("Commodity")
 
     # hold the name of the counter to use for id
     _counter_name = None
@@ -93,7 +125,11 @@ class Person:
 
     def validate(self):
         if self.id is None:
-            raise ValueError("You cannot flush a {} that is not added to a book".format(self.__class__.__name__))
+            raise ValueError(
+                "You cannot flush a {} that is not added to a book".format(
+                    self.__class__.__name__
+                )
+            )
 
     def on_book_add(self):
         self._assign_id()
@@ -106,16 +142,18 @@ class Person:
     @classmethod
     def __declare_last__(cls):
         from .invoice import Job
+
         owner_type = PersonType.get(cls, None)
         if owner_type:
-            cls.jobs = relation('Job',
-                                primaryjoin=and_(
-                                    cls.guid == foreign(Job.owner_guid),
-                                    owner_type == Job.owner_type,
-                                ),
-                                cascade='all, delete-orphan',
-                                collection_class=CallableList,
-                                )
+            cls.jobs = relation(
+                "Job",
+                primaryjoin=and_(
+                    cls.guid == foreign(Job.owner_guid),
+                    owner_type == Job.owner_type,
+                ),
+                cascade="all, delete-orphan",
+                collection_class=CallableList,
+            )
 
             @event.listens_for(cls.jobs, "append")
             def add(target, value, initiator):
@@ -143,55 +181,67 @@ class Customer(Person, DeclarativeBaseGuid):
         taxtable (:class:`piecash.business.tax.TaxTable`): tax table of the customer
         term (:class:`piecash.business.invoice.Billterm`): bill term of the customer
     """
-    __tablename__ = 'customers'
+
+    __tablename__ = "customers"
 
     __table_args__ = {}
 
     # column definitions
-    name = Column('name', VARCHAR(length=2048), nullable=False)
+    name = Column("name", VARCHAR(length=2048), nullable=False)
     # id is nullable as it is set during validation (happening after flush)
-    notes = Column('notes', VARCHAR(length=2048), nullable=False)
-    _discount_num = Column('discount_num', BIGINT(), nullable=False)
-    _discount_denom = Column('discount_denom', BIGINT(), nullable=False)
+    notes = Column("notes", VARCHAR(length=2048), nullable=False)
+    _discount_num = Column("discount_num", BIGINT(), nullable=False)
+    _discount_denom = Column("discount_denom", BIGINT(), nullable=False)
     discount = hybrid_property_gncnumeric(_discount_num, _discount_denom)
-    _credit_num = Column('credit_num', BIGINT(), nullable=False)
-    _credit_denom = Column('credit_denom', BIGINT(), nullable=False)
+    _credit_num = Column("credit_num", BIGINT(), nullable=False)
+    _credit_denom = Column("credit_denom", BIGINT(), nullable=False)
     credit = hybrid_property_gncnumeric(_credit_num, _credit_denom)
-    tax_override = Column('tax_override', INTEGER(), nullable=False)
+    tax_override = Column("tax_override", INTEGER(), nullable=False)
 
-    shipaddr_name = Column('shipaddr_name', VARCHAR(length=1024))
-    shipaddr_addr1 = Column('shipaddr_addr1', VARCHAR(length=1024))
-    shipaddr_addr2 = Column('shipaddr_addr2', VARCHAR(length=1024))
-    shipaddr_addr3 = Column('shipaddr_addr3', VARCHAR(length=1024))
-    shipaddr_addr4 = Column('shipaddr_addr4', VARCHAR(length=1024))
-    shipaddr_phone = Column('shipaddr_phone', VARCHAR(length=128))
-    shipaddr_fax = Column('shipaddr_fax', VARCHAR(length=128))
-    shipaddr_email = Column('shipaddr_email', VARCHAR(length=256))
-    shipping_address = composite(Address, shipaddr_name, shipaddr_addr1, shipaddr_addr2, shipaddr_addr3, shipaddr_addr4,
-                                 shipaddr_email, shipaddr_fax, shipaddr_phone)
+    shipaddr_name = Column("shipaddr_name", VARCHAR(length=1024))
+    shipaddr_addr1 = Column("shipaddr_addr1", VARCHAR(length=1024))
+    shipaddr_addr2 = Column("shipaddr_addr2", VARCHAR(length=1024))
+    shipaddr_addr3 = Column("shipaddr_addr3", VARCHAR(length=1024))
+    shipaddr_addr4 = Column("shipaddr_addr4", VARCHAR(length=1024))
+    shipaddr_phone = Column("shipaddr_phone", VARCHAR(length=128))
+    shipaddr_fax = Column("shipaddr_fax", VARCHAR(length=128))
+    shipaddr_email = Column("shipaddr_email", VARCHAR(length=256))
+    shipping_address = composite(
+        Address,
+        shipaddr_name,
+        shipaddr_addr1,
+        shipaddr_addr2,
+        shipaddr_addr3,
+        shipaddr_addr4,
+        shipaddr_email,
+        shipaddr_fax,
+        shipaddr_phone,
+    )
 
-    term_guid = Column('terms', VARCHAR(length=32), ForeignKey('billterms.guid'))
-    tax_included = Column('tax_included', ChoiceType(TaxIncludedType))
-    taxtable_guid = Column('taxtable', VARCHAR(length=32), ForeignKey('taxtables.guid'))
+    term_guid = Column("terms", VARCHAR(length=32), ForeignKey("billterms.guid"))
+    tax_included = Column("tax_included", ChoiceType(TaxIncludedType))
+    taxtable_guid = Column("taxtable", VARCHAR(length=32), ForeignKey("taxtables.guid"))
 
     # relation definitions
-    taxtable = relation('Taxtable')
-    term = relation('Billterm')
+    taxtable = relation("Taxtable")
+    term = relation("Billterm")
 
-    def __init__(self,
-                 name,
-                 currency,
-                 id=None,
-                 notes="",
-                 active=1,
-                 tax_override=0,
-                 credit=Decimal(0),
-                 discount=Decimal(0),
-                 taxtable=None,
-                 address=None,
-                 shipping_address=None,
-                 tax_included="USEGLOBAL",
-                 book=None):
+    def __init__(
+        self,
+        name,
+        currency,
+        id=None,
+        notes="",
+        active=1,
+        tax_override=0,
+        credit=Decimal(0),
+        discount=Decimal(0),
+        taxtable=None,
+        address=None,
+        shipping_address=None,
+        tax_included="USEGLOBAL",
+        book=None,
+    ):
         self.name = name
         self.currency = currency
         self.notes = notes
@@ -235,38 +285,41 @@ class Employee(Person, DeclarativeBaseGuid):
         creditcard_account (:class:`piecash.core.account.Account`): credit card account for the employee
 
     """
-    __tablename__ = 'employees'
+
+    __tablename__ = "employees"
 
     __table_args__ = {}
 
     # column definitions
-    name = Column('username', VARCHAR(length=2048), nullable=False)
+    name = Column("username", VARCHAR(length=2048), nullable=False)
     # id is nullable as it is set during validation (happening after flush)
-    language = Column('language', VARCHAR(length=2048), nullable=False)
-    acl = Column('acl', VARCHAR(length=2048), nullable=False)
-    ccard_guid = Column('ccard_guid', VARCHAR(length=32), ForeignKey('accounts.guid'))
-    _workday_num = Column('workday_num', BIGINT(), nullable=False)
-    _workday_denom = Column('workday_denom', BIGINT(), nullable=False)
+    language = Column("language", VARCHAR(length=2048), nullable=False)
+    acl = Column("acl", VARCHAR(length=2048), nullable=False)
+    ccard_guid = Column("ccard_guid", VARCHAR(length=32), ForeignKey("accounts.guid"))
+    _workday_num = Column("workday_num", BIGINT(), nullable=False)
+    _workday_denom = Column("workday_denom", BIGINT(), nullable=False)
     workday = hybrid_property_gncnumeric(_workday_num, _workday_denom)
-    _rate_num = Column('rate_num', BIGINT(), nullable=False)
-    _rate_denom = Column('rate_denom', BIGINT(), nullable=False)
+    _rate_num = Column("rate_num", BIGINT(), nullable=False)
+    _rate_denom = Column("rate_denom", BIGINT(), nullable=False)
     rate = hybrid_property_gncnumeric(_rate_num, _rate_denom)
 
     # relation definitions
-    creditcard_account = relation('Account')
+    creditcard_account = relation("Account")
 
-    def __init__(self,
-                 name,
-                 currency,
-                 creditcard_account=None,
-                 id=None,
-                 active=1,
-                 acl="",
-                 language="",
-                 workday=Decimal(0),
-                 rate=Decimal(0),
-                 address=None,
-                 book=None):
+    def __init__(
+        self,
+        name,
+        currency,
+        creditcard_account=None,
+        id=None,
+        active=1,
+        acl="",
+        language="",
+        workday=Decimal(0),
+        rate=Decimal(0),
+        address=None,
+        book=None,
+    ):
         self.name = name
         self.currency = currency
         self.active = active
@@ -310,37 +363,42 @@ class Vendor(Person, DeclarativeBaseGuid):
         taxtable (:class:`piecash.business.tax.TaxTable`): tax table of the vendor
         term (:class:`piecash.business.invoice.Billterm`): bill term of the vendor
     """
-    __tablename__ = 'vendors'
+
+    __tablename__ = "vendors"
 
     __table_args__ = {}
 
     # column definitions
-    name = Column('name', VARCHAR(length=2048), nullable=False)
+    name = Column("name", VARCHAR(length=2048), nullable=False)
     # id is nullable as it is set during validation (happening after flush)
-    notes = Column('notes', VARCHAR(length=2048), nullable=False)
-    tax_override = Column('tax_override', INTEGER(), nullable=False)
+    notes = Column("notes", VARCHAR(length=2048), nullable=False)
+    tax_override = Column("tax_override", INTEGER(), nullable=False)
 
-    term_guid = Column('terms', VARCHAR(length=32), ForeignKey('billterms.guid'))
-    tax_included = Column('tax_inc', VARCHAR(length=2048))
-    tax_table_guid = Column('tax_table', VARCHAR(length=32), ForeignKey('taxtables.guid'))
+    term_guid = Column("terms", VARCHAR(length=32), ForeignKey("billterms.guid"))
+    tax_included = Column("tax_inc", VARCHAR(length=2048))
+    tax_table_guid = Column(
+        "tax_table", VARCHAR(length=32), ForeignKey("taxtables.guid")
+    )
 
     # relation definitions
-    taxtable = relation('Taxtable')
-    term = relation('Billterm')
+    taxtable = relation("Taxtable")
+    term = relation("Billterm")
 
-    def __init__(self,
-                 name,
-                 currency,
-                 id=None,
-                 notes="",
-                 active=1,
-                 tax_override=0,
-                 taxtable=None,
-                 credit=Decimal(0),
-                 discount=Decimal(0),
-                 address=None,
-                 tax_included="USEGLOBAL",
-                 book=None):
+    def __init__(
+        self,
+        name,
+        currency,
+        id=None,
+        notes="",
+        active=1,
+        tax_override=0,
+        taxtable=None,
+        credit=Decimal(0),
+        discount=Decimal(0),
+        address=None,
+        tax_included="USEGLOBAL",
+        book=None,
+    ):
         self.name = name
         self.currency = currency
         self.notes = notes
@@ -365,7 +423,4 @@ class Vendor(Person, DeclarativeBaseGuid):
     _counter_name = "counter_vendor"
 
 
-PersonType = {
-    Vendor: 4,
-    Customer: 2
-}
+PersonType = {Vendor: 4, Customer: 2}

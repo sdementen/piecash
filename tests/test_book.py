@@ -239,7 +239,9 @@ class TestBook_open_book(object):
             pass
 
         # open book specifying open_if_lock as True and RW to delete lock
-        with open_book(uri_conn=book_uri, open_if_lock=True, readonly=False, do_backup=False) as b:
+        with open_book(
+            uri_conn=book_uri, open_if_lock=True, readonly=False, do_backup=False
+        ) as b:
             b.session.delete_lock()
             b.save()
 
@@ -275,7 +277,10 @@ class TestBook_access_book(object):
 
         new_book.use_split_action_field = True
         assert new_book["options"].value == {
-            "Accounts": {"Use Split Action Field for Number": "t", "Use Trading Accounts": "t"}
+            "Accounts": {
+                "Use Split Action Field for Number": "t",
+                "Use Trading Accounts": "t",
+            }
         }
 
         new_book.RO_threshold_day = 50
@@ -289,7 +294,10 @@ class TestBook_access_book(object):
 
         new_book.RO_threshold_day = 0
         assert new_book["options"].value == {
-            "Accounts": {"Use Split Action Field for Number": "t", "Use Trading Accounts": "t"}
+            "Accounts": {
+                "Use Split Action Field for Number": "t",
+                "Use Trading Accounts": "t",
+            }
         }
 
         new_book.use_split_action_field = False
@@ -413,7 +421,9 @@ class TestBook_access_book(object):
     def test_splits_df_with_additional(self, book_transactions):
         # Adding in two additional memo fields here. If it works for non-unique it should
         # be fine for unique fields.
-        df = book_transactions.splits_df(additional_fields=["memo", "memo"]).reset_index()
+        df = book_transactions.splits_df(
+            additional_fields=["memo", "memo"]
+        ).reset_index()
 
         # remove guid columns as not comparable from run to run
         for col in df.columns:
@@ -491,11 +501,22 @@ class TestBook_access_book(object):
             == "Rue de la Chenille éclairée, 22"
         )
         assert book_reference_3_0_0_fulloptions.business_company_contact == "John Michu"
-        assert book_reference_3_0_0_fulloptions.business_company_email == "woozie@example.com"
-        assert book_reference_3_0_0_fulloptions.business_company_ID == "SIREN 123 456 789"
+        assert (
+            book_reference_3_0_0_fulloptions.business_company_email
+            == "woozie@example.com"
+        )
+        assert (
+            book_reference_3_0_0_fulloptions.business_company_ID == "SIREN 123 456 789"
+        )
         assert book_reference_3_0_0_fulloptions.business_company_name == "Woozie Inc"
-        assert book_reference_3_0_0_fulloptions.business_company_phone == "+33 1 33 33 33 33"
-        assert book_reference_3_0_0_fulloptions.business_company_website == "www.woozie.com"
+        assert (
+            book_reference_3_0_0_fulloptions.business_company_phone
+            == "+33 1 33 33 33 33"
+        )
+        assert (
+            book_reference_3_0_0_fulloptions.business_company_website
+            == "www.woozie.com"
+        )
 
     def test_business_slots_nooptions(self, book_reference_3_0_0_basic):
         """

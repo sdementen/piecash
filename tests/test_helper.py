@@ -29,9 +29,11 @@ file_template_full = book_folder / "test_book.gnucash"
 # file_template_full = book_folder / "reference" / "3_0" / "default_3_0_0_full_options.gnucash"
 file_template_full = book_folder / "all-accounts.gnucash"
 file_for_test_full = test_folder / "test_book_for_test.gnucash"
-file_ghost_kvp_scheduled_transaction = book_folder / "ghost_kvp_scheduled_transaction.gnucash"
+file_ghost_kvp_scheduled_transaction = (
+    book_folder / "ghost_kvp_scheduled_transaction.gnucash"
+)
 file_ghost_kvp_scheduled_transaction_for_test = (
-        test_folder / "ghost_kvp_scheduled_transaction_for_test.gnucash"
+    test_folder / "ghost_kvp_scheduled_transaction_for_test.gnucash"
 )
 
 
@@ -50,7 +52,10 @@ LOCALSERVER_USERNAME = os.environ.get("PIECASH_DBSERVER_TEST_USERNAME", "")
 
 db_sqlite_uri = "sqlite:///{}".format(db_sqlite)
 databases_to_check = [None, db_sqlite_uri]
-db_config = {"sqlite": dict(sqlite_file=db_sqlite), "sqlite_in_mem": dict(sqlite_file=None)}
+db_config = {
+    "sqlite": dict(sqlite_file=db_sqlite),
+    "sqlite_in_mem": dict(sqlite_file=None),
+}
 
 if TRAVIS:
     pg_password = os.environ.get("PG_PASSWORD", "")
@@ -102,7 +107,9 @@ elif LOCALSERVER:
     )
 elif APPVEYOR:
     databases_to_check.append("postgresql://postgres:Password12!@localhost:5432/foo")
-    databases_to_check.append("mysql+pymysql://root:Password12!@localhost/foo?charset=utf8")
+    databases_to_check.append(
+        "mysql+pymysql://root:Password12!@localhost/foo?charset=utf8"
+    )
     db_config.update(
         {
             "postgres": dict(
@@ -198,7 +205,9 @@ def book_basic(request):
     with create_book(uri_conn=name, currency="EUR", keep_foreign_keys=False) as b:
         # create some accounts
         curr = b.currencies[0]
-        cdty = Commodity(namespace=u"échange", mnemonic=u"ïoà", fullname=u"Example of unicode déta")
+        cdty = Commodity(
+            namespace=u"échange", mnemonic=u"ïoà", fullname=u"Example of unicode déta"
+        )
         a = Account(name="asset", type="ASSET", commodity=curr, parent=b.root_account)
         Account(name="broker", type="STOCK", commodity=cdty, parent=a)
         Account(name="exp", type="EXPENSE", commodity=curr, parent=b.root_account)
@@ -225,19 +234,31 @@ def book_transactions(request):
         cdty = Commodity(
             namespace=u"BEL20", mnemonic=u"GnuCash Inc.", fullname=u"GnuCash Inc. stock"
         )
-        asset = Account(name="asset", type="ASSET", commodity=curr, parent=b.root_account)
+        asset = Account(
+            name="asset", type="ASSET", commodity=curr, parent=b.root_account
+        )
         foreign_asset = Account(
-            name="foreign asset", type="ASSET", commodity=other_curr, parent=b.root_account
+            name="foreign asset",
+            type="ASSET",
+            commodity=other_curr,
+            parent=b.root_account,
         )
         stock = Account(name="broker", type="STOCK", commodity=cdty, parent=asset)
-        expense = Account(name="exp", type="EXPENSE", commodity=curr, parent=b.root_account)
-        income = Account(name="inc", type="INCOME", commodity=curr, parent=b.root_account)
+        expense = Account(
+            name="exp", type="EXPENSE", commodity=curr, parent=b.root_account
+        )
+        income = Account(
+            name="inc", type="INCOME", commodity=curr, parent=b.root_account
+        )
 
         tr1 = Transaction(
             post_date=date(2015, 10, 21),
             description="my revenue",
             currency=curr,
-            splits=[Split(account=asset, value=(1000, 1)), Split(account=income, value=(-1000, 1))],
+            splits=[
+                Split(account=asset, value=(1000, 1)),
+                Split(account=income, value=(-1000, 1)),
+            ],
         )
         tr2 = Transaction(
             post_date=date(2015, 10, 25),
@@ -256,7 +277,12 @@ def book_transactions(request):
             splits=[
                 Split(account=asset, value=(-200, 1)),
                 Split(account=expense, value=(15, 1), memo="transaction costs"),
-                Split(account=stock, value=(185, 1), quantity=(6, 1), memo="purchase of stock"),
+                Split(
+                    account=stock,
+                    value=(185, 1),
+                    quantity=(6, 1),
+                    memo="purchase of stock",
+                ),
             ],
         )
         tr_to_foreign = Transaction(
@@ -277,8 +303,18 @@ def book_transactions(request):
                 Split(account=foreign_asset, value=(-135, 1)),
             ],
         )
-        Price(commodity=cdty, currency=other_curr, date=date(2015, 11, 1), value=(123, 100))
-        Price(commodity=cdty, currency=other_curr, date=date(2015, 11, 4), value=(127, 100))
+        Price(
+            commodity=cdty,
+            currency=other_curr,
+            date=date(2015, 11, 1),
+            value=(123, 100),
+        )
+        Price(
+            commodity=cdty,
+            currency=other_curr,
+            date=date(2015, 11, 4),
+            value=(127, 100),
+        )
         Price(commodity=cdty, currency=curr, date=date(2015, 11, 2), value=(234, 100))
 
         b.save()
@@ -339,7 +375,9 @@ book_reference_3_0_0_fulloptions = generate_book_fixture(
     PurePath() / "default_3_0_0_full_options.gnucash"
 )
 
-book_reference_3_0_0_basic = generate_book_fixture(PurePath() / "default_3_0_0_basic.gnucash")
+book_reference_3_0_0_basic = generate_book_fixture(
+    PurePath() / "default_3_0_0_basic.gnucash"
+)
 
 # complex 2.6 book sample
 book_complex = generate_book_fixture(PurePath() / "complex_sample.gnucash")

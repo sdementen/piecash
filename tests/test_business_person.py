@@ -6,7 +6,15 @@ from decimal import Decimal
 # dummy line to avoid removing unused symbols
 from piecash import Address, Employee, Account, Vendor, Customer
 from piecash.business import Taxtable, TaxtableEntry
-from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, Person
+from test_helper import (
+    db_sqlite_uri,
+    db_sqlite,
+    new_book,
+    new_book_USD,
+    book_uri,
+    book_basic,
+    Person,
+)
 
 a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, Person
 
@@ -30,7 +38,7 @@ class TestBusinessPerson_create_Person(object):
 
         # adding the person to the book does not per se set the id
         book_basic.add(c)
-        assert c.id == '000001'
+        assert c.id == "000001"
         # but validation sets the id if still to None
         assert getattr(book_basic, Person._counter_name) == 1
 
@@ -108,16 +116,32 @@ class TestBusinessPerson_create_Person(object):
         EUR = book_basic.commodities(namespace="CURRENCY")
 
         # create person detached from book with a specific id
-        taxtable = Taxtable(name="Local tax", entries=[
-            TaxtableEntry(type="percentage",
-                          amount=Decimal("6.5"),
-                          account=Account(name="MyAcc", parent=book_basic.root_account, commodity=EUR, type="ASSET"))
-        ])
-        te = TaxtableEntry(type="percentage",
-                           amount=Decimal("6.5"),
-                           account=Account(name="MyOtherAcc", parent=book_basic.root_account, commodity=EUR,
-                                           type="ASSET"),
-                           taxtable=taxtable)
+        taxtable = Taxtable(
+            name="Local tax",
+            entries=[
+                TaxtableEntry(
+                    type="percentage",
+                    amount=Decimal("6.5"),
+                    account=Account(
+                        name="MyAcc",
+                        parent=book_basic.root_account,
+                        commodity=EUR,
+                        type="ASSET",
+                    ),
+                )
+            ],
+        )
+        te = TaxtableEntry(
+            type="percentage",
+            amount=Decimal("6.5"),
+            account=Account(
+                name="MyOtherAcc",
+                parent=book_basic.root_account,
+                commodity=EUR,
+                type="ASSET",
+            ),
+            taxtable=taxtable,
+        )
 
         c = Person(name="John Föo", currency=EUR, taxtable=taxtable, book=book_basic)
         assert len(taxtable.entries) == 2

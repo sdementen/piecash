@@ -52,9 +52,10 @@ class TestModelCore_EmptyBook(object):
         # two accounts in an empty gnucash file
         account_names = session.query(Account.name).all()
 
-        assert set(account_names) == {(u'Template Root',),
-                                      (u'Root Account',),
-                                      }
+        assert set(account_names) == {
+            (u"Template Root",),
+            (u"Root Account",),
+        }
 
     def test_transactions(self, session):
         # no transactions in an empty gnucash file
@@ -73,16 +74,33 @@ class TestModelCore_EmptyBook(object):
 
     def test_versions(self, session):
         # confirm versions of tables
-        versions = session.query(Version.table_name,
-                                 Version.table_version).all()
-        assert set(versions) == {(u'Gnucash', 3000000), (u'Gnucash-Resave', 19920),
-                                 (u'accounts', 1), (u'books', 1),
-                                 (u'budgets', 1), (u'budget_amounts', 1), ('jobs', 1), (u'orders', 1),
-                                 (u'taxtables', 2), (u'taxtable_entries', 3), (u'vendors', 1), (u'recurrences', 2),
-                                 (u'slots', 4), (u'transactions', 4), (u'splits', 4), (u'lots', 2), (u'entries', 4),
-                                 (u'billterms', 2), (u'invoices', 4), (u'commodities', 1), (u'schedxactions', 1),
-                                 (u'prices', 3), (u'customers', 2), (u'employees', 2),
-                                 }
+        versions = session.query(Version.table_name, Version.table_version).all()
+        assert set(versions) == {
+            (u"Gnucash", 3000000),
+            (u"Gnucash-Resave", 19920),
+            (u"accounts", 1),
+            (u"books", 1),
+            (u"budgets", 1),
+            (u"budget_amounts", 1),
+            ("jobs", 1),
+            (u"orders", 1),
+            (u"taxtables", 2),
+            (u"taxtable_entries", 3),
+            (u"vendors", 1),
+            (u"recurrences", 2),
+            (u"slots", 4),
+            (u"transactions", 4),
+            (u"splits", 4),
+            (u"lots", 2),
+            (u"entries", 4),
+            (u"billterms", 2),
+            (u"invoices", 4),
+            (u"commodities", 1),
+            (u"schedxactions", 1),
+            (u"prices", 3),
+            (u"customers", 2),
+            (u"employees", 2),
+        }
 
     def test_readonly_true(self, session_readonly):
         # control exception when adding object to readonly gnucash db

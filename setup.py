@@ -11,7 +11,9 @@ import sys
 if "check_output" not in dir(subprocess):
 
     def check_output(cmd_args, *args, **kwargs):
-        proc = subprocess.Popen(cmd_args, *args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)
+        proc = subprocess.Popen(
+            cmd_args, *args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs
+        )
         out, err = proc.communicate()
         if proc.returncode != 0:
             raise subprocess.CalledProcessError(args)
@@ -189,9 +191,12 @@ def _lint():
     # Python 3 compat:
     # - The result of subprocess call outputs are byte strings, meaning we need
     # to pass a byte string to endswith.
-    project_python_files = [filename for filename in get_project_files() if filename.endswith(b".py")]
+    project_python_files = [
+        filename for filename in get_project_files() if filename.endswith(b".py")
+    ]
     retcode = subprocess.call(
-        ["flake8", "--ignore=E126,E121", "--max-line-length=99", "--max-complexity=10"] + project_python_files
+        ["flake8", "--ignore=E126,E121", "--max-line-length=99", "--max-complexity=10"]
+        + project_python_files
     )
     if retcode == 0:
         print_success_message("No style errors")
@@ -199,7 +204,13 @@ def _lint():
 
 
 ## package dependencies
-install_requires = ["SQLAlchemy>=1.0, <1.4", "SQLAlchemy-Utils!=0.36.8", "pytz", "tzlocal", "click"]
+install_requires = [
+    "SQLAlchemy>=1.0, <1.4",
+    "SQLAlchemy-Utils!=0.36.8",
+    "pytz",
+    "tzlocal",
+    "click",
+]
 extras_require = {
     "postgres": ["psycopg2"],
     "mysql": ["PyMySQL"],
@@ -208,7 +219,13 @@ extras_require = {
     "qif": ["qifparse"],
     "yahoo": ["requests"],
     "test": ["pytest", "pytest-cov", "tox"],
-    "doc": ["sphinx", "sphinxcontrib-napoleon", "sphinxcontrib-programoutput", "sphinx-rtd-theme", "ipython"],
+    "doc": [
+        "sphinx",
+        "sphinxcontrib-napoleon",
+        "sphinxcontrib-programoutput",
+        "sphinx-rtd-theme",
+        "ipython",
+    ],
 }
 # build an 'all' option covering all options
 extras_require["all"] = deps_all = sum(

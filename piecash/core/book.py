@@ -79,42 +79,57 @@ class Book(DeclarativeBaseGuid):
         business_company_address (str): address of book company (link to slit "options/Business/Company Address")
         business_company_website (str): website URL of book company (link to slit "options/Business/Company Website URL")
     """
-    __tablename__ = 'books'
+
+    __tablename__ = "books"
 
     __table_args__ = {}
 
     # column definitions
-    root_account_guid = Column('root_account_guid', VARCHAR(length=32),
-                               ForeignKey('accounts.guid'), nullable=False)
-    root_template_guid = Column('root_template_guid', VARCHAR(length=32),
-                                ForeignKey('accounts.guid'), nullable=False)
+    root_account_guid = Column(
+        "root_account_guid",
+        VARCHAR(length=32),
+        ForeignKey("accounts.guid"),
+        nullable=False,
+    )
+    root_template_guid = Column(
+        "root_template_guid",
+        VARCHAR(length=32),
+        ForeignKey("accounts.guid"),
+        nullable=False,
+    )
 
     # relation definitions
-    root_account = relation('Account',
-                            # back_populates='root_book',
-                            foreign_keys=[root_account_guid],
-                            )
-    root_template = relation('Account',
-                             foreign_keys=[root_template_guid])
+    root_account = relation(
+        "Account",
+        # back_populates='root_book',
+        foreign_keys=[root_account_guid],
+    )
+    root_template = relation("Account", foreign_keys=[root_template_guid])
 
     uri = None
     session = None
 
     # link options to KVP
-    use_trading_accounts = kvp_attribute("options/Accounts/Use Trading Accounts",
-                                         from_gnc=lambda v: v == 't',
-                                         to_gnc=lambda v: 't',
-                                         default=False)
+    use_trading_accounts = kvp_attribute(
+        "options/Accounts/Use Trading Accounts",
+        from_gnc=lambda v: v == "t",
+        to_gnc=lambda v: "t",
+        default=False,
+    )
 
-    use_split_action_field = kvp_attribute("options/Accounts/Use Split Action Field for Number",
-                                           from_gnc=lambda v: v == 't',
-                                           to_gnc=lambda v: 't' if v else 'f',
-                                           default=False)
+    use_split_action_field = kvp_attribute(
+        "options/Accounts/Use Split Action Field for Number",
+        from_gnc=lambda v: v == "t",
+        to_gnc=lambda v: "t" if v else "f",
+        default=False,
+    )
 
-    RO_threshold_day = kvp_attribute("options/Accounts/Day Threshold for Read-Only Transactions (red line)",
-                                     from_gnc=lambda v: int(v),
-                                     to_gnc=lambda v: float(v),
-                                     default=0)
+    RO_threshold_day = kvp_attribute(
+        "options/Accounts/Day Threshold for Read-Only Transactions (red line)",
+        from_gnc=lambda v: int(v),
+        to_gnc=lambda v: float(v),
+        default=0,
+    )
 
     counter_customer = kvp_attribute("counters/gncCustomer", default=0)
     counter_vendor = kvp_attribute("counters/gncVendor", default=0)
@@ -125,13 +140,23 @@ class Book(DeclarativeBaseGuid):
     counter_exp_voucher = kvp_attribute("counters/gncExpVoucher", default=0)
     counter_order = kvp_attribute("counters/gncOrder", default=0)
 
-    business_company_phone = kvp_attribute("options/Business/Company Phone Number", default="")
-    business_company_email = kvp_attribute("options/Business/Company Email Address", default="")
-    business_company_contact = kvp_attribute("options/Business/Company Contact Person", default="")
+    business_company_phone = kvp_attribute(
+        "options/Business/Company Phone Number", default=""
+    )
+    business_company_email = kvp_attribute(
+        "options/Business/Company Email Address", default=""
+    )
+    business_company_contact = kvp_attribute(
+        "options/Business/Company Contact Person", default=""
+    )
     business_company_ID = kvp_attribute("options/Business/Company ID", default="")
     business_company_name = kvp_attribute("options/Business/Company Name", default="")
-    business_company_address = kvp_attribute("options/Business/Company Address", default="")
-    business_company_website = kvp_attribute("options/Business/Company Website URL", default="")
+    business_company_address = kvp_attribute(
+        "options/Business/Company Address", default=""
+    )
+    business_company_website = kvp_attribute(
+        "options/Business/Company Website URL", default=""
+    )
 
     def __init__(self, root_account=None, root_template=None):
         self.root_account = root_account
@@ -166,10 +191,11 @@ class Book(DeclarativeBaseGuid):
         """
         Record in session._all_changes the objects that have been modified before each flush
         """
-        for change, l in {"dirty": session.dirty,
-                          "new": session.new,
-                          "deleted": session.deleted
-                          }.items():
+        for change, l in {
+            "dirty": session.dirty,
+            "new": session.new,
+            "deleted": session.deleted,
+        }.items():
             for obj in l:
                 # retrieve the dictionary of changes for the given obj
                 attrs = session._all_changes.setdefault(id(obj), {})
@@ -202,7 +228,10 @@ class Book(DeclarativeBaseGuid):
 
         # sort object from local to global (ensure Split checked before Transaction) and remove deleted objects
         from . import Account, Transaction, Split, Commodity
-        sort_order = defaultdict(lambda: 20, {Account: 10, Transaction: 5, Split: 3, Commodity: 2})
+
+        sort_order = defaultdict(
+            lambda: 20, {Account: 10, Transaction: 5, Split: 3, Commodity: 2}
+        )
         txs = sorted(txs, key=lambda x: sort_order[type(x)])
 
         # for each object, validate it
@@ -219,34 +248,41 @@ class Book(DeclarativeBaseGuid):
             self._trading_accounts = {}
 
         tacc = self._trading_accounts.get(key, None)
-        if tacc: return tacc
+        if tacc:
+            return tacc
 
         from .account import Account
 
         try:
             trading = self.root_account.children(name="Trading")
         except KeyError:
-            trading = Account(name="Trading",
-                              type="TRADING",
-                              placeholder=1,
-                              commodity=self.default_currency,
-                              parent=self.root_account)
+            trading = Account(
+                name="Trading",
+                type="TRADING",
+                placeholder=1,
+                commodity=self.default_currency,
+                parent=self.root_account,
+            )
         try:
             nspc = trading.children(name=cdty.namespace)
         except KeyError:
-            nspc = Account(name=namespace,
-                           type="TRADING",
-                           placeholder=1,
-                           commodity=self.default_currency,
-                           parent=trading)
+            nspc = Account(
+                name=namespace,
+                type="TRADING",
+                placeholder=1,
+                commodity=self.default_currency,
+                parent=trading,
+            )
         try:
             tacc = nspc.children(name=cdty.mnemonic)
         except KeyError:
-            tacc = Account(name=mnemonic,
-                           type="TRADING",
-                           placeholder=0,
-                           commodity=cdty,
-                           parent=nspc)
+            tacc = Account(
+                name=mnemonic,
+                type="TRADING",
+                placeholder=0,
+                commodity=cdty,
+                parent=nspc,
+            )
         # self.flush()
         return tacc
 
@@ -261,8 +297,7 @@ class Book(DeclarativeBaseGuid):
         self.session.delete(obj)
 
     def save(self):
-        """Save the changes to the file/DB (=commit transaction)
-        """
+        """Save the changes to the file/DB (=commit transaction)"""
         self.session.commit()
 
     def flush(self):
@@ -270,8 +305,7 @@ class Book(DeclarativeBaseGuid):
         self.session.flush()
 
     def cancel(self):
-        """Cancel all the changes that have not been saved (=rollback transaction)
-        """
+        """Cancel all the changes that have not been saved (=rollback transaction)"""
         self.session.rollback()
 
     @property
@@ -291,8 +325,7 @@ class Book(DeclarativeBaseGuid):
         self.close()
 
     def close(self):
-        """Close a session. Any changes not yet saved are rolled back. Any lock on the file/DB is released.
-        """
+        """Close a session. Any changes not yet saved are rolled back. Any lock on the file/DB is released."""
         session = self.session
         # cancel pending changes
         session.rollback()
@@ -326,8 +359,7 @@ class Book(DeclarativeBaseGuid):
             try:
                 return self.session.query(cls).filter_by(**kwargs).one()
             except NoResultFound:
-                raise ValueError("Could not find a {}({})".format(cls.__name__,
-                                                                  kwargs))
+                raise ValueError("Could not find a {}({})".format(cls.__name__, kwargs))
         else:
             return self.session.query(cls)
 
@@ -457,23 +489,31 @@ class Book(DeclarativeBaseGuid):
 
     def preload(self):
         # preload list of accounts
-        accounts = self.session.query(Account).options(joinedload("splits").joinedload("transaction"),
-                                                       joinedload("children"),
-                                                       joinedload("commodity"),
-                                                       ).all()
+        accounts = (
+            self.session.query(Account)
+            .options(
+                joinedload("splits").joinedload("transaction"),
+                joinedload("children"),
+                joinedload("commodity"),
+            )
+            .all()
+        )
 
         # load all splits
-        splits = self.session.query(Split).join(Transaction).options(
-            joinedload("account"),
-            joinedload("lot")) \
-            .order_by(Transaction.post_date, Split.value).all()
+        splits = (
+            self.session.query(Split)
+            .join(Transaction)
+            .options(joinedload("account"), joinedload("lot"))
+            .order_by(Transaction.post_date, Split.value)
+            .all()
+        )
 
         return accounts, splits
 
     def splits_df(self, additional_fields=None):
         """
         Return a pandas DataFrame with all splits (:class:`piecash.core.commodity.Split`) from the book
-        
+
         :parameters: :class:`list`
 
         :return: :class:`pandas.DataFrame`
@@ -490,23 +530,42 @@ class Book(DeclarativeBaseGuid):
         accounts = self.session.query(Account).all()
 
         # preload list of commodities
-        commodities = self.session.query(Commodity).filter(Commodity.namespace != "template").all()
+        commodities = (
+            self.session.query(Commodity)
+            .filter(Commodity.namespace != "template")
+            .all()
+        )
 
         # preload list of transactions
         transactions = self.session.query(Transaction).all()
 
         # load all splits
-        splits = self.session.query(Split).join(Transaction) \
-            .order_by(Transaction.post_date, Split.value).all()
+        splits = (
+            self.session.query(Split)
+            .join(Transaction)
+            .order_by(Transaction.post_date, Split.value)
+            .all()
+        )
 
         # build dataframe. Adds additional transaction.guid field.
-        fields = ["guid", "value", "quantity", "memo", "transaction.guid", "transaction.description",
-                  "transaction.post_date", "transaction.currency.guid", "transaction.currency.mnemonic",
-                  "account.fullname", "account.commodity.guid", "account.commodity.mnemonic",
-                  ] + additional_fields
+        fields = [
+            "guid",
+            "value",
+            "quantity",
+            "memo",
+            "transaction.guid",
+            "transaction.description",
+            "transaction.post_date",
+            "transaction.currency.guid",
+            "transaction.currency.mnemonic",
+            "account.fullname",
+            "account.commodity.guid",
+            "account.commodity.mnemonic",
+        ] + additional_fields
         fields_getter = [attrgetter(fld) for fld in fields]
-        df_splits = pandas.DataFrame([[fg(sp) for fg in fields_getter]
-                                      for sp in splits], columns=fields)
+        df_splits = pandas.DataFrame(
+            [[fg(sp) for fg in fields_getter] for sp in splits], columns=fields
+        )
         df_splits = df_splits[df_splits["account.commodity.mnemonic"] != "template"]
         df_splits = df_splits.set_index("guid")
 
@@ -528,16 +587,26 @@ class Book(DeclarativeBaseGuid):
 
         # load all prices
         Currency = aliased(Commodity)
-        prices = self.session.query(Price) \
-            .join(Commodity, Price.commodity) \
-            .join(Currency, Price.currency) \
-            .order_by(Commodity.mnemonic, Price.date, Currency.mnemonic).all()
+        prices = (
+            self.session.query(Price)
+            .join(Commodity, Price.commodity)
+            .join(Currency, Price.currency)
+            .order_by(Commodity.mnemonic, Price.date, Currency.mnemonic)
+            .all()
+        )
 
-        fields = ["date", "type", "value",
-                  "commodity.guid", "commodity.mnemonic",
-                  "currency.guid", "currency.mnemonic", ]
+        fields = [
+            "date",
+            "type",
+            "value",
+            "commodity.guid",
+            "commodity.mnemonic",
+            "currency.guid",
+            "currency.mnemonic",
+        ]
         fields_getter = [attrgetter(fld) for fld in fields]
-        df_prices = pandas.DataFrame([[fg(pr) for fg in fields_getter]
-                                      for pr in prices], columns=fields)
+        df_prices = pandas.DataFrame(
+            [[fg(pr) for fg in fields_getter] for pr in prices], columns=fields
+        )
 
         return df_prices

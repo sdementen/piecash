@@ -2,7 +2,14 @@
 import pytest
 from datetime import datetime, date
 from piecash import Account, Commodity, Split, Transaction
-from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_transactions
+from test_helper import (
+    db_sqlite_uri,
+    db_sqlite,
+    new_book,
+    new_book_USD,
+    book_uri,
+    book_transactions,
+)
 
 # dummy line to avoid removing unused symbols
 
@@ -112,8 +119,13 @@ class TestAccount_create_account(object):
         racc = new_book.root_account
 
         # create account with unknown type
-        acc = Account(name="test account", type="ASSET", commodity=EUR, parent=racc,
-                      children=[Account(name="test sub-account", type="ASSET", commodity=EUR)])
+        acc = Account(
+            name="test account",
+            type="ASSET",
+            commodity=EUR,
+            parent=racc,
+            children=[Account(name="test sub-account", type="ASSET", commodity=EUR)],
+        )
         new_book.flush()
         assert len(acc.children) == 1
 
@@ -150,7 +162,9 @@ class TestAccount_features(object):
         pos = "STOCK,MUTUAL,EXPENSE,BANK,TRADING,CASH,ASSET,RECEIVABLE".split(",")
         all = neg + pos
         for acc in all:
-            assert Account(name=acc, type=acc, commodity=EUR).sign == (1 if acc in pos else -1)
+            assert Account(name=acc, type=acc, commodity=EUR).sign == (
+                1 if acc in pos else -1
+            )
 
     def test_scu(self, new_book):
         EUR = new_book.commodities[0]

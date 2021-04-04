@@ -9,15 +9,17 @@ import os
 from piecash import create_book, Account, Commodity, open_book
 from piecash.core.factories import create_currency_from_ISO
 
-filename = os.path.abspath('test.blob')
+filename = os.path.abspath("test.blob")
 if os.path.exists(filename):
     os.remove(filename)
 
 with create_book(filename) as book:
-    a = Account(parent=book.root_account,
-                name="wow",
-                type="ASSET",
-                commodity=create_currency_from_ISO("CAD"))
+    a = Account(
+        parent=book.root_account,
+        name="wow",
+        type="ASSET",
+        commodity=create_currency_from_ISO("CAD"),
+    )
 
     book.save()
 

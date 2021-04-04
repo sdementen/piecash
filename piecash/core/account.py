@@ -11,14 +11,22 @@ from .._declbase import DeclarativeBaseGuid
 from ..sa_extra import mapped_to_slot_property
 
 root_types = {"ROOT"}
-asset_types = {'RECEIVABLE', 'MUTUAL', 'CASH', 'ASSET', 'BANK', 'STOCK'}
-liability_types = {'CREDIT', 'LIABILITY', 'PAYABLE'}
+asset_types = {"RECEIVABLE", "MUTUAL", "CASH", "ASSET", "BANK", "STOCK"}
+liability_types = {"CREDIT", "LIABILITY", "PAYABLE"}
 income_types = {"INCOME"}
 expense_types = {"EXPENSE"}
-trading_types = {'TRADING'}
+trading_types = {"TRADING"}
 equity_types = {"EQUITY"}
 # : the different types of accounts
-ACCOUNT_TYPES = equity_types | income_types | expense_types | asset_types | liability_types | root_types | trading_types
+ACCOUNT_TYPES = (
+    equity_types
+    | income_types
+    | expense_types
+    | asset_types
+    | liability_types
+    | root_types
+    | trading_types
+)
 
 
 class AccountType(Enum):
@@ -103,17 +111,26 @@ class Account(DeclarativeBaseGuid):
         budget_amounts (list of :class:`piecash.budget.BudgetAmount`): list of budget amounts of the account
         scheduled_transaction (:class:`piecash.core.transaction.ScheduledTransaction`): scheduled transaction linked to the account
     """
-    __tablename__ = 'accounts'
+
+    __tablename__ = "accounts"
 
     __table_args__ = {}
 
     # column definitions
-    guid = Column('guid', VARCHAR(length=32), primary_key=True, nullable=False, default=lambda: uuid.uuid4().hex)
-    name = Column('name', VARCHAR(length=2048), nullable=False)
-    type = Column('account_type', VARCHAR(length=2048), nullable=False)
-    commodity_guid = Column('commodity_guid', VARCHAR(length=32), ForeignKey('commodities.guid'))
-    _commodity_scu = Column('commodity_scu', INTEGER(), nullable=False)
-    _non_std_scu = Column('non_std_scu', INTEGER(), nullable=False)
+    guid = Column(
+        "guid",
+        VARCHAR(length=32),
+        primary_key=True,
+        nullable=False,
+        default=lambda: uuid.uuid4().hex,
+    )
+    name = Column("name", VARCHAR(length=2048), nullable=False)
+    type = Column("account_type", VARCHAR(length=2048), nullable=False)
+    commodity_guid = Column(
+        "commodity_guid", VARCHAR(length=32), ForeignKey("commodities.guid")
+    )
+    _commodity_scu = Column("commodity_scu", INTEGER(), nullable=False)
+    _non_std_scu = Column("non_std_scu", INTEGER(), nullable=False)
 
     @property
     def non_std_scu(self):
@@ -136,59 +153,69 @@ class Account(DeclarativeBaseGuid):
 
         self._commodity_scu = value
 
-    parent_guid = Column('parent_guid', VARCHAR(length=32), ForeignKey('accounts.guid'))
-    code = Column('code', VARCHAR(length=2048))
-    description = Column('description', VARCHAR(length=2048))
-    hidden = Column('hidden', INTEGER())
-    _placeholder = Column('placeholder', INTEGER())
-    placeholder = mapped_to_slot_property(_placeholder,
-                                          slot_name="placeholder",
-                                          slot_transform=lambda v: "true" if v else None)
+    parent_guid = Column("parent_guid", VARCHAR(length=32), ForeignKey("accounts.guid"))
+    code = Column("code", VARCHAR(length=2048))
+    description = Column("description", VARCHAR(length=2048))
+    hidden = Column("hidden", INTEGER())
+    _placeholder = Column("placeholder", INTEGER())
+    placeholder = mapped_to_slot_property(
+        _placeholder,
+        slot_name="placeholder",
+        slot_transform=lambda v: "true" if v else None,
+    )
 
     # relation definitions
-    commodity = relation('Commodity', back_populates='accounts')
-    children = relation('Account',
-                        back_populates='parent',
-                        cascade='all, delete-orphan',
-                        collection_class=CallableList,
-                        )
-    parent = relation('Account',
-                      back_populates='children',
-                      remote_side=guid,
-                      )
-    splits = relation('Split',
-                      back_populates='account',
-                      cascade='all, delete-orphan',
-                      collection_class=CallableList,
-                      )
-    lots = relation('Lot',
-                    back_populates='account',
-                    cascade='all, delete-orphan',
-                    collection_class=CallableList,
-                    )
-    budget_amounts = relation('BudgetAmount',
-                              back_populates='account',
-                              cascade='all, delete-orphan',
-                              collection_class=CallableList,
-                              )
-    scheduled_transaction = relation('ScheduledTransaction',
-                                     back_populates='template_account',
-                                     cascade='all, delete-orphan',
-                                     uselist=False,
-                                     )
+    commodity = relation("Commodity", back_populates="accounts")
+    children = relation(
+        "Account",
+        back_populates="parent",
+        cascade="all, delete-orphan",
+        collection_class=CallableList,
+    )
+    parent = relation(
+        "Account",
+        back_populates="children",
+        remote_side=guid,
+    )
+    splits = relation(
+        "Split",
+        back_populates="account",
+        cascade="all, delete-orphan",
+        collection_class=CallableList,
+    )
+    lots = relation(
+        "Lot",
+        back_populates="account",
+        cascade="all, delete-orphan",
+        collection_class=CallableList,
+    )
+    budget_amounts = relation(
+        "BudgetAmount",
+        back_populates="account",
+        cascade="all, delete-orphan",
+        collection_class=CallableList,
+    )
+    scheduled_transaction = relation(
+        "ScheduledTransaction",
+        back_populates="template_account",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
 
-    def __init__(self,
-                 name,
-                 type,
-                 commodity,
-                 parent=None,
-                 description='',
-                 commodity_scu=None,
-                 hidden=0,
-                 placeholder=0,
-                 code='',
-                 book=None,
-                 children=None):
+    def __init__(
+        self,
+        name,
+        type,
+        commodity,
+        parent=None,
+        description="",
+        commodity_scu=None,
+        hidden=0,
+        placeholder=0,
+        code="",
+        book=None,
+        children=None,
+    ):
         book = book or (commodity and commodity.book) or (parent and parent.book)
         if not book:
             raise ValueError("Could not find a book to attach the account to")
@@ -212,26 +239,41 @@ class Account(DeclarativeBaseGuid):
 
     def validate(self):
         if self.type not in ACCOUNT_TYPES:
-            raise ValueError("Account_type '{}' is not in {}".format(self.type, ACCOUNT_TYPES))
+            raise ValueError(
+                "Account_type '{}' is not in {}".format(self.type, ACCOUNT_TYPES)
+            )
 
         if self.parent:
-            if not _is_parent_child_types_consistent(self.parent.type, self.type, self.book.control_mode):
-                raise ValueError("Child type '{}' is not consistent with parent type {}".format(
-                    self.type, self.parent.type))
+            if not _is_parent_child_types_consistent(
+                self.parent.type, self.type, self.book.control_mode
+            ):
+                raise ValueError(
+                    "Child type '{}' is not consistent with parent type {}".format(
+                        self.type, self.parent.type
+                    )
+                )
 
             for acc in self.parent.children:
                 if acc.name == self.name and acc != self:
                     raise ValueError(
-                        "{} has two children with the same name {} : {} and {}".format(self.parent, self.name,
-                                                                                       self, acc))
+                        "{} has two children with the same name {} : {} and {}".format(
+                            self.parent, self.name, self, acc
+                        )
+                    )
         else:
             if self.type in root_types:
-                if self.name not in ['Template Root', 'Root Account']:
-                    raise ValueError("{} is a root account but has a name = '{}'".format(self, self.name))
+                if self.name not in ["Template Root", "Root Account"]:
+                    raise ValueError(
+                        "{} is a root account but has a name = '{}'".format(
+                            self, self.name
+                        )
+                    )
             else:
-                raise ValueError("{} has no parent but is not a root account".format(self))
+                raise ValueError(
+                    "{} has no parent but is not a root account".format(self)
+                )
 
-    @validates('commodity')
+    @validates("commodity")
     def observe_commodity(self, key, value):
         """
         Ensure update of commodity_scu when commodity is changed
@@ -252,7 +294,9 @@ class Account(DeclarativeBaseGuid):
         else:
             return ""
 
-    def get_balance(self, recurse=True, commodity=None, natural_sign=True, at_date=None):
+    def get_balance(
+        self, recurse=True, commodity=None, natural_sign=True, at_date=None
+    ):
         """
         Returns the balance of the account (including its children accounts if recurse=True)
         expressed in account's commodity/currency.
@@ -275,13 +319,15 @@ class Account(DeclarativeBaseGuid):
             commodity = self.commodity
 
         if at_date is None:
-            balance = sum([ sp.quantity for sp in self.splits ])
+            balance = sum([sp.quantity for sp in self.splits])
         else:
-            balance = sum([
-                sp.quantity
-                for sp in self.splits
-                if sp.transaction.post_date <= at_date 
-                ])
+            balance = sum(
+                [
+                    sp.quantity
+                    for sp in self.splits
+                    if sp.transaction.post_date <= at_date
+                ]
+            )
 
         if commodity != self.commodity:
             try:
@@ -297,9 +343,14 @@ class Account(DeclarativeBaseGuid):
 
         if recurse and self.children:
             balance += sum(
-                    acc.get_balance(recurse=recurse, commodity=commodity, natural_sign=False, at_date=at_date) 
-                    for acc in self.children
-                    )
+                acc.get_balance(
+                    recurse=recurse,
+                    commodity=commodity,
+                    natural_sign=False,
+                    at_date=at_date,
+                )
+                for acc in self.children
+            )
 
         if natural_sign:
             return balance * self.sign
@@ -312,7 +363,7 @@ class Account(DeclarativeBaseGuid):
 
     @property
     def is_template(self):
-        return self.commodity.namespace == 'template'
+        return self.commodity.namespace == "template"
 
     def __str__(self):
         if self.commodity:

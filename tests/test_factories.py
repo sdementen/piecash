@@ -9,7 +9,15 @@ import tzlocal
 
 from piecash import GnucashException, Commodity
 from piecash.core import factories
-from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, needweb
+from test_helper import (
+    db_sqlite_uri,
+    db_sqlite,
+    new_book,
+    new_book_USD,
+    book_uri,
+    book_basic,
+    needweb,
+)
 
 # dummy line to avoid removing unused symbols
 
@@ -20,7 +28,8 @@ class TestFactoriesCommodities(object):
     def test_create_stock_accounts_simple(self, book_basic):
         with pytest.raises(GnucashException):
             factories.create_stock_accounts(
-                book_basic.default_currency, broker_account=book_basic.accounts(name="broker")
+                book_basic.default_currency,
+                broker_account=book_basic.accounts(name="broker"),
             )
 
         broker = book_basic.accounts(name="broker")
@@ -42,11 +51,17 @@ class TestFactoriesCommodities(object):
         assert len(inc_accounts) == 1
 
         acc, inc_accounts = factories.create_stock_accounts(
-            appl, broker_account=broker, income_account=income, income_account_types="CL"
+            appl,
+            broker_account=broker,
+            income_account=income,
+            income_account_types="CL",
         )
         assert len(inc_accounts) == 1
         acc, inc_accounts = factories.create_stock_accounts(
-            appl, broker_account=broker, income_account=income, income_account_types="CS"
+            appl,
+            broker_account=broker,
+            income_account=income,
+            income_account_types="CS",
         )
         assert len(inc_accounts) == 1
         acc, inc_accounts = factories.create_stock_accounts(
@@ -54,7 +69,10 @@ class TestFactoriesCommodities(object):
         )
         assert len(inc_accounts) == 1
         acc, inc_accounts = factories.create_stock_accounts(
-            appl, broker_account=broker, income_account=income, income_account_types="D/CL/CS/I"
+            appl,
+            broker_account=broker,
+            income_account=income,
+            income_account_types="D/CL/CS/I",
         )
         assert len(income.children) == 4
         book_basic.flush()
@@ -109,7 +127,9 @@ class TestFactoriesTransactions(object):
         assert sp2.account == book_basic.accounts(name="asset")
         assert sp1.value == -sp2.value
         assert sp1.quantity == sp1.value
-        assert tr.enter_date == tzlocal.get_localzone().localize(today.replace(microsecond=0))
+        assert tr.enter_date == tzlocal.get_localzone().localize(
+            today.replace(microsecond=0)
+        )
         assert tr.post_date == tzlocal.get_localzone().localize(today).date()
 
     def test_single_transaction_tz(self, book_basic):

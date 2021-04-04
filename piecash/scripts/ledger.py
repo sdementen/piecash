@@ -13,7 +13,11 @@ from piecash.scripts.cli import cli
 
 @cli.command()
 @click.argument("book", type=click.Path(exists=True))
-@click.option("--locale/--no-locale", default=False, help="Export currency amounts using locale for currencies format")
+@click.option(
+    "--locale/--no-locale",
+    default=False,
+    help="Export currency amounts using locale for currencies format",
+)
 @click.option(
     "--commodity-notes/--no-commodity-notes",
     default=True,
@@ -36,4 +40,11 @@ def ledger(book, output, locale, commodity_notes, short_account_names):
     This scripts export a GnuCash BOOK to the ledget-cli format.
     """
     with piecash.open_book(book, open_if_lock=True) as data:
-        output.write(piecash.ledger(data, locale=locale, commodity_notes=commodity_notes,short_account_names=short_account_names))
+        output.write(
+            piecash.ledger(
+                data,
+                locale=locale,
+                commodity_notes=commodity_notes,
+                short_account_names=short_account_names,
+            )
+        )

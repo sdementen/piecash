@@ -24,7 +24,7 @@ with piecash.open_book(filename, open_if_lock=True) as book:
 
     # Get all commodities.
     # The commodities (including currencies) in the book are only those used in accounts.
-    #commodities = book.commodities
+    # commodities = book.commodities
 
     # Get all the currencies in the book (i.e. for update).
     print("All currencies used in the book:")
@@ -38,17 +38,23 @@ with piecash.open_book(filename, open_if_lock=True) as book:
     cdty = book.get(Commodity, namespace="CURRENCY", mnemonic=symbol)
 
     # Accessing attributes of a commodity.
-    print("Commodity namespace={cdty.namespace}\n"
+    print(
+        "Commodity namespace={cdty.namespace}\n"
         "          mnemonic={cdty.mnemonic}\n"
         "          cusip={cdty.cusip}\n"
-        "          fraction={cdty.fraction}".format(cdty=cdty))
+        "          fraction={cdty.fraction}".format(cdty=cdty)
+    )
 
     # Loop through the existing commodity prices.
     # This can be used to fetch the points for a price graph.
     print("\nHistorical prices:")
     for pr in cdty.prices:
-        print("Price date={pr.date}"
-            "      value={pr.value} {pr.currency.mnemonic}/{pr.commodity.mnemonic}".format(pr=pr))
+        print(
+            "Price date={pr.date}"
+            "      value={pr.value} {pr.currency.mnemonic}/{pr.commodity.mnemonic}".format(
+                pr=pr
+            )
+        )
 
     # List of accounts which use the commodity:
-    #cdty.accounts
+    # cdty.accounts

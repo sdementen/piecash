@@ -15,6 +15,7 @@ from .core import Transaction, Account, Commodity, Price, Book
 try:
     import babel
     import babel.numbers
+
     BABEL_AVAILABLE = True
 except ImportError:
     BABEL_AVAILABLE = False
@@ -45,7 +46,9 @@ def format_commodity(mnemonic, locale):
     return NUMBER_RE.sub("", s)
 
 
-def format_currency(amount, decimals, currency, locale=False, decimal_quantization=True):
+def format_currency(
+    amount, decimals, currency, locale=False, decimal_quantization=True
+):
     if locale is True:
         locale = getdefaultlocale()[0]
         if BABEL_AVAILABLE is False:
@@ -59,29 +62,33 @@ def format_currency(amount, decimals, currency, locale=False, decimal_quantizati
                 format=None,
                 locale=locale,
                 currency_digits=True,
-                format_type='standard',
-                decimal_quantization=decimal_quantization
+                format_type="standard",
+                decimal_quantization=decimal_quantization,
             )
     else:
         # local hand made version
         if decimal_quantization:
             digits = decimals
         else:
-            digits = max(decimals, len((str(amount)+'.').split('.')[1].rstrip('0')))
+            digits = max(decimals, len((str(amount) + ".").split(".")[1].rstrip("0")))
         return "{} {:,.{}f}".format(currency, amount, digits)
+
 
 @ledger.register(Transaction)
 def _(tr, locale=False, **kwargs):
     """Return a ledger-cli alike representation of the transaction"""
     s = [
         "{:%Y-%m-%d} {}{}\n".format(
-            tr.post_date, "({}) ".format(tr.num.replace(")", "")) if tr.num else "", tr.description
+            tr.post_date,
+            "({}) ".format(tr.num.replace(")", "")) if tr.num else "",
+            tr.description,
         )
     ]
     if tr.notes:
         s.append("\t;{}\n".format(tr.notes))
     for split in sorted(
-        tr.splits, key=lambda split: (split.value, split.transaction_guid, split.account_guid)
+        tr.splits,
+        key=lambda split: (split.value, split.transaction_guid, split.account_guid),
     ):
         if split.account.commodity.mnemonic == "template":
             return ""
@@ -97,16 +104,21 @@ def _(tr, locale=False, **kwargs):
                         split.account.commodity.precision,
                         split.account.commodity.mnemonic,
                         locale,
-                        decimal_quantization=False
+                        decimal_quantization=False,
                     ),
                     amount=format_currency(
-                        abs(split.value), tr.currency.precision, tr.currency.mnemonic, locale
+                        abs(split.value),
+                        tr.currency.precision,
+                        tr.currency.mnemonic,
+                        locale,
                     ),
                 )
             )
         else:
             s.append(
-                format_currency(split.value, tr.currency.precision, tr.currency.mnemonic, locale)
+                format_currency(
+                    split.value, tr.currency.precision, tr.currency.mnemonic, locale
+                )
             )
 
         if split.memo:
@@ -145,7 +157,9 @@ def _(acc, short_account_names=False, **kwargs):
     if acc.description != "":
         res += "\tnote {}\n".format(acc.description)
 
-    res += '\tcheck commodity == "{}"\n'.format(acc.commodity.mnemonic)  # .replace('"', '\\"'))
+    res += '\tcheck commodity == "{}"\n'.format(
+        acc.commodity.mnemonic
+    )  # .replace('"', '\\"'))
     return res
 
 
@@ -160,8 +174,8 @@ def _(price, locale=False, **kwargs):
             price.currency.precision,
             price.currency.mnemonic,
             locale,
-            decimal_quantization=False
-        )
+            decimal_quantization=False,
+        ),
     )
 
 
@@ -187,7 +201,9 @@ def _(book, **kwargs):
         res.append("\n")
 
     # Prices
-    for price in sorted(book.prices, key=lambda x: (x.commodity_guid, x.currency_guid, x.date)):
+    for price in sorted(
+        book.prices, key=lambda x: (x.commodity_guid, x.currency_guid, x.date)
+    ):
         res.append(ledger(price, **kwargs))
     res.append("\n")
 

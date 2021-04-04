@@ -18,7 +18,9 @@ MAX_ATTEMPT = 5
 
 YAHOO_BASE_URL = "https://query1.finance.yahoo.com/v7/finance"
 
-YahooSymbol = namedtuple("YahooSymbol", "name,symbol,exchange,timezone,currency,date,price")
+YahooSymbol = namedtuple(
+    "YahooSymbol", "name,symbol,exchange,timezone,currency,date,price"
+)
 YahooQuote = namedtuple("YahooQuote", "date,open,high,low,close,adj_close,volume")
 
 
@@ -33,7 +35,9 @@ def get_latest_quote(symbol):
     except IndexError:
         from .core.commodity import GncCommodityError
 
-        raise GncCommodityError("Can't find information on symbol '{}' on yahoo".format(symbol))
+        raise GncCommodityError(
+            "Can't find information on symbol '{}' on yahoo".format(symbol)
+        )
 
     tz = data["exchangeTimezoneName"]
 
@@ -43,7 +47,9 @@ def get_latest_quote(symbol):
         data["exchange"],
         tz,
         data["currency"],
-        datetime.datetime.fromtimestamp(data["regularMarketTime"]).astimezone(pytz.timezone(tz)),
+        datetime.datetime.fromtimestamp(data["regularMarketTime"]).astimezone(
+            pytz.timezone(tz)
+        ),
         data["regularMarketPrice"],
     )
 
@@ -88,7 +94,9 @@ def download_quote(symbol, date_from, date_to, tz=None):
     time_stamp_to = int(date_to.timestamp())
 
     for i in range(MAX_ATTEMPT):
-        logging.info("{} attempt to download quotes for symbol {} from yahoo".format(i, symbol))
+        logging.info(
+            "{} attempt to download quotes for symbol {} from yahoo".format(i, symbol)
+        )
 
         crumble_str, cookie_str = get_crumble_and_cookie(symbol)
 
@@ -122,7 +130,9 @@ def download_quote(symbol, date_from, date_to, tz=None):
 if __name__ == "__main__":
     print(get_latest_quote("KO"))
 
-    print(download_quote("ENGI.PA", "2018-02-26", "2018-03-01", tz=pytz.timezone("CET")))
+    print(
+        download_quote("ENGI.PA", "2018-02-26", "2018-03-01", tz=pytz.timezone("CET"))
+    )
 
 if __name__ == "__main__":
     print(get_latest_quote("ENGI.PA"))
