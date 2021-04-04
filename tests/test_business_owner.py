@@ -3,7 +3,15 @@ from __future__ import unicode_literals
 
 # dummy line to avoid removing unused symbols
 from piecash import Employee, Job
-from test_helper import db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, Person
+from test_helper import (
+    db_sqlite_uri,
+    db_sqlite,
+    new_book,
+    new_book_USD,
+    book_uri,
+    book_basic,
+    Person,
+)
 
 a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, Person
 

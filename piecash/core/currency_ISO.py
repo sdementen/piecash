@@ -2,7 +2,9 @@
 from collections import namedtuple
 from xml.etree import ElementTree
 
-ISO_type = namedtuple("ISO_type", "country	currency	mnemonic	cusip	fraction".split("\t"))
+ISO_type = namedtuple(
+    "ISO_type", "country	currency	mnemonic	cusip	fraction".split("\t")
+)
 
 # https://www.currency-iso.org/dam/downloads/lists/list_one.xml
 ISO_currencies_XML = """<ISO_4217 Pblshd="2018-08-29">
@@ -1954,7 +1956,8 @@ ISO_currencies_XML = """<ISO_4217 Pblshd="2018-08-29">
 </CcyTbl>
 </ISO_4217>
 """
-ISO_currencies = {cur.findtext("Ccy"): ISO_type(*[e.text for e in cur])
-                  for cur in ElementTree.fromstring(ISO_currencies_XML).findall(".//CcyNtry")
-                  if cur.findtext("CcyMnrUnts")
-                  }
+ISO_currencies = {
+    cur.findtext("Ccy"): ISO_type(*[e.text for e in cur])
+    for cur in ElementTree.fromstring(ISO_currencies_XML).findall(".//CcyNtry")
+    if cur.findtext("CcyMnrUnts")
+}

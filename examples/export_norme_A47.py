@@ -8,14 +8,18 @@ import jinja2
 
 from piecash import open_book
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     this_folder = os.path.dirname(os.path.realpath(__file__))
 
-    with open_book(os.path.join(this_folder, "..", "gnucash_books", "CGT2015.gnucash"), open_if_lock=True) as book:
+    with open_book(
+        os.path.join(this_folder, "..", "gnucash_books", "CGT2015.gnucash"),
+        open_if_lock=True,
+    ) as book:
         transactions = book.transactions
 
         env = jinja2.Environment(trim_blocks=True, lstrip_blocks=True)
-        xml = env.from_string(u"""
+        xml = env.from_string(
+            u"""
 <?xml version="1.0"?>
 <comptabilite>
   <exercice>
@@ -47,10 +51,12 @@ if __name__ == '__main__':
     </journal>
   </exercice>
 </comptabilite>
-        """).render(transactions=transactions,
-                    enumerate=enumerate,
-                    abs=abs,
-                    )
+        """
+        ).render(
+            transactions=transactions,
+            enumerate=enumerate,
+            abs=abs,
+        )
 
         with io.open("resultat.xml", "w", encoding="utf-8") as f:
             f.write(xml)

@@ -31,21 +31,29 @@ def quandl_fx(fx_mnemonic, base_mnemonic, start_date):
     try:
         query_result = json.loads(text_result)
     except ValueError:
-        logging.error("issue when retrieving info from quandl.com : '{}'".format(text_result))
+        logging.error(
+            "issue when retrieving info from quandl.com : '{}'".format(text_result)
+        )
         return []
     if "error" in query_result:
         logging.error(
-            "issue when retrieving info from quandl.com : '{}'".format(query_result["error"])
+            "issue when retrieving info from quandl.com : '{}'".format(
+                query_result["error"]
+            )
         )
         return []
     if "quandl_error" in query_result:
         logging.error(
-            "issue when retrieving info from quandl.com : '{}'".format(query_result["quandl_error"])
+            "issue when retrieving info from quandl.com : '{}'".format(
+                query_result["quandl_error"]
+            )
         )
         return []
     if "errors" in query_result and query_result["errors"]:
         logging.error(
-            "issue when retrieving info from quandl.com : '{}'".format(query_result["errors"])
+            "issue when retrieving info from quandl.com : '{}'".format(
+                query_result["errors"]
+            )
         )
         return []
 

@@ -15,15 +15,24 @@ REFERENCE = Path(__file__).parent / "references"
 
 @pytest.mark.parametrize(
     "options",
-    [dict(), dict(locale=True), dict(commodity_notes=True), dict(short_account_names=True)],
+    [
+        dict(),
+        dict(locale=True),
+        dict(commodity_notes=True),
+        dict(short_account_names=True),
+    ],
 )
 def test_out_write(book_complex, options):
     ledger_output = piecash.ledger(book_complex, **options)
 
-    file_name = "file_template_full" + "".join(f".{k}_{v}" for k, v in options.items()) + ".ledger"
+    file_name = (
+        "file_template_full"
+        + "".join(f".{k}_{v}" for k, v in options.items())
+        + ".ledger"
+    )
 
     # to generate the first time the expected output of the test
-    (REFERENCE /  file_name).write_text(ledger_output, encoding="utf-8")
+    (REFERENCE / file_name).write_text(ledger_output, encoding="utf-8")
 
     assert ledger_output == (REFERENCE / file_name).read_text(encoding="utf-8")
 

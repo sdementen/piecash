@@ -13,7 +13,6 @@ from ._common import hybrid_property_gncnumeric
 from .sa_extra import _DateTime, DeclarativeBase, _Date
 
 
-
 class KVP_Type(Enum):
     KVP_TYPE_INVALID = -1
     KVP_TYPE_GINT64 = 1
@@ -38,21 +37,21 @@ pytype_KVPtype = {
 }
 
 KVPtype_fields = {
-    KVP_Type.KVP_TYPE_GINT64: 'int64_val',
-    KVP_Type.KVP_TYPE_DOUBLE: 'double_val',
-    KVP_Type.KVP_TYPE_STRING: 'string_val',
-    KVP_Type.KVP_TYPE_GUID: 'guid_val',
-    KVP_Type.KVP_TYPE_TIMESPEC: 'timespec_val',
-    KVP_Type.KVP_TYPE_GDATE: 'gdate_val',
-    KVP_Type.KVP_TYPE_NUMERIC: ('numeric_val_num', 'numeric_val_denom'),
-    KVP_Type.KVP_TYPE_FRAME: 'guid',
-    KVP_Type.KVP_TYPE_GLIST: 'guid',
+    KVP_Type.KVP_TYPE_GINT64: "int64_val",
+    KVP_Type.KVP_TYPE_DOUBLE: "double_val",
+    KVP_Type.KVP_TYPE_STRING: "string_val",
+    KVP_Type.KVP_TYPE_GUID: "guid_val",
+    KVP_Type.KVP_TYPE_TIMESPEC: "timespec_val",
+    KVP_Type.KVP_TYPE_GDATE: "gdate_val",
+    KVP_Type.KVP_TYPE_NUMERIC: ("numeric_val_num", "numeric_val_denom"),
+    KVP_Type.KVP_TYPE_FRAME: "guid",
+    KVP_Type.KVP_TYPE_GLIST: "guid",
 }
 
 
 class SlotType(types.TypeDecorator):
-    """Used to customise the DateTime type for sqlite (ie without the separators as in gnucash
-    """
+    """Used to customise the DateTime type for sqlite (ie without the separators as in gnucash"""
+
     impl = INTEGER
 
     def process_bind_param(self, value, dialect):
@@ -73,8 +72,11 @@ class DictWrapper(object):
             return False
 
     def __getitem__(self, key):
-        assert not isinstance(key, int), \
-            "You are accessing slots with an integer (={}) while a string is expected".format(key)
+        assert not isinstance(
+            key, int
+        ), "You are accessing slots with an integer (={}) while a string is expected".format(
+            key
+        )
         keys = key.split("/", 1)
         key = keys[0]
         for sl in self.slots:
@@ -97,11 +99,9 @@ class DictWrapper(object):
             # new key
             if len(keys) > 1:
                 if isinstance(self, SlotFrame):
-                    sf = SlotFrame(name=self._name + "/" + key,
-                                   obj_guid=self.guid_val)
+                    sf = SlotFrame(name=self._name + "/" + key, obj_guid=self.guid_val)
                 else:
-                    sf = SlotFrame(name=key,
-                                   obj_guid=self.guid)
+                    sf = SlotFrame(name=key, obj_guid=self.guid)
                 sf[keys[1]] = value
                 self.slots.append(sf)
             else:
@@ -116,7 +116,9 @@ class DictWrapper(object):
         if isinstance(value, sl._python_type):
             sl.value = value
         else:
-            raise TypeError("Type of '{}' is not one of {}".format(value, sl._python_type))
+            raise TypeError(
+                "Type of '{}' is not one of {}".format(value, sl._python_type)
+            )
 
     def __delitem__(self, key):
         if isinstance(key, slice):
@@ -146,17 +148,19 @@ class DictWrapper(object):
 
 
 class Slot(DeclarativeBase):
-    __tablename__ = 'slots'
+    __tablename__ = "slots"
 
     __table_args__ = (
-        Index('slots_guid_index', 'obj_guid'),
-        {'sqlite_autoincrement': True, }
+        Index("slots_guid_index", "obj_guid"),
+        {
+            "sqlite_autoincrement": True,
+        },
     )
 
     # column definitions
-    id = Column('id', INTEGER(), primary_key=True, nullable=False, autoincrement=True)
-    obj_guid = Column('obj_guid', VARCHAR(length=32), nullable=False)
-    _name = Column('name', VARCHAR(length=4096), nullable=False)
+    id = Column("id", INTEGER(), primary_key=True, nullable=False, autoincrement=True)
+    obj_guid = Column("obj_guid", VARCHAR(length=32), nullable=False)
+    _name = Column("name", VARCHAR(length=4096), nullable=False)
 
     @property
     def name(self):
@@ -169,10 +173,10 @@ class Slot(DeclarativeBase):
     def name(self, value):
         self._name = value
 
-    slot_type = Column('slot_type', SlotType(), nullable=False)
+    slot_type = Column("slot_type", SlotType(), nullable=False)
 
     __mapper_args__ = {
-        'polymorphic_on': slot_type,
+        "polymorphic_on": slot_type,
     }
 
     def __init__(self, name, value=None, obj_guid=None):
@@ -188,7 +192,7 @@ class Slot(DeclarativeBase):
 
 class SlotSimple(Slot):
     __mapper_args__ = {
-        'polymorphic_identity': -1,
+        "polymorphic_identity": -1,
     }
 
     _python_type = ()
@@ -202,72 +206,75 @@ class SlotSimple(Slot):
         setattr(self, self._field, value)
 
     def __eq__(self, other):
-        return (isinstance(other, self.__class__)
-                and self.name == other.name
-                and self.value == other.value
-                )
+        return (
+            isinstance(other, self.__class__)
+            and self.name == other.name
+            and self.value == other.value
+        )
 
 
 def define_simpleslot(postfix, pytype, KVPtype, field, col_type, col_default):
     cls = type(
-        'Slot{}'.format(postfix),
+        "Slot{}".format(postfix),
         (SlotSimple,),
         {
-            "__mapper_args__": {'polymorphic_identity': KVPtype},
+            "__mapper_args__": {"polymorphic_identity": KVPtype},
             field: Column(field, col_type, default=col_default),
             "_field": field,
             "_python_type": pytype,
-        }
+        },
     )
     return cls
 
 
-SlotInt = define_simpleslot(postfix="Int",
-                            pytype=(int,),
-                            KVPtype=KVP_Type.KVP_TYPE_GINT64,
-                            field="int64_val",
-                            col_type=BIGINT(),
-                            col_default=0,
-                            )
-SlotString = define_simpleslot(postfix="String",
-                               pytype=(str,),
-                               KVPtype=KVP_Type.KVP_TYPE_STRING,
-                               field="string_val",
-                               col_type=VARCHAR(length=4096),
-                               col_default=None,
-                               )
-SlotDouble = define_simpleslot(postfix="Double",
-                               pytype=(float,),
-                               KVPtype=KVP_Type.KVP_TYPE_DOUBLE,
-                               field="double_val",
-                               col_type=REAL(),
-                               col_default=0,
-                               )
-SlotTime = define_simpleslot(postfix="Time",
-                             pytype=(datetime.time,),
-                             KVPtype=KVP_Type.KVP_TYPE_TIMESPEC,
-                             field="timespec_val",
-                             col_type=_DateTime(),
-                             col_default=None,
-                             )
+SlotInt = define_simpleslot(
+    postfix="Int",
+    pytype=(int,),
+    KVPtype=KVP_Type.KVP_TYPE_GINT64,
+    field="int64_val",
+    col_type=BIGINT(),
+    col_default=0,
+)
+SlotString = define_simpleslot(
+    postfix="String",
+    pytype=(str,),
+    KVPtype=KVP_Type.KVP_TYPE_STRING,
+    field="string_val",
+    col_type=VARCHAR(length=4096),
+    col_default=None,
+)
+SlotDouble = define_simpleslot(
+    postfix="Double",
+    pytype=(float,),
+    KVPtype=KVP_Type.KVP_TYPE_DOUBLE,
+    field="double_val",
+    col_type=REAL(),
+    col_default=0,
+)
+SlotTime = define_simpleslot(
+    postfix="Time",
+    pytype=(datetime.time,),
+    KVPtype=KVP_Type.KVP_TYPE_TIMESPEC,
+    field="timespec_val",
+    col_type=_DateTime(),
+    col_default=None,
+)
 
 
 class SlotFrame(DictWrapper, Slot):
-    __mapper_args__ = {
-        'polymorphic_identity': KVP_Type.KVP_TYPE_FRAME
-    }
+    __mapper_args__ = {"polymorphic_identity": KVP_Type.KVP_TYPE_FRAME}
     _python_type = (dict,)
 
-    guid_val = Column('guid_val', VARCHAR(length=32))
+    guid_val = Column("guid_val", VARCHAR(length=32))
 
-    slots = relation('Slot',
-                     primaryjoin=foreign(Slot.obj_guid) == guid_val,
-                     cascade='all, delete-orphan',
-                     collection_class=CallableList,
-                     single_parent=True,
-                     backref=backref("parent", remote_side=guid_val),
-
-                     )
+    slots = relation(
+        "Slot",
+        primaryjoin=foreign(Slot.obj_guid) == guid_val,
+        cascade="all, delete-orphan",
+        collection_class=CallableList,
+        single_parent=True,
+        backref=backref("parent", remote_side=guid_val),
+    )
 
     @property
     def value(self):
@@ -284,9 +291,7 @@ class SlotFrame(DictWrapper, Slot):
 
 
 class SlotList(SlotFrame):
-    __mapper_args__ = {
-        'polymorphic_identity': KVP_Type.KVP_TYPE_GLIST
-    }
+    __mapper_args__ = {"polymorphic_identity": KVP_Type.KVP_TYPE_GLIST}
     _python_type = (list,)
 
     @property
@@ -296,14 +301,16 @@ class SlotList(SlotFrame):
 
     @value.setter
     def value(self, value):
-        self.slots = [slot(parent=self, name=str(i), value=v) for i, v in enumerate(value)]
+        self.slots = [
+            slot(parent=self, name=str(i), value=v) for i, v in enumerate(value)
+        ]
 
     def __init__(self, **kwargs):
         self.guid_val = uuid.uuid4().hex
         super(SlotFrame, self).__init__(**kwargs)
 
 
-@event.listens_for(SlotFrame.slots, 'remove')
+@event.listens_for(SlotFrame.slots, "remove")
 def remove_slot(target, value, initiator):
     s = object_session(value)
     if value in s.new:
@@ -313,43 +320,44 @@ def remove_slot(target, value, initiator):
 
 
 class SlotGUID(SlotFrame):
-    __mapper_args__ = {
-        'polymorphic_identity': KVP_Type.KVP_TYPE_GUID
-    }
+    __mapper_args__ = {"polymorphic_identity": KVP_Type.KVP_TYPE_GUID}
     _python_type = (DeclarativeBase,)
 
     # add
     _mapping_name_class = {
-        'from-sched-xaction': 'piecash.core.transaction.ScheduledTransaction',
-        'account': 'piecash.core.account.Account',
-        'invoice-guid': 'piecash.business.invoice.Invoice',
-        'peer_guid': 'piecash.core.transaction.Split',
-        'gains-split': 'piecash.core.transaction.Split',
-        'gains-source': 'piecash.core.transaction.Split',
-        'default-currency': 'piecash.core.commodity.Commodity',
+        "from-sched-xaction": "piecash.core.transaction.ScheduledTransaction",
+        "account": "piecash.core.account.Account",
+        "invoice-guid": "piecash.business.invoice.Invoice",
+        "peer_guid": "piecash.core.transaction.Split",
+        "gains-split": "piecash.core.transaction.Split",
+        "gains-source": "piecash.core.transaction.Split",
+        "default-currency": "piecash.core.commodity.Commodity",
     }
 
     @property
     def Class(self):
         name, guid = self.name, self.guid_val
-        if name.startswith('CURRENCY::'):
+        if name.startswith("CURRENCY::"):
             # handle capital gain account
-            class_to_retrieve = 'piecash.core.account.Account'
+            class_to_retrieve = "piecash.core.account.Account"
         else:
             class_to_retrieve = self._mapping_name_class.get(name, None)
             if class_to_retrieve is None:
                 raise ValueError(
                     "Smart retrieval of GUID slot with name '{}' is not yet supported. "
                     "Need to retrieve proper object type in kvp module "
-                    "(add in SlotGUID._mapping_name_class)".format(name))
-        class_module, class_name = class_to_retrieve.rsplit('.', 1)
+                    "(add in SlotGUID._mapping_name_class)".format(name)
+                )
+        class_module, class_name = class_to_retrieve.rsplit(".", 1)
         mod = import_module(class_module)
         Class = getattr(mod, class_name)
         return Class
 
     @property
     def value(self):
-        return object_session(self).query(self.Class).filter_by(guid=self.guid_val).one()
+        return (
+            object_session(self).query(self.Class).filter_by(guid=self.guid_val).one()
+        )
 
     @value.setter
     def value(self, value):
@@ -405,20 +413,19 @@ def slot(parent, name, value):
 
 
 class SlotNumeric(Slot):
-    __mapper_args__ = {
-        'polymorphic_identity': KVP_Type.KVP_TYPE_NUMERIC
-    }
+    __mapper_args__ = {"polymorphic_identity": KVP_Type.KVP_TYPE_NUMERIC}
     _python_type = (tuple, decimal.Decimal)
 
-    _numeric_val_num = Column('numeric_val_num', BIGINT(), nullable=True, default=0)
-    _numeric_val_denom = Column('numeric_val_denom', BIGINT(), nullable=True, default=1)
+    _numeric_val_num = Column("numeric_val_num", BIGINT(), nullable=True, default=0)
+    _numeric_val_denom = Column("numeric_val_denom", BIGINT(), nullable=True, default=1)
     value = hybrid_property_gncnumeric(_numeric_val_num, _numeric_val_denom)
 
 
-SlotDate = define_simpleslot(postfix="Date",
-                             pytype=(datetime.date,),
-                             KVPtype=KVP_Type.KVP_TYPE_GDATE,
-                             field="gdate_val",
-                             col_type=_Date(),
-                             col_default=None,
-                             )
+SlotDate = define_simpleslot(
+    postfix="Date",
+    pytype=(datetime.date,),
+    KVPtype=KVP_Type.KVP_TYPE_GDATE,
+    field="gdate_val",
+    col_type=_Date(),
+    col_default=None,
+)

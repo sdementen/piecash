@@ -38,12 +38,18 @@ def realbook_session(request):
 
 @pytest.fixture
 def realbook_session_multithread(request):
-    return use_copied_book(request, file_template_full, file_for_test_full, check_same_thread=False)
+    return use_copied_book(
+        request, file_template_full, file_for_test_full, check_same_thread=False
+    )
 
 
 @pytest.fixture
 def ghost_kvp_scheduled_transaction_session(request):
-    return use_copied_book(request, file_ghost_kvp_scheduled_transaction, file_ghost_kvp_scheduled_transaction_for_test)
+    return use_copied_book(
+        request,
+        file_ghost_kvp_scheduled_transaction,
+        file_ghost_kvp_scheduled_transaction_for_test,
+    )
 
 
 def use_copied_book(request, template_filename, test_filename, check_same_thread=True):
@@ -90,7 +96,10 @@ class TestIntegration_EmptyBook(object):
             "vtime": datetime.datetime.now(),
             "vnum": Decimal("4.53"),
             "vlist": ["stri", 4, dict(foo=23)],
-            "vdct": {"spl": 2.3, "vfr": {"vfr2": {"foo": 33, "baz": "hello"}, "coo": Decimal("4.53")}},
+            "vdct": {
+                "spl": 2.3,
+                "vfr": {"vfr2": {"foo": 33, "baz": "hello"}, "coo": Decimal("4.53")},
+            },
         }
         for k, v in kv.items():
             book[k] = v
@@ -100,7 +109,9 @@ class TestIntegration_EmptyBook(object):
             assert k in book
             if isinstance(v, datetime.datetime):
                 # check string format as the date in piecash is localized
-                assert "{:%Y%m%d%H%M%S}".format(book[k].value) == "{:%Y%m%d%H%M%S}".format(v)
+                assert "{:%Y%m%d%H%M%S}".format(
+                    book[k].value
+                ) == "{:%Y%m%d%H%M%S}".format(v)
             else:
                 assert book[k].value == v
 
@@ -135,7 +146,13 @@ class TestIntegration_EmptyBook(object):
             b["a/b/c"] = True
 
         book.flush()
-        assert {n for (n,) in book.session.query(Slot._name)} == {"a", "a/b", "a/b/c", "a/b/c/d", "a/b/c/d/f"}
+        assert {n for (n,) in book.session.query(Slot._name)} == {
+            "a",
+            "a/b",
+            "a/b/c",
+            "a/b/c/d",
+            "a/b/c/d/f",
+        }
 
         # delete some elements
         del b["a"]["b"][:]
@@ -182,7 +199,13 @@ class TestIntegration_EmptyBook(object):
         assert all(acc.type == "ROOT" for acc in accs)
 
     def test_is_parent_child_types_consistent(self):
-        combi_OK = [("ROOT", "BANK"), (None, "ROOT"), ("ROOT", "EQUITY"), ("ROOT", "ASSET"), ("ROOT", "EXPENSE")]
+        combi_OK = [
+            ("ROOT", "BANK"),
+            (None, "ROOT"),
+            ("ROOT", "EQUITY"),
+            ("ROOT", "ASSET"),
+            ("ROOT", "EXPENSE"),
+        ]
 
         combi_not_OK = [
             ("ROOT", "ROOT"),
@@ -203,10 +226,14 @@ class TestIntegration_EmptyBook(object):
     def test_add_account_compatibility(self, book):
         # test compatibility between child account and parent account
         for acc_type1 in ACCOUNT_TYPES - root_types:
-            acc1 = Account(name=acc_type1, type=acc_type1, parent=book.root_account, commodity=None)
+            acc1 = Account(
+                name=acc_type1, type=acc_type1, parent=book.root_account, commodity=None
+            )
             for acc_type2 in ACCOUNT_TYPES:
                 if _is_parent_child_types_consistent(acc_type1, acc_type2, []):
-                    acc2 = Account(name=acc_type2, type=acc_type2, parent=acc1, commodity=None)
+                    acc2 = Account(
+                        name=acc_type2, type=acc_type2, parent=acc1, commodity=None
+                    )
 
         book.save()
 
@@ -215,7 +242,9 @@ class TestIntegration_EmptyBook(object):
     def test_add_account_incompatible(self, book):
         # test compatibility between child account and parent account
         for acc_type1 in ACCOUNT_TYPES - root_types:
-            acc1 = Account(name=acc_type1, type=acc_type1, parent=book.root_account, commodity=None)
+            acc1 = Account(
+                name=acc_type1, type=acc_type1, parent=book.root_account, commodity=None
+            )
         book.save()
 
         assert len(book.accounts) == 13
@@ -223,7 +252,9 @@ class TestIntegration_EmptyBook(object):
             acc1 = book.accounts(name=acc_type1)
             for acc_type2 in ACCOUNT_TYPES:
                 if not _is_parent_child_types_consistent(acc_type1, acc_type2, []):
-                    acc2 = Account(name=acc_type2, type=acc_type2, parent=acc1, commodity=None)
+                    acc2 = Account(
+                        name=acc_type2, type=acc_type2, parent=acc1, commodity=None
+                    )
                     with pytest.raises(ValueError):
                         book.validate()
                     book.cancel()
@@ -233,13 +264,19 @@ class TestIntegration_EmptyBook(object):
 
     def test_add_account_names(self, book):
         # raise ValueError as acc1 and acc2 shares same parents with same name
-        acc1 = Account(name="Foo", type="MUTUAL", parent=book.root_account, commodity=None)
-        acc2 = Account(name="Foo", type="BANK", parent=book.root_account, commodity=None)
+        acc1 = Account(
+            name="Foo", type="MUTUAL", parent=book.root_account, commodity=None
+        )
+        acc2 = Account(
+            name="Foo", type="BANK", parent=book.root_account, commodity=None
+        )
         with pytest.raises(ValueError):
             book.save()
         book.cancel()
         # ok as same name but different parents
-        acc3 = Account(name="Fooz", type="BANK", parent=book.root_account, commodity=None)
+        acc3 = Account(
+            name="Fooz", type="BANK", parent=book.root_account, commodity=None
+        )
         acc4 = Account(name="Fooz", type="BANK", parent=acc3, commodity=None)
         book.save()
         # raise ValueError as now acc4 and acc3 shares same parents with same name
@@ -267,7 +304,9 @@ class TestIntegration_EmptyBook(object):
             print(account)
 
         # build map between account fullname (e.g. "Assets:Current Assets" and account)
-        map_fullname_account = {account.fullname: account for account in book.query(Account).all()}
+        map_fullname_account = {
+            account.fullname: account for account in book.query(Account).all()
+        }
 
         # use it to retrieve the current assets account
         print(map_fullname_account)
@@ -313,7 +352,9 @@ class TestIntegration_Thread(object):
         thr.start()
         thr.join()
 
-    def test_check_same_thread_False_allow_thread_use(self, realbook_session_multithread):
+    def test_check_same_thread_False_allow_thread_use(
+        self, realbook_session_multithread
+    ):
         book = realbook_session_multithread
 
         class MyThread(threading.Thread):

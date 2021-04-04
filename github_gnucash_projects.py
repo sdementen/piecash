@@ -16,10 +16,11 @@ if __name__ == "__main__":
     g = Github(GITHUB_TOKEN)
     for project in g.search_repositories(query="gnucash", sort="stars", order="desc"):
         print(project)
-        if (project.name.lower() == "gnucash") or ("mirror" in (project.description or "").lower()):
+        if (project.name.lower() == "gnucash") or (
+            "mirror" in (project.description or "").lower()
+        ):
             continue
         languages.setdefault(project.language, []).append(project)
-
 
     with open("docs/source/doc/github_links.rst", "w", encoding="UTF-8") as fo:
         list_of_projects = sorted(
@@ -63,7 +64,9 @@ if __name__ == "__main__":
             for (lang, projects) in list_of_projects
         ]
 
-        for lang, projects, recent_projects in sorted(list_of_projects, key=lambda k: -len(k[2])):
+        for lang, projects, recent_projects in sorted(
+            list_of_projects, key=lambda k: -len(k[2])
+        ):
             print(
                 "|{:^50}|{:^50}|{:^50}|".format(
                     ":ref:`{}`".format(lang), len(projects), len(recent_projects)

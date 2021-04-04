@@ -20,7 +20,15 @@ from test_helper import (
 
 # dummy line to avoid removing unused symbols
 
-a = db_sqlite_uri, db_sqlite, new_book, new_book_USD, book_uri, book_basic, book_transactions
+a = (
+    db_sqlite_uri,
+    db_sqlite,
+    new_book,
+    new_book_USD,
+    book_uri,
+    book_basic,
+    book_transactions,
+)
 
 
 class TestTransaction_create_transaction(object):
@@ -207,13 +215,23 @@ class TestTransaction_create_transaction(object):
             sp = Split(account=a, value=1.0 / 3.0, quantity=10, memo="mémo asset")
 
         with pytest.raises(ValueError):
-            sp = Split(account=a, value=Decimal(1) / Decimal(3), quantity=10, memo="mémo asset")
+            sp = Split(
+                account=a, value=Decimal(1) / Decimal(3), quantity=10, memo="mémo asset"
+            )
 
-        sp = Split(account=a, value=Decimal(1234567890123455678), quantity=10, memo="mémo asset")
+        sp = Split(
+            account=a,
+            value=Decimal(1234567890123455678),
+            quantity=10,
+            memo="mémo asset",
+        )
 
         with pytest.raises(ValueError):
             sp = Split(
-                account=a, value=Decimal(1234567890123455678901234), quantity=10, memo="mémo asset"
+                account=a,
+                value=Decimal(1234567890123455678901234),
+                quantity=10,
+                memo="mémo asset",
             )
 
     def test_create_cdtytransaction_cdtycurrency(self, book_basic):
@@ -299,7 +317,9 @@ class TestTransaction_create_transaction(object):
         splits = [
             Split(asset, value),
             Split(inc, -value),
-            Split(broker, value=0, quantity=0),  # tag split for assigning dividend income to stock
+            Split(
+                broker, value=0, quantity=0
+            ),  # tag split for assigning dividend income to stock
         ]
 
         Transaction(currency, description="Dividend income", splits=splits)
@@ -379,7 +399,9 @@ class TestTransaction_lots(object):
                 enter_date=datetime(2014, 1, 1 + i),
                 splits=[
                     Split(account=a, value=am * 10, memo="mémo asset"),
-                    Split(account=s, value=-am * 10, quantity=-am, memo="mémo brok", lot=l),
+                    Split(
+                        account=s, value=-am * 10, quantity=-am, memo="mémo brok", lot=l
+                    ),
                 ],
             )
         book_basic.flush()
@@ -475,7 +497,9 @@ class TestTransaction_changes(object):
         ns = len(book_transactions.splits)
         assert ns == s
 
-    def test_delete__replace_existing_split__split_with_transaction(self, book_transactions):
+    def test_delete__replace_existing_split__split_with_transaction(
+        self, book_transactions
+    ):
         s = len(book_transactions.splits)
         transaction = book_transactions.transactions(description="my revenue")
         split = transaction.splits(value=1000)
