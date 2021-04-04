@@ -108,13 +108,13 @@ class TestIntegration_EmptyBook(object):
         b = book
 
         b["a/b/c/d/e"] = 1
-        book.book.flush()
+        book.flush()
         assert b["a"]["b"]["c"]["d"]["e"].value == 1
 
         b["a/b/c"] = {"d": {"t": "ok"}}
 
         b["a/b/c/d/f"] = "2"
-        book.book.flush()
+        book.flush()
         assert len(b["a"]["b"]["c"]["d"].slots) == 2
 
         b["a/b/c/d/f"] = "5"

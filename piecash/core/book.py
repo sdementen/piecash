@@ -1,8 +1,7 @@
-import warnings
 from collections import defaultdict
 from operator import attrgetter
 
-from sqlalchemy import Column, VARCHAR, ForeignKey
+from sqlalchemy import Column, VARCHAR, ForeignKey, inspect
 from sqlalchemy.orm import relation, aliased, joinedload
 from sqlalchemy.orm.base import instance_state
 from sqlalchemy.orm.exc import NoResultFound
@@ -159,11 +158,6 @@ class Book(DeclarativeBaseGuid):
 
         self.root_account.commodity = value
 
-    @property
-    def book(self):
-        warnings.warn("deprecated", DeprecationWarning)
-        return self
-
     def validate(self):
         Book.validate_book(self.session)
 
@@ -174,9 +168,10 @@ class Book(DeclarativeBaseGuid):
         """
         for change, l in {"dirty": session.dirty,
                           "new": session.new,
-                          "deleted": session.deleted}.items():
+                          "deleted": session.deleted
+                          }.items():
             for obj in l:
-                # retrieve the dictionnary of changes for the given obj
+                # retrieve the dictionary of changes for the given obj
                 attrs = session._all_changes.setdefault(id(obj), {})
                 # add the change of state to the list of state changes
                 attrs.setdefault("STATE_CHANGES", []).append(change)
@@ -196,18 +191,19 @@ class Book(DeclarativeBaseGuid):
 
         # iterate on all explicitly changes objects to see
         # if we need to add other objects for check
+        # skip deleted objects
         for attrs in session._all_changes.values():
             obj = attrs["OBJECT"]
             for o_to_validate in obj.object_to_validate(attrs["STATE_CHANGES"]):
-                txs.add(o_to_validate)
+                if not inspect(o_to_validate).deleted:
+                    txs.add(o_to_validate)
 
         assert None not in txs, "No object should return None to validate. fix the code"
 
-        # sort object from local to global (ensure Split checked before Transaction)
+        # sort object from local to global (ensure Split checked before Transaction) and remove deleted objects
         from . import Account, Transaction, Split, Commodity
         sort_order = defaultdict(lambda: 20, {Account: 10, Transaction: 5, Split: 3, Commodity: 2})
-        txs = list(txs)
-        txs.sort(key=lambda x: sort_order[type(x)])
+        txs = sorted(txs, key=lambda x: sort_order[type(x)])
 
         # for each object, validate it
         for tx in txs:
