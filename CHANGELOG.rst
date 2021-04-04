@@ -1,6 +1,13 @@
 What's new
 ==========
 
+Version 1.1.7 (2021-04-04)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- fix issue when deleting splits (fix #155)
+- reformat files with black
+
+
 Version 1.1.6 (2021-04-03)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
