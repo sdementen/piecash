@@ -479,6 +479,7 @@ class TestTransaction_changes(object):
         s = len(book_transactions.splits)
         transaction = book_transactions.transactions(description="my revenue")
         split = transaction.splits(value=1000)
+        split_guid = split.guid
         assert len(transaction.splits) == 2
         splits = list(transaction.splits)
         del transaction.splits[:]
@@ -486,8 +487,8 @@ class TestTransaction_changes(object):
         splits = [
             Split(
                 account=split.account,
-                value=split.value,
-                quantity=split.quantity,
+                value=split.value * 2,
+                quantity=split.quantity * 2,
                 transaction=transaction,
             )
             for split in splits
@@ -499,6 +500,9 @@ class TestTransaction_changes(object):
         assert len(transaction.splits) == 2
         book_transactions.flush()
         book_transactions.save()
+        # check that previous split has been deleted
+        with pytest.raises(KeyError, match="Could not find object with {'guid'"):
+            split = book_transactions.splits(guid=split_guid)
         ns = len(book_transactions.splits)
         assert ns == s
 
