@@ -1,6 +1,11 @@
 Tutorial : using existing objects
 =================================
 
+.. warning::
+
+    piecash module and required functions must be loaded to run tutorials
+    eg: from piecash import open_book
+
 .. include:: existing_objects/open_book.rst
 
 .. include:: existing_objects/account.rst
