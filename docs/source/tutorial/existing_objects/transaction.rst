@@ -5,6 +5,8 @@ The list of all transactions in the book can be retrieved via the ``transactions
 
 .. ipython:: python
 
+    from piecash import open_book
+
     book = open_book(gnucash_books + "book_schtx.gnucash", open_if_lock=True)
 
     # all transactions (including transactions part of a scheduled transaction description)
