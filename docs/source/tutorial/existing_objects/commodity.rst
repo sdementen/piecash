@@ -5,6 +5,8 @@ The list of all commodities in the book can be retrieved via the ``commodities``
 
 .. ipython:: python
 
+    from piecash import open_book
+
     book = open_book(gnucash_books + "book_prices.gnucash", open_if_lock=True)
 
     # all commodities
