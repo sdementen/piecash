@@ -51,7 +51,6 @@ def basic_coa():
     get_or_create_account(book, fullname="Asset:Saving", type="BANK")
     get_or_create_account(book, fullname="Expense", type="EXPENSE")
     get_or_create_account(book, fullname="Income", type="INCOME")
-    return ()
 
 
 def print_coa():
@@ -59,7 +58,6 @@ def print_coa():
     print()
     for account in book.accounts:
         print(account)
-    return ()
 
 
 GNUCASH_BOOK = "../gnucash_books/simple_csv_book_creation.gnucash"
@@ -73,7 +71,7 @@ basic_coa()
 
 import csv
 from piecash import open_book, Transaction, Split
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 
 CSV_IMPORT = "import.csv"
@@ -93,11 +91,14 @@ with open(CSV_IMPORT, "r") as file:
             book, fullname=row["Account"], type=row["Account"].split(":")[0].upper()
         )
         amount = Decimal(row["Amount"])
-        dt_obj = datetime.strptime(row["Date"], "%d/%m/%y")
 
         # create the transaction with its two splits
         Transaction(
-            post_date=today.date(),  # fix this
+            post_date=date(
+                int(row["Date"][6:8]) + 2000,
+                int(row["Date"][3:5]),
+                int(row["Date"][0:2]),
+            ),
             enter_date=today,
             currency=EUR,
             description=row["Entity"],
