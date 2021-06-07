@@ -35,7 +35,7 @@ Create a book with some accounts and add a transaction
 
 Import transactions from a CSV file
 ---------------------------------
-.. literalinclude:: ../../../examples/simple_import_transaction_csv.py
+.. literalinclude:: ../../../examples/simple_csv_book_creation.py
 
 Export transactions to a CSV file
 ---------------------------------
