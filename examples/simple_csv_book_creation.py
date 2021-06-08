@@ -101,10 +101,12 @@ with open(CSV_IMPORT, "r") as file:
             ),
             enter_date=today,
             currency=EUR,
+            num=row["Number"],
             description=row["Entity"],
+            notes=row["Memo"],
             splits=[
-                Split(account=import_account, value=amount, memo=row["Memo"]),
-                Split(account=transfer_account, value=-amount, memo=row["Memo"]),
+                Split(account=import_account, value=amount),
+                Split(account=transfer_account, value=-amount),
             ],
         )
     # save the book
