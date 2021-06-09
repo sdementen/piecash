@@ -14,7 +14,11 @@ def open_gnucash_book(GNUCASH_BOOK):
         )
     else:
         # create book file
-        book = create_book(GNUCASH_BOOK, overwrite=True, currency="EUR")
+        book = create_book(
+            GNUCASH_BOOK,
+            overwrite=True,
+            currency=locale.localeconv()["int_curr_symbol"],
+        )
         print("Created: ", GNUCASH_BOOK)
     return book
 
@@ -37,7 +41,7 @@ def get_or_create_account(book, fullname, type):
                 name=name,
                 type=type,
                 parent=acc,
-                commodity=EUR,
+                commodity=CURR,
                 placeholder=False,
             )
             book.flush()
@@ -61,12 +65,18 @@ def print_coa():
         print(account)
 
 
+import locale
+
+locale.setlocale(locale.LC_ALL, "")
+
 GNUCASH_BOOK = "../gnucash_books/simple_csv.gnucash"
 # book = open_gnucash_book(GNUCASH_BOOK)
-book = create_book(GNUCASH_BOOK, overwrite=True, currency="EUR")
+book = create_book(
+    GNUCASH_BOOK, overwrite=True, currency=locale.localeconv()["int_curr_symbol"]
+)
 
 # retrieve the default currency
-EUR = book.commodities.get(mnemonic="EUR")
+CURR = book.default_currency
 
 basic_coa()
 # print_coa()
@@ -102,7 +112,7 @@ with open(CSV_IMPORT, "r") as file:
                 int(row["Date"][0:2]),
             ),
             enter_date=today,
-            currency=EUR,
+            currency=CURR,
             num=row["Number"],
             description=row["Entity"],
             notes=row["Description"],
