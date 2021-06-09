@@ -46,6 +46,7 @@ def get_or_create_account(book, fullname, type):
 
 def basic_coa():
     # get_or_create_accounts
+    # must create top level account<>type or type="BANK"
     get_or_create_account(book, fullname="Asset", type="ASSET")
     get_or_create_account(book, fullname="Asset:Cheque", type="BANK")
     get_or_create_account(book, fullname="Asset:Saving", type="BANK")
@@ -60,8 +61,9 @@ def print_coa():
         print(account)
 
 
-GNUCASH_BOOK = "../gnucash_books/simple_csv_book_creation.gnucash"
-book = open_gnucash_book(GNUCASH_BOOK)
+GNUCASH_BOOK = "../gnucash_books/simple_csv.gnucash"
+# book = open_gnucash_book(GNUCASH_BOOK)
+book = create_book(GNUCASH_BOOK, overwrite=True, currency="EUR")
 
 # retrieve the default currency
 EUR = book.commodities.get(mnemonic="EUR")
@@ -74,7 +76,7 @@ from piecash import open_book, Transaction, Split
 from datetime import datetime, date
 from decimal import Decimal
 
-CSV_IMPORT = "import.csv"
+CSV_IMPORT = "demo.csv"
 today = datetime.now()
 import_account = get_or_create_account(book, fullname="Asset:Cheque", type="BANK")
 
@@ -103,7 +105,7 @@ with open(CSV_IMPORT, "r") as file:
             currency=EUR,
             num=row["Number"],
             description=row["Entity"],
-            notes=row["Memo"],
+            notes=row["Description"],
             splits=[
                 Split(account=import_account, value=amount),
                 Split(account=transfer_account, value=-amount),
