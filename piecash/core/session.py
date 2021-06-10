@@ -336,7 +336,7 @@ def create_book(
     from .account import Account
     import locale
     
-    if currency = "locale":
+    if currency == "locale":
         locale.setlocale(locale.LC_ALL, '')
         currency = locale.localeconv()['int_curr_symbol']
 
