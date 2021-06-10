@@ -1,29 +1,33 @@
 from piecash import open_book, create_book, GnucashException, Account
 
 
-def open_gnucash_book(GNUCASH_BOOK):
+def open_gnucash_book(GNUCASH_BOOK, **kwargs):
     # open or create gnucash book if not found
     import os
     import tempfile
 
-    if os.path.exists(GNUCASH_BOOK):
+    if os.path.exists(GNUCASH_BOOK) and not kwargs.get("overwrite"):
         print("Found: ", GNUCASH_BOOK)
         # open book file
         book = open_book(
-            GNUCASH_BOOK, readonly=False, open_if_lock=True, do_backup=False
+            GNUCASH_BOOK,
+            readonly=False,
+            open_if_lock=True,
+            do_backup=False,
+            **kwargs,
         )
     else:
         # create book file
         book = create_book(
             GNUCASH_BOOK,
-            overwrite=True,
             currency=locale.localeconv()["int_curr_symbol"],
+            **kwargs,
         )
         print("Created: ", GNUCASH_BOOK)
     return book
 
 
-def get_or_create_account(book, fullname, type):
+def get_or_create_account(book, fullname, type, **kwargs):
     # get_or_create_accounts
     acc_tree = ""
     for name in fullname.split(":"):
@@ -43,6 +47,7 @@ def get_or_create_account(book, fullname, type):
                 parent=acc,
                 commodity=CURR,
                 placeholder=False,
+                **kwargs,
             )
             book.flush()
     return acc
@@ -70,10 +75,7 @@ import locale
 locale.setlocale(locale.LC_ALL, "")
 
 GNUCASH_BOOK = "../gnucash_books/simple_csv.gnucash"
-# book = open_gnucash_book(GNUCASH_BOOK)
-book = create_book(
-    GNUCASH_BOOK, overwrite=True, currency=locale.localeconv()["int_curr_symbol"]
-)
+book = open_gnucash_book(GNUCASH_BOOK, overwrite=True)
 
 # retrieve the default currency
 CURR = book.default_currency
