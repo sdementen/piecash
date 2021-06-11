@@ -235,7 +235,7 @@ def build_uri(
 def create_book(
     sqlite_file=None,
     uri_conn=None,
-    currency="EUR",
+    currency="locale",
     overwrite=False,
     keep_foreign_keys=False,
     db_type=None,
