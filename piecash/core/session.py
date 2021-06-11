@@ -1,4 +1,5 @@
 import datetime
+import locale
 import os
 import shutil
 import socket
@@ -334,7 +335,6 @@ def create_book(
 
     # create commodities and initial accounts
     from .account import Account
-    import locale
     
     if currency == "locale":
         locale.setlocale(locale.LC_ALL, '')
