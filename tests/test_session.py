@@ -115,6 +115,7 @@ else:
         "en_US.UTF-8": "USD",
         "fr_FR.UTF-8": "EUR",
     }
+locales[locale.setlocale(locale.LC_ALL, '')] = ""
 
 
 @pytest.yield_fixture(params=locales)
