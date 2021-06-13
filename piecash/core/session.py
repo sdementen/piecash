@@ -1,4 +1,5 @@
 import datetime
+import locale
 import os
 import shutil
 import socket
@@ -234,7 +235,7 @@ def build_uri(
 def create_book(
     sqlite_file=None,
     uri_conn=None,
-    currency="EUR",
+    currency="locale",
     overwrite=False,
     keep_foreign_keys=False,
     db_type=None,
@@ -251,7 +252,7 @@ def create_book(
 
     :param str sqlite_file: a path to an sqlite3 file (only used if uri_conn is None)
     :param str uri_conn: a sqlalchemy connection string
-    :param str currency: the ISO symbol of the default currency of the book
+    :param str currency: the ISO symbol of the default currency of the book, "locale" returns local international currency symbol
     :param bool overwrite: True if book should be deleted and recreated if it exists already
     :param bool keep_foreign_keys: True if the foreign keys should be kept (may not work at all with GnuCash)
     :param str db_type: type of database in ["postgres","mysql"]
@@ -334,6 +335,10 @@ def create_book(
 
     # create commodities and initial accounts
     from .account import Account
+    
+    if currency == "locale":
+        locale.setlocale(locale.LC_ALL, '')
+        currency = locale.localeconv()['int_curr_symbol']
 
     b.root_account = Account(
         name="Root Account",

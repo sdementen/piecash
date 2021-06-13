@@ -1,6 +1,12 @@
 What's new
 ==========
 
+Version 1.1.8 (Pending)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- support locale currency setting (fix #174)
+
+
 Version 1.1.7 (2021-04-04)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 

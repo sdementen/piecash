@@ -115,6 +115,8 @@ else:
         "en_US.UTF-8": "USD",
         "fr_FR.UTF-8": "EUR",
     }
+locale.setlocale(locale.LC_ALL, '')
+locales[locale.setlocale(locale.LC_ALL, '')] = locale.localeconv()['int_curr_symbol']
 
 
 @pytest.yield_fixture(params=locales)
