@@ -223,6 +223,7 @@ extras_require = {
         "sphinx",
         "sphinxcontrib-napoleon",
         "sphinxcontrib-programoutput",
+        "sphinx-autobuild",
         "sphinx-rtd-theme",
         "ipython",
     ],
