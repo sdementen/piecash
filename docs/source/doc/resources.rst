@@ -19,6 +19,7 @@ Web resources
 Blogs & discussions
 -------------------
 
+- Gitter chat room for developers and users: https://gitter.im/sdementen/piecash
 - blog with GnuCash/python links (not 100% correct): http://wideopenstudy.blogspot.be/search/label/GnuCash
 - on timezone in GnuCash: http://do-the-right-things.blogspot.be/2013/11/caveats-in-using-gnucash-time-zone.html
 - Google search on python in user mailing list: `python site:http://lists.gnucash.org/pipermail/gnucash-user" python <https://www.google.be/search?hl=en&as_q=python&as_epq=&as_oq=&as_eq=&as_nlo=&as_nhi=&lr=&cr=&as_qdr=all&as_sitesearch=http%3A%2F%2Flists.gnucash.org%2Fpipermail%2Fgnucash-user&as_occt=any&safe=images&tbs=&as_filetype=&as_rights=>`__
