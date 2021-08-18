@@ -69,7 +69,7 @@ class DeclarativeBase(object):
         return str(self)
 
 
-tz = tzlocal.get_localzone()
+tz = pytz.timezone(str(tzlocal.get_localzone()))
 utc = pytz.utc
 
 
@@ -158,8 +158,8 @@ class _DateAsDateTime(types.TypeDecorator):
 
     def process_result_value(self, value, dialect):
         if value is not None:
-            r = utc.localize(value).astimezone(tz).date()
-            return r
+            r = utc.localize(value).astimezone(tz)
+            return r.date()
 
 
 class _Date(types.TypeDecorator):
