@@ -1,6 +1,11 @@
 What's new
 ==========
 
+devel
+~~~~~
+
+- fix changes from yahoo API (fix user-agent to "", remove recovery of crumble)
+
 Version 1.1.7 (2021-04-04)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 

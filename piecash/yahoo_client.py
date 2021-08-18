@@ -6,13 +6,11 @@ https://help.yahoo.com/kb/SLN2310.html
 import csv
 import datetime
 import logging
-import re
 from collections import namedtuple
 from decimal import Decimal
 from time import sleep
 
 import pytz
-
 
 MAX_ATTEMPT = 5
 
@@ -27,7 +25,9 @@ YahooQuote = namedtuple("YahooQuote", "date,open,high,low,close,adj_close,volume
 def get_latest_quote(symbol):
     import requests
 
-    resp = requests.get("{}/quote".format(YAHOO_BASE_URL), params={"symbols": symbol})
+    resp = requests.get("{}/quote".format(YAHOO_BASE_URL),
+                        params={"symbols": symbol},
+                        headers={"user-agent": ""})
     resp.raise_for_status()
 
     try:
@@ -54,21 +54,7 @@ def get_latest_quote(symbol):
     )
 
 
-crumble_link = "https://finance.yahoo.com/quote/{0}/history?p={0}"
-crumble_regex = r'CrumbStore":{"crumb":"(.*?)"}'
-quote_link = "https://query1.finance.yahoo.com/v7/finance/download/{}?period1={}&period2={}&interval=1d&events=history&crumb={}"
-
-
-def get_crumble_and_cookie(symbol):
-    import requests
-
-    link = crumble_link.format(symbol)
-    response = requests.get(link)
-    cookie_str = response.headers["set-cookie"]
-
-    match = re.search(crumble_regex, response.text)
-    crumble_str = match.group(1)
-    return crumble_str, cookie_str
+quote_link = "https://query1.finance.yahoo.com/v7/finance/download/{}?period1={}&period2={}&interval=1d&events=history"
 
 
 def download_quote(symbol, date_from, date_to, tz=None):
@@ -98,11 +84,9 @@ def download_quote(symbol, date_from, date_to, tz=None):
             "{} attempt to download quotes for symbol {} from yahoo".format(i, symbol)
         )
 
-        crumble_str, cookie_str = get_crumble_and_cookie(symbol)
+        link = quote_link.format(symbol, time_stamp_from, time_stamp_to)
 
-        link = quote_link.format(symbol, time_stamp_from, time_stamp_to, crumble_str)
-
-        resp = requests.get(link, headers={"Cookie": cookie_str})
+        resp = requests.get(link, headers={"user-agent": ""})
         try:
             resp.raise_for_status()
         except Exception as e:
