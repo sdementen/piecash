@@ -5,6 +5,7 @@ from datetime import datetime
 from decimal import Decimal
 
 import pytest
+import pytz
 import tzlocal
 
 from piecash import GnucashException, Commodity
@@ -127,13 +128,13 @@ class TestFactoriesTransactions(object):
         assert sp2.account == book_basic.accounts(name="asset")
         assert sp1.value == -sp2.value
         assert sp1.quantity == sp1.value
-        assert tr.enter_date == tzlocal.get_localzone().localize(
+        assert tr.enter_date == pytz.timezone(str(tzlocal.get_localzone())).localize(
             today.replace(microsecond=0)
         )
-        assert tr.post_date == tzlocal.get_localzone().localize(today).date()
+        assert tr.post_date == pytz.timezone(str(tzlocal.get_localzone())).localize(today).date()
 
     def test_single_transaction_tz(self, book_basic):
-        today = tzlocal.get_localzone().localize(datetime.today())
+        today = pytz.timezone(str(tzlocal.get_localzone())).localize(datetime.today())
         tr = factories.single_transaction(
             today.date(),
             today,
@@ -148,7 +149,7 @@ class TestFactoriesTransactions(object):
         assert tr.enter_date == today.replace(microsecond=0)
 
     def test_single_transaction_rollback(self, book_basic):
-        today = tzlocal.get_localzone().localize(datetime.today())
+        today = pytz.timezone(str(tzlocal.get_localzone())).localize(datetime.today())
         factories.single_transaction(
             today.date(),
             today,
