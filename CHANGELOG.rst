@@ -4,10 +4,9 @@ What's new
 devel
 ~~~~~
 
-
 - fix changes from yahoo API (fix user-agent to "", remove recovery of crumble)
 - fix tzlocal>=2.3 issue with change of tz type returned by tzlocal.get_localzone() (fix #180)
-
+- move to github actions
 
 Version 1.1.7 (2021-04-04)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

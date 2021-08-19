@@ -56,3 +56,5 @@ jobs:
     - name: Coverage
       run: |
         coverage run --source=piecash setup.py test
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v1
