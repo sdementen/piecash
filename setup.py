@@ -221,7 +221,6 @@ extras_require = {
     "test": ["pytest", "pytest-cov", "tox"],
     "doc": [
         "sphinx",
-        "sphinxcontrib-napoleon",
         "sphinxcontrib-programoutput",
         "sphinx-rtd-theme",
         "ipython",
