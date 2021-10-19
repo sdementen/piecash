@@ -85,7 +85,7 @@ class TestModelCommon(object):
         assert str(list(s.bind.execute("select day from c_table"))[0][0]) == "20100412"
 
     def test_datetime(self):
-        class C(DeclarativeBaseGuid):
+        class D(DeclarativeBaseGuid):
             __tablename__ = "d_table"
             time = Column(_DateTime)
 
@@ -93,7 +93,7 @@ class TestModelCommon(object):
                 self.time = time
 
         s = session()
-        a = C(time=datetime.datetime(2010, 4, 12, 3, 4, 5, tzinfo=pytz.utc))
+        a = D(time=datetime.datetime(2010, 4, 12, 3, 4, 5, tzinfo=pytz.utc))
         s.add(a)
         s.flush()
         assert a.time

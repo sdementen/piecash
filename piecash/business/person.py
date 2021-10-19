@@ -8,7 +8,11 @@ from .._common import hybrid_property_gncnumeric, CallableList
 from .._declbase import DeclarativeBaseGuid
 from ..sa_extra import ChoiceType
 
-TaxIncludedType = [(1, "YES"), (2, "NO"), (3, "USEGLOBAL")]
+TaxIncludedType = [
+    (1, "YES"),
+    (2, "NO"),
+    (3, "USEGLOBAL")
+]
 
 
 class Address(object):
@@ -144,9 +148,8 @@ class Person:
         from .invoice import Job
 
         owner_type = PersonType.get(cls, None)
-        if owner_type:
-            cls.jobs = relation(
-                "Job",
+        if owner_type and not hasattr(cls, "jobs"):
+            cls.jobs = relation('Job',
                 primaryjoin=and_(
                     cls.guid == foreign(Job.owner_guid),
                     owner_type == Job.owner_type,

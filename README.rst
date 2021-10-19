@@ -5,8 +5,8 @@ piecash
    :alt: Join the chat at https://gitter.im/sdementen/piecash
    :target: https://gitter.im/sdementen/piecash?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
-.. image:: https://travis-ci.org/sdementen/piecash.svg?branch=master
-    :target: https://travis-ci.org/sdementen/piecash
+.. image:: https://github.com/sdementen/piecash/workflows/CI/badge.svg
+    :target: https://github.com/sdementen/piecash/actions
 
 .. image:: https://ci.appveyor.com/api/projects/status/af7mb3pwv31i6ltv/branch/master?svg=true
     :target: https://ci.appveyor.com/project/sdementen/piecash
