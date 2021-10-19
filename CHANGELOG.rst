@@ -1,13 +1,15 @@
 What's new
 ==========
 
-devel
-~~~~~
+Version 1.2.0 (2021-10-19)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - fix changes from yahoo API (fix user-agent to "", remove recovery of crumble)
-- fix tzlocal>=2.3 issue with change of tz type returned by tzlocal.get_localzone() (fix #180)
+- fix tzlocal>=2.3 issue with change of tz type returned by tzlocal.get_localzone() (fix #180 #185)
 - move to github actions
 - remove contrib.napoleon as included in sphinx as of 1.3
+- change pytest.yield_fixture to pytest.fixture
+- remove unused code
 
 Version 1.1.7 (2021-04-04)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
