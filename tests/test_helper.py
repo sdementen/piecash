@@ -46,6 +46,7 @@ def run_file(fname):
 db_sqlite = test_folder / "foozbar.sqlite"
 
 TRAVIS = os.environ.get("TRAVIS", False)
+GITHUB_ACTIONS = os.environ.get("CI", False)
 APPVEYOR = os.environ.get("APPVEYOR", False)
 LOCALSERVER = os.environ.get("PIECASH_DBSERVER_TEST", False)
 LOCALSERVER_USERNAME = os.environ.get("PIECASH_DBSERVER_TEST_USERNAME", "")
@@ -79,6 +80,32 @@ if TRAVIS:
                 db_name="foo",
                 db_user="travis",
                 db_password="",
+                db_host="localhost",
+                db_port=3306,
+            ),
+        }
+    )
+elif GITHUB_ACTIONS:
+    pg_password = "postgres_password_CI"
+    databases_to_check.append(
+        "postgresql://postgres:{pwd}@localhost:5432/foo".format(pwd=pg_password)
+    )
+    databases_to_check.append("mysql+pymysql://root:root@localhost/foo?charset=utf8")
+    db_config.update(
+        {
+            "postgres": dict(
+                db_type="postgres",
+                db_name="foo",
+                db_user="postgres",
+                db_password=pg_password,
+                db_host="localhost",
+                db_port=5432,
+            ),
+            "mysql": dict(
+                db_type="mysql",
+                db_name="foo",
+                db_user="root",
+                db_password="root",
                 db_host="localhost",
                 db_port=3306,
             ),
@@ -134,12 +161,12 @@ else:
     pass
 
 
-@pytest.yield_fixture(params=[Customer, Vendor, Employee])
+@pytest.fixture(params=[Customer, Vendor, Employee])
 def Person(request):
     yield request.param
 
 
-@pytest.yield_fixture(params=db_config.items())
+@pytest.fixture(params=db_config.items())
 def book_db_config(request):
     from piecash.core.session import build_uri
 
@@ -155,7 +182,7 @@ def book_db_config(request):
         drop_database(name)
 
 
-@pytest.yield_fixture(params=databases_to_check[1:])
+@pytest.fixture(params=databases_to_check[1:])
 def book_uri(request):
     name = request.param
 
@@ -167,7 +194,7 @@ def book_uri(request):
         drop_database(name)
 
 
-@pytest.yield_fixture(params=databases_to_check)
+@pytest.fixture(params=databases_to_check)
 def new_book(request):
     name = request.param
 
@@ -181,7 +208,7 @@ def new_book(request):
         drop_database(name)
 
 
-@pytest.yield_fixture(params=databases_to_check)
+@pytest.fixture(params=databases_to_check)
 def new_book_USD(request):
     name = request.param
 
@@ -195,7 +222,7 @@ def new_book_USD(request):
         drop_database(name)
 
 
-@pytest.yield_fixture(params=databases_to_check)
+@pytest.fixture(params=databases_to_check)
 def book_basic(request):
     name = request.param
 
@@ -220,7 +247,7 @@ def book_basic(request):
         drop_database(name)
 
 
-@pytest.yield_fixture(params=databases_to_check)
+@pytest.fixture(params=databases_to_check)
 def book_transactions(request):
     name = request.param
 
@@ -324,7 +351,7 @@ def book_transactions(request):
         drop_database(name)
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def book_invoices(request):
     """
     Returns the book that contains invoices.
@@ -337,7 +364,7 @@ def book_invoices(request):
         yield book
 
 
-@pytest.yield_fixture(params=["", ".272"])
+@pytest.fixture(params=["", ".272"])
 def book_sample(request):
     """
     Returns a simple sample book for 2.6.N
@@ -361,7 +388,7 @@ needweb = pytest.mark.skipif(
 
 
 def generate_book_fixture(filename):
-    @pytest.yield_fixture(scope="module")
+    @pytest.fixture(scope="module")
     def my_fixture():
         file_template = book_folder / filename
 

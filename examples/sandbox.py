@@ -334,11 +334,8 @@ EUR = b.commodities(namespace="CURRENCY")
 racc = b.root_account
 a = b.accounts(name="asset")
 s = b.accounts(name="broker")
-b.book.use_trading_accounts = True
-tr = Transaction(
-    currency=EUR,
-    description="buy stock",
-    notes="on St-Eugène day",
+b.use_trading_accounts = True
+tr = Transaction(currency=EUR, description="buy stock", notes="on St-Eugène day",
     post_date=datetime(2014, 1, 2),
     enter_date=datetime(2014, 1, 3),
     splits=[

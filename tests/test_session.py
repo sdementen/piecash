@@ -117,7 +117,7 @@ else:
     }
 
 
-@pytest.yield_fixture(params=locales)
+@pytest.fixture(params=locales)
 def locale_set(request):
     yield request.param
 

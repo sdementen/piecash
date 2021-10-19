@@ -94,7 +94,7 @@ def download_quote(symbol, date_from, date_to, tz=None):
         else:
             break
     else:
-        raise e
+        raise e  # noqa: F821
 
     csv_data = list(csv.reader(resp.text.strip().split("\n")))
 

@@ -31,20 +31,3 @@ class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):
         )
 
         return rel
-
-    # set the relation to the slots table (KVP)
-    @classmethod
-    def __declare_last__(cls):
-        # do not do it on the DeclarativeBaseGuid as it is an abstract class
-        if cls == DeclarativeBaseGuid:
-            return
-
-        # assign id of slot when associating to object
-        @event.listens_for(cls.slots, "remove")
-        def my_append_listener_slots(target, value, initiator):
-            s = object_session(value)
-            if s:
-                if value in s.new:
-                    s.expunge(value)
-                else:
-                    s.delete(value)

@@ -27,7 +27,7 @@ def ledger(obj, **kwargs):
 
 
 CURRENCY_RE = re.compile("^[A-Z]{3}$")
-NUMBER_RE = re.compile("[0-9\., ]")
+NUMBER_RE = re.compile("[0-9., ]")
 
 
 def format_commodity(mnemonic, locale):

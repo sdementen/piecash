@@ -213,12 +213,12 @@ install_requires = [
 ]
 extras_require = {
     "postgres": ["psycopg2"],
-    "mysql": ["PyMySQL"],
-    "ledger": ["babel"],
+    "mysql": ["PyMySQL[rsa]"],
+    "ledger": ["money", "babel"],
     "pandas": ["pandas"],
     "qif": ["qifparse"],
     "yahoo": ["requests"],
-    "test": ["pytest", "pytest-cov", "tox"],
+    "test": ["pytest", "pytest-cov", "tox", "flake8"],
     "doc": [
         "sphinx",
         "sphinxcontrib-programoutput",
