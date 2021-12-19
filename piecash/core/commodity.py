@@ -291,8 +291,6 @@ class Commodity(DeclarativeBaseGuid):
         """
         pair = frozenset((self, currency))
         if (closest_conv_cache is not None) and (on_date in closest_conv_cache.get(pair, {})):
-            print('getting from cache')
-            print(closest_conv_cache)
             return closest_conv_cache[pair][on_date]
         # get all "forward" (self-to-other) rates
         forward_rates = self.prices.filter_by(currency=currency).order_by(Price.date.asc())
