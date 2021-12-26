@@ -80,7 +80,7 @@ def test_get_historical_balance(book_historical_prices):
     assert gbp_cash.get_balance(commodity=eur, at_date=date(2020, 6, 30), use_historical=True) == Decimal("20000")
 
     # Indirect rate
-    assert gbp_cash.get_balance(commodity=usd, at_date=date(2020, 8, 1), use_historical=True) == Decimal("23600")
+    assert round(gbp_cash.get_balance(commodity=usd, at_date=date(2020, 8, 1), use_historical=True), 2) == Decimal("16949.15")
 
     # Recursive (cash accounts)
     assert current.get_balance(commodity=eur, at_date=date(2020, 4, 20), use_historical=True, recurse=True) == Decimal('23000')

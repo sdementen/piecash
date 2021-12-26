@@ -278,7 +278,7 @@ class Commodity(DeclarativeBaseGuid):
             currency (:class:`piecash.core.commodity.Commodity`): the currency to which the Price need to be converted
             on_date (:class:`datetime.date`, optional): the date as of which to get the conversion factor.
             closest_conv_cache (:class:`dict`, optional): an internal cache of closest-in-time commodity prices. Keys
-            are commodity pairs (as frozensets); values are dicts mapping dates to prices. This is used internally when
+            are commodity pairs (as tuples); values are dicts mapping dates to prices. This is used internally when
             this method is called as part of a recursive function.
 
 
@@ -289,7 +289,7 @@ class Commodity(DeclarativeBaseGuid):
                 GncConversionError: not possible to convert self to the currency
 
         """
-        pair = frozenset((self, currency))
+        pair = (self, currency)
         if (closest_conv_cache is not None) and (on_date in closest_conv_cache.get(pair, {})):
             return closest_conv_cache[pair][on_date]
         # get all "forward" (self-to-other) rates
@@ -312,7 +312,7 @@ class Commodity(DeclarativeBaseGuid):
             closest = closest_forward.value
         elif closest_forward is None:
             # only backwards prices found
-            closest = closest_reverse.value
+            closest = Decimal(1) / closest_reverse.value
         else:
             # both forwards and backwards prices found
             if abs(closest_forward.date - on_date) <= abs(closest_reverse.date - on_date):

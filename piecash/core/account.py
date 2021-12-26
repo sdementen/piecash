@@ -312,7 +312,7 @@ class Account(DeclarativeBaseGuid):
             natural_sign (bool, optional): True if the balance sign is reversed for accounts of type {'LIABILITY', 'PAYABLE', 'CREDIT', 'INCOME', 'EQUITY'} (default to True)
             at_date (:class:`datetime.datetime`): the sum() balance of the account at a given date based on transaction post date
             use_historical (bool, optional): if True, the balance will be based on the historical commodity price that is closest in time to the given date.
-            closest_conv_cache (dict, optional): an internal cache of closest-in-time commodity prices. Keys are commodities; values are dicts mapping dates to proces.
+            closest_conv_cache (dict, optional): an internal cache of closest-in-time commodity prices. Keys are commodity pairs (as tuples); values are dicts mapping dates to proces.
             Used internally where recurse and use_historical are both True. Should not generally be explicitly provided in external calls.
 
         Returns:
