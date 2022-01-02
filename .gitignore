@@ -7,6 +7,9 @@
 # pycharm
 .idea
 
+# vscode
+.vscode
+
 # pyenv version file
 .python-version
 
