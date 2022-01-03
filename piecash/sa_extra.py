@@ -18,23 +18,28 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import exc as orm_exc
 from sqlalchemy.orm import sessionmaker, object_session
+from sqlalchemy.ext.declarative import as_declarative # SA <1.4
+try:
+    from sqlalchemy.orm import as_declarative  # SA >=1.4
+    decl_wrapper = as_declarative()
+except ImportError:
+    from sqlalchemy.ext.declarative import as_declarative # SA <1.4
+    decl_wrapper = as_declarative(constructor=None)
 
 # import yaml
 
 
-def __init__blocked(self, *args, **kwargs):
-    raise NotImplementedError(
-        "Objects of type {} cannot be created from scratch "
-        "(only read)".format(self.__class__.__name__)
-    )
-
-
-@as_declarative(constructor=__init__blocked)
+@decl_wrapper
 class DeclarativeBase(object):
+    def __init__(self, *args, **kwargs):
+        raise NotImplementedError(
+            "Objects of type {} cannot be created from scratch "
+            "(only read)".format(self.__class__.__name__)
+        )
+
     @property
     def book(self):
         """Return the gnc book holding the object"""
@@ -127,6 +132,8 @@ class _DateAsDateTime(types.TypeDecorator):
     """Used to customise the DateTime type for sqlite (ie without the separators as in gnucash"""
 
     impl = types.TypeEngine
+
+    cache_ok = True
 
     def __init__(self, neutral_time=True, *args, **kwargs):
         super(_DateAsDateTime, self).__init__(*args, **kwargs)
