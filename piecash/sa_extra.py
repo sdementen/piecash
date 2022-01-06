@@ -21,12 +21,12 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import exc as orm_exc
 from sqlalchemy.orm import sessionmaker, object_session
-from sqlalchemy.ext.declarative import as_declarative # SA <1.4
 try:
-    from sqlalchemy.orm import as_declarative  # SA >=1.4
+    from sqlalchemy.orm import as_declarative  # SA >= 1.4
     decl_wrapper = as_declarative()
 except ImportError:
-    from sqlalchemy.ext.declarative import as_declarative # SA <1.4
+    # SA < 1.4
+    from sqlalchemy.ext.declarative import as_declarative
     decl_wrapper = as_declarative(constructor=None)
 
 # import yaml
