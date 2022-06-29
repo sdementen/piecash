@@ -134,9 +134,9 @@ class Invoice(DeclarativeBaseGuid):
     #                                                      })
     term_guid = Column("terms", VARCHAR(length=32), ForeignKey("billterms.guid"))
     billing_id = Column("billing_id", VARCHAR(length=2048))
-    post_txn_guid = Column("post_txn", VARCHAR(length=32), ForeignKey("lots.guid"))
+    post_txn_guid = Column("post_txn", VARCHAR(length=32), ForeignKey("transactions.guid"))
     post_lot_guid = Column(
-        "post_lot", VARCHAR(length=32), ForeignKey("transactions.guid")
+        "post_lot", VARCHAR(length=32), ForeignKey("lots.guid")
     )
     post_acc_guid = Column("post_acc", VARCHAR(length=32), ForeignKey("accounts.guid"))
     billto_type = Column("billto_type", INTEGER())
