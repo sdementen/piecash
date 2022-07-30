@@ -8,12 +8,15 @@ from .._common import hybrid_property_gncnumeric, CallableList
 from .._declbase import DeclarativeBaseGuid
 from ..sa_extra import ChoiceType
 
+#akj added
+from sqlalchemy.orm.attributes import get_history
+#akj end added
+
 TaxIncludedType = [
     (1, "YES"),
     (2, "NO"),
     (3, "USEGLOBAL")
 ]
-
 
 class Address(object):
     """An Address object encapsulates information regarding an address in GnuCash.
@@ -70,7 +73,6 @@ class Address(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
-
 
 class Person:
     """A mixin declaring common field for Customer, Vendor and Employee"""
@@ -164,6 +166,25 @@ class Person:
                 value.owner_guid = target.guid
                 value._assign_id()
 
+#akj: new content
+        # add listeners to update the Billterm.refcount field
+        if owner_type and hasattr(cls, "term"):
+            event.listen(cls, "after_insert", cls._changed)
+            event.listen(cls, "after_update", cls._changed)
+            event.listen(cls, "after_delete", cls._deleted)
+
+    def _changed(mapper, connection, target):
+        # check if the term field changed, obtain new and old value, and update the refcount for the terms
+        newval, _, oldval = get_history(target, 'term')
+        if newval and (newval[0] is not None):
+            newval[0]._increase_refcount(connection)
+        if oldval and (oldval[0] is not None):
+            oldval[0]._decrease_refcount(connection)
+            
+    def _deleted(mapper, connection, target):
+        if target.term:
+            target.term._decrease_refcount(connection)    
+#akj: end new content
 
 class Customer(Person, DeclarativeBaseGuid):
     """
@@ -425,5 +446,5 @@ class Vendor(Person, DeclarativeBaseGuid):
 
     _counter_name = "counter_vendor"
 
+PersonType = {Vendor: 4, Customer: 2, Employee: 5}
 
-PersonType = {Vendor: 4, Customer: 2}

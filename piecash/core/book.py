@@ -15,6 +15,10 @@ from .._declbase import DeclarativeBaseGuid
 from ..business.invoice import Invoice
 from ..sa_extra import kvp_attribute
 
+#akj added
+from ..business.invoice import Bill, Expensevoucher
+#akj end added
+
 
 class Book(DeclarativeBaseGuid):
     """
@@ -412,6 +416,27 @@ class Book(DeclarativeBaseGuid):
 
         return CallableList(self.session.query(Invoice))
 
+#akj added
+    @property
+    def bills(self):
+        """
+        gives easy access to all commodities in the book through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.core.commodity.Commodity`
+        """
+
+        return CallableList(self.session.query(Bill))
+
+    @property
+    def expensevouchers(self):
+        """
+        gives easy access to all commodities in the book through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.core.commodity.Commodity`
+        """
+
+        return CallableList(self.session.query(Expensevoucher))
+    
+#akj end added
+
     @property
     def currencies(self):
         """
@@ -479,6 +504,28 @@ class Book(DeclarativeBaseGuid):
         from ..business import Taxtable
 
         return CallableList(self.session.query(Taxtable))
+
+#akj added
+    @property
+    def billterms(self):
+        """
+        gives easy access to all terms in the book through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.business.invoice.Billterm`
+        """
+        from ..business import Billterm
+
+        return CallableList(self.session.query(Billterm))
+    
+    @property
+    def jobs(self):
+        """
+        gives easy access to all jobs in the book through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.business.invoice.Job`
+        """
+        from ..business import Job
+
+        return CallableList(self.session.query(Job))
+#akj end added
 
     @property
     def query(self):

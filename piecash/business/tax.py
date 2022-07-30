@@ -59,6 +59,24 @@ class Taxtable(DeclarativeBaseGuid):
         else:
             return "TaxTable<{}>".format(self.name)
 
+#akj: new    
+    # adjust the refcount field - called by e.g. Entry
+    def _increase_refcount(self, connection, increment=1):
+        r = connection.execute(
+            self.__table__.
+            select().
+            where(Taxtable.guid == self.guid))
+        refcountval = r.fetchone()[2]
+        connection.execute(
+            self.__table__.
+            update().        
+            values(refcount=refcountval+increment).
+            where(Taxtable.guid == self.guid))
+        
+    # adjust the refcount field - called by e.g. Entry
+    def _decrease_refcount(self, connection):
+        self._increase_refcount(connection, increment=-1)
+#akj: end new
 
 class TaxtableEntry(DeclarativeBase):
     __tablename__ = "taxtable_entries"
