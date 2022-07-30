@@ -302,7 +302,7 @@ class Entry(DeclarativeBaseGuid):
         quantity=None,                      #how many items were sold
         price=0,                            #unit price of item. Note: to specify price, an account also needs to be specified.
         acct=None,                          #income account that is to be credited (invoice) / expense account to charged (bill, expense voucher)
-        taxable=None,                       #True/1 - yes, False/0 - no. If taxtable is provided, will be set to True
+        taxable=True,                       #True/1 - yes, False/0 - no. If taxtable is provided, must be True
         taxincluded=False,                  #tax already included in unit price? True/1 - yes, False/0 - no
         taxtable=None,                      #info re tax percentage and account to which tax is charged
         i_discount=None,                    #total discount
@@ -446,9 +446,6 @@ class Entry(DeclarativeBaseGuid):
     def taxable(self, taxable):
         this_prefix, other_prefix = self.get_entry_field_prefix()
 
-        if taxable is None:
-            taxable = True
-
         setattr(self, other_prefix+'taxable', True)
         if (not taxable) and self.taxtable:
             raise ValueError("Cannot set taxable to False while also specifying taxtable. Please unset taxtable first.") 
@@ -513,7 +510,7 @@ class Entry(DeclarativeBaseGuid):
     @classmethod
     def __declare_last__(cls):
         # add listeners to update the Taxtable.refcount field
-        if hasattr(cls, "b_taxtable") or hasattr(cls, "i_taxtable"):
+        if hasattr(cls, "taxtable"):
             event.listen(cls, "after_insert", cls._changed)
             event.listen(cls, "after_update", cls._changed)
             event.listen(cls, "after_delete", cls._deleted)
@@ -534,10 +531,12 @@ class Entry(DeclarativeBaseGuid):
             
     def _deleted(mapper, connection, target):
         # only one of i_taxtable and b_taxtable should ever be set for a single entry 
-        if target.i_taxtable:
-            target.i_taxtable._decrease_refcount(connection)
-        elif target.b_taxtable:
-            target.b_taxtable._decrease_refcount(connection)
+#        if target.invoice:
+        if target._i_taxtable:
+            target._i_taxtable._decrease_refcount(connection)
+        elif target._b_taxtable:
+#        elif target.bill:
+            target._b_taxtable._decrease_refcount(connection)
 #akj - end new content
 
 #akj modified class name
