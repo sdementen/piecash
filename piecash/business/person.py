@@ -3,14 +3,11 @@ from decimal import Decimal
 from sqlalchemy import Column, VARCHAR, INTEGER, BIGINT, ForeignKey, and_, event
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import composite, relation, foreign
+from sqlalchemy.orm.attributes import get_history
 
 from .._common import hybrid_property_gncnumeric, CallableList
 from .._declbase import DeclarativeBaseGuid
 from ..sa_extra import ChoiceType
-
-#akj added
-from sqlalchemy.orm.attributes import get_history
-#akj end added
 
 TaxIncludedType = [
     (1, "YES"),
@@ -166,7 +163,6 @@ class Person:
                 value.owner_guid = target.guid
                 value._assign_id()
 
-#akj: new content
         # add listeners to update the Billterm.refcount field
         if owner_type and hasattr(cls, "term"):
             event.listen(cls, "after_insert", cls._changed)
@@ -184,7 +180,6 @@ class Person:
     def _deleted(mapper, connection, target):
         if target.term:
             target.term._decrease_refcount(connection)    
-#akj: end new content
 
 class Customer(Person, DeclarativeBaseGuid):
     """

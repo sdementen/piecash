@@ -2,15 +2,11 @@ import uuid
 import datetime
 from enum import Enum
 
-from sqlalchemy import Column, INTEGER, BIGINT, VARCHAR, ForeignKey
-from sqlalchemy.orm import composite, relation
-
-#akj: new content start
-from sqlalchemy import select, case, text, event
-from sqlalchemy.orm import column_property
+from sqlalchemy import Column, INTEGER, BIGINT, VARCHAR, ForeignKey, select, case, text, event
+from sqlalchemy.orm import composite, relation, column_property
 from sqlalchemy.orm.attributes import get_history
+
 from decimal import Decimal
-#akj: new content end
 
 from .person import PersonType, Person, Customer, Vendor, Employee
 
@@ -23,8 +19,6 @@ from .._common import CallableList, hybrid_property_gncnumeric
 from .._declbase import DeclarativeBaseGuid
 
 from ..kvp import SlotInt, SlotString, SlotFrame, SlotDate, SlotNumeric
-
-#akj: new content start
 from ..core.account import Account, income_types, asset_types, expense_types
 from .tax import Taxtable
 #from ..core.transaction import Transaction, Split, Lot
@@ -45,7 +39,6 @@ class Paytype(Enum):
 class Termtype(Enum):
     days = "GNC_TERM_TYPE_DAYS"
     proximo = "GNC_TERM_TYPE_PROXIMO"
-#akj: new content end
 
 class Job(DeclarativeBaseGuid):
     __tablename__ = "jobs"
@@ -62,7 +55,7 @@ class Job(DeclarativeBaseGuid):
 
     # relation definitions
     # todo: owner_guid/type links to Vendor or Customer
-#akj: start change, added rate
+
     def __init__(self, name, owner, reference="", active=1, rate=0):
         #At least a name and owner need to be specified
         if not name:
@@ -70,7 +63,6 @@ class Job(DeclarativeBaseGuid):
             
         if not (owner and (isinstance(owner, Customer) or isinstance(owner, Vendor))):
             raise ValueError("Need a valid owner (Customer or Vendor) for job.")
-#akj: end change
 
         self.name = name
         self.reference = reference
@@ -80,7 +72,6 @@ class Job(DeclarativeBaseGuid):
         if owner.book:
             owner.book.add(self)
 
-#akj: added code
         self.rate = rate
 
     # Retrieve the job rate
@@ -108,7 +99,6 @@ class Job(DeclarativeBaseGuid):
     @property
     def owner(self):
         return self.book.get(self._owner_cls_type, guid=self.owner_guid)
-#akj: end addition
 
     def __str__(self):
         return "Job<{self.name}>".format(self=self)
@@ -164,7 +154,6 @@ class Billterm(DeclarativeBaseGuid):
         remote_side=guid,
     )
 
-#akj: new
     def __str__(self):
         return "Billterm<{}>".format(self.name)
     
@@ -190,9 +179,6 @@ class Billterm(DeclarativeBaseGuid):
         if book:
             book.add(self)
             book.flush()
-            
-#    def on_book_add(self):
-#        self._assign_id()
     
     # adjust the refcount field - called by e.g. Person and Invoice/Bill/Expensevoucher
     def _increase_refcount(self, connection, increment=1):
@@ -210,7 +196,6 @@ class Billterm(DeclarativeBaseGuid):
     # adjust the refcount field - called by e.g. Person and Invoice/Bill/Expensevoucher
     def _decrease_refcount(self, connection):
         self._increase_refcount(connection, increment=-1)
-#akj: end new
 
 class Entry(DeclarativeBaseGuid):
     __tablename__ = "entries"
@@ -244,31 +229,19 @@ class Entry(DeclarativeBaseGuid):
     _i_disc_how = Column("i_disc_how", VARCHAR(length=2048))
     _i_taxable = Column("i_taxable", INTEGER())
     _i_taxincluded = Column("i_taxincluded", INTEGER())
-#akj commented out
-#    i_taxtable = Column("i_taxtable", VARCHAR(length=32))
-#akj end commented out
-#akj new content
     _i_taxtable_guid = Column("i_taxtable", VARCHAR(length=32), ForeignKey("taxtables.guid"))
-#akj end new content
+
     _b_acct = Column("b_acct", VARCHAR(length=32))
     _b_price_num = Column("b_price_num", BIGINT())
     _b_price_denom = Column("b_price_denom", BIGINT())
     _b_price_denom_basis = None
     _b_price = hybrid_property_gncnumeric(_b_price_num, _b_price_denom)
-#akj commented out    
-#    bill = Column("bill", VARCHAR(length=32))
-#akj end commented out
-#akj new content
+
     bill_guid = Column("bill", VARCHAR(length=32), ForeignKey("invoices.guid"))
-#akj end new content
+
     _b_taxable = Column("b_taxable", INTEGER())
     _b_taxincluded = Column("b_taxincluded", INTEGER())
-#akj commented out    
-#    b_taxtable = Column("b_taxtable", VARCHAR(length=32))
-#akj end commented out
-#akj new content
     _b_taxtable_guid = Column("b_taxtable", VARCHAR(length=32), ForeignKey("taxtables.guid"))
-#akj end new content
     _b_paytype = Column("b_paytype", INTEGER())
     billable = Column("billable", INTEGER())
     _billto_type = Column("billto_type", INTEGER())
@@ -277,21 +250,14 @@ class Entry(DeclarativeBaseGuid):
 
     # relation definitions
     order = relation("Order", back_populates="entries")
-#akj commented out
-#    invoice = relation("Invoice", back_populates="entries")
-#akj end commented out
-
-#akj new content
     invoice = relation("InvoiceBase", foreign_keys=[invoice_guid], back_populates="_invoice_entries")
     bill = relation("InvoiceBase", foreign_keys=[bill_guid], back_populates="_bill_entries")
     _b_taxtable = relation("Taxtable", foreign_keys=[_b_taxtable_guid])
     _i_taxtable = relation("Taxtable", foreign_keys=[_i_taxtable_guid])
-#akj end new content
 
     def __str__(self):
         return "Entry<{}>".format(self.description)
 
-#akj - new content
     def __init__(self, 
         invoice,                            #Invoice/bill/expense voucher object
         date=datetime.datetime.now().replace(microsecond=0),   #date item was sold
@@ -363,7 +329,7 @@ class Entry(DeclarativeBaseGuid):
         self.b_paytype = b_paytype
         self.billable = billable
 
-    def get_entry_field_prefix(self):
+    def _get_entry_field_prefix(self):
         # convenience method to set the i-half or b-half of the entry row depending on Invoice or Bill/Expensevoucher
         # assume dealing with invoice
         this_prefix = '_i_'
@@ -377,12 +343,12 @@ class Entry(DeclarativeBaseGuid):
 
     @property
     def price(self):
-        this_prefix, other_prefix = self.get_entry_field_prefix()
+        this_prefix, other_prefix = self._get_entry_field_prefix()
         return getattr(self, this_prefix+'price')
 
     @price.setter
     def price(self, price):
-        this_prefix, other_prefix = self.get_entry_field_prefix()
+        this_prefix, other_prefix = self._get_entry_field_prefix()
         setattr(self, other_prefix+'price', 0)
         if (price and price != 0) and not self.acct:
             #Price without account gives an error message in the GUI if one attempts to edit the entry. 
@@ -422,12 +388,12 @@ class Entry(DeclarativeBaseGuid):
     
     @property
     def acct(self):
-        this_prefix, other_prefix = self.get_entry_field_prefix()
+        this_prefix, other_prefix = self._get_entry_field_prefix()
         return getattr(self, this_prefix+'acct')
 
     @acct.setter
     def acct(self, acct):
-        this_prefix, other_prefix = self.get_entry_field_prefix()
+        this_prefix, other_prefix = self._get_entry_field_prefix()
         
         setattr(self, other_prefix+'price', None)
         if not acct:
@@ -439,12 +405,12 @@ class Entry(DeclarativeBaseGuid):
 
     @property
     def taxable(self):
-        this_prefix, other_prefix = self.get_entry_field_prefix()
+        this_prefix, other_prefix = self._get_entry_field_prefix()
         return getattr(self, this_prefix+'taxable')
 
     @taxable.setter
     def taxable(self, taxable):
-        this_prefix, other_prefix = self.get_entry_field_prefix()
+        this_prefix, other_prefix = self._get_entry_field_prefix()
 
         setattr(self, other_prefix+'taxable', True)
         if (not taxable) and self.taxtable:
@@ -454,12 +420,12 @@ class Entry(DeclarativeBaseGuid):
 
     @property
     def taxtable(self):
-        this_prefix, other_prefix = self.get_entry_field_prefix()
+        this_prefix, other_prefix = self._get_entry_field_prefix()
         return getattr(self, this_prefix+'taxtable')
 
     @taxtable.setter
     def taxtable(self, taxtable):
-        this_prefix, other_prefix = self.get_entry_field_prefix()
+        this_prefix, other_prefix = self._get_entry_field_prefix()
 
         setattr(self, other_prefix+'taxtable', None)
         if taxtable and type(taxtable) is not Taxtable:
@@ -469,12 +435,12 @@ class Entry(DeclarativeBaseGuid):
             
     @property
     def taxincluded(self):
-        this_prefix, other_prefix = self.get_entry_field_prefix()
+        this_prefix, other_prefix = self._get_entry_field_prefix()
         return getattr(self, this_prefix+'taxincluded')
 
     @taxincluded.setter
     def taxincluded(self, taxincluded):
-        this_prefix, other_prefix = self.get_entry_field_prefix()
+        this_prefix, other_prefix = self._get_entry_field_prefix()
 
         setattr(self, other_prefix+'taxincluded', False)
         setattr(self, this_prefix+'taxincluded', taxincluded)
@@ -496,12 +462,12 @@ class Entry(DeclarativeBaseGuid):
 
     @property
     def billto(self):
-        this_prefix, other_prefix = self.get_entry_field_prefix()
+        this_prefix, other_prefix = self._get_entry_field_prefix()
         return self._billto
 
     @taxincluded.setter
     def taxincluded(self, taxincluded):
-        this_prefix, other_prefix = self.get_entry_field_prefix()
+        this_prefix, other_prefix = self._get_entry_field_prefix()
 
         setattr(self, other_prefix+'taxincluded', False)
         setattr(self, this_prefix+'taxincluded', taxincluded)
@@ -516,7 +482,7 @@ class Entry(DeclarativeBaseGuid):
             event.listen(cls, "after_delete", cls._deleted)
 
     def _changed(mapper, connection, target):
-        # check if the taxtable field changed, obtain new and old value, and update the refcount for the terms
+        # check if the taxtable field changed, obtain new and old value, and update the refcount for the taxtable
         newval, _, oldval = get_history(target, '_i_taxtable')
         if newval and (newval[0] is not None):
             newval[0]._increase_refcount(connection)
@@ -531,16 +497,11 @@ class Entry(DeclarativeBaseGuid):
             
     def _deleted(mapper, connection, target):
         # only one of i_taxtable and b_taxtable should ever be set for a single entry 
-#        if target.invoice:
         if target._i_taxtable:
             target._i_taxtable._decrease_refcount(connection)
         elif target._b_taxtable:
-#        elif target.bill:
             target._b_taxtable._decrease_refcount(connection)
-#akj - end new content
 
-#akj modified class name
-#class Invoice(DeclarativeBaseGuid):
 class InvoiceBase(DeclarativeBaseGuid):
     """
     - This class is a superclass for Invoices, Bills, and Expense vouchers. 
@@ -568,7 +529,6 @@ class InvoiceBase(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
-#akj added content
     guid = Column(
         "guid",
         VARCHAR(length=32),
@@ -576,7 +536,6 @@ class InvoiceBase(DeclarativeBaseGuid):
         nullable=False,
         default=lambda: uuid.uuid4().hex,
     )
-#akj end added content
     
     id = Column("id", VARCHAR(length=2048), nullable=False)
     date_opened = Column("date_opened", _DateTime())
@@ -616,17 +575,6 @@ class InvoiceBase(DeclarativeBaseGuid):
     post_lot = relation("Lot")
     post_txn = relation("Transaction")
 
-#akj commented out
-#    entries = relation(
-#        "Entry",
-#        back_populates="invoice",
-#        cascade="all, delete-orphan",
-#       collection_class=CallableList,
-#        foreign_keys=Entry.invoice_guid
-#    )
-#akj end commented out
-
-#akj added
     _invoice_entries = relation(
         "Entry",
         back_populates="invoice",
@@ -663,13 +611,7 @@ class InvoiceBase(DeclarativeBaseGuid):
     }
 
     job = relation(Job, uselist=False, primaryjoin='Job.guid == InvoiceBase.owner_guid', foreign_keys=Job.guid)
-#akj end added
 
-#akj: start commenting out
-#    def __str__(self):
-#        return "Invoice<{}>".format(self.id)
-#akj: end commenting out
-#akj: new content
     @property
     def entries(self):
         if type(self) is Invoice:
@@ -677,7 +619,6 @@ class InvoiceBase(DeclarativeBaseGuid):
         elif type(self) in [Bill, Expensevoucher]:
             return self._bill_entries
  
-#    def __init__(self, 
     def _create_invoice(self, 
         owner,                  #Either a customer (for invoices), vendor (for bills), or employee (for expenses)
         currency,
@@ -738,8 +679,8 @@ class InvoiceBase(DeclarativeBaseGuid):
             self.billto_guid = billto.guid
         
         #Finally, create a slot indicating if credit-note or not
-#        self.slots = [SlotInt('credit-note', is_credit_note)]
         self.is_credit_note = is_credit_note
+
         book.add(self)
         book.flush()
 
@@ -818,6 +759,7 @@ class InvoiceBase(DeclarativeBaseGuid):
         if target.term:
             target.term._decrease_refcount(connection)    
 
+#todo - work in progress !!!!!
     def post_invoice(self, 
         post_account, 
         post_date=datetime.datetime.now().replace(microsecond=0), 
@@ -990,8 +932,6 @@ class Expensevoucher(InvoiceBase):
         is_credit_note=False):
         
         self._create_invoice(owner=owner, date_opened=date_opened, notes=notes, term=term, billing_id=billing_id, book=book, currency=currency, active=active, billto=billto, is_credit_note=is_credit_note)
-#akj: end new content
-
 
 # This class exists in code but not in the GUI (to confirm?)
 
@@ -1021,7 +961,5 @@ class Order(DeclarativeBaseGuid):
         collection_class=CallableList,
     )
 
-#akj: added
 OwnerType = PersonType.copy()
 OwnerType[Job] = 3
-#akj: end added

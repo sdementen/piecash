@@ -12,13 +12,8 @@ from .commodity import Commodity, Price
 from .transaction import Split, Transaction
 from .._common import CallableList, GnucashException
 from .._declbase import DeclarativeBaseGuid
-from ..business.invoice import Invoice
+from ..business.invoice import Invoice, Bill, Expensevoucher
 from ..sa_extra import kvp_attribute
-
-#akj added
-from ..business.invoice import Bill, Expensevoucher
-#akj end added
-
 
 class Book(DeclarativeBaseGuid):
     """
@@ -416,7 +411,6 @@ class Book(DeclarativeBaseGuid):
 
         return CallableList(self.session.query(Invoice))
 
-#akj added
     @property
     def bills(self):
         """
@@ -435,8 +429,6 @@ class Book(DeclarativeBaseGuid):
 
         return CallableList(self.session.query(Expensevoucher))
     
-#akj end added
-
     @property
     def currencies(self):
         """
@@ -505,7 +497,6 @@ class Book(DeclarativeBaseGuid):
 
         return CallableList(self.session.query(Taxtable))
 
-#akj added
     @property
     def billterms(self):
         """
@@ -525,7 +516,6 @@ class Book(DeclarativeBaseGuid):
         from ..business import Job
 
         return CallableList(self.session.query(Job))
-#akj end added
 
     @property
     def query(self):
