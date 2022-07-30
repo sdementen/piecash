@@ -278,9 +278,7 @@ class Entry(DeclarativeBaseGuid):
         billable=False):                    #True/1 - yes, False/0 - no - only applicable for bills: ignored for invoices and expense vouchers
         
         #order=None                         #There is no mention of orders in the Gnucash user manual, besides a mention under 'Counters'. Some artifact of something started but abandoned?
-
-        #To do:
-        #   billto - what is the relationship between invoice.billto and entry.billto?
+        #billto=None                        #Can't see that the Gnucash interface allows to set per-entry bill-to(?). Ignore for now.
 
         #Check that a valid invoice pas provided.
         if not invoice or not type(invoice) in [Invoice, Bill, Expensevoucher]:
@@ -301,16 +299,11 @@ class Entry(DeclarativeBaseGuid):
         if type(invoice) is Invoice:
             self.invoice_guid = invoice.guid        
 
-#            self.billto_type = None
-
             self.i_discount = i_discount
             self.i_disc_type = i_disc_type
             self.i_disc_how = i_disc_how
         else:
             self.bill_guid = invoice.guid
-
-#            self.billto_type = invoice.billto_type
-#            self.billto_guid = invoice.billto_guid
 
             self.i_discount = 0
             self.i_disc_type = DiscountType.percent
