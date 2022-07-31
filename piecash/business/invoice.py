@@ -213,7 +213,7 @@ class Entry(DeclarativeBaseGuid):
     _quantity_denom_basis = None
     quantity = hybrid_property_gncnumeric(_quantity_num, _quantity_denom)
 
-    _i_acct = Column("i_acct", VARCHAR(length=32))
+    _i_acct = Column("i_acct", VARCHAR(length=32), ForeignKey("accounts.guid"))
     _i_price_num = Column("i_price_num", BIGINT())
     _i_price_denom = Column("i_price_denom", BIGINT())
     _i_price_denom_basis = None
@@ -231,7 +231,7 @@ class Entry(DeclarativeBaseGuid):
     _i_taxincluded = Column("i_taxincluded", INTEGER())
     _i_taxtable_guid = Column("i_taxtable", VARCHAR(length=32), ForeignKey("taxtables.guid"))
 
-    _b_acct = Column("b_acct", VARCHAR(length=32))
+    _b_acct = Column("b_acct", VARCHAR(length=32), ForeignKey("accounts.guid"))
     _b_price_num = Column("b_price_num", BIGINT())
     _b_price_denom = Column("b_price_denom", BIGINT())
     _b_price_denom_basis = None
@@ -252,8 +252,10 @@ class Entry(DeclarativeBaseGuid):
     order = relation("Order", back_populates="entries")
     invoice = relation("InvoiceBase", foreign_keys=[invoice_guid], back_populates="_invoice_entries")
     bill = relation("InvoiceBase", foreign_keys=[bill_guid], back_populates="_bill_entries")
-    _b_taxtable = relation("Taxtable", foreign_keys=[_b_taxtable_guid])
     _i_taxtable = relation("Taxtable", foreign_keys=[_i_taxtable_guid])
+    _b_taxtable = relation("Taxtable", foreign_keys=[_b_taxtable_guid])
+    _i_account = relation("Account", foreign_keys=[_i_acct])
+    _b_account = relation("Account", foreign_keys=[_b_acct])
 
     def __str__(self):
         return "Entry<{}>".format(self.description)
@@ -267,7 +269,7 @@ class Entry(DeclarativeBaseGuid):
         notes='',                       
         quantity=None,                      #how many items were sold
         price=0,                            #unit price of item. Note: to specify price, an account also needs to be specified.
-        acct=None,                          #income account that is to be credited (invoice) / expense account to charged (bill, expense voucher)
+        account=None,                       #income account that is to be credited (invoice) / expense account to charged (bill, expense voucher)
         taxable=True,                       #True/1 - yes, False/0 - no. If taxtable is provided, must be True
         taxincluded=False,                  #tax already included in unit price? True/1 - yes, False/0 - no
         taxtable=None,                      #info re tax percentage and account to which tax is charged
@@ -312,7 +314,7 @@ class Entry(DeclarativeBaseGuid):
         # flush to set the invoice or bill / expense voucher attributes
         book.flush()
     
-        self.acct = acct
+        self.account = account
         self.price = price
         self.taxtable = taxtable
         self.taxincluded = taxincluded
@@ -343,11 +345,11 @@ class Entry(DeclarativeBaseGuid):
     def price(self, price):
         this_prefix, other_prefix = self._get_entry_field_prefix()
         setattr(self, other_prefix+'price', 0)
-        if (price and price != 0) and not self.acct:
+        if (price and price != 0) and not self.account:
             #Price without account gives an error message in the GUI if one attempts to edit the entry. 
             raise ValueError("To set the price, please set a valid account first.")
         else:
-            setattr(self, this_prefix+'price', Decimal(str(price)))
+            setattr(self, this_prefix+'price', price)
 
     @property
     def i_discount(self):
@@ -380,21 +382,21 @@ class Entry(DeclarativeBaseGuid):
             raise ValueError(f"Unrecognised value for i_disc_how: - {i_disc_how} was provided")
     
     @property
-    def acct(self):
+    def account(self):
         this_prefix, other_prefix = self._get_entry_field_prefix()
-        return getattr(self, this_prefix+'acct')
+        return getattr(self, this_prefix+'account')
 
-    @acct.setter
-    def acct(self, acct):
+    @account.setter
+    def account(self, account):
         this_prefix, other_prefix = self._get_entry_field_prefix()
         
-        setattr(self, other_prefix+'price', None)
-        if not acct:
-            setattr(self, this_prefix+'price', None)
-        elif (type(self.invoice) is Invoice and not (acct.type in asset_types or acct.type in income_types)) or (type(self.invoice) is not Invoice and not acct.type in expense_types):
+        setattr(self, other_prefix+'account', None)
+        if not account:
+            setattr(self, this_prefix+'account', None)
+        elif (type(self.invoice) is Invoice and not (account.type in asset_types or account.type in income_types)) or (type(self.invoice) is not Invoice and not account.type in expense_types):
             raise ValueError("Please provide a valid income or asset account for invoices, or valid expense account for bills and expensevouchers.")
         else:
-            setattr(self, this_prefix+'acct', acct.guid)
+            setattr(self, this_prefix+'account', account)
 
     @property
     def taxable(self):
@@ -452,19 +454,6 @@ class Entry(DeclarativeBaseGuid):
             self._b_paytype = b_paytype.value
         else:
             raise ValueError(f"Unrecognised value for b_paytype: - {b_paytype} was provided")
-
-    @property
-    def billto(self):
-        this_prefix, other_prefix = self._get_entry_field_prefix()
-        return self._billto
-
-    @taxincluded.setter
-    def taxincluded(self, taxincluded):
-        this_prefix, other_prefix = self._get_entry_field_prefix()
-
-        setattr(self, other_prefix+'taxincluded', False)
-        setattr(self, this_prefix+'taxincluded', taxincluded)
-
     
     @classmethod
     def __declare_last__(cls):

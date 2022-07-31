@@ -140,40 +140,40 @@ def book_with_invoice_entries(book_with_invoices):
     anEntry.action = 'invoice1 action1'
     anEntry.notes = 'invoice1 notes'
     anEntry.quantity = 10
-    anEntry.acct = invoice_income_account
-    anEntry.price = 100.01
+    anEntry.account = invoice_income_account
+    anEntry.price = Decimal(str(100.01))
     
     anEntry = piecash.business.invoice.Entry(invoice=invoice2) 
     anEntry.description = 'invoice2 description'
     anEntry.action = 'invoice2 action1'
     anEntry.notes = 'invoice2 notes'
     anEntry.quantity = 11
-    anEntry.acct = invoice_income_account
-    anEntry.price = 101.01
+    anEntry.account = invoice_income_account
+    anEntry.price = Decimal(str(101.01))
 
     anEntry = piecash.business.invoice.Entry(invoice=bill1) 
     anEntry.description = 'bill1 description'
     anEntry.action = 'bill1 action1'
     anEntry.notes = 'bill1 notes'
     anEntry.quantity = 20
-    anEntry.acct = bill_expense_account
-    anEntry.price = 200.01
+    anEntry.account = bill_expense_account
+    anEntry.price = Decimal(str(200.01))
     
     anEntry = piecash.business.invoice.Entry(invoice=bill2) 
     anEntry.description = 'bill2 description'
     anEntry.action = 'bill2 action1'
     anEntry.notes = 'bill2 notes'
     anEntry.quantity = 21
-    anEntry.acct = bill_expense_account
-    anEntry.price = 201.01
+    anEntry.account = bill_expense_account
+    anEntry.price = Decimal(str(201.01))
 
     anEntry = piecash.business.invoice.Entry(invoice=expensevoucher) 
     anEntry.description = 'expensevoucher description'
     anEntry.action = 'expensevoucher action1'
     anEntry.notes = 'expensevoucher notes'
     anEntry.quantity = 31
-    anEntry.acct = expense_voucher_account
-    anEntry.price = 301.01
+    anEntry.account = expense_voucher_account
+    anEntry.price = Decimal(str(301.01))
     anEntry.billable = True
     anEntry.b_paytype = piecash.business.invoice.Paytype.credit
 
@@ -182,8 +182,8 @@ def book_with_invoice_entries(book_with_invoices):
     anEntry.action = 'expensevoucher action2'
     anEntry.notes = 'expensevoucher notes2'
     anEntry.quantity = 32
-    anEntry.acct = expense_voucher_account
-    anEntry.price = 302.01
+    anEntry.account = expense_voucher_account
+    anEntry.price = Decimal(str(302.01))
     anEntry.billable = False
     anEntry.b_paytype = piecash.business.invoice.Paytype.cash
 
@@ -332,7 +332,7 @@ def test_entries(book_with_invoice_entries):
     assert anEntry.action == 'invoice1 action1'
     assert anEntry.notes == 'invoice1 notes'
     assert anEntry.quantity == 10
-#    assert anEntry.acct == invoice_income_account
+    assert anEntry.account == invoice_income_account
     assert anEntry.price == Decimal(str(100.01))
     
     anEntry = invoice2.entries[0]
@@ -340,7 +340,7 @@ def test_entries(book_with_invoice_entries):
     assert anEntry.action == 'invoice2 action1'
     assert anEntry.notes == 'invoice2 notes'
     assert anEntry.quantity == 11
-#    assert anEntry.acct = invoice_income_account
+    assert anEntry.account == invoice_income_account
     assert anEntry.price == Decimal(str(101.01))
 
     anEntry = bill1.entries[0]
@@ -348,7 +348,7 @@ def test_entries(book_with_invoice_entries):
     assert anEntry.action == 'bill1 action1'
     assert anEntry.notes == 'bill1 notes'
     assert anEntry.quantity == 20
-#    anEntry.acct = bill_expense_account
+    assert anEntry.account == bill_expense_account
     assert anEntry.price == Decimal(str(200.01))
     
     anEntry = bill2.entries[0]
@@ -356,7 +356,7 @@ def test_entries(book_with_invoice_entries):
     assert anEntry.action == 'bill2 action1'
     assert anEntry.notes == 'bill2 notes'
     assert anEntry.quantity == 21
-#    anEntry.acct = bill_expense_account
+    assert anEntry.account == bill_expense_account
     assert anEntry.price == Decimal(str(201.01))
 
     anEntry = expensevoucher.entries[0]
@@ -364,7 +364,7 @@ def test_entries(book_with_invoice_entries):
     assert anEntry.action == 'expensevoucher action1'
     assert anEntry.notes == 'expensevoucher notes'
     assert anEntry.quantity == 31
-#    assert anEntry.acct == expense_voucher_account
+    assert anEntry.account == expense_voucher_account
     assert anEntry.price == Decimal(str(301.01))
     assert anEntry.billable
     assert anEntry.b_paytype == piecash.business.invoice.Paytype.credit
@@ -374,13 +374,7 @@ def test_entries(book_with_invoice_entries):
     assert anEntry.action == 'expensevoucher action2'
     assert anEntry.notes == 'expensevoucher notes2'
     assert anEntry.quantity == 32
-#    assert anEntry.acct = expense_voucher_account
+    assert anEntry.account == expense_voucher_account
     assert anEntry.price == Decimal(str(302.01))
     assert not anEntry.billable
     assert anEntry.b_paytype == piecash.business.invoice.Paytype.cash
-
-
-
-# things to check
-# Decimal - must be a better way
-# account: should get an account, not guid
