@@ -625,8 +625,14 @@ class InvoiceBase(DeclarativeBaseGuid):
         is_credit_note=False):    
  
         #Although not required to add invoice to the database, the invoice won't be found in the GnuCash GUI without an owner attached
-        if not (owner and (isinstance(owner, Person) or isinstance(owner, Job))):
-            raise ValueError("Need a valid owner for invoice.")
+        if not (type(owner) in [Customer, Vendor, Employee, Job]):
+            raise ValueError(f'Unknown owner type - {owner}')
+        elif type(self) is Invoice and not (type(owner) is Customer or (type(owner) is Job and type(owner.owner) is Customer)):
+            raise ValueError(f"Only Customers and Customer Jobs can create invoices - {owner} was provided.")
+        elif type(self) is Bill and not (type(owner) is Vendor or (type(owner) is Job and type(owner.owner) is Vendor)):
+            raise ValueError(f"Only Vendors and Vendor Jobs can create bills - {owner} was provided.")
+        elif type(self) is Expensevoucher and not type(owner) is Employee:
+            raise ValueError(f"Only Employees can create expense vouchers - {owner} was provided.")
 
         #Chargeback only available to Vendors and Employees
         if billto and not (isinstance(owner, Vendor) or isinstance(owner, Employee) or (isinstance(owner, Job) and isinstance(owner.owner, Vendor))):
@@ -753,22 +759,22 @@ class InvoiceBase(DeclarativeBaseGuid):
             target.term._decrease_refcount(connection)    
 
 #todo - work in progress !!!!!
-    def post_invoice(self, 
-        post_account, 
-        post_date=datetime.datetime.now().replace(microsecond=0), 
-        due_date=datetime.date.today(),
-        description='', 
-        accumulateSplits=True):
+##    def post_invoice(self, 
+##        post_account, 
+##        post_date=datetime.datetime.now().replace(microsecond=0), 
+##        due_date=datetime.date.today(),
+##        description='', 
+##        accumulateSplits=True):
         
         #TODO:
             #slots
             #coded for invoice. Not checked for bills, nor for bills with charge-through.
         
-        self.post_account = post_account
-        self.date_posted = post_date
+##        self.post_account = post_account
+##        self.date_posted = post_date
 #        owner = self.get_owner()
-        owner = self.owner()
-        charge_amt = sum(entry.quantity * entry.i_price for entry in self.entries)
+##        owner = self.owner()
+##        charge_amt = sum(entry.quantity * entry.i_price for entry in self.entries)
 
 #        if len(self.slots) > 0:
 #            if self.slots[0].name == 'credit-note' and not self.slots[0].value:
@@ -778,53 +784,53 @@ class InvoiceBase(DeclarativeBaseGuid):
 #                    action = 'Undefined'
 #            else:
 #                action = 'Credit note'
-        action = self.get_type_string()
+##        action = self.get_type_string()
 
-        if accumulateSplits:
+##        if accumulateSplits:
             #check that all entries refer to the same account
-            same_account = all(entry.i_acct == self.entries[0].i_acct for entry in self.entries)
+##            same_account = all(entry.i_acct == self.entries[0].i_acct for entry in self.entries)
 
         #prepare splits
-        splits = []
-        if accumulateSplits and same_account:
-            splits.append(Split(
-                account=self.book.get(Account, guid=self.entries[0].i_acct),
-                value=-charge_amt,
-                quantity=-charge_amt,
-                transaction=None,
-                memo=description,
-                action=action,
-                lot=None))
-        else:
-            for entry in self.entries:
-                splits.append(Split(
-                    account=self.book.get(Account, guid=entry.i_acct), 
-                    value=-entry.quantity*entry.i_price,
-                    quantity=-entry.quantity*entry.i_price,      #are these always equal?
-                    transaction=None,
-                    memo=entry.description,
-                    action=action,
-                    lot=None))
+##        splits = []
+##        if accumulateSplits and same_account:
+##            splits.append(Split(
+##                account=self.book.get(Account, guid=self.entries[0].i_acct),
+##                value=-charge_amt,
+##                quantity=-charge_amt,
+##                transaction=None,
+##                memo=description,
+##                action=action,
+##                lot=None))
+##        else:
+##            for entry in self.entries:
+##                splits.append(Split(
+##                    account=self.book.get(Account, guid=entry.i_acct), 
+##                    value=-entry.quantity*entry.i_price,
+##                    quantity=-entry.quantity*entry.i_price,      #are these always equal?
+##                    transaction=None,
+##                    memo=entry.description,
+##                    action=action,
+##                    lot=None))
 
             #add balancing split
-        splits.append(Split(post_account,
-                 value=charge_amt,
-                 quantity=charge_amt,
-                 transaction=None,
-                 memo=description,
-                 action=action))
+##        splits.append(Split(post_account,
+##                 value=charge_amt,
+##                 quantity=charge_amt,
+##                 transaction=None,
+##                 memo=description,
+##                 action=action))
 
 #        self.post_txn = Transaction(self.currency, description=owner.name, notes=None, splits=splits, post_date=post_date.date(), num=self.id)
 #        self.post_lot = Lot(title=action + ' ' + str(self.id), account=post_account, splits=[splits[-1]], is_closed=-1)
 
-        tr = Transaction(self.currency, description=owner.name, notes=None, splits=splits, post_date=post_date.date(), num=self.id)
-        lot = Lot(title=action + ' ' + str(self.id), account=post_account, splits=[splits[-1]], is_closed=-1)
-        self.book.add(tr)
-        self.book.add(lot)
-        self.book.flush()
+##        tr = Transaction(self.currency, description=owner.name, notes=None, splits=splits, post_date=post_date.date(), num=self.id)
+##        lot = Lot(title=action + ' ' + str(self.id), account=post_account, splits=[splits[-1]], is_closed=-1)
+##        self.book.add(tr)
+##        self.book.add(lot)
+##        self.book.flush()
 
-        self.post_txn_guid = tr.guid
-        self.post_lot_guid = lot.guid
+##        self.post_txn_guid = tr.guid
+##        self.post_lot_guid = lot.guid
         
 #        self.post_txn.slots = 
 #        from pprint import pprint
