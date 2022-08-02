@@ -378,3 +378,77 @@ def test_entries(book_with_invoice_entries):
     assert anEntry.price == Decimal(str(302.01))
     assert not anEntry.billable
     assert anEntry.b_paytype == piecash.business.invoice.Paytype.cash
+
+def test_subtotal_and_taxes_for_entries(book):
+    default_currency = book.currencies[0]
+    
+    #create a customer invoice
+    invoice = piecash.Invoice(book.customers[0], default_currency)
+
+    #create some expense accounts to hold the various taxes
+    tax_account_1 = piecash.Account(name='taxaccount_1', type='EXPENSE', parent=book.root_account, commodity=default_currency)
+    tax_account_2 = piecash.Account(name='taxaccount_2', type='EXPENSE', parent=book.root_account, commodity=default_currency)
+    tax_account_3 = piecash.Account(name='taxaccount_3', type='EXPENSE', parent=book.root_account, commodity=default_currency)
+    tax_account_4 = piecash.Account(name='taxaccount_4', type='EXPENSE', parent=book.root_account, commodity=default_currency)
+    
+    #create an income account for the invoice
+    income_account = piecash.Account(name='invoice income', type='INCOME', parent=book.root_account, commodity=default_currency)
+
+    #create taxtable with multiple entries, using both value and percent
+    taxtable = piecash.business.tax.Taxtable('mytaxtable')
+    book.add(taxtable)
+    piecash.business.tax.TaxtableEntry("value", 10, tax_account_1, taxtable=taxtable)
+    piecash.business.tax.TaxtableEntry("value", 3, tax_account_2, taxtable=taxtable)
+    piecash.business.tax.TaxtableEntry("percentage", 6, tax_account_3, taxtable=taxtable)
+    piecash.business.tax.TaxtableEntry("percentage", 8, tax_account_4, taxtable=taxtable)
+    
+    #add entries    
+    for discount_type in [piecash.business.tax.DiscountType.percent, piecash.business.tax.DiscountType.value]:
+        piecash.business.invoice.Entry(
+                                    invoice=invoice, 
+                                    description=f'discount type: {discount_type}',
+                                    action='some action',
+                                    quantity = 2,
+                                    price=Decimal(str(200)),
+                                    account=income_account,
+                                    i_discount=Decimal(str('6')),
+                                    i_disc_type=discount_type,
+                                    taxable = False
+                                )                
+
+    for discount_how in [piecash.business.tax.DiscountHow.sametime, piecash.business.tax.DiscountHow.pretax, piecash.business.tax.DiscountHow.posttax, ]:
+        for discount_type in [piecash.business.tax.DiscountType.percent, piecash.business.tax.DiscountType.value]:
+            for tax_included in [True, False]:
+                piecash.business.invoice.Entry(
+                                    invoice=invoice, 
+                                    description=f'discount type: {discount_type} ; discount how: {discount_how} ; tax_included: {tax_included}',
+                                    action='some action',
+                                    quantity = 2,
+                                    price=Decimal(str(200)),
+                                    account=income_account,
+                                    taxincluded=tax_included,
+                                    taxtable=taxtable,
+                                    i_discount=Decimal(str('6')),
+                                    i_disc_type=discount_type,
+                                    i_disc_how=discount_how,
+                                    b_paytype=piecash.business.invoice.Paytype.cash,
+                                    billable=False,
+                                    taxable = True
+                                )
+    book.save()
+
+    subtotals = [
+        376, 394, 
+        319.11, 376, 333.47, 394, 
+        319.11, 376, 333.47, 394, 
+        315.47, 371.86, 333.47, 394]
+    taxes = [
+        0, 0, 
+        60.53, 69, 60.53, 69, 
+        57.67, 65.64, 59.69, 68.16, 
+        60.53, 69, 60.53, 69]
+    for entry, subtotal, tax in zip(book.invoices[0].entries, subtotals, taxes):
+        entry_subtotal, entry_tax = entry.subtotal_and_tax
+        assert round(entry_subtotal, 2) == round(Decimal(subtotal), 2)
+        assert round(entry_tax, 2) == round(Decimal(tax), 2)
+    

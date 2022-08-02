@@ -20,17 +20,17 @@ from .._declbase import DeclarativeBaseGuid
 
 from ..kvp import SlotInt, SlotString, SlotFrame, SlotDate, SlotNumeric
 from ..core.account import Account, income_types, asset_types, expense_types
-from .tax import Taxtable
+from .tax import Taxtable, DiscountType, DiscountHow
 #from ..core.transaction import Transaction, Split, Lot
 
-class DiscountType(Enum):
-    value = "VALUE"
-    percent = "PERCENT"
+#class DiscountType(Enum):
+#    value = "VALUE"
+#    percent = "PERCENT"
 
-class DiscountHow(Enum):
-    pretax = "PRETAX"
-    sametime = "SAMETIME"
-    posttax = "POSTTAX"
+#class DiscountHow(Enum):
+#    pretax = "PRETAX"
+#    sametime = "SAMETIME"
+#    posttax = "POSTTAX"
 
 class Paytype(Enum):
     cash = 1
@@ -374,7 +374,7 @@ class Entry(DeclarativeBaseGuid):
     def i_disc_how(self):
         return DiscountHow(self._i_disc_how)
 
-    @i_disc_type.setter
+    @i_disc_how.setter
     def i_disc_how(self, i_disc_how):
         if i_disc_how in DiscountHow:
             self._i_disc_how = i_disc_how.value
@@ -484,6 +484,19 @@ class Entry(DeclarativeBaseGuid):
         elif target._b_taxtable:
             target._b_taxtable._decrease_refcount(connection)
 
+    @property
+    def subtotal_and_tax(self):
+        tax = 0
+        subtotal = 0
+        if self.taxable and self.taxtable:
+            subtotal, tax = self.taxtable.calculate_subtotal_and_tax(self.quantity, self.price, self.i_disc_how, self.i_disc_type, self.i_discount, self.taxincluded)
+        else:   #not taxable
+            if self.i_disc_type == DiscountType.percent:
+                subtotal = self.quantity * self.price * (1-self.i_discount/100)
+            else:
+                subtotal = self.quantity * self.price - self.i_discount
+        return subtotal, tax
+        
 class InvoiceBase(DeclarativeBaseGuid):
     """
     - This class is a superclass for Invoices, Bills, and Expense vouchers. 
