@@ -488,14 +488,15 @@ class Entry(DeclarativeBaseGuid):
     def subtotal_and_tax(self):
         tax = 0
         subtotal = 0
+        tax_per_taxaccount = {}
         if self.taxable and self.taxtable:
-            subtotal, tax = self.taxtable.calculate_subtotal_and_tax(self.quantity, self.price, self.i_disc_how, self.i_disc_type, self.i_discount, self.taxincluded)
-        else:   #not taxable
+            subtotal, tax, tax_per_taxaccount = self.taxtable.calculate_subtotal_and_tax(self.quantity, self.price, self.i_disc_how, self.i_disc_type, self.i_discount, self.taxincluded)
+        else:   #not taxable or don't have the means to calculate taxes
             if self.i_disc_type == DiscountType.percent:
-                subtotal = self.quantity * self.price * (1-self.i_discount/100)
+                subtotal = self.quantity * self.price * (1 - self.i_discount/100)
             else:
                 subtotal = self.quantity * self.price - self.i_discount
-        return subtotal, tax
+        return subtotal, tax, tax_per_taxaccount
         
 class InvoiceBase(DeclarativeBaseGuid):
     """
@@ -759,7 +760,17 @@ class InvoiceBase(DeclarativeBaseGuid):
     def _deleted(mapper, connection, target):
         if target.term:
             target.term._decrease_refcount(connection)    
-
+    
+    @property
+    def tax_per_taxaccount(self):
+    # get the taxes for each tax acount
+        tax_per_taxaccount = {}
+        for entry in self.entries:
+            entry_subtotal, entry_tax, entry_tax_per_taxaccount = entry.subtotal_and_tax
+            for acct in entry_tax_per_taxaccount:
+                tax_per_taxaccount[acct] = tax_per_taxaccount.get(acct, 0) + entry_tax_per_taxaccount[acct]
+        return tax_per_taxaccount
+        
 #todo - work in progress !!!!!
 ##    def post_invoice(self, 
 ##        post_account, 

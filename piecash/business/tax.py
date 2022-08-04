@@ -88,52 +88,40 @@ class Taxtable(DeclarativeBaseGuid):
         
     def calculate_subtotal_and_tax(self, quantity, price, i_disc_how, i_disc_type, i_discount, taxincluded):
     # 12 different permutations depending on i_disc_type (2), i_disc_how (3), taxincluded (2)
-    # Basically: pretax + tax - discount = subtotal + tax. What varies is the reference for tax computation, and whether the price already includes tax or not
+    # Basically: pretax + tax - discount = subtotal + tax. What varies is the reference for tax computation, and whether the quantity * price already includes tax or not
     # The Taxtable may contain multiple TaxtableEntries, each entry either a percent or a value. The tax is then:
     #   tax = sum(tax value) + pretax * sum(tax percent)
+    # A dict is returned with the amount of tax due to each tax account
         tax = 0
         subtotal = 0
         pretax = 0
+        taxes = {}
         if self.entries:
             # First need sum(tax values) and sum(tax percent)
             sum_tax_value = sum(entry.amount for entry in self.entries if entry.type=="value")
             sum_tax_percent = sum(entry.amount for entry in self.entries if entry.type=="percentage") / 100
 
             if taxincluded:
-                #tax included with price: need to back off the old tax before adding the new tax
+                #tax included with quantity * price: need to back off the old tax before adding the new tax
                 #quantity * price = pretax + tax = pretax + sum_tax_value + pretax * sum_tax_percent = pretax * (1 + sum_tax_percent) + sum_tax_value
                 pretax = (quantity * price - sum_tax_value) / (1 + sum_tax_percent)            
             else:
                 pretax = quantity * price
 
-            if i_disc_how == DiscountHow.sametime and i_disc_type == DiscountType.percent and taxincluded:
+            if i_disc_how == DiscountHow.sametime and i_disc_type == DiscountType.percent:
                 #tax and discount based on pretax value. 
-                tax = sum_tax_value + pretax * sum_tax_percent
                 subtotal = pretax * (1 - i_discount/100)
-            elif i_disc_how == DiscountHow.sametime and i_disc_type == DiscountType.percent and not taxincluded:
-                #pretax value is the price, and discount and tax applied to pretax value
                 tax = sum_tax_value + pretax * sum_tax_percent
-                subtotal = pretax * (1 - i_discount/100)                
-            elif i_disc_how == DiscountHow.sametime and i_disc_type == DiscountType.value and taxincluded:
+            elif i_disc_how == DiscountHow.sametime and i_disc_type == DiscountType.value:
                 #price includes tax, discount and tax applied to pretax value
-                tax = sum_tax_value + pretax * sum_tax_percent
-                subtotal = pretax - i_discount
-            elif i_disc_how == DiscountHow.sametime and i_disc_type == DiscountType.value and not taxincluded:
                 subtotal = pretax - i_discount
                 tax = sum_tax_value + pretax * sum_tax_percent
-            elif i_disc_how == DiscountHow.pretax and i_disc_type == DiscountType.percent and taxincluded:
+            elif i_disc_how == DiscountHow.pretax and i_disc_type == DiscountType.percent:
                 #price includes a tax that needs backing off, and tax to be recomputed after discount applied
                 subtotal = pretax * (1 - i_discount/100)
                 tax = sum_tax_value + subtotal * sum_tax_percent
-            elif i_disc_how == DiscountHow.pretax and i_disc_type == DiscountType.percent and not taxincluded:
-                #tax based on subtotal (i.e. after discount)
-                subtotal = pretax * (1 - i_discount/100)
-                tax = sum_tax_value + subtotal * sum_tax_percent
-            elif i_disc_how == DiscountHow.pretax and i_disc_type == DiscountType.value and taxincluded:
+            elif i_disc_how == DiscountHow.pretax and i_disc_type == DiscountType.value:
                 #price includes tax that needs backing off, and tax recomputed based on discounted price
-                subtotal = pretax - i_discount
-                tax = sum_tax_value + subtotal * sum_tax_percent
-            elif i_disc_how == DiscountHow.pretax and i_disc_type == DiscountType.value and not taxincluded:
                 subtotal = pretax - i_discount
                 tax = sum_tax_value + subtotal * sum_tax_percent
             elif i_disc_how == DiscountHow.posttax and i_disc_type == DiscountType.percent and taxincluded:
@@ -144,14 +132,20 @@ class Taxtable(DeclarativeBaseGuid):
                 #discount calculated based on pretax + tax
                 tax = sum_tax_value + pretax * sum_tax_percent
                 subtotal = pretax - (pretax + tax) * i_discount/100
-            elif i_disc_how == DiscountHow.posttax and i_disc_type == DiscountType.value and taxincluded:
-                tax = sum_tax_value + pretax * sum_tax_percent
-                subtotal = pretax - i_discount
-            elif i_disc_how == DiscountHow.posttax and i_disc_type == DiscountType.value and not taxincluded:
+            elif i_disc_how == DiscountHow.posttax and i_disc_type == DiscountType.value:
                 subtotal = pretax - i_discount
                 tax = sum_tax_value + pretax * sum_tax_percent
+            
+            # get dict of accounts and tax due to each account
+            # tax = sum(tax value) + pretax * sum(tax percent)
+            pretax = (tax - sum_tax_value) / sum_tax_percent
+            for entry in self.entries:
+                if entry.type == "value":
+                    taxes[entry.account] = taxes.get(entry.account, 0) + entry.amount
+                else:
+                    taxes[entry.account] = taxes.get(entry.account, 0) + pretax*entry.amount/100
                 
-        return subtotal, tax
+        return subtotal, tax, taxes
     
 class TaxtableEntry(DeclarativeBase):
     __tablename__ = "taxtable_entries"

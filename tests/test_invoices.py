@@ -379,7 +379,7 @@ def test_entries(book_with_invoice_entries):
     assert not anEntry.billable
     assert anEntry.b_paytype == piecash.business.invoice.Paytype.cash
 
-def test_subtotal_and_taxes_for_entries(book):
+def test_subtotal_and_taxes_for_invoiceentries(book):
     default_currency = book.currencies[0]
     
     #create a customer invoice
@@ -394,6 +394,9 @@ def test_subtotal_and_taxes_for_entries(book):
     #create an income account for the invoice
     income_account = piecash.Account(name='invoice income', type='INCOME', parent=book.root_account, commodity=default_currency)
 
+    #create an account receivable for the invoice
+    accounts_receivable = piecash.Account(name='accounts_receivable', type='RECEIVABLE', parent=book.root_account, commodity=default_currency)
+    
     #create taxtable with multiple entries, using both value and percent
     taxtable = piecash.business.tax.Taxtable('mytaxtable')
     book.add(taxtable)
@@ -448,7 +451,95 @@ def test_subtotal_and_taxes_for_entries(book):
         57.67, 65.64, 59.69, 68.16, 
         60.53, 69, 60.53, 69]
     for entry, subtotal, tax in zip(book.invoices[0].entries, subtotals, taxes):
-        entry_subtotal, entry_tax = entry.subtotal_and_tax
+        entry_subtotal, entry_tax, entry_tax_per_taxaccount = entry.subtotal_and_tax
         assert round(entry_subtotal, 2) == round(Decimal(subtotal), 2)
         assert round(entry_tax, 2) == round(Decimal(tax), 2)
     
+    tax_per_taxaccount = book.invoices[0].tax_per_taxaccount
+    assert round(tax_per_taxaccount[tax_account_1], 2) == round(Decimal(120), 2)
+    assert round(tax_per_taxaccount[tax_account_2], 2) == round(Decimal(36), 2)
+    assert round(tax_per_taxaccount[tax_account_3], 2) == round(Decimal(262.83), 2)
+    assert round(tax_per_taxaccount[tax_account_4], 2) == round(Decimal(350.44), 2)
+
+def test_subtotal_and_taxes_for_billentries(book):
+    default_currency = book.currencies[0]
+    
+    #create a vendor bill
+    bill = piecash.Bill(book.vendors[0], default_currency)
+
+    #create some expense accounts to hold the various taxes
+    tax_account_1 = piecash.Account(name='taxaccount_1', type='EXPENSE', parent=book.root_account, commodity=default_currency)
+    tax_account_2 = piecash.Account(name='taxaccount_2', type='EXPENSE', parent=book.root_account, commodity=default_currency)
+    tax_account_3 = piecash.Account(name='taxaccount_3', type='EXPENSE', parent=book.root_account, commodity=default_currency)
+    tax_account_4 = piecash.Account(name='taxaccount_4', type='EXPENSE', parent=book.root_account, commodity=default_currency)
+    
+    #create an expense account for the bill
+    expense_account = piecash.Account(name='expense account', type='EXPENSE', parent=book.root_account, commodity=default_currency)
+
+    #create an account payable for the invoice
+    accounts_payable = piecash.Account(name='accounts_payable', type='PAYABLE', parent=book.root_account, commodity=default_currency)
+    
+    #create taxtable with multiple entries, using both value and percent
+    taxtable = piecash.business.tax.Taxtable('mytaxtable')
+    book.add(taxtable)
+    piecash.business.tax.TaxtableEntry("value", 10, tax_account_1, taxtable=taxtable)
+    piecash.business.tax.TaxtableEntry("value", 3, tax_account_2, taxtable=taxtable)
+    piecash.business.tax.TaxtableEntry("percentage", 6, tax_account_3, taxtable=taxtable)
+    piecash.business.tax.TaxtableEntry("percentage", 8, tax_account_4, taxtable=taxtable)
+    
+    #add entries    
+    piecash.business.invoice.Entry(
+                                    invoice=bill, 
+                                    description=f'entry 1 - not taxable',
+                                    action='some action',
+                                    quantity = 2,
+                                    price=Decimal(str(200)),
+                                    account=expense_account,
+                                    taxable = False
+                                )                
+
+    for tax_included in [True, False]:
+        piecash.business.invoice.Entry(
+                                    invoice=bill, 
+                                    description=f'tax_included: {tax_included}',
+                                    action='some action',
+                                    quantity = 2,
+                                    price=Decimal(str(200)),
+                                    account=expense_account,
+                                    taxincluded=tax_included,
+                                    taxtable=taxtable,
+                                    b_paytype=piecash.business.invoice.Paytype.cash,
+                                    billable=False,
+                                    taxable = True
+                                )
+    book.save()
+
+    subtotals = [400, 339.47, 400]
+
+    #the following values are not presented in the Gnucash GUI. However, total matches the taxes posted to the various accounts.
+    taxes = [0, 60.53, 69]
+
+    for entry, subtotal, tax in zip(book.bills[0].entries, subtotals, taxes):
+        entry_subtotal, entry_tax, entry_tax_per_taxaccount = entry.subtotal_and_tax
+        assert round(entry_subtotal, 2) == round(Decimal(subtotal), 2)
+        assert round(entry_tax, 2) == round(Decimal(tax), 2)
+    
+    tax_per_taxaccount = book.bills[0].tax_per_taxaccount
+    assert round(tax_per_taxaccount[tax_account_1], 2) == round(Decimal(20), 2)
+    assert round(tax_per_taxaccount[tax_account_2], 2) == round(Decimal(6), 2)
+    assert round(tax_per_taxaccount[tax_account_3], 2) == round(Decimal(44.37), 2)
+    assert round(tax_per_taxaccount[tax_account_4], 2) == round(Decimal(59.16), 2)
+
+def test_subtotal_and_taxes_for_expensevoucherentries(book_with_invoice_entries):
+    book = book_with_invoice_entries
+
+    subtotals = [9331.31, 9664.32]
+    taxes = [0, 0]
+
+    for entry, subtotal, tax in zip(book.expensevouchers[0].entries, subtotals, taxes):
+        entry_subtotal, entry_tax, entry_tax_per_taxaccount = entry.subtotal_and_tax
+        assert round(entry_subtotal, 2) == round(Decimal(subtotal), 2)
+        assert round(entry_tax, 2) == round(Decimal(tax), 2)
+    
+    tax_per_taxaccount = book.expensevouchers[0].tax_per_taxaccount
+    assert len(tax_per_taxaccount) == 0
