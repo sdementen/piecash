@@ -133,7 +133,7 @@ def book_with_invoice_entries(book_with_invoices):
     bill1 = book.bills[0]
     bill2 = book.bills[1]
     expensevoucher = book.expensevouchers[0]
-    
+        
     #Add some entries to invoices/bills/expense vouchers
     anEntry = piecash.business.invoice.Entry(invoice=invoice1) 
     anEntry.description = 'invoice1 description'
@@ -419,6 +419,10 @@ def test_subtotal_and_taxes_for_invoiceentries(book):
                                     taxable = False
                                 )                
 
+    book.save()
+    print(len(invoice.entries))
+    print(invoice.entries)
+
     for discount_how in [piecash.business.tax.DiscountHow.sametime, piecash.business.tax.DiscountHow.pretax, piecash.business.tax.DiscountHow.posttax, ]:
         for discount_type in [piecash.business.tax.DiscountType.percent, piecash.business.tax.DiscountType.value]:
             for tax_included in [True, False]:
@@ -450,6 +454,9 @@ def test_subtotal_and_taxes_for_invoiceentries(book):
         60.53, 69, 60.53, 69, 
         57.67, 65.64, 59.69, 68.16, 
         60.53, 69, 60.53, 69]
+        
+    assert len(book.invoices[0].entries) ==  14
+        
     for entry, subtotal, tax in zip(book.invoices[0].entries, subtotals, taxes):
         entry_subtotal, entry_tax, entry_tax_per_taxaccount = entry.subtotal_and_tax
         assert round(entry_subtotal, 2) == round(Decimal(subtotal), 2)
@@ -543,3 +550,43 @@ def test_subtotal_and_taxes_for_expensevoucherentries(book_with_invoice_entries)
     
     tax_per_taxaccount = book.expensevouchers[0].tax_per_taxaccount
     assert len(tax_per_taxaccount) == 0
+
+def test_billto(book):
+    #create invoices with different billtos
+    customer = book.customers[0]
+    vendor = book.vendors[0]
+    employee = book.employees[0]
+    customer_job = book.jobs[0]
+    vendor_job = book.jobs[1]
+    currency = book.currencies[0]
+    
+    with pytest.raises(ValueError):
+        invoice = piecash.Bill(vendor, currency, billto=employee)
+        
+    with pytest.raises(ValueError):
+        invoice = piecash.Bill(vendor, currency, billto=vendor)
+
+    with pytest.raises(ValueError):
+        invoice = piecash.Bill(vendor, currency, billto=vendor_job)
+        
+    with pytest.raises(ValueError):
+        invoice = piecash.Expensevoucher(employee, currency, billto=vendor)
+        
+    with pytest.raises(ValueError):
+        invoice = piecash.Expensevoucher(employee, currency, billto=employee)
+
+    with pytest.raises(ValueError):
+        invoice = piecash.Expensevoucher(employee, currency, billto=vendor_job)
+
+    with pytest.raises(ValueError):
+        invoice = piecash.Expensevoucher(employee, currency, billto=employee)
+
+    invoice1a = piecash.Bill(vendor, currency, billto=customer)
+    invoice1b = piecash.Bill(vendor, currency, billto=customer_job)
+    invoice2a = piecash.Expensevoucher(employee, currency, billto=customer)
+    invoice2b = piecash.Expensevoucher(employee, currency, billto=customer_job)
+
+    assert book.bills[0].billto == customer
+    assert book.bills[1].billto == customer_job
+    assert book.expensevouchers[0].billto == customer
+    assert book.expensevouchers[1].billto == customer_job

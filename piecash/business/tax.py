@@ -138,7 +138,10 @@ class Taxtable(DeclarativeBaseGuid):
             
             # get dict of accounts and tax due to each account
             # tax = sum(tax value) + pretax * sum(tax percent)
-            pretax = (tax - sum_tax_value) / sum_tax_percent
+            if sum_tax_percent != 0:
+                pretax = (tax - sum_tax_value) / sum_tax_percent
+            else:
+                pretax = tax - sum_tax_value
             for entry in self.entries:
                 if entry.type == "value":
                     taxes[entry.account] = taxes.get(entry.account, 0) + entry.amount
@@ -146,6 +149,14 @@ class Taxtable(DeclarativeBaseGuid):
                     taxes[entry.account] = taxes.get(entry.account, 0) + pretax*entry.amount/100
                 
         return subtotal, tax, taxes
+    
+    def create_copy_as_child(self):
+        entries = [entry.clone() for entry in self.entries]
+        clone = Taxtable(self.name, entries=entries)
+        clone.invisible = True
+        clone.parent_guid = self.guid
+        self.book.add(clone)
+        return clone
     
 class TaxtableEntry(DeclarativeBase):
     __tablename__ = "taxtable_entries"
@@ -178,3 +189,7 @@ class TaxtableEntry(DeclarativeBase):
 
     def __str__(self):
         return "TaxEntry<{} {} in {}>".format(self.amount, self.type, self.account.name)
+
+    def clone(self):
+        clone = TaxtableEntry(self.type, self.amount, self.account)
+        return clone

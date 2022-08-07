@@ -14,23 +14,13 @@ from .person import PersonType, Person, Customer, Vendor, Employee
 
 composite.__doc__ = None  # composite.__doc__.replace(":ref:`mapper_composite`", "")
 
-from ..sa_extra import _DateTime
+from ..sa_extra import _DateTime, pure_slot_property
 from .._common import CallableList, hybrid_property_gncnumeric
 from .._declbase import DeclarativeBaseGuid
 
-from ..kvp import SlotInt, SlotString, SlotFrame, SlotDate, SlotNumeric
 from ..core.account import Account, income_types, asset_types, expense_types
+from ..core.transaction import Transaction, Split, Lot
 from .tax import Taxtable, DiscountType, DiscountHow
-#from ..core.transaction import Transaction, Split, Lot
-
-#class DiscountType(Enum):
-#    value = "VALUE"
-#    percent = "PERCENT"
-
-#class DiscountHow(Enum):
-#    pretax = "PRETAX"
-#    sametime = "SAMETIME"
-#    posttax = "POSTTAX"
 
 class Paytype(Enum):
     cash = 1
@@ -53,8 +43,12 @@ class Job(DeclarativeBaseGuid):
     owner_type = Column("owner_type", INTEGER())
     owner_guid = Column("owner_guid", VARCHAR(length=32))
 
+    rate = pure_slot_property(slot_name="job-rate", slot_transform=float)
+
     # relation definitions
     # todo: owner_guid/type links to Vendor or Customer
+    _customer = relation(Customer, uselist=False, primaryjoin='Customer.guid == Job.owner_guid', foreign_keys=Customer.guid)
+    _vendor = relation(Vendor, uselist=False, primaryjoin='Vendor.guid == Job.owner_guid', foreign_keys=Vendor.guid)
 
     def __init__(self, name, owner, reference="", active=1, rate=0):
         #At least a name and owner need to be specified
@@ -74,31 +68,9 @@ class Job(DeclarativeBaseGuid):
 
         self.rate = rate
 
-    # Retrieve the job rate
-    @property
-    def rate(self):
-        rate_lst = [slot for slot in self.slots if slot._name == 'job-rate']
-        if len(rate_lst) > 0:
-            return rate_lst[0].value
-        else:
-            return None
-
-    # Create a slot holding the job rate
-    @rate.setter
-    def rate(self, rateval):
-        if rateval:
-            self.slots = [SlotNumeric('job-rate', Decimal(rateval))]
-        else:
-            self.slots = []
-
-    @property
-    def _owner_cls_type(self):
-        idx = list(PersonType.values()).index(self.owner_type)
-        return list(PersonType.keys())[idx]
-
     @property
     def owner(self):
-        return self.book.get(self._owner_cls_type, guid=self.owner_guid)
+        return self._customer or self._vendor
 
     def __str__(self):
         return "Job<{self.name}>".format(self=self)
@@ -264,8 +236,8 @@ class Entry(DeclarativeBaseGuid):
         invoice,                            #Invoice/bill/expense voucher object
         date=datetime.datetime.now().replace(microsecond=0),   #date item was sold
         date_entered=datetime.datetime.now().replace(microsecond=0), 
-        description=None,                   #item or service description
-        action=None,                        #user-defined field (cost center information), or Hours, Material, Project 
+        description='',                     #item or service description
+        action='',                          #user-defined field (cost center information), or Hours, Material, Project 
         notes='',                       
         quantity=None,                      #how many items were sold
         price=0,                            #unit price of item. Note: to specify price, an account also needs to be specified.
@@ -273,7 +245,7 @@ class Entry(DeclarativeBaseGuid):
         taxable=True,                       #True/1 - yes, False/0 - no. If taxtable is provided, must be True
         taxincluded=False,                  #tax already included in unit price? True/1 - yes, False/0 - no
         taxtable=None,                      #info re tax percentage and account to which tax is charged
-        i_discount=None,                    #total discount
+        i_discount=0,                       #total discount
         i_disc_type=DiscountType.percent,   #type of discount; VALUE - monetary value, PERCENT - percentage
         i_disc_how=DiscountHow.pretax,      #computation method; POSTTAX - discount after tax, PRETAX - discount before tax, SAMETIME - discount and tax applied to pretax value
         b_paytype=Paytype.cash,             #Cash or credit account. Applicable for employees only, and requires that a credit account has been set for the employee.
@@ -284,7 +256,7 @@ class Entry(DeclarativeBaseGuid):
 
         #Check that a valid invoice pas provided.
         if not invoice or not type(invoice) in [Invoice, Bill, Expensevoucher]:
-            raise ValueError("Please provide a valid Invoice object.")
+            raise ValueError(f"Please provide a valid invoice, bill, or expense voucher - {invoice} provided.")
 
         book = (invoice and invoice.book)
         if book:
@@ -300,7 +272,7 @@ class Entry(DeclarativeBaseGuid):
     
         if type(invoice) is Invoice:
             self.invoice_guid = invoice.guid        
-
+            
             self.i_discount = i_discount
             self.i_disc_type = i_disc_type
             self.i_disc_how = i_disc_how
@@ -312,7 +284,7 @@ class Entry(DeclarativeBaseGuid):
             self.i_disc_how = DiscountHow.pretax        
 
         # flush to set the invoice or bill / expense voucher attributes
-        book.flush()
+        self.book.flush()
     
         self.account = account
         self.price = price
@@ -387,16 +359,18 @@ class Entry(DeclarativeBaseGuid):
         return getattr(self, this_prefix+'account')
 
     @account.setter
-    def account(self, account):
+    def account(self, accnt):
         this_prefix, other_prefix = self._get_entry_field_prefix()
         
         setattr(self, other_prefix+'account', None)
-        if not account:
+        if not accnt:
             setattr(self, this_prefix+'account', None)
-        elif (type(self.invoice) is Invoice and not (account.type in asset_types or account.type in income_types)) or (type(self.invoice) is not Invoice and not account.type in expense_types):
-            raise ValueError("Please provide a valid income or asset account for invoices, or valid expense account for bills and expensevouchers.")
+        elif self.invoice and not (accnt.type in asset_types or accnt.type in income_types):
+            raise ValueError(f"Please provide a valid income or asset account for invoices - {accnt} provided")
+        elif self.bill and not accnt.type in expense_types:
+            raise ValueError(f"Please provide a valid expense account for bills or expensevouchers - {accnt} provided")
         else:
-            setattr(self, this_prefix+'account', account)
+            setattr(self, this_prefix+'account', accnt)
 
     @property
     def taxable(self):
@@ -501,11 +475,9 @@ class Entry(DeclarativeBaseGuid):
 class InvoiceBase(DeclarativeBaseGuid):
     """
     - This class is a superclass for Invoices, Bills, and Expense vouchers. 
-    - The type of invoice (Invoice, Bill, Expense voucher) is determined by the Owner of the invoice.
-        If Owner is a Customer: Invoice
-        If Owner is a Vendor: Bill
-        If Owner is an Employee: Expense voucher
-    - In addition, a Job may be an Owner. Then the Job's Owner (either a Customer or Vendor) determines the type of invoice (Invoice or Bill).
+    - An Invoice is owned by a Customer, a Bill is owned by a Vendor, and an Expensevoucher is owned by an Employee
+    - An Invoice may be owned by a Job, provided the Job's owner is a Customer
+    - A Bill may be owned by a Job, provided the Job's owner is a Vendor
 
     Attributes:
         id (str): autonumber id with 6 digits (initialised to book.counter_employee + 1)
@@ -525,14 +497,6 @@ class InvoiceBase(DeclarativeBaseGuid):
     __table_args__ = {}
 
     # column definitions
-    guid = Column(
-        "guid",
-        VARCHAR(length=32),
-        primary_key=True,
-        nullable=False,
-        default=lambda: uuid.uuid4().hex,
-    )
-    
     id = Column("id", VARCHAR(length=2048), nullable=False)
     date_opened = Column("date_opened", _DateTime())
     date_posted = Column("date_posted", _DateTime())
@@ -552,9 +516,9 @@ class InvoiceBase(DeclarativeBaseGuid):
 
     term_guid = Column("terms", VARCHAR(length=32), ForeignKey("billterms.guid"))
     billing_id = Column("billing_id", VARCHAR(length=2048))
-    post_txn_guid = Column("post_txn", VARCHAR(length=32), ForeignKey("lots.guid"))
+    post_txn_guid = Column("post_txn", VARCHAR(length=32), ForeignKey("transactions.guid"))
     post_lot_guid = Column(
-        "post_lot", VARCHAR(length=32), ForeignKey("transactions.guid")
+        "post_lot", VARCHAR(length=32), ForeignKey("lots.guid")
     )
     post_acc_guid = Column("post_acc", VARCHAR(length=32), ForeignKey("accounts.guid"))
     billto_type = Column("billto_type", INTEGER())
@@ -562,6 +526,8 @@ class InvoiceBase(DeclarativeBaseGuid):
     _charge_amt_num = Column("charge_amt_num", BIGINT())
     _charge_amt_denom = Column("charge_amt_denom", BIGINT())
     charge_amt = hybrid_property_gncnumeric(_charge_amt_num, _charge_amt_denom)
+
+    is_credit_note = pure_slot_property("credit-note")
 
     # relation definitions
     # todo: check all relations and understanding of types...
@@ -607,6 +573,11 @@ class InvoiceBase(DeclarativeBaseGuid):
     }
 
     job = relation(Job, uselist=False, primaryjoin='Job.guid == InvoiceBase.owner_guid', foreign_keys=Job.guid)
+    _customer = relation(Customer, uselist=False, primaryjoin='Customer.guid == InvoiceBase.owner_guid', foreign_keys=Customer.guid)
+    _vendor = relation(Vendor, uselist=False, primaryjoin='Vendor.guid == InvoiceBase.owner_guid', foreign_keys=Vendor.guid)
+    _employee = relation(Employee, uselist=False, primaryjoin='Employee.guid == InvoiceBase.owner_guid', foreign_keys=Employee.guid)
+    _billto_customer = relation(Customer, uselist=False, primaryjoin='Customer.guid == InvoiceBase.billto_guid', foreign_keys=Customer.guid)
+    _billto_job = relation(Job, uselist=False, primaryjoin='Job.guid == InvoiceBase.billto_guid', foreign_keys=Job.guid)
 
     @property
     def entries(self):
@@ -636,15 +607,7 @@ class InvoiceBase(DeclarativeBaseGuid):
             raise ValueError(f"Only Vendors and Vendor Jobs can create bills - {owner} was provided.")
         elif type(self) is Expensevoucher and not type(owner) is Employee:
             raise ValueError(f"Only Employees can create expense vouchers - {owner} was provided.")
-
-        #Chargeback only available to Vendors and Employees
-        if billto and not (isinstance(owner, Vendor) or isinstance(owner, Employee) or (isinstance(owner, Job) and isinstance(owner.owner, Vendor))):
-            raise ValueError("Customer invoices cannot have chargebacks")
             
-        #Chargeback: can only chargeback to a Customer or a Job belonging to a Customer
-        if billto and not (isinstance(billto, Customer) or (isinstance(billto, Job) and isinstance(billto.owner, Customer))):
-            raise ValueError("Either provide a Customer, or a Job belonging to a Customer, or omit.")
-
         if term and not isinstance(term, Billterm):
             raise ValueError("Either provide a valid term, or omit.")
 
@@ -652,7 +615,7 @@ class InvoiceBase(DeclarativeBaseGuid):
         if not book:
             raise ValueError("Could not find a book to attach the invoice to")
         
-        #Unless a valid currency was passed in, set the invoice currency
+        #Check valid currency passed in
         if not currency:
             raise ValueError("Need a valid currency for the invoice/bill/expense voucher")
         elif currency and not currency.namespace == 'CURRENCY':
@@ -668,42 +631,31 @@ class InvoiceBase(DeclarativeBaseGuid):
             self.billing_id = billing_id
             
         self.owner_guid = owner.guid
+        self.owner_type = OwnerType[type(owner)]
         self.date_opened = date_opened
         self.notes = notes
         self.active = active
-        self.owner_type = OwnerType[type(owner)]
         self.charge_amt = 0
         self._invoice_entries = []
         self._bill_entries = []
         
+        if type(owner) is Job:
+            self.job = owner
+        elif type(owner) is Customer:
+            self._customer = owner
+        elif type(owner) is Vendor:
+            self._vendor = owner
+        else:
+            self._employee = owner
+
         if billto:
-            self.billto_type = OwnerType[type(billto)]
-            self.billto_guid = billto.guid
+            self.billto = billto
         
-        #Finally, create a slot indicating if credit-note or not
+        #Finally, update slot indicating if credit-note or not
         self.is_credit_note = is_credit_note
 
         book.add(self)
         book.flush()
-
-    def add_entry(self, entries):
-        if type(entries) is list:
-            for entry in entries:
-                self.entries.append(Entry(self, **entry))
-        else:
-            self.entries.append(Entry(self, **entries))
-
-    @property
-    def is_credit_note(self):
-        credit_note_lst = [slot for slot in self.slots if slot._name == 'credit-note']
-        if len(credit_note_lst) > 0:
-            return credit_note_lst[0].value
-        else:
-            return False
-
-    @is_credit_note.setter
-    def is_credit_note(self, is_credit_note):
-        self.slots = [SlotInt('credit-note', is_credit_note)]        
 
     def on_book_add(self):
         self._assign_id()
@@ -718,27 +670,8 @@ class InvoiceBase(DeclarativeBaseGuid):
             self.id = "{:06d}".format(cnt)
 
     @property
-    def _owner_cls_type(self):
-        idx = list(OwnerType.values()).index(self.owner_type)
-        return list(OwnerType.keys())[idx]
-
-    @property
     def owner(self):
-        return self.book.get(self._owner_cls_type, guid=self.owner_guid)
-
-    @property
-    def _billto_cls_type(self):
-        if self.billto_type:
-            idx = list(OwnerType.values()).index(self.billto_type)
-            clstype = list(OwnerType.keys())[idx]
-        else:
-            clstype = None
-        return clstype
-
-    @property
-    def billto(self):
-        if self.billto_cls_type:
-            return self.book.get(self._billto_cls_type, guid=self.billto_guid)
+        return self._customer or self._vendor or self._employee
 
     @property
     def end_owner(self):
@@ -746,6 +679,28 @@ class InvoiceBase(DeclarativeBaseGuid):
             return self.owner.owner
         else:
             return self.owner
+
+    @property
+    def billto(self):
+        return self._billto_customer or self._billto_job
+
+    @billto.setter
+    def billto(self, billto):
+        #Chargeback only available to Vendors and Employees
+        if billto and (isinstance(self.owner, Customer) or (isinstance(self.owner, Job) and isinstance(self.owner.owner, Customer))):
+            raise ValueError("Customer invoices cannot have chargebacks")
+
+        #Chargeback: can only chargeback to a Customer or a Job belonging to a Customer
+        if billto and not (isinstance(billto, Customer) or (isinstance(billto, Job) and isinstance(billto.owner, Customer))):
+            raise ValueError(f"Can only charge to a Customer, or a Job belonging to a Customer. {billto} provided.")
+
+        if isinstance(billto, Customer):
+            self._billto_customer = billto
+        else:
+            self._billto_job = billto
+
+        self.billto_type = OwnerType[type(billto)]
+        self.billto_guid = billto.guid
 
     # if the term field is modified, adjust the Billterm.refcount
     def _changed(mapper, connection, target):
@@ -763,94 +718,165 @@ class InvoiceBase(DeclarativeBaseGuid):
     
     @property
     def tax_per_taxaccount(self):
-    # get the taxes for each tax acount
+        # get the taxes for each tax acount
         tax_per_taxaccount = {}
         for entry in self.entries:
             entry_subtotal, entry_tax, entry_tax_per_taxaccount = entry.subtotal_and_tax
             for acct in entry_tax_per_taxaccount:
                 tax_per_taxaccount[acct] = tax_per_taxaccount.get(acct, 0) + entry_tax_per_taxaccount[acct]
         return tax_per_taxaccount
-        
-#todo - work in progress !!!!!
-##    def post_invoice(self, 
-##        post_account, 
-##        post_date=datetime.datetime.now().replace(microsecond=0), 
-##        due_date=datetime.date.today(),
-##        description='', 
-##        accumulateSplits=True):
-        
-        #TODO:
-            #slots
-            #coded for invoice. Not checked for bills, nor for bills with charge-through.
-        
-##        self.post_account = post_account
-##        self.date_posted = post_date
-#        owner = self.get_owner()
-##        owner = self.owner()
-##        charge_amt = sum(entry.quantity * entry.i_price for entry in self.entries)
 
-#        if len(self.slots) > 0:
-#            if self.slots[0].name == 'credit-note' and not self.slots[0].value:
-#                if type(owner) == Customer:
-#                    action = 'Invoice'
-#                else:
-#                    action = 'Undefined'
+    def _accumulate_splits(self, splits):
+        #all splits to same account will be collected in a single split
+        #only the first split's action, memo, notes will be preserved
+        tmp = {}
+        for split in splits:
+            if tmp.get(split.account):  
+                tmp[split.account].quantity += split.quantity
+                tmp[split.account].value += split.value
+            else:
+                tmp[split.account] = split
+#                tmp[split.account] = Split(split.account, value=split.value, quantity=split.quantity, action=split.action, lot=split.lot, transaction=split.transaction, memo=split.memo)            
+#                tmp[split.account] = Split(split.account, value=split.value, quantity=split.quantity, action=split.action, lot=split.lot, memo=split.memo)            
+       
+        return list(tmp.values())
+    
+    def post(self, 
+        post_account, 
+        post_date=datetime.datetime.now().replace(microsecond=0), 
+        due_date=datetime.datetime.now().replace(microsecond=0),
+        description='', 
+        accumulate_splits=True):
+
+#todo
+# - sign for net and tax, including credit notes
+# - currency mixes
+#       value vs quantity
+#
+
+        #taxtables - duplicate referenced taxtables complete with taxtableentries
+        taxtables = list(set([entry.taxtable for entry in self.entries if entry.taxtable]))
+        for taxtable in taxtables:
+            taxtable_clone = taxtable.create_copy_as_child()
+
+        #action
+        if self.is_credit_note:
+            action = 'Credit Note'
+        elif type(self) is Invoice:
+            action = 'Invoice'
+        elif type(self) is Bill:
+            action = 'Bill'
+        elif type(self) is Expensevoucher:
+            action = 'Expense'
+
+        #lot
+        lot = Lot(title=action + ' ' + str(self.id), account=post_account, splits=None, is_closed=False)
+        
+        #splits
+#        splits = {} if accumulate_splits else []
+#        subtotal = 0
+#        tax = 0
+#        taxes_per_account = {}
+#            #entries
+#        for entry in self.entries:            
+#            entry_subtotal, entry_tax, entry_tax_per_taxaccount = entry.subtotal_and_tax
+#            subtotal += entry_subtotal
+#            tax += entry_tax
+#            for t in entry_tax_per_taxaccount:
+#                taxes_per_account[t] = taxes_per_account.get(t, 0) + entry_tax_per_taxaccount[t]
+
+#            if accumulate_splits and splits.get(entry.account):
+#                splits[entry.account].value += -entry_subtotal
+#                splits[entry.account].quantity += -entry_subtotal
 #            else:
-#                action = 'Credit note'
-##        action = self.get_type_string()
-
-##        if accumulateSplits:
-            #check that all entries refer to the same account
-##            same_account = all(entry.i_acct == self.entries[0].i_acct for entry in self.entries)
-
-        #prepare splits
-##        splits = []
-##        if accumulateSplits and same_account:
-##            splits.append(Split(
-##                account=self.book.get(Account, guid=self.entries[0].i_acct),
-##                value=-charge_amt,
-##                quantity=-charge_amt,
-##                transaction=None,
-##                memo=description,
-##                action=action,
-##                lot=None))
-##        else:
-##            for entry in self.entries:
-##                splits.append(Split(
-##                    account=self.book.get(Account, guid=entry.i_acct), 
-##                    value=-entry.quantity*entry.i_price,
-##                    quantity=-entry.quantity*entry.i_price,      #are these always equal?
-##                    transaction=None,
-##                    memo=entry.description,
-##                    action=action,
-##                    lot=None))
-
-            #add balancing split
-##        splits.append(Split(post_account,
-##                 value=charge_amt,
-##                 quantity=charge_amt,
-##                 transaction=None,
-##                 memo=description,
-##                 action=action))
-
-#        self.post_txn = Transaction(self.currency, description=owner.name, notes=None, splits=splits, post_date=post_date.date(), num=self.id)
-#        self.post_lot = Lot(title=action + ' ' + str(self.id), account=post_account, splits=[splits[-1]], is_closed=-1)
-
-##        tr = Transaction(self.currency, description=owner.name, notes=None, splits=splits, post_date=post_date.date(), num=self.id)
-##        lot = Lot(title=action + ' ' + str(self.id), account=post_account, splits=[splits[-1]], is_closed=-1)
-##        self.book.add(tr)
-##        self.book.add(lot)
-##        self.book.flush()
-
-##        self.post_txn_guid = tr.guid
-##        self.post_lot_guid = lot.guid
+#                s = Split(entry.account, value=-entry_subtotal, quantity=-entry_subtotal, action=action, lot=None, transaction=txn, memo=description)
+#                if accumulate_splits:
+#                    splits[entry.account] = s
+#                else:
+#                    splits.append(s)
+            #entries & taxes
+        entry_splits = []
+        tax_splits = []
+        for entry in self.entries:
+            entry_subtotal, entry_tax, tax_per_account = entry.subtotal_and_tax
+#            entry_splits.append(Split(entry.account, value=-entry_subtotal, quantity=-entry_subtotal, action=action, lot=None, transaction=None, memo=description))
+            entry_splits.append(Split(entry.account, value=-entry_subtotal, action=action, memo=description))
+            for tax_account in tax_per_account:
+#                tax_splits.append(Split(account=tax_account, value=-tax_per_account[tax_account], quantity=-tax_per_account[tax_account], action=action, lot=None, transaction=None, memo=description))
+#                tax_splits.append(Split(account=tax_account, value=-tax_per_account[tax_account], quantity=-tax_per_account[tax_account], action=action, lot=None, memo=description))
+                tax_splits.append(Split(account=tax_account, value=-tax_per_account[tax_account], action=action, memo=description))
+ 
+##        tax_splits2 = self._accumulate_splits(tax_splits)    #taxes always accumulated
+##        if accumulate_splits:
+##            entry_splits2 = self._accumulate_splits(entry_splits)
         
-#        self.post_txn.slots = 
-#        from pprint import pprint
-#        pprint(vars(self.post_txn.slots[0]))
-#        self.post_txn.slots = [
-#            SlotDate('date-posted', post_date)
-#            ]
+#        del tax_splits
+#        del entry_splits
+        #transaction
+#        lst = []
+#        for s in tax_splits+entry_splits:
+#            print(s)
+#            lst.append(s)
+#        print(lst)
+        
+        txn = Transaction(self.currency, description=self.owner.name, splits=tax_splits+entry_splits, post_date=post_date.date(), num=self.id)
+#        txn = Transaction(self.currency, description=self.owner.name, splits=lst, post_date=post_date.date(), num=self.id)
+#        txn = Transaction(self.currency, description=self.owner.name, splits=[Split(account=tax_account, value=-5)], post_date=post_date.date(), num=self.id)
+
+#        txn.splits = tax_splits+entry_splits
+#        print('a')
+#        txn.validate()
+#        print('b')
+            #posted account
+#        total = 7
+        total = sum([t.value for t in txn.splits])
+#        print(total)
+#        print(txn.splits)
+#        Split(account=post_account, value=-total, quantity=-total, action=action, lot=lot, transaction=txn, memo=description)
+        Split(account=post_account, value=-total, action=action, lot=lot, transaction=txn, memo=description)
+
+#        print(tax_splits)
+#        print(type(tax_splits))
+#        print(tax_splits+entry_splits)
+        #txn.splits = tax_splits.extend(entry_splits)
+        #splits=tax_splits+entry_splits
+#        print(dir(txn))
+            #taxes
+#        for tax_account in taxes_per_account:
+#            Split(account=tax_account, value=-taxes_per_account[tax_account], quantity=-taxes_per_account[tax_account], action=action, lot=None, transaction=txn, memo=description)
+
+                
+            #posted account
+#        for s in entry_splits:
+#            print(s)
+ #           print(type(s))
+#        for s in tax_splits:
+#            print(s)
+ #           print(type(s))
+ #       subtotal = sum([s.value for s in entry_splits])
+ #       tax = sum([s.value for s in tax_splits])
+ #       print(subtotal)
+ #       print(tax)
+#        Split(account=post_account, value=(subtotal+tax), quantity=(subtotal+tax), action=action, lot=lot, transaction=txn, memo=description)
+
+        #slots
+        txn['date-posted'] = post_date
+        txn['trans-date-due'] = due_date
+        txn['trans-read-only'] = 'Generated from an invoice. Try unposting the invoice.'
+        txn['trans-txn-type'] = 'I'                         #same irrespective of Invoice/Bill/Expensevoucher
+        txn['gncInvoice/invoice-guid'] = self               #same irrespective of Invoice/Bill/Expensevoucher
+
+        #   lot
+        lot['gncInvoice/invoice-guid'] = self               #same irrespective of Invoice/Bill/Expensevoucher
+       
+        #lock lot
+        lot.is_closed = '-1'
+        
+        #self
+        self.date_posted = post_date
+        self.post_account = post_account
+        self.post_txn = txn
+        self.post_lot = lot
 
 class Invoice(InvoiceBase):
     __mapper_args__ = {
