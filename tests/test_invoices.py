@@ -1,7 +1,7 @@
 import pytest
 import piecash
 
-#import datetime
+import datetime
 from decimal import Decimal
     
 @pytest.fixture 
@@ -76,7 +76,8 @@ def book_with_invoices(book_with_updated_job_properties):
     invoice2 = piecash.Invoice(book.jobs[0], book.currencies[0])
     bill1 = piecash.Bill(book.vendors[0], book.currencies[0])
     bill2 = piecash.Bill(book.jobs[1], book.currencies[0])
-    expensevoucher = piecash.Expensevoucher(book.employees[0], book.currencies[0])
+    expensevoucher1 = piecash.Expensevoucher(book.employees[0], book.currencies[0])
+    expensevoucher2 = piecash.Expensevoucher(book.employees[0], book.currencies[0])
 
     #set some invoice/bill/expensevoucher properties
     invoice1.notes = 'some super notes for customer invoice'
@@ -99,6 +100,7 @@ def book_with_invoices(book_with_updated_job_properties):
     bill1.is_credit_note = True
     bill1.currency = book.currencies[1]
     bill1.term = book.billterms[1]
+    bill1.billto = book.customers[0]
 
     bill2.notes = 'vendor job notes'
     bill2.billing_id = 'billing id vendor job bill'
@@ -106,13 +108,21 @@ def book_with_invoices(book_with_updated_job_properties):
     bill2.is_credit_note = False
     bill2.currency = book.currencies[1]
     bill2.term = book.billterms[0]
+    bill2.billto = book.jobs[0]
 
-    expensevoucher.notes = 'expensevoucher notes'
-    expensevoucher.billing_id = 'billing id expensevoucher'
-    expensevoucher.active = True
-    expensevoucher.is_credit_note = False
-    expensevoucher.currency = book.currencies[0]
-    expensevoucher.term = book.billterms[0]
+    expensevoucher1.notes = 'expensevoucher notes'
+    expensevoucher1.billing_id = 'billing id expensevoucher'
+    expensevoucher1.active = True
+    expensevoucher1.is_credit_note = False
+    expensevoucher1.currency = book.currencies[1]
+    expensevoucher1.term = book.billterms[0]
+
+    expensevoucher2.notes = 'expensevoucher notes'
+    expensevoucher2.billing_id = 'billing id expensevoucher'
+    expensevoucher2.active = True
+    expensevoucher2.is_credit_note = True
+    expensevoucher2.currency = book.currencies[1]
+    expensevoucher2.term = book.billterms[0]
 
     book.save()
     return book
@@ -132,7 +142,8 @@ def book_with_invoice_entries(book_with_invoices):
     invoice2 = book.invoices[1]
     bill1 = book.bills[0]
     bill2 = book.bills[1]
-    expensevoucher = book.expensevouchers[0]
+    expensevoucher1 = book.expensevouchers[0]
+    expensevoucher2 = book.expensevouchers[1]
         
     #Add some entries to invoices/bills/expense vouchers
     anEntry = piecash.business.invoice.Entry(invoice=invoice1) 
@@ -167,7 +178,7 @@ def book_with_invoice_entries(book_with_invoices):
     anEntry.account = bill_expense_account
     anEntry.price = Decimal(str(201.01))
 
-    anEntry = piecash.business.invoice.Entry(invoice=expensevoucher) 
+    anEntry = piecash.business.invoice.Entry(invoice=expensevoucher1) 
     anEntry.description = 'expensevoucher description'
     anEntry.action = 'expensevoucher action1'
     anEntry.notes = 'expensevoucher notes'
@@ -177,13 +188,33 @@ def book_with_invoice_entries(book_with_invoices):
     anEntry.billable = True
     anEntry.b_paytype = piecash.business.invoice.Paytype.credit
 
-    anEntry = piecash.business.invoice.Entry(invoice=expensevoucher) 
+    anEntry = piecash.business.invoice.Entry(invoice=expensevoucher1) 
     anEntry.description = 'expensevoucher description2'
     anEntry.action = 'expensevoucher action2'
     anEntry.notes = 'expensevoucher notes2'
     anEntry.quantity = 32
     anEntry.account = expense_voucher_account
     anEntry.price = Decimal(str(302.01))
+    anEntry.billable = False
+    anEntry.b_paytype = piecash.business.invoice.Paytype.cash
+
+    anEntry = piecash.business.invoice.Entry(invoice=expensevoucher2) 
+    anEntry.description = 'expensevoucher description'
+    anEntry.action = 'expensevoucher action1'
+    anEntry.notes = 'expensevoucher notes'
+    anEntry.quantity = 33
+    anEntry.account = expense_voucher_account
+    anEntry.price = Decimal(str(401.01))
+    anEntry.billable = True
+    anEntry.b_paytype = piecash.business.invoice.Paytype.credit
+
+    anEntry = piecash.business.invoice.Entry(invoice=expensevoucher2) 
+    anEntry.description = 'expensevoucher description2'
+    anEntry.action = 'expensevoucher action2'
+    anEntry.notes = 'expensevoucher notes2'
+    anEntry.quantity = 34
+    anEntry.account = expense_voucher_account
+    anEntry.price = Decimal(str(402.01))
     anEntry.billable = False
     anEntry.b_paytype = piecash.business.invoice.Paytype.cash
 
@@ -241,50 +272,85 @@ def test_invoices(book_with_invoices):
 
     assert len(book.invoices) == 2
     assert len(book.bills) == 2
-    assert len(book.expensevouchers) == 1
-    
+    assert len(book.expensevouchers) == 2
+        
     # get invoices / bills / expensevouchers
     invoice1 = book.invoices[0]
     invoice2 = book.invoices[1]
     bill1 = book.bills[0]
     bill2 = book.bills[1]
-    expensevoucher = book.expensevouchers[0]
+    expensevoucher1 = book.expensevouchers[0]
+    expensevoucher2 = book.expensevouchers[1]
 
     #set some invoice/bill/expensevoucher properties
+    assert invoice1.id == '000001'
     assert invoice1.notes == 'some super notes for customer invoice'
     assert invoice1.billing_id == 'setting invoice billing id'
     assert not invoice1.active
     assert invoice1.is_credit_note
     assert invoice1.currency == book.currencies[1]
     assert invoice1.term == book.billterms[1]
+    assert invoice1.owner == book.customers[0]
+    assert invoice1.end_owner == book.customers[0]
+    assert invoice1.date_opened.date() == datetime.date.today()
 
+    assert invoice2.id == '000002'
     assert invoice2.notes == 'customer job notes'
     assert invoice2.billing_id == 'customer job billing id'
     assert invoice2.active
     assert not invoice2.is_credit_note
     assert invoice2.currency == book.currencies[1]
     assert invoice2.term == book.billterms[0]
+    assert invoice2.owner == book.jobs[0]    
+    assert invoice2.end_owner == book.customers[0]
+    assert invoice2.date_opened.date() == datetime.date.today()
 
+    assert bill1.id == '000001'
     assert bill1.notes == 'notes vendor bill'
     assert bill1.billing_id == 'billing id vendor bill'
     assert not bill1.active
     assert bill1.is_credit_note
     assert bill1.currency == book.currencies[1]
     assert bill1.term == book.billterms[1]
+    assert bill1.owner == book.vendors[0]
+    assert bill1.end_owner == book.vendors[0]
+    assert bill1.billto == book.customers[0]
+    assert bill1.date_opened.date() == datetime.date.today()
 
+    assert bill2.id == '000002'
     assert bill2.notes == 'vendor job notes'
     assert bill2.billing_id == 'billing id vendor job bill'
     assert bill2.active
     assert not bill2.is_credit_note
     assert bill2.currency == book.currencies[1]
     assert bill2.term == book.billterms[0]
+    assert bill2.owner == book.jobs[1]
+    assert bill2.end_owner == book.vendors[0]
+    assert bill2.billto == book.jobs[0]
+    assert bill2.date_opened.date() == datetime.date.today()
 
-    assert expensevoucher.notes == 'expensevoucher notes'
-    assert expensevoucher.billing_id == 'billing id expensevoucher'
-    assert expensevoucher.active
-    assert not expensevoucher.is_credit_note
-    assert expensevoucher.currency == book.currencies[0]
-    assert expensevoucher.term == book.billterms[0]
+    assert expensevoucher1.id == '000001'
+    assert expensevoucher1.notes == 'expensevoucher notes'
+    assert expensevoucher1.billing_id == 'billing id expensevoucher'
+    assert expensevoucher1.active
+    assert not expensevoucher1.is_credit_note
+    assert expensevoucher1.currency == book.currencies[1]
+    assert expensevoucher1.term == book.billterms[0]
+    assert expensevoucher1.owner == book.employees[0]
+    assert expensevoucher1.end_owner == book.employees[0]
+    assert expensevoucher1.date_opened.date() == datetime.date.today()
+
+    assert expensevoucher2.id == '000002'
+    assert expensevoucher2.notes == 'expensevoucher notes'
+    assert expensevoucher2.billing_id == 'billing id expensevoucher'
+    assert expensevoucher2.active
+    assert expensevoucher2.is_credit_note
+    assert expensevoucher2.currency == book.currencies[1]
+    assert expensevoucher2.term == book.billterms[0]
+    assert expensevoucher2.owner == book.employees[0]
+    assert expensevoucher2.end_owner == book.employees[0]
+    assert expensevoucher2.date_opened.date() == datetime.date.today()
+
 
 def test_invoices2(book_with_invoices):
     book = book_with_invoices
@@ -420,8 +486,6 @@ def test_subtotal_and_taxes_for_invoiceentries(book):
                                 )                
 
     book.save()
-    print(len(invoice.entries))
-    print(invoice.entries)
 
     for discount_how in [piecash.business.tax.DiscountHow.sametime, piecash.business.tax.DiscountHow.pretax, piecash.business.tax.DiscountHow.posttax, ]:
         for discount_type in [piecash.business.tax.DiscountType.percent, piecash.business.tax.DiscountType.value]:
@@ -586,7 +650,153 @@ def test_billto(book):
     invoice2a = piecash.Expensevoucher(employee, currency, billto=customer)
     invoice2b = piecash.Expensevoucher(employee, currency, billto=customer_job)
 
+    book.flush()
+
     assert book.bills[0].billto == customer
     assert book.bills[1].billto == customer_job
     assert book.expensevouchers[0].billto == customer
     assert book.expensevouchers[1].billto == customer_job
+
+def test_post(book_with_invoice_entries):
+    book = book_with_invoice_entries
+    
+    NOK = book.commodities(mnemonic='NOK')
+    EUR = book.commodities(mnemonic='EUR')
+    
+    COP = piecash.factories.create_currency_from_ISO("COP")
+    book.add(COP)
+
+    ar = piecash.Account(name="A/Receivable", 
+              type="RECEIVABLE",
+              parent=book.root_account,
+              commodity=NOK,
+              placeholder=False,)
+    ap = piecash.Account(name="A/Payable", 
+              type="PAYABLE",
+              parent=book.root_account,
+              commodity=NOK,
+              placeholder=False,)
+
+    arCOP = piecash.Account(name="A/R test", 
+              type="RECEIVABLE",
+              parent=book.root_account,
+              commodity=COP,
+              placeholder=False,)
+    apCOP = piecash.Account(name="A/P test", 
+              type="PAYABLE",
+              parent=book.root_account,
+              commodity=COP,
+              placeholder=False,)
+
+    date = datetime.date.today()
+    book.add(piecash.Price(commodity=NOK, currency=EUR, date=date, value=Decimal('0.1')))
+
+    book.flush()
+    
+    for objtype in [book.invoices, book.bills, book.expensevouchers]:
+        postacc = ar
+        wrong_postacc_currency = arCOP
+        wrong_postacc_type = ap
+        
+        if objtype != book.invoices:
+            postacc, wrong_postacc_type = wrong_postacc_type, postacc
+            wrong_postacc_currency = apCOP
+        
+        for obj in objtype:
+            with pytest.raises(ValueError):
+                obj.post(wrong_postacc_type)
+
+            with pytest.raises(ValueError):
+                obj.post(wrong_postacc_currency)
+            
+            obj.post(postacc, prices=book.prices)
+    book.flush()
+    
+#missing: check of transaction splits: combined value    
+# post to wrong account currency
+    
+    assert book.invoices[0].is_posted
+    assert book.invoices[0].date_posted.date() == datetime.date.today()
+    assert book.invoices[0].post_account == ar
+    assert book.invoices[0].post_txn == book.query(piecash.Transaction).filter(piecash.Transaction.description == book.invoices[0].owner.name, piecash.Transaction.num == book.invoices[0].id).all()[0]
+    lot = book.query(piecash.Lot).filter(piecash.Lot.guid==book.invoices[0].post_lot.guid).all()[0]
+    assert book.invoices[0].post_lot == lot
+    assert book.invoices[0].post_account.guid == lot.account_guid
+    assert book.invoices[1].is_posted
+    assert book.invoices[1].date_posted.date() == datetime.date.today()
+    assert book.invoices[1].post_account == ar
+    assert book.invoices[1].post_txn == book.query(piecash.Transaction).filter(piecash.Transaction.description == book.invoices[1].owner.name, piecash.Transaction.num == book.invoices[1].id).all()[0]
+    lot = book.query(piecash.Lot).filter(piecash.Lot.guid==book.invoices[1].post_lot.guid).all()[0]
+    assert book.invoices[1].post_lot == lot
+    assert book.invoices[1].post_account.guid == lot.account_guid
+    assert book.bills[0].is_posted
+    assert book.bills[0].date_posted.date() == datetime.date.today()
+    assert book.bills[0].post_account == ap
+    assert book.bills[0].post_txn == book.query(piecash.Transaction).filter(piecash.Transaction.description == book.bills[0].owner.name, piecash.Transaction.num == book.bills[0].id).all()[0]
+    lot = book.query(piecash.Lot).filter(piecash.Lot.guid==book.bills[0].post_lot.guid).all()[0]
+    assert book.bills[0].post_lot == lot
+    assert book.bills[0].post_account.guid == lot.account_guid
+    assert book.bills[1].is_posted
+    assert book.bills[1].date_posted.date() == datetime.date.today()
+    assert book.bills[1].post_account == ap
+    assert book.bills[1].post_txn == book.query(piecash.Transaction).filter(piecash.Transaction.description == book.bills[1].owner.name, piecash.Transaction.num == book.bills[1].id).all()[0]
+    lot = book.query(piecash.Lot).filter(piecash.Lot.guid==book.bills[1].post_lot.guid).all()[0]
+    assert book.bills[1].post_lot == lot
+    assert book.bills[1].post_account.guid == lot.account_guid
+    assert book.expensevouchers[0].is_posted
+    assert book.expensevouchers[0].date_posted.date() == datetime.date.today()
+    assert book.expensevouchers[0].post_account == ap
+    assert book.expensevouchers[0].post_txn == book.query(piecash.Transaction).filter(piecash.Transaction.description == book.expensevouchers[0].owner.name, piecash.Transaction.num == book.expensevouchers[0].id).all()[0]
+    lot = book.query(piecash.Lot).filter(piecash.Lot.guid==book.expensevouchers[0].post_lot.guid).all()[0]
+    assert book.expensevouchers[0].post_lot == lot
+    assert book.expensevouchers[0].post_account.guid == lot.account_guid
+    assert book.expensevouchers[1].is_posted
+    assert book.expensevouchers[1].date_posted.date() == datetime.date.today()
+    assert book.expensevouchers[1].post_account == ap
+    assert book.expensevouchers[1].post_txn == book.query(piecash.Transaction).filter(piecash.Transaction.description == book.expensevouchers[1].owner.name, piecash.Transaction.num == book.expensevouchers[1].id).all()[0]
+    lot = book.query(piecash.Lot).filter(piecash.Lot.guid==book.expensevouchers[1].post_lot.guid).all()[0]
+    assert book.expensevouchers[1].post_lot == lot
+    assert book.expensevouchers[1].post_account.guid == lot.account_guid
+
+def test_post_multicurrency(book):
+    #currencies
+    NOK = book.commodities(mnemonic='NOK')
+    EUR = book.commodities(mnemonic='EUR')
+    COP = piecash.factories.create_currency_from_ISO("COP")
+    HRK = piecash.factories.create_currency_from_ISO("HRK")
+    BGN = piecash.factories.create_currency_from_ISO("BGN")
+    book.add(COP)
+    book.add(HRK)
+    book.add(BGN)
+
+    #accounts
+    entry_income = piecash.Account(name="invoice_income_account_HRK", type="INCOME", parent=book.root_account, commodity=HRK, placeholder=False,)
+    entry_income2 = piecash.Account(name="invoice_income_account_BGN", type="INCOME", parent=book.root_account, commodity=BGN, placeholder=False,)
+    entry_income3 = piecash.Account(name="invoice_income_account_NOK", type="INCOME", parent=book.root_account, commodity=NOK, placeholder=False,)
+    tax1 = piecash.Account(name="tax1", type="LIABILITY", parent=book.root_account, commodity=COP, placeholder=False,)
+    tax2 = piecash.Account(name="tax2", type="LIABILITY", parent=book.root_account, commodity=EUR, placeholder=False,)
+    ar = piecash.Account(name="A/Receivable", type="RECEIVABLE", parent=book.root_account, commodity=NOK, placeholder=False,)
+
+    #taxtable
+    taxtable = piecash.business.tax.Taxtable('multicurrencytt')
+    book.add(taxtable)
+    piecash.business.tax.TaxtableEntry("value", 10, tax1, taxtable=taxtable)
+    piecash.business.tax.TaxtableEntry("percentage", 20, tax2, taxtable=taxtable)
+    
+    #invoice
+    invoice = piecash.Invoice(book.customers[0], NOK)
+    entry1 = piecash.business.invoice.Entry(invoice, quantity=5, price=1000, account=entry_income, taxtable=taxtable)
+    entry2 = piecash.business.invoice.Entry(invoice, quantity=10, price=2000, account=entry_income2, taxtable=taxtable)
+    entry3 = piecash.business.invoice.Entry(invoice, quantity=20, price=3000, account=entry_income3, taxtable=taxtable)
+
+    #set some prices
+    date = datetime.date.today()
+    book.add(piecash.Price(commodity=NOK, currency=EUR, date=date, value=Decimal('0.1')))
+    book.add(piecash.Price(commodity=NOK, currency=BGN, date=date, value=Decimal('0.2')))
+    book.add(piecash.Price(commodity=NOK, currency=HRK, date=date, value=Decimal('0.75')))
+    book.add(piecash.Price(commodity=NOK, currency=COP, date=date, value=Decimal('445')))
+    book.flush()
+
+    invoice.post(ar, prices=book.prices)
+
+    txn = invoice.post_txn

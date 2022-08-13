@@ -240,7 +240,7 @@ class Entry(DeclarativeBaseGuid):
         action='',                          #user-defined field (cost center information), or Hours, Material, Project 
         notes='',                       
         quantity=None,                      #how many items were sold
-        price=0,                            #unit price of item. Note: to specify price, an account also needs to be specified.
+        price=0,                            #unit price of item. Note: to specify price, an account also needs to be specified (issues in GUI otherwise)
         account=None,                       #income account that is to be credited (invoice) / expense account to charged (bill, expense voucher)
         taxable=True,                       #True/1 - yes, False/0 - no. If taxtable is provided, must be True
         taxincluded=False,                  #tax already included in unit price? True/1 - yes, False/0 - no
@@ -271,20 +271,17 @@ class Entry(DeclarativeBaseGuid):
         self.order_guid = None
     
         if type(invoice) is Invoice:
-            self.invoice_guid = invoice.guid        
+            self.invoice = invoice
             
             self.i_discount = i_discount
             self.i_disc_type = i_disc_type
             self.i_disc_how = i_disc_how
         else:
-            self.bill_guid = invoice.guid
+            self.bill = invoice
 
             self.i_discount = 0
             self.i_disc_type = DiscountType.percent
             self.i_disc_how = DiscountHow.pretax        
-
-        # flush to set the invoice or bill / expense voucher attributes
-        self.book.flush()
     
         self.account = account
         self.price = price
@@ -547,7 +544,7 @@ class InvoiceBase(DeclarativeBaseGuid):
 
     _bill_entries = relation(
         "Entry",
-        back_populates="invoice",
+        back_populates="bill",
         cascade="all, delete-orphan",
         collection_class=CallableList,
         foreign_keys=Entry.bill_guid
@@ -587,7 +584,7 @@ class InvoiceBase(DeclarativeBaseGuid):
             return self._bill_entries
  
     def _create_invoice(self, 
-        owner,                  #Either a customer (for invoices), vendor (for bills), or employee (for expenses)
+        owner,                  #Either a customer (for invoices), vendor (for bills), or employee (for expenses), or job
         currency,
         date_opened=datetime.datetime.now().replace(microsecond=0), 
         notes='', 
@@ -655,7 +652,6 @@ class InvoiceBase(DeclarativeBaseGuid):
         self.is_credit_note = is_credit_note
 
         book.add(self)
-        book.flush()
 
     def on_book_add(self):
         self._assign_id()
@@ -671,7 +667,7 @@ class InvoiceBase(DeclarativeBaseGuid):
 
     @property
     def owner(self):
-        return self._customer or self._vendor or self._employee
+        return self._customer or self._vendor or self._employee or self.job
 
     @property
     def end_owner(self):
@@ -728,36 +724,49 @@ class InvoiceBase(DeclarativeBaseGuid):
 
     def _accumulate_splits(self, splits):
         #all splits to same account will be collected in a single split
-        #only the first split's action, memo, notes will be preserved
+        #only the first split's action, memo, notes, etc. will be preserved
         tmp = {}
         for split in splits:
             if tmp.get(split.account):  
                 tmp[split.account].quantity += split.quantity
                 tmp[split.account].value += split.value
+                split.account = None        #set to None, otherwise unused splits trigger an attribute error
             else:
                 tmp[split.account] = split
-#                tmp[split.account] = Split(split.account, value=split.value, quantity=split.quantity, action=split.action, lot=split.lot, transaction=split.transaction, memo=split.memo)            
-#                tmp[split.account] = Split(split.account, value=split.value, quantity=split.quantity, action=split.action, lot=split.lot, memo=split.memo)            
-       
         return list(tmp.values())
+
+    @property
+    def is_posted(self):
+        return self.post_txn is not None
     
     def post(self, 
-        post_account, 
+        post_account,                   #account to post to (Receivable for invoices, Payable for bills and expensevouchers. 
         post_date=datetime.datetime.now().replace(microsecond=0), 
         due_date=datetime.datetime.now().replace(microsecond=0),
         description='', 
-        accumulate_splits=True):
+        accumulate_splits=True,         #whether or not entries should be accumulated by account
+        prices=[]):                     #list of Price objects to use if any currency conversion is required. All entry values are in the invoice's currency, but taxes and entries could be to other currencies.
+        
+        if self.is_posted:
+            raise ValueError(f'{self} has already been posted - cannot re-post.')
 
-#todo
-# - sign for net and tax, including credit notes
-# - currency mixes
-#       value vs quantity
-#
+        if type(self) is Invoice and not post_account.sign == +1:
+            raise ValueError(f'Please provide a valid Accounts Receivable - {post_account} provided')
+        elif type(self) in [Bill, Expensevoucher] and not post_account.sign == -1:
+            raise ValueError(f'Please provide a valid Accounts Payable - {post_account} provided')
 
-        #taxtables - duplicate referenced taxtables complete with taxtableentries
-        taxtables = list(set([entry.taxtable for entry in self.entries if entry.taxtable]))
-        for taxtable in taxtables:
-            taxtable_clone = taxtable.create_copy_as_child()
+        if not post_account.commodity == self.currency:
+            raise ValueError(f"Post account currency does not match invoice/bill/expensevoucher currency")
+
+        #prepare a dict of exchange rates to use, if relevant
+        price_dict = {}
+        for price in prices:
+            if price.commodity == self.currency:
+                price_dict[price.currency] = price.value
+            elif price.currency == self.currency:
+                price_dict[price.commodity] = 1/price.value
+            else:
+                pass    #discard - only support direct conversion for now
 
         #action
         if self.is_credit_note:
@@ -769,95 +778,45 @@ class InvoiceBase(DeclarativeBaseGuid):
         elif type(self) is Expensevoucher:
             action = 'Expense'
 
+        #taxtables - duplicate referenced taxtables complete with taxtableentries
+        taxtables = list(set([entry.taxtable for entry in self.entries if entry.taxtable]))
+        for taxtable in taxtables:
+            taxtable_clone = taxtable.create_copy_as_child()
+
         #lot
         lot = Lot(title=action + ' ' + str(self.id), account=post_account, splits=None, is_closed=False)
+        self.post_lot = lot
         
-        #splits
-#        splits = {} if accumulate_splits else []
-#        subtotal = 0
-#        tax = 0
-#        taxes_per_account = {}
-#            #entries
-#        for entry in self.entries:            
-#            entry_subtotal, entry_tax, entry_tax_per_taxaccount = entry.subtotal_and_tax
-#            subtotal += entry_subtotal
-#            tax += entry_tax
-#            for t in entry_tax_per_taxaccount:
-#                taxes_per_account[t] = taxes_per_account.get(t, 0) + entry_tax_per_taxaccount[t]
-
-#            if accumulate_splits and splits.get(entry.account):
-#                splits[entry.account].value += -entry_subtotal
-#                splits[entry.account].quantity += -entry_subtotal
-#            else:
-#                s = Split(entry.account, value=-entry_subtotal, quantity=-entry_subtotal, action=action, lot=None, transaction=txn, memo=description)
-#                if accumulate_splits:
-#                    splits[entry.account] = s
-#                else:
-#                    splits.append(s)
+        #transaction/splits
             #entries & taxes
         entry_splits = []
-        tax_splits = []
-        for entry in self.entries:
-            entry_subtotal, entry_tax, tax_per_account = entry.subtotal_and_tax
-#            entry_splits.append(Split(entry.account, value=-entry_subtotal, quantity=-entry_subtotal, action=action, lot=None, transaction=None, memo=description))
-            entry_splits.append(Split(entry.account, value=-entry_subtotal, action=action, memo=description))
-            for tax_account in tax_per_account:
-#                tax_splits.append(Split(account=tax_account, value=-tax_per_account[tax_account], quantity=-tax_per_account[tax_account], action=action, lot=None, transaction=None, memo=description))
-#                tax_splits.append(Split(account=tax_account, value=-tax_per_account[tax_account], quantity=-tax_per_account[tax_account], action=action, lot=None, memo=description))
-                tax_splits.append(Split(account=tax_account, value=-tax_per_account[tax_account], action=action, memo=description))
+        tax_splits = []        
+        sign = -post_account.sign
+
+        try:    
+            for entry in self.entries:
+                entry_subtotal, entry_tax, tax_per_account = entry.subtotal_and_tax
+                value = entry_subtotal*sign
+                quantity = value*price_dict[entry.account.commodity] if not entry.account.commodity == self.currency else None
+                entry_splits.append(Split(entry.account, value=value, quantity=quantity, action=action, memo=description))
+
+                for tax_account in tax_per_account:
+                    value = tax_per_account[tax_account]*sign
+                    quantity = value*price_dict[tax_account.commodity] if not entry.account.commodity == self.currency else None
+                    tax_splits.append(Split(account=tax_account, value=value, quantity=quantity, action=action, memo=description))
+        except KeyError as ex:
+            raise ValueError(f"Conversion rate not found for {ex.args[0].mnemonic} -> {self.currency.mnemonic} - use the prices parameter")
+            
+        tax_splits = self._accumulate_splits(tax_splits)    #taxes always accumulated
+        if accumulate_splits:
+            entry_splits = self._accumulate_splits(entry_splits)
  
-##        tax_splits2 = self._accumulate_splits(tax_splits)    #taxes always accumulated
-##        if accumulate_splits:
-##            entry_splits2 = self._accumulate_splits(entry_splits)
-        
-#        del tax_splits
-#        del entry_splits
-        #transaction
-#        lst = []
-#        for s in tax_splits+entry_splits:
-#            print(s)
-#            lst.append(s)
-#        print(lst)
-        
         txn = Transaction(self.currency, description=self.owner.name, splits=tax_splits+entry_splits, post_date=post_date.date(), num=self.id)
-#        txn = Transaction(self.currency, description=self.owner.name, splits=lst, post_date=post_date.date(), num=self.id)
-#        txn = Transaction(self.currency, description=self.owner.name, splits=[Split(account=tax_account, value=-5)], post_date=post_date.date(), num=self.id)
 
-#        txn.splits = tax_splits+entry_splits
-#        print('a')
-#        txn.validate()
-#        print('b')
-            #posted account
-#        total = 7
-        total = sum([t.value for t in txn.splits])
-#        print(total)
-#        print(txn.splits)
-#        Split(account=post_account, value=-total, quantity=-total, action=action, lot=lot, transaction=txn, memo=description)
-        Split(account=post_account, value=-total, action=action, lot=lot, transaction=txn, memo=description)
-
-#        print(tax_splits)
-#        print(type(tax_splits))
-#        print(tax_splits+entry_splits)
-        #txn.splits = tax_splits.extend(entry_splits)
-        #splits=tax_splits+entry_splits
-#        print(dir(txn))
-            #taxes
-#        for tax_account in taxes_per_account:
-#            Split(account=tax_account, value=-taxes_per_account[tax_account], quantity=-taxes_per_account[tax_account], action=action, lot=None, transaction=txn, memo=description)
-
-                
-            #posted account
-#        for s in entry_splits:
-#            print(s)
- #           print(type(s))
-#        for s in tax_splits:
-#            print(s)
- #           print(type(s))
- #       subtotal = sum([s.value for s in entry_splits])
- #       tax = sum([s.value for s in tax_splits])
- #       print(subtotal)
- #       print(tax)
-#        Split(account=post_account, value=(subtotal+tax), quantity=(subtotal+tax), action=action, lot=lot, transaction=txn, memo=description)
+            #posted account - create a balancing split
+#        value, quantity = txn.calculate_imbalances()
+        value = -sum([split.value for split in txn.splits])        
+        Split(account=post_account, value=value, action=action, lot=lot, transaction=txn, memo=description)
 
         #slots
         txn['date-posted'] = post_date
@@ -866,18 +825,17 @@ class InvoiceBase(DeclarativeBaseGuid):
         txn['trans-txn-type'] = 'I'                         #same irrespective of Invoice/Bill/Expensevoucher
         txn['gncInvoice/invoice-guid'] = self               #same irrespective of Invoice/Bill/Expensevoucher
 
-        #   lot
         lot['gncInvoice/invoice-guid'] = self               #same irrespective of Invoice/Bill/Expensevoucher
-       
-        #lock lot
-        lot.is_closed = '-1'
-        
+               
         #self
-        self.date_posted = post_date
+        self.date_posted = post_date        
         self.post_account = post_account
         self.post_txn = txn
         self.post_lot = lot
 
+        #lock lot
+        lot.is_closed = '-1'
+        
 class Invoice(InvoiceBase):
     __mapper_args__ = {
         "polymorphic_identity": 2,

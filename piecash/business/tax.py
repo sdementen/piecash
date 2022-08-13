@@ -7,6 +7,7 @@ from .._declbase import DeclarativeBaseGuid, DeclarativeBase
 from ..sa_extra import ChoiceType
 
 from enum import Enum
+import collections
 
 class DiscountType(Enum):
     value = "VALUE"
@@ -68,7 +69,7 @@ class Taxtable(DeclarativeBaseGuid):
             )
         else:
             return "TaxTable<{}>".format(self.name)
-
+        
     # adjust the refcount field - called by e.g. Entry
     def _increase_refcount(self, connection, increment=1):
         r = connection.execute(
@@ -149,13 +150,21 @@ class Taxtable(DeclarativeBaseGuid):
                     taxes[entry.account] = taxes.get(entry.account, 0) + pretax*entry.amount/100
                 
         return subtotal, tax, taxes
+
+    def _table_entries(self):
+        return collections.Counter([entry.__str__() for entry in self.entries])
     
     def create_copy_as_child(self):
-        entries = [entry.clone() for entry in self.entries]
-        clone = Taxtable(self.name, entries=entries)
-        clone.invisible = True
-        clone.parent_guid = self.guid
-        self.book.add(clone)
+    # only copy a tax table if an existing copy doesn't exist; only differences in taxtable entries matter, i.e. amount, type and account.
+    # this is captured in TaxtableEntry.__string__
+        clone = None
+        if not any([self._table_entries() == child._table_entries() for child in self.children]):
+            entries = [entry.clone() for entry in self.entries]
+            clone = Taxtable(self.name, entries=entries)
+            clone.invisible = True
+            clone.parent_guid = self.guid
+            self.children.append(clone)
+        
         return clone
     
 class TaxtableEntry(DeclarativeBase):

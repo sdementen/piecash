@@ -490,12 +490,15 @@ class Book(DeclarativeBaseGuid):
     @property
     def taxtables(self):
         """
-        gives easy access to all commodities in the book through a :class:`piecash.model_common.CallableList`
+        gives easy access to taxtables in the book through a :class:`piecash.model_common.CallableList`
         of :class:`piecash.business.tax.Taxtable`
+        
+        Only retrieves  'parent' taxtables, i.e. taxtables with attribute invisible set to False. 
+        Child taxtables (those with attribute invisible set to True) may be accessed via the parents. 
         """
         from ..business import Taxtable
 
-        return CallableList(self.session.query(Taxtable))
+        return CallableList(self.session.query(Taxtable).filter(Taxtable.invisible==False))
 
     @property
     def billterms(self):
