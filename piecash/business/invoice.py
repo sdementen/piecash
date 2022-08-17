@@ -2,10 +2,10 @@ import uuid
 import datetime
 from enum import Enum
 
-from sqlalchemy import Column, INTEGER, BIGINT, VARCHAR, ForeignKey, select, case, text, event
+from sqlalchemy import Column, INTEGER, BIGINT, VARCHAR, ForeignKey, select, case, text, event, exists
 from sqlalchemy.orm import composite, relation, column_property
 from sqlalchemy.orm.attributes import get_history
-
+from sqlalchemy.ext.hybrid import hybrid_property
 from decimal import Decimal
 
 from .person import PersonType, Person, Customer, Vendor, Employee
@@ -550,6 +550,25 @@ class InvoiceBase(DeclarativeBaseGuid):
         foreign_keys=Entry.bill_guid
     )
 
+    _payment_split = column_property(
+        select([Split.guid]).\
+        where(Split.lot_guid==post_lot_guid).\
+        where(Split.action=='Payment')
+    )
+
+    is_paid = column_property(
+#        case(
+#            [
+#                (_payment_split == text(''), False),
+#            ],
+#            else_=True
+#        )
+        exists().\
+        where(Split.lot_guid==post_lot_guid).\
+        where(Split.action=='Payment')
+
+    )
+
     _job_owner_type = column_property(
         select([Job.owner_type]).\
         where(Job.guid==owner_guid).\
@@ -665,11 +684,11 @@ class InvoiceBase(DeclarativeBaseGuid):
             setattr(self.book, self._counter_name, cnt)
             self.id = "{:06d}".format(cnt)
 
-    @property
+    @hybrid_property
     def owner(self):
         return self._customer or self._vendor or self._employee or self.job
 
-    @property
+    @hybrid_property
     def end_owner(self):
         if isinstance(self.owner, Job):
             return self.owner.owner
@@ -735,10 +754,25 @@ class InvoiceBase(DeclarativeBaseGuid):
                 tmp[split.account] = split
         return list(tmp.values())
 
-    @property
+    @hybrid_property
     def is_posted(self):
         return self.post_txn is not None
-    
+
+#    @hybrid_property
+#    def is_paid(self):
+#        if self.payment_split:
+#            return True
+#        else:
+#            return False
+#        return True if self.payment_split else False
+                
+    @property
+    def due_date(self):
+        if self.post_txn and self.post_txn['trans-date-due']:
+            return self.post_txn['trans-date-due'].value
+        else:
+            return None
+            
     def post(self, 
         post_account,                   #account to post to (Receivable for invoices, Payable for bills and expensevouchers. 
         post_date=datetime.datetime.now().replace(microsecond=0), 
@@ -814,7 +848,6 @@ class InvoiceBase(DeclarativeBaseGuid):
         txn = Transaction(self.currency, description=self.owner.name, splits=tax_splits+entry_splits, post_date=post_date.date(), num=self.id)
 
             #posted account - create a balancing split
-#        value, quantity = txn.calculate_imbalances()
         value = -sum([split.value for split in txn.splits])        
         Split(account=post_account, value=value, action=action, lot=lot, transaction=txn, memo=description)
 
