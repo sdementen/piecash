@@ -749,7 +749,7 @@ class InvoiceBase(DeclarativeBaseGuid):
 
     @hybrid_property
     def is_posted(self):
-        return isinstance(self.post_txn, Transaction)
+        return self.post_txn_guid != ''
 
     @property
     def due_date(self):
