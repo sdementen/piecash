@@ -557,16 +557,9 @@ class InvoiceBase(DeclarativeBaseGuid):
     )
 
     is_paid = column_property(
-#        case(
-#            [
-#                (_payment_split == text(''), False),
-#            ],
-#            else_=True
-#        )
         exists().\
         where(Split.lot_guid==post_lot_guid).\
         where(Split.action=='Payment')
-
     )
 
     _job_owner_type = column_property(
@@ -756,16 +749,8 @@ class InvoiceBase(DeclarativeBaseGuid):
 
     @hybrid_property
     def is_posted(self):
-        return self.post_txn is not None
+        return isinstance(self.post_txn, Transaction)
 
-#    @hybrid_property
-#    def is_paid(self):
-#        if self.payment_split:
-#            return True
-#        else:
-#            return False
-#        return True if self.payment_split else False
-                
     @property
     def due_date(self):
         if self.post_txn and self.post_txn['trans-date-due']:
