@@ -362,10 +362,6 @@ class Entry(DeclarativeBaseGuid):
         setattr(self, other_prefix+'account', None)
         if not accnt:
             setattr(self, this_prefix+'account', None)
-        elif self.invoice and not (accnt.type in asset_types or accnt.type in income_types):
-            raise ValueError(f"Please provide a valid income or asset account for invoices - {accnt} provided")
-        elif self.bill and not accnt.type in expense_types:
-            raise ValueError(f"Please provide a valid expense account for bills or expensevouchers - {accnt} provided")
         else:
             setattr(self, this_prefix+'account', accnt)
 
@@ -749,7 +745,8 @@ class InvoiceBase(DeclarativeBaseGuid):
 
     @hybrid_property
     def is_posted(self):
-        return self.post_txn_guid != ''
+#        return self.post_txn_guid != ''
+        return self.date_posted != None
 
     @property
     def due_date(self):
