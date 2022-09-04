@@ -572,6 +572,17 @@ class InvoiceBase(DeclarativeBaseGuid):
         )
     )
 
+    from ..sa_extra import tz, utc
+    is_posted = column_property(
+        case(
+            [
+                (date_posted == None, False),
+                (date_posted == utc.localize(datetime.datetime(1970, 1, 1, 0, 0, 0)).astimezone(tz), False),
+            ],
+            else_=True
+        )
+    )
+
     __mapper_args__ = {
         "polymorphic_identity": "invoices",
         "polymorphic_on": _end_owner_type,
@@ -742,11 +753,6 @@ class InvoiceBase(DeclarativeBaseGuid):
             else:
                 tmp[split.account] = split
         return list(tmp.values())
-
-    @hybrid_property
-    def is_posted(self):
-#        return self.post_txn_guid != ''
-        return self.date_posted != None
 
     @property
     def due_date(self):
