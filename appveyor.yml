@@ -20,47 +20,57 @@ environment:
     - PYTHON: "C:\\Python37"
       PYTHON_VERSION: "3.7.x"
       PYTHON_ARCH: "32"
+      target: i686-pc-windows-msvc
     
     - PYTHON: "C:\\Python38"
       PYTHON_VERSION: "3.8.x"
       PYTHON_ARCH: "32"
+      target: i686-pc-windows-msvc
     
     - PYTHON: "C:\\Python39"
       PYTHON_VERSION: "3.9.x"
       PYTHON_ARCH: "32"
+      target: i686-pc-windows-msvc
     
     - PYTHON: "C:\\Python310"
       PYTHON_VERSION: "3.10.x"
       PYTHON_ARCH: "32"
+      target: i686-pc-windows-msvc
     
     - PYTHON: "C:\\Python311"
       PYTHON_VERSION: "3.11.x"
       PYTHON_ARCH: "32"
+      target: i686-pc-windows-msvc
     
     - PYTHON: "C:\\Python37-x64"
       PYTHON_VERSION: "3.7.x"
       PYTHON_ARCH: "64"
       WINDOWS_SDK_VERSION: "v7.1"
+      target: x86_64-pc-windows-msvc
     
     - PYTHON: "C:\\Python38-x64"
       PYTHON_VERSION: "3.8.x"
       PYTHON_ARCH: "64"
       WINDOWS_SDK_VERSION: "v7.1"
+      target: x86_64-pc-windows-msvc
     
     - PYTHON: "C:\\Python39-x64"
       PYTHON_VERSION: "3.9.x"
       PYTHON_ARCH: "64"
       WINDOWS_SDK_VERSION: "v7.1"
+      target: x86_64-pc-windows-msvc
     
     - PYTHON: "C:\\Python310-x64"
       PYTHON_VERSION: "3.10.x"
       PYTHON_ARCH: "64"
       WINDOWS_SDK_VERSION: "v7.1"
+      target: x86_64-pc-windows-msvc
 
     - PYTHON: "C:\\Python311-x64"
       PYTHON_VERSION: "3.11.x"
       PYTHON_ARCH: "64"
       WINDOWS_SDK_VERSION: "v7.1"
+      target: x86_64-pc-windows-msvc
 
 init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
@@ -82,7 +92,7 @@ install:
 
   # update rust (for bcrypt)
   - appveyor DownloadFile https://win.rustup.rs/ -FileName rustup-init.exe
-  - rustup-init -yv --default-toolchain %channel% --default-host %target%
+  - rustup-init -yv --default-toolchain stable --default-host %target%
   - set PATH=%PATH%;%USERPROFILE%\.cargo\bin
   - rustc -vV
   - cargo -vV
