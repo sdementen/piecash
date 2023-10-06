@@ -209,7 +209,7 @@ install_requires = [
     "click",
 ]
 extras_require = {
-    "postgres": ["psycopg2"],
+    "postgres": ["psycopg2-binary"],
     "mysql": ["PyMySQL[rsa]"],
     "ledger": ["money", "babel"],
     "pandas": ["pandas"],
