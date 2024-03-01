@@ -18,12 +18,43 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import exc as orm_exc
 from sqlalchemy.orm import sessionmaker, object_session
 
 # import yaml
+
+try:
+    # sqlalchemy 1.4 and greater changes `as_declarative` to create a
+    # `registry` object, on which `as_declarative_base` is called.
+    #
+    # For unclear reasons, the `constructor` keyword is not forwarded
+    # to the `registry` constructor in `as_declarative`, even though
+    # it's defined for `registry.__init__` and not allowed by 
+    # `registry.as_declarative_base`.
+    #
+    # This redefinition of `as_declarative` passes the `constructor` keyword
+    # onto `registry`, just as is done in `declarative_base`.
+    #
+    # I am using the existence of `sqlalchemy.orm.registry` (new in SA 1.4)
+    # as the marker for whether `constructor` is supported in `as_declarative`
+    from sqlalchemy.orm import registry
+    from sqlalchemy.orm.decl_base import _declarative_constructor
+
+    def as_declarative(**kw):
+        bind, metadata, class_registry, constructor = (
+            kw.pop("bind", None),
+            kw.pop("metadata", None),
+            kw.pop("class_registry", None),
+            kw.pop("constructor", _declarative_constructor),
+        )
+
+        return registry(
+            _bind=bind, metadata=metadata, class_registry=class_registry, constructor=constructor
+        ).as_declarative_base(**kw)
+except ImportError:
+    # `as_declarative` was under `sqlalchemy.ext.declarative` prior to 1.4
+    from sqlalchemy.ext.declarative import as_declarative
 
 
 def __init__blocked(self, *args, **kwargs):
