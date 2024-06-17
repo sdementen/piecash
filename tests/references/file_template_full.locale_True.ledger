@@ -1,82 +1,78 @@
-commodity  ADF
+commodity ADF
 
-commodity  AED
+commodity AED
 
-commodity  €
+commodity €
 
-commodity  FOO
+commodity FOO
 
-commodity  $US
+commodity US$
 
 account Asset
-	check commodity == "EUR"
+	check commodity == "€"
 
 account Asset:Current
-	check commodity == "EUR"
+	check commodity == "€"
 
 account Asset:Current:Cash
-	check commodity == "EUR"
+	check commodity == "€"
 
 account Asset:Current:Savings
-	check commodity == "EUR"
+	check commodity == "€"
 
 account Asset:Current:Checking
-	check commodity == "EUR"
+	check commodity == "€"
 
 account Asset:Fixed
-	check commodity == "EUR"
+	check commodity == "€"
 
 account Asset:Fixed:House
-	check commodity == "EUR"
+	check commodity == "€"
 
 account Asset:Broker
 	check commodity == "AED"
 
 account Asset:Broker:Foo stock
-	check commodity == "FOO"
 
 account Liability
-	check commodity == "EUR"
+	check commodity == "€"
 
 account Income
-	check commodity == "EUR"
+	check commodity == "€"
 
 account Expense
-	check commodity == "EUR"
+	check commodity == "€"
 
 account Equity
-	check commodity == "EUR"
+	check commodity == "€"
 
 account Equity:Opening Balances - EUR
-	check commodity == "EUR"
+	check commodity == "€"
 
 account Mouvements
-	check commodity == "FOO"
 
 account Mouvements:NASDAQ
-	check commodity == "FOO"
 
 account Mouvements:NASDAQ:FOO
-	check commodity == "FOO"
 
 account Mouvements:CURRENCY
-	check commodity == "EUR"
+	check commodity == "€"
 
 account Mouvements:CURRENCY:EUR5
-	check commodity == "EUR"
+	check commodity == "€"
 
-P 2018-02-21 00:00:00  FOO 0,90 AED
-P 2018-02-21 00:00:00  $US 1,40 €
-P 2018-02-21 00:00:00  € 1,111111111111111111111111111 AED
-P 2018-02-21 00:00:00  ADF 1,50 AED
+P 2018-02-21 00:00:00 FOO 0,90 AED
+P 2018-02-21 00:00:00 US$ 1,40 €
+P 2018-02-21 00:00:00 € 1,111111111111111111111111111 AED
+P 2018-02-21 00:00:00 ADF 1,50 AED
 
 2014-12-24 income 1
 	Income                                    -150,00 €
 	Asset:Current:Cash                        150,00 €
 
 2014-12-24 initial load
-	Liability                                 -1 000,00 €
-	Asset:Current:Checking                    1 000,00 €
+	Liability                                 -1.000,00 €
+	Asset:Current:Checking                    1.000,00 €
 
 2014-12-24 expense 1
 	Asset:Current:Checking                    -200,00 €
@@ -100,20 +96,20 @@ P 2018-02-21 00:00:00  ADF 1,50 AED
 	Asset:Current:Checking                    250,00 €
 
 2018-02-20 Opening Balance
-	Equity:Opening Balances - EUR             -2 500,00 €
-	Asset:Current:Savings                     2 500,00 €
+	Equity:Opening Balances - EUR             -2.500,00 €
+	Asset:Current:Savings                     2.500,00 €
 
 2018-02-20 house load
-	Liability                                 -20 000,00 €
-	Asset:Fixed:House                         20 000,00 €
+	Liability                                 -20.000,00 €
+	Asset:Fixed:House                         20.000,00 €
 
 2018-02-21 buy foo
-	Mouvements:NASDAQ:FOO                     -130,00 FOO @@ 1 200,00 €
-	Asset:Current:Savings                     -1 200,00 €
-	Asset:Broker:Foo stock                    130,00 FOO @@ 1 200,00 €
-	Mouvements:CURRENCY:EUR5                  1 200,00 €
+	Mouvements:NASDAQ:FOO                     -130,00 FOO @@ 1.200,00 €
+	Asset:Current:Savings                     -1.200,00 €
+	Asset:Broker:Foo stock                    130,00 FOO @@ 1.200,00 €
+	Mouvements:CURRENCY:EUR5                  1.200,00 €
 
 2018-02-21 Opening Balance
-	Equity:Opening Balances - EUR             -2 500,00 €
-	Asset:Current:Savings                     2 500,00 €
+	Equity:Opening Balances - EUR             -2.500,00 €
+	Asset:Current:Savings                     2.500,00 €
 
