@@ -28,7 +28,7 @@ def ledger(obj, **kwargs):
 
 
 CURRENCY_RE = re.compile("^[A-Z]{3}$")
-NUMBER_RE = re.compile(r"(^|\s+)[-+]?([0-9]*\.[0-9]+|[0-9]+)($|\s+)")  # regexp to identify a float with blank spaces
+NUMBER_RE = re.compile(r"(^|\s+)[-+]?([0-9]*(\.|,)[0-9]+|[0-9]+)($|\s+)")  # regexp to identify a float with blank spaces
 NUMERIC_SPACE = re.compile(r"[0-9\s]")
 CHARS_ONLY = re.compile(r"[A-Za-z]+")
 
@@ -138,7 +138,7 @@ def _(cdty, locale=False, commodity_notes=False, **kwargs):
 
 
 @ledger.register(Account)
-def _(acc, short_account_names=False, **kwargs):
+def _(acc, short_account_names=False, locale=False, **kwargs):
     """Return a ledger-cli alike representation of the account"""
     # ignore "dummy" accounts
     if acc.type is None or acc.parent is None:
@@ -155,7 +155,7 @@ def _(acc, short_account_names=False, **kwargs):
         res += "\tnote {}\n".format(acc.description)
 
     if acc.commodity.is_currency():
-        res += '\tcheck commodity == "{}"\n'.format(acc.commodity.mnemonic)  # .replace('"', '\\"'))
+        res += '\tcheck commodity == "{}"\n'.format(format_commodity(acc.commodity.mnemonic,locale))  # .replace('"', '\\"'))
     return res
 
 
