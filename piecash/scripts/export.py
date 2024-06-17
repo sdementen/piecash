@@ -66,3 +66,6 @@ def export(book, entities, output, inactive):
             )
 
             output.write(res)
+
+if __name__ == '__main__':
+    cli()
