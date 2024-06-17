@@ -30,7 +30,7 @@ def create_stock_accounts(
         :class:`piecash.core.account.Account`: a tuple with the account under the broker_account where the stock is held
         and the list of income accounts.
     """
-    if cdty.namespace == "CURRENCY":
+    if cdty.is_currency():
         raise GnucashException(
             "{} is a currency ! You can't create stock_accounts for currencies".format(
                 cdty

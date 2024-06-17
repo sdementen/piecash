@@ -98,7 +98,7 @@ def qif(book, output):
                 continue  # skip template transactions
 
             splits = sorted(tr.splits, key=sort_split)
-            if all(sp.account.commodity.namespace == "CURRENCY" for sp in splits):
+            if all(sp.account.commodity.is_currency() for sp in splits):
 
                 sp1, sp2 = splits[:2]
                 item = _qif.Transaction(
