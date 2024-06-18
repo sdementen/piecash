@@ -219,6 +219,7 @@ extras_require = {
     "doc": [
         "sphinx",
         "sphinxcontrib-programoutput",
+        "sphinx-autobuild",
         "sphinx-rtd-theme",
         "ipython",
     ],
