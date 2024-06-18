@@ -5,9 +5,9 @@ In fact, any object can be retrieved from the session through a generic ``get(**
 
 .. ipython:: python
 
-    book = open_book(gnucash_books + "invoices.gnucash", open_if_lock=True)
+    from piecash import Account, Commodity, Budget, Vendor, open_book
 
-    from piecash import Account, Commodity, Budget, Vendor
+    book = open_book(gnucash_books + "invoices.gnucash", open_if_lock=True)
 
     # accessing specific objects through the get method
     book.get(Account, name="Assets", parent=book.root_account)
@@ -20,7 +20,7 @@ queries using the piecash classes:
 
 .. ipython:: python
 
-    from piecash import Account, Commodity, Budget, Vendor
+    from piecash import Account, Commodity, Budget, Vendor, open_book
 
     # get the SQLAlchemy session
     session = book.session

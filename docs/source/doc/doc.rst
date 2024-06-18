@@ -202,9 +202,9 @@ Or in python
 
 .. ipython:: python
 
-    book = open_book(gnucash_books + "simple_sample.gnucash", open_if_lock=True)
+    from piecash import open_book, ledger
 
-    from piecash import ledger
+    book = open_book(gnucash_books + "simple_sample.gnucash", open_if_lock=True)
 
     # printing the ledger-cli (https://www.ledger-cli.org/) representation of the book
     print(ledger(book))
