@@ -34,7 +34,7 @@ pockets==0.9.1
 prompt-toolkit==3.0.8
 psycopg2==2.8.6
 py==1.9.0
-Pygments==2.7.1
+Pygments==2.15.0
 PyMySQL==1.1.1
 pyparsing==2.4.7
 pytest==6.1.1
