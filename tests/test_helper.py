@@ -261,22 +261,28 @@ def book_transactions(request):
         cdty = Commodity(
             namespace=u"BEL20", mnemonic=u"GnuCash Inc.", fullname=u"GnuCash Inc. stock"
         )
+        b.add(cdty)
         asset = Account(
             name="asset", type="ASSET", commodity=curr, parent=b.root_account
         )
+        b.add(asset)
         foreign_asset = Account(
             name="foreign asset",
             type="ASSET",
             commodity=other_curr,
             parent=b.root_account,
         )
+        b.add(foreign_asset)
         stock = Account(name="broker", type="STOCK", commodity=cdty, parent=asset)
+        b.add(stock)
         expense = Account(
             name="exp", type="EXPENSE", commodity=curr, parent=b.root_account
         )
+        b.add(expense)
         income = Account(
             name="inc", type="INCOME", commodity=curr, parent=b.root_account
         )
+        b.add(income)
 
         tr1 = Transaction(
             post_date=date(2015, 10, 21),
@@ -287,6 +293,7 @@ def book_transactions(request):
                 Split(account=income, value=(-1000, 1)),
             ],
         )
+        b.add(tr1)
         tr2 = Transaction(
             post_date=date(2015, 10, 25),
             description="my expense",
@@ -297,6 +304,7 @@ def book_transactions(request):
                 Split(account=expense, value=(80, 1), memo="cost of Y"),
             ],
         )
+        b.add(tr2)
         tr_stock = Transaction(
             post_date=date(2015, 10, 29),
             description="my purchase of stock",
@@ -312,6 +320,7 @@ def book_transactions(request):
                 ),
             ],
         )
+        b.add(tr_stock)
         tr_to_foreign = Transaction(
             post_date=date(2015, 10, 30),
             description="transfer to foreign asset",
@@ -321,6 +330,7 @@ def book_transactions(request):
                 Split(account=foreign_asset, value=(200, 1), quantity=(135, 1)),
             ],
         )
+        b.add(tr_to_foreign)
         tr_from_foreign = Transaction(
             post_date=date(2015, 10, 31),
             description="transfer from foreign asset",
@@ -330,19 +340,20 @@ def book_transactions(request):
                 Split(account=foreign_asset, value=(-135, 1)),
             ],
         )
-        Price(
+        b.add(tr_from_foreign)
+        b.add(Price(
             commodity=cdty,
             currency=other_curr,
             date=date(2015, 11, 1),
             value=(123, 100),
-        )
-        Price(
+        ))
+        b.add(Price(
             commodity=cdty,
             currency=other_curr,
             date=date(2015, 11, 4),
             value=(127, 100),
-        )
-        Price(commodity=cdty, currency=curr, date=date(2015, 11, 2), value=(234, 100))
+        ))
+        b.add(Price(commodity=cdty, currency=curr, date=date(2015, 11, 2), value=(234, 100)))
 
         b.save()
         yield b
