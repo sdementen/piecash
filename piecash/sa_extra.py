@@ -40,14 +40,13 @@ try:
     from sqlalchemy.orm.decl_base import _declarative_constructor
 
     def as_declarative(**kw):
-        bind, metadata, class_registry, constructor = (
-            kw.pop("bind", None),
+        metadata, class_registry, constructor = (
             kw.pop("metadata", None),
             kw.pop("class_registry", None),
             kw.pop("constructor", _declarative_constructor),
         )
 
-        return registry(_bind=bind, metadata=metadata, class_registry=class_registry, constructor=constructor).as_declarative_base(**kw)
+        return registry(metadata=metadata, class_registry=class_registry, constructor=constructor).as_declarative_base(**kw)
 
 except ImportError:
     # `as_declarative` was under `sqlalchemy.ext.declarative` prior to 1.4

@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import datetime
 import os
+import pathlib
 import shutil
 import threading
 from decimal import Decimal
@@ -67,6 +68,15 @@ def use_copied_book(request, template_filename, test_filename, check_same_thread
 
 
 class TestIntegration_ExampleScripts(object):
+
+    @pytest.fixture(autouse=True)
+    def examples_root_folder(self) -> None:
+        """Tests from this class reference the examples folder, so we change to the root folder if not already."""
+        prev_path = Path()
+        os.chdir(Path(__file__).parent.parent)
+        yield None
+        os.chdir(prev_path)
+
     def test_simple_move_split(self):
         run_file("examples/simple_move_split.py")
 

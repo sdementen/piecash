@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from sqlalchemy import Column, VARCHAR, INTEGER, BIGINT, ForeignKey, and_, event
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import composite, relation, foreign
+from sqlalchemy.orm import composite, relationship, foreign
 
 from .._common import hybrid_property_gncnumeric, CallableList
 from .._declbase import DeclarativeBaseGuid
@@ -113,7 +113,7 @@ class Person:
 
     @declared_attr
     def currency(cls):
-        return relation("Commodity")
+        return relationship("Commodity")
 
     # hold the name of the counter to use for id
     _counter_name = None
@@ -149,7 +149,7 @@ class Person:
 
         owner_type = PersonType.get(cls, None)
         if owner_type and not hasattr(cls, "jobs"):
-            cls.jobs = relation('Job',
+            cls.jobs = relationship('Job',
                 primaryjoin=and_(
                     cls.guid == foreign(Job.owner_guid),
                     owner_type == Job.owner_type,
@@ -226,8 +226,8 @@ class Customer(Person, DeclarativeBaseGuid):
     taxtable_guid = Column("taxtable", VARCHAR(length=32), ForeignKey("taxtables.guid"))
 
     # relation definitions
-    taxtable = relation("Taxtable")
-    term = relation("Billterm")
+    taxtable = relationship("Taxtable")
+    term = relationship("Billterm")
 
     def __init__(
         self,
@@ -307,7 +307,7 @@ class Employee(Person, DeclarativeBaseGuid):
     rate = hybrid_property_gncnumeric(_rate_num, _rate_denom)
 
     # relation definitions
-    creditcard_account = relation("Account")
+    creditcard_account = relationship("Account")
 
     def __init__(
         self,
@@ -384,8 +384,8 @@ class Vendor(Person, DeclarativeBaseGuid):
     )
 
     # relation definitions
-    taxtable = relation("Taxtable")
-    term = relation("Billterm")
+    taxtable = relationship("Taxtable")
+    term = relationship("Billterm")
 
     def __init__(
         self,
