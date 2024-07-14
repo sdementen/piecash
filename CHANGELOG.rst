@@ -1,6 +1,17 @@
 What's new
 ==========
 
+Version 1.2.1 (2024-07-14)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- bumping dependencies to fix security issues
+- fix ability to get to TXN from Invoice (and Lot) [Jared Kipe]
+- fix migration to SA1.4 (fix #165) [kapinga]
+- fix ledger export to quote account name in case of special characters (fix #215) [sdementen]
+- fix ledger export to exclude "check commodity" when commodity is not a currency [sdementen]
+- fix python 3.12 support (fix #212) [teeberg]
+- fix yahoo import due to null values (fix #202) [JCPvanHooren]
+
 Version 1.2.0 (2021-10-19)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
