@@ -8,9 +8,6 @@ piecash
 .. image:: https://github.com/sdementen/piecash/workflows/CI/badge.svg
     :target: https://github.com/sdementen/piecash/actions
 
-.. image:: https://ci.appveyor.com/api/projects/status/af7mb3pwv31i6ltv/branch/master?svg=true
-    :target: https://ci.appveyor.com/project/sdementen/piecash
-
 .. image:: https://readthedocs.org/projects/piecash/badge/?version=master
     :target: http://piecash.readthedocs.org
 
@@ -22,9 +19,6 @@ piecash
 
 .. image:: https://img.shields.io/pypi/dd/piecash.svg
     :target: https://pypi.python.org/pypi/piecash/
-
-.. image:: https://requires.io/github/sdementen/piecash/requirements.svg?branch=master
-    :target: https://requires.io/github/sdementen/piecash/requirements/?branch=master
 
 .. image:: https://coveralls.io/repos/sdementen/piecash/badge.svg?branch=master&service=github
     :target: https://coveralls.io/github/sdementen/piecash?branch=master

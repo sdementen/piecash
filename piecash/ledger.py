@@ -1,10 +1,11 @@
 from __future__ import unicode_literals
 
+import json
 import re
 from functools import singledispatch
 from locale import getdefaultlocale
 
-from .core import Transaction, Account, Commodity, Price, Book
+from .core import Account, Book, Commodity, Price, Transaction
 
 """original script from https://github.com/MatzeB/pygnucash/blob/master/gnucash2ledger.py by Matthias Braun matze@braunis.de
  adapted for:
@@ -27,34 +28,34 @@ def ledger(obj, **kwargs):
 
 
 CURRENCY_RE = re.compile("^[A-Z]{3}$")
-NUMBER_RE = re.compile("[0-9., ]")
+NUMBER_RE = re.compile(r"(^|\s+)[-+]?([0-9]*(\.|,)[0-9]+|[0-9]+)($|\s+)")  # regexp to identify a float with blank spaces
+NUMERIC_SPACE = re.compile(r"[0-9\s]")
+CHARS_ONLY = re.compile(r"[A-Za-z]+")
+
+
+def quote_commodity(mnemonic):
+    if not CHARS_ONLY.fullmatch(mnemonic):
+        return json.dumps(mnemonic)
+    else:
+        return mnemonic
 
 
 def format_commodity(mnemonic, locale):
-    if CURRENCY_RE.match(mnemonic):
-        # format the commodity
+    if CURRENCY_RE.match(mnemonic) or True:
+        # format the currency via BABEL if available and then remove the number/amount
         s = format_currency(0, 0, mnemonic, locale)
-
-        # remove the non currency part and real white spaces
         return NUMBER_RE.sub("", s)
     else:
-        if NUMBER_RE.search(mnemonic):
-            return '"{}"'.format(mnemonic)
-        else:
-            return mnemonic
-
-    return NUMBER_RE.sub("", s)
+        # just quote the commodity
+        return quote_commodity(mnemonic)
 
 
-def format_currency(
-    amount, decimals, currency, locale=False, decimal_quantization=True
-):
+def format_currency(amount, decimals, currency, locale=False, decimal_quantization=True):
+    currency = quote_commodity(currency)
     if locale is True:
         locale = getdefaultlocale()[0]
         if BABEL_AVAILABLE is False:
-            raise ValueError(
-                f"You must install babel ('pip install babel') to export to ledger in your locale '{locale}'"
-            )
+            raise ValueError(f"You must install babel ('pip install babel') to export to ledger in your locale '{locale}'")
         else:
             return babel.numbers.format_currency(
                 amount,
@@ -115,11 +116,7 @@ def _(tr, locale=False, **kwargs):
                 )
             )
         else:
-            s.append(
-                format_currency(
-                    split.value, tr.currency.precision, tr.currency.mnemonic, locale
-                )
-            )
+            s.append(format_currency(split.value, tr.currency.precision, tr.currency.mnemonic, locale))
 
         if split.memo:
             s.append(" ;   {:20}".format(split.memo))
@@ -141,7 +138,7 @@ def _(cdty, locale=False, commodity_notes=False, **kwargs):
 
 
 @ledger.register(Account)
-def _(acc, short_account_names=False, **kwargs):
+def _(acc, short_account_names=False, locale=False, **kwargs):
     """Return a ledger-cli alike representation of the account"""
     # ignore "dummy" accounts
     if acc.type is None or acc.parent is None:
@@ -157,9 +154,8 @@ def _(acc, short_account_names=False, **kwargs):
     if acc.description != "":
         res += "\tnote {}\n".format(acc.description)
 
-    res += '\tcheck commodity == "{}"\n'.format(
-        acc.commodity.mnemonic
-    )  # .replace('"', '\\"'))
+    if acc.commodity.is_currency():
+        res += '\tcheck commodity == "{}"\n'.format(format_commodity(acc.commodity.mnemonic,locale))  # .replace('"', '\\"'))
     return res
 
 
@@ -192,18 +188,13 @@ def _(book, **kwargs):
     if kwargs.get("short_account_names"):  # check that no ambiguity in account names
         accounts = [acc.name for acc in book.accounts]
         if len(accounts) != len(set(accounts)):
-            raise ValueError(
-                "You have duplicate short names in your book. "
-                "You cannot use the 'short_account_names' option."
-            )
+            raise ValueError("You have duplicate short names in your book. " "You cannot use the 'short_account_names' option.")
     for acc in book.accounts:
         res.append(ledger(acc, **kwargs))
         res.append("\n")
 
     # Prices
-    for price in sorted(
-        book.prices, key=lambda x: (x.commodity_guid, x.currency_guid, x.date)
-    ):
+    for price in sorted(book.prices, key=lambda x: (x.commodity_guid, x.currency_guid, x.date)):
         res.append(ledger(price, **kwargs))
     res.append("\n")
 

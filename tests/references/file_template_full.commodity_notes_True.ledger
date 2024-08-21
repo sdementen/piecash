@@ -38,7 +38,6 @@ account Asset:Broker
 	check commodity == "AED"
 
 account Asset:Broker:Foo stock
-	check commodity == "FOO"
 
 account Liability
 	check commodity == "EUR"
@@ -56,13 +55,10 @@ account Equity:Opening Balances - EUR
 	check commodity == "EUR"
 
 account Mouvements
-	check commodity == "FOO"
 
 account Mouvements:NASDAQ
-	check commodity == "FOO"
 
 account Mouvements:NASDAQ:FOO
-	check commodity == "FOO"
 
 account Mouvements:CURRENCY
 	check commodity == "EUR"

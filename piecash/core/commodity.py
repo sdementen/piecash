@@ -77,9 +77,7 @@ class Price(DeclarativeBaseGuid):
         foreign_keys=[currency_guid],
     )
 
-    def __init__(
-        self, commodity, currency, date, value, type="unknown", source="user:price"
-    ):
+    def __init__(self, commodity, currency, date, value, type="unknown", source="user:price"):
         self.commodity = commodity
         self.currency = currency
         assert _type(date) is datetime.date
@@ -89,9 +87,7 @@ class Price(DeclarativeBaseGuid):
         self.source = source
 
     def __str__(self):
-        return "Price<{:%Y-%m-%d} : {} {}/{}>".format(
-            self.date, self.value, self.currency.mnemonic, self.commodity.mnemonic
-        )
+        return "Price<{:%Y-%m-%d} : {} {}/{}>".format(self.date, self.value, self.currency.mnemonic, self.commodity.mnemonic)
 
     def object_to_validate(self, change):
         if change[-1] != "deleted":
@@ -159,9 +155,7 @@ class Commodity(DeclarativeBaseGuid):
     def base_currency(self):
         b = self.book
         if b is None:
-            raise GnucashException(
-                "The commodity should be linked to a session to have a 'base_currency'"
-            )
+            raise GnucashException("The commodity should be linked to a session to have a 'base_currency'")
 
         if self.namespace == "CURRENCY":
             # get the base currency as first commodity in DB
@@ -238,6 +232,9 @@ class Commodity(DeclarativeBaseGuid):
     def precision(self):
         return len(str(self.fraction)) - 1
 
+    def is_currency(self):
+        return self.namespace == "CURRENCY"
+
     def currency_conversion(self, currency):
         """
         Return the latest conversion factor to convert self to currency
@@ -253,16 +250,12 @@ class Commodity(DeclarativeBaseGuid):
 
         """
         # conversion is done from self.commodity to commodity (if possible)
-        sc2c = (
-            self.prices.filter_by(currency=currency).order_by(Price.date.desc()).first()
-        )
+        sc2c = self.prices.filter_by(currency=currency).order_by(Price.date.desc()).first()
         if sc2c:
             return sc2c.value
 
         # conversion is done directly from commodity to self.commodity (if possible)
-        c2sc = (
-            currency.prices.filter_by(currency=self).order_by(Price.date.desc()).first()
-        )
+        c2sc = currency.prices.filter_by(currency=self).order_by(Price.date.desc()).first()
         if c2sc:
             return Decimal(1) / c2sc.value
 
@@ -285,9 +278,7 @@ class Commodity(DeclarativeBaseGuid):
         .. todo:: add some frequency to retrieve prices only every X (week, month, ...)
         """
         if self.book is None:
-            raise GncPriceError(
-                "Cannot update price for a commodity not attached to a book"
-            )
+            raise GncPriceError("Cannot update price for a commodity not attached to a book")
 
         # get last_price updated
         last_price = self.prices.order_by(Price.date.desc()).limit(1).first()
@@ -298,7 +289,7 @@ class Commodity(DeclarativeBaseGuid):
         if last_price:
             start_date = max(last_price.date + datetime.timedelta(days=1), start_date)
 
-        if self.namespace == "CURRENCY":
+        if self.is_currency():
             # get reference currency (from book.root_account)
             default_currency = self.base_currency
             if default_currency == self:
@@ -337,8 +328,6 @@ class Commodity(DeclarativeBaseGuid):
     def validate(self):
         # check uniqueness of namespace/mnemonic
         try:
-            self.book.query(Commodity).filter_by(
-                namespace=self.namespace, mnemonic=self.mnemonic
-            ).one()
+            self.book.query(Commodity).filter_by(namespace=self.namespace, mnemonic=self.mnemonic).one()
         except MultipleResultsFound:
             raise ValueError("{} already exists in this book".format(self))

@@ -97,6 +97,8 @@ def download_quote(symbol, date_from, date_to, tz=None):
         raise e  # noqa: F821
 
     csv_data = list(csv.reader(resp.text.strip().split("\n")))
+    for n in csv_data:
+        if n[1:].count('null') == len(n) - 1: csv_data.remove(n)
 
     return [
         yq
@@ -104,7 +106,7 @@ def download_quote(symbol, date_from, date_to, tz=None):
         for yq in [
             YahooQuote(
                 datetime.datetime.strptime(data[0], "%Y-%m-%d").date(),
-                *[Decimal(f) for f in data[1:]]
+                *[(0 if f=='null' else Decimal(f)) for f in data[1:]]
             )
         ]
         if date_from.date() <= yq.date <= date_to.date()

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
-import imp
+import importlib.machinery
+import importlib.util
 import os
 import subprocess
 import sys
@@ -67,21 +68,17 @@ TESTS_DIRECTORY = "tests"
 DATA_DIRECTORY = "gnucash_books"
 PYTEST_FLAGS = ["--doctest-modules"]
 
-# Import metadata. Normally this would just be:
-#
-# from piecash import metadata
-#
-# However, when we do this, we also import `piecash/__init__.py'. If this
-# imports names from some other modules and these modules have third-party
-# dependencies that need installing (which happens after this file is run), the
-# script will crash. What we do instead is to load the metadata module by path
-# instead, effectively side-stepping the dependency problem. Please make sure
-# metadata has no dependencies, otherwise they will need to be added to
-# the setup_requires keyword.
-metadata = imp.load_source("metadata", os.path.join(CODE_DIRECTORY, "metadata.py"))
-
 
 # # Miscellaneous helper functions
+def load_source(modname, filename):
+    loader = importlib.machinery.SourceFileLoader(modname, filename)
+    spec = importlib.util.spec_from_file_location(modname, filename, loader=loader)
+    module = importlib.util.module_from_spec(spec)
+    # The module is always executed and not cached in sys.modules.
+    # Uncomment the following line to cache the module.
+    # sys.modules[module.__name__] = module
+    loader.exec_module(module)
+    return module
 
 
 def get_project_files():
@@ -205,14 +202,14 @@ def _lint():
 
 ## package dependencies
 install_requires = [
-    "SQLAlchemy>=1.0, <1.4",
+    "SQLAlchemy>=1.0, <1.5",
     "SQLAlchemy-Utils!=0.36.8",
     "pytz",
     "tzlocal",
     "click",
 ]
 extras_require = {
-    "postgres": ["psycopg2"],
+    "postgres": ["psycopg2-binary"],
     "mysql": ["PyMySQL[rsa]"],
     "ledger": ["money", "babel"],
     "pandas": ["pandas"],
@@ -222,6 +219,7 @@ extras_require = {
     "doc": [
         "sphinx",
         "sphinxcontrib-programoutput",
+        "sphinx-autobuild",
         "sphinx-rtd-theme",
         "ipython",
     ],
@@ -233,6 +231,21 @@ extras_require["all"] = deps_all = sum(
 # add 'all' for both doc and test
 extras_require["test"].extend(deps_all)
 extras_require["doc"].extend(deps_all)
+
+
+# Import metadata. Normally this would just be:
+#
+# from piecash import metadata
+#
+# However, when we do this, we also import `piecash/__init__.py'. If this
+# imports names from some other modules and these modules have third-party
+# dependencies that need installing (which happens after this file is run), the
+# script will crash. What we do instead is to load the metadata module by path
+# instead, effectively side-stepping the dependency problem. Please make sure
+# metadata has no dependencies, otherwise they will need to be added to
+# the setup_requires keyword.
+metadata = load_source("metadata", os.path.join(CODE_DIRECTORY, "metadata.py"))
+
 
 setup_dict = dict(
     name=metadata.package,
