@@ -12,9 +12,8 @@ from .commodity import Commodity, Price
 from .transaction import Split, Transaction
 from .._common import CallableList, GnucashException
 from .._declbase import DeclarativeBaseGuid
-from ..business.invoice import Invoice
+from ..business.invoice import Invoice, Bill, Expensevoucher
 from ..sa_extra import kvp_attribute
-
 
 class Book(DeclarativeBaseGuid):
     """
@@ -413,6 +412,24 @@ class Book(DeclarativeBaseGuid):
         return CallableList(self.session.query(Invoice))
 
     @property
+    def bills(self):
+        """
+        gives easy access to all commodities in the book through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.core.commodity.Commodity`
+        """
+
+        return CallableList(self.session.query(Bill))
+
+    @property
+    def expensevouchers(self):
+        """
+        gives easy access to all commodities in the book through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.core.commodity.Commodity`
+        """
+
+        return CallableList(self.session.query(Expensevoucher))
+    
+    @property
     def currencies(self):
         """
         gives easy access to all currencies in the book through a :class:`piecash.model_common.CallableList`
@@ -473,12 +490,35 @@ class Book(DeclarativeBaseGuid):
     @property
     def taxtables(self):
         """
-        gives easy access to all commodities in the book through a :class:`piecash.model_common.CallableList`
+        gives easy access to taxtables in the book through a :class:`piecash.model_common.CallableList`
         of :class:`piecash.business.tax.Taxtable`
+        
+        Only retrieves  'parent' taxtables, i.e. taxtables with attribute invisible set to False. 
+        Child taxtables (those with attribute invisible set to True) may be accessed via the parents. 
         """
         from ..business import Taxtable
 
-        return CallableList(self.session.query(Taxtable))
+        return CallableList(self.session.query(Taxtable).filter(Taxtable.invisible==False))
+
+    @property
+    def billterms(self):
+        """
+        gives easy access to all terms in the book through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.business.invoice.Billterm`
+        """
+        from ..business import Billterm
+
+        return CallableList(self.session.query(Billterm))
+    
+    @property
+    def jobs(self):
+        """
+        gives easy access to all jobs in the book through a :class:`piecash.model_common.CallableList`
+        of :class:`piecash.business.invoice.Job`
+        """
+        from ..business import Job
+
+        return CallableList(self.session.query(Job))
 
     @property
     def query(self):
