@@ -602,12 +602,7 @@ class Lot(DeclarativeBaseGuid):
         gains_losses_account = list(self.account["lot-mgmt/gains-acct"].value.values())[0]
 
         # Check that the gains/losses account has the same currency as the transactions
-#        if gains_losses_account and len(self.splits) > 0 and gains_losses_account.commodity != self.splits[0].transaction.currency:
         if gains_losses_account and not all(gains_losses_account.commodity == sp.transaction.currency for sp in self.splits if sp.value != 0):
-            print(f"gains losses account: {gains_losses_account.commodity}")
-            for split in self.splits:
-                print(f"Splits: {split}")
-
             raise ValueError(f"The currency of the provided gains/losses account ({gains_losses_account}) does not match "
                              "the currency of the transactions in the lot. Aborting.")
 
@@ -640,10 +635,6 @@ class Lot(DeclarativeBaseGuid):
                     # Deduct the purchase value from the sales value
                     gain -= val * (qty - excess) / qty
                     quantity += qty - excess
-
-#                print(f"Lot gain: {gain}")
-#                print(split)
-#                print(split)
 
                 # Check that the split that realised a gain/loss hasn't already been 
                 # added to the lot. If not, create a transaction with the gains/losses.
