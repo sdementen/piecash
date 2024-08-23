@@ -281,23 +281,3 @@ class TestAccount_features(object):
 
         assert xyz_account["lot-mgmt/gains-acct/CURRENCY::EUR"].value == new_book.accounts(name="Orphaned Gains-EUR")
         assert xyz_account["lot-mgmt/next-id"].value == 3
-
-# this works
-        import json
-        from sqlalchemy.schema import MetaData
-        meta = MetaData()
-        meta.reflect(bind=new_book.session.bind)  # http://docs.sqlalchemy.org/en/rel_0_9/core/reflection.html
-        result = {}
-
-        for table in meta.sorted_tables:
-            if table.name == "slots":
-#                result[table.name] = [dict(row) for row in new_book.session.execute(table.select())]
-#                result[table.name] = [row for row in new_book.session.execute(table.select())]
-
-                for row in new_book.session.execute(table.select()):
-                    print(row)
-#ok        print(json.dumps(result))
-# end this works
-
-
-        assert 1 == 2

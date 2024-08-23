@@ -633,7 +633,6 @@ class Lot(DeclarativeBaseGuid):
                 # Check that the split that realised a gain/loss hasn't already been 
                 # added to the lot. If not, create a transaction with the gains/losses.
                 if "gains-split" not in split:
-#                if "gains-source" not in split:
                     post_date = split.transaction.post_date
                     memo = "Realised Gain/Loss"
                     currency = split.transaction.currency
@@ -651,9 +650,6 @@ class Lot(DeclarativeBaseGuid):
                     self.book.flush()
                     tr.splits[1]["gains-source"] = split
                     split["gains-split"] = tr.splits[1]
-#                    tr.splits[0]["gains-split"] = split
-#                    split["gains-source"] = tr.splits[0]
-
 
     @validates("splits", "account")
     def check_no_change_if_lot_is_close(self, key, value):
