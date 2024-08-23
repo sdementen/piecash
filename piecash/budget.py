@@ -3,7 +3,7 @@ from __future__ import division
 import uuid
 
 from sqlalchemy import Column, VARCHAR, INTEGER, BIGINT, ForeignKey
-from sqlalchemy.orm import relation, foreign
+from sqlalchemy.orm import relationship, foreign
 
 from ._common import hybrid_property_gncnumeric, Recurrence, CallableList
 from ._declbase import DeclarativeBaseGuid
@@ -38,14 +38,14 @@ class Budget(DeclarativeBaseGuid):
     num_periods = Column("num_periods", INTEGER(), nullable=False)
 
     # # relation definitions
-    recurrence = relation(
+    recurrence = relationship(
         Recurrence,
         primaryjoin=foreign(Recurrence.obj_guid) == guid,
         cascade="all, delete-orphan",
         uselist=False,
     )
 
-    amounts = relation(
+    amounts = relationship(
         "BudgetAmount",
         back_populates="budget",
         cascade="all, delete-orphan",
@@ -86,8 +86,8 @@ class BudgetAmount(DeclarativeBase):
     amount = hybrid_property_gncnumeric(_amount_num, _amount_denom)
 
     # relation definitions
-    account = relation("Account", back_populates="budget_amounts")
-    budget = relation("Budget", back_populates="amounts")
+    account = relationship("Account", back_populates="budget_amounts")
+    budget = relationship("Budget", back_populates="amounts")
 
     def __str__(self):
         return "BudgetAmount<{}={}>".format(self.period_num, self.amount)

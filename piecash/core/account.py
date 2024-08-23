@@ -4,7 +4,7 @@ import uuid
 from enum import Enum
 
 from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER
-from sqlalchemy.orm import relation, validates
+from sqlalchemy.orm import relationship, validates
 
 from .._common import CallableList, GncConversionError
 from .._declbase import DeclarativeBaseGuid
@@ -165,37 +165,37 @@ class Account(DeclarativeBaseGuid):
     )
 
     # relation definitions
-    commodity = relation("Commodity", back_populates="accounts")
-    children = relation(
+    commodity = relationship("Commodity", back_populates="accounts")
+    children = relationship(
         "Account",
         back_populates="parent",
         cascade="all, delete-orphan",
         collection_class=CallableList,
     )
-    parent = relation(
+    parent = relationship(
         "Account",
         back_populates="children",
         remote_side=guid,
     )
-    splits = relation(
+    splits = relationship(
         "Split",
         back_populates="account",
         cascade="all, delete-orphan",
         collection_class=CallableList,
     )
-    lots = relation(
+    lots = relationship(
         "Lot",
         back_populates="account",
         cascade="all, delete-orphan",
         collection_class=CallableList,
     )
-    budget_amounts = relation(
+    budget_amounts = relationship(
         "BudgetAmount",
         back_populates="account",
         cascade="all, delete-orphan",
         collection_class=CallableList,
     )
-    scheduled_transaction = relation(
+    scheduled_transaction = relationship(
         "ScheduledTransaction",
         back_populates="template_account",
         cascade="all, delete-orphan",

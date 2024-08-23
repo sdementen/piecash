@@ -1,6 +1,6 @@
 import uuid
 from sqlalchemy import Column, VARCHAR, BIGINT, INTEGER, ForeignKey
-from sqlalchemy.orm import relation
+from sqlalchemy.orm import relationship
 
 from .._common import hybrid_property_gncnumeric, CallableList
 from .._declbase import DeclarativeBaseGuid, DeclarativeBase
@@ -26,19 +26,19 @@ class Taxtable(DeclarativeBaseGuid):
     parent_guid = Column("parent", VARCHAR(length=32), ForeignKey("taxtables.guid"))
 
     # relation definitions
-    entries = relation(
+    entries = relationship(
         "TaxtableEntry",
         back_populates="taxtable",
         cascade="all, delete-orphan",
         collection_class=CallableList,
     )
-    children = relation(
+    children = relationship(
         "Taxtable",
         back_populates="parent",
         cascade="all, delete-orphan",
         collection_class=CallableList,
     )
-    parent = relation(
+    parent = relationship(
         "Taxtable",
         back_populates="children",
         remote_side=guid,
@@ -79,8 +79,8 @@ class TaxtableEntry(DeclarativeBase):
     type = Column("type", ChoiceType({1: "value", 2: "percentage"}), nullable=False)
 
     # relation definitions
-    taxtable = relation("Taxtable", back_populates="entries")
-    account = relation("Account")
+    taxtable = relationship("Taxtable", back_populates="entries")
+    account = relationship("Account")
 
     def __init__(self, type, amount, account, taxtable=None):
         self.type = type

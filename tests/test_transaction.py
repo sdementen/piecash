@@ -76,6 +76,7 @@ class TestTransaction_create_transaction(object):
                 enter_date=datetime(2014, 1, 1),
                 splits=splits,
             )
+            book_basic.add(tr)
 
         with pytest.raises(GncValidationError):
             tr = Transaction(
@@ -86,6 +87,7 @@ class TestTransaction_create_transaction(object):
                 enter_date=time(10, 59, 00),
                 splits=splits,
             )
+            book_basic.add(tr)
 
         with pytest.raises(GncValidationError):
             tr = Transaction(
@@ -96,6 +98,7 @@ class TestTransaction_create_transaction(object):
                 enter_date=date(2014, 1, 1),
                 splits=splits,
             )
+            book_basic.add(tr)
 
         tr = Transaction(
             currency=EUR,
@@ -105,6 +108,7 @@ class TestTransaction_create_transaction(object):
             enter_date=None,
             splits=splits,
         )
+        book_basic.add(tr)
 
         with pytest.raises(GncImbalanceError):
             book_basic.flush()
@@ -127,13 +131,14 @@ class TestTransaction_create_transaction(object):
                 Split(account=e, value=-10, memo="mémo exp"),
             ],
         )
+        book_basic.add(tr)
         # check issue with balance
         with pytest.raises(GncImbalanceError):
             book_basic.flush()
             book_basic.validate()
 
         # adjust balance
-        Split(account=e, value=-90, memo="missing exp", transaction=tr)
+        book_basic.add(Split(account=e, value=-90, memo="missing exp", transaction=tr))
         book_basic.flush()
 
         # check no issue with str
@@ -168,6 +173,7 @@ class TestTransaction_create_transaction(object):
                 Split(account=s, value=-90, memo="mémo brok"),
             ],
         )
+        book_basic.add(tr)
 
         # check issue with quantity for broker split not defined
         with pytest.raises(GncValidationError):
@@ -187,7 +193,7 @@ class TestTransaction_create_transaction(object):
             book_basic.validate()
 
         # adjust balance
-        Split(account=a, value=-10, memo="missing asset corr", transaction=tr)
+        book_basic.add(Split(account=a, value=-10, memo="missing asset corr", transaction=tr))
         book_basic.save()
         assert str(sb)
         assert str(sb)
@@ -251,6 +257,7 @@ class TestTransaction_create_transaction(object):
                 Split(account=s, value=-100, quantity=-10, memo="mémo brok"),
             ],
         )
+        book_basic.add(tr)
         # raise error as Transaction has a non CURRENCY commodity
         with pytest.raises(GncValidationError):
             book_basic.validate()
@@ -273,6 +280,7 @@ class TestTransaction_create_transaction(object):
                 Split(account=s, value=-100, quantity=-15, memo="mémo brok"),
             ],
         )
+        book_basic.add(tr)
         book_basic.validate()
 
         assert "{}".format(tr) == "Transaction<[EUR] 'buy stock' on 2014-01-02>"
@@ -468,6 +476,7 @@ class TestTransaction_lots(object):
                 Split(account=s, value=-10, quantity=-2, memo="mémo brok", lot=l),
             ],
         )
+        book_basic.add(tr)
 
         with pytest.raises(ValueError):
             book_basic.validate()
