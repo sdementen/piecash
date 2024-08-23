@@ -602,18 +602,29 @@ class Lot(DeclarativeBaseGuid):
         gains_losses_account = list(self.account["lot-mgmt/gains-acct"].value.values())[0]
 
         # Check that the gains/losses account has the same currency as the transactions
-        if gains_losses_account and len(self.splits) > 0 and gains_losses_account.commodity != self.splits[0].transaction.currency:
-            raise ValueError(f"The currency of the provided gains/losses account ({gains_losses_account}) does not match"
+#        if gains_losses_account and len(self.splits) > 0 and gains_losses_account.commodity != self.splits[0].transaction.currency:
+        if gains_losses_account and not all(gains_losses_account.commodity == sp.transaction.currency for sp in self.splits if sp.value != 0):
+            print(f"gains losses account: {gains_losses_account.commodity}")
+            for split in self.splits:
+                print(f"Splits: {split}")
+
+            raise ValueError(f"The currency of the provided gains/losses account ({gains_losses_account}) does not match "
                              "the currency of the transactions in the lot. Aborting.")
 
         # Create an empty queue for holding the opening split, and any following 'buy' splits.
         lst = []
-            
-        for split in self.splits:
-            if split.quantity * self.splits[0].quantity > 0:
+
+        # Get splits that are not assigned to a lot and not void.
+        splits = [split for split in self.splits if split.quantity != 0 and split.reconcile_state != "v"]
+
+        # Sort the splits by transaction post_date ascending
+        splits.sort(key=lambda sp: sp.transaction.post_date)
+
+        for split in splits:
+            if split.quantity * splits[0].quantity > 0:
                 # if same sign as opening split, add (value, quantity) tuple to queue
                 lst.append((split.value, split.quantity))
-            elif split.quantity != 0:
+            else:
                 # if different sign, gains/losses were realised
                 quantity = split.quantity
                 gain = -split.value
@@ -629,10 +640,14 @@ class Lot(DeclarativeBaseGuid):
                     # Deduct the purchase value from the sales value
                     gain -= val * (qty - excess) / qty
                     quantity += qty - excess
-                    
+
+#                print(f"Lot gain: {gain}")
+#                print(split)
+#                print(split)
+
                 # Check that the split that realised a gain/loss hasn't already been 
                 # added to the lot. If not, create a transaction with the gains/losses.
-                if "gains-split" not in split:
+                if gain != 0 and "gains-split" not in split:
                     post_date = split.transaction.post_date
                     memo = "Realised Gain/Loss"
                     currency = split.transaction.currency
