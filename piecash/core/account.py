@@ -1,11 +1,13 @@
 from __future__ import unicode_literals
 
+import datetime
 import uuid
 from enum import Enum
 
 from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER
 from sqlalchemy.orm import relation, validates
 
+from .transaction import Lot, Split, Transaction
 from .._common import CallableList, GncConversionError
 from .._declbase import DeclarativeBaseGuid
 from ..sa_extra import mapped_to_slot_property
@@ -53,6 +55,10 @@ assetliab_types = asset_types | liability_types
 # types according to the sign of their balance
 positive_types = asset_types | expense_types | trading_types
 negative_types = liability_types | income_types | equity_types
+
+# Accounting policy 
+class AccountingPolicy(Enum):
+    FIFO = "FIFOc"
 
 
 def _is_parent_child_types_consistent(type_parent, type_child, control_mode):
@@ -356,6 +362,151 @@ class Account(DeclarativeBaseGuid):
             return balance * self.sign
         else:
             return balance
+
+    def get_lot_by_policy(self, policy, split):
+        """
+        Get the appropriate lot for the split given the policy.
+
+        Attributes:
+            policy (AccountingPolicy): the policy to be used pairing split with lot
+            split (Split): split
+        
+        Returns:
+            lot (Lot)
+        """
+        lot = None
+
+        if policy == AccountingPolicy.FIFO:
+            # Get the open lots
+            lots = [lot for lot in self.lots if lot.is_closed == 0 and lot.quantity != 0]
+            
+            # Sort lots my the earliest split's transaction post_date ascending in each lot
+            lots.sort(key=lambda lot: min(sp.transaction.post_date for sp in lot.splits))
+
+            # Some checks on the lot before returning it.
+            while lots:
+                # Optimistically assume the first one will work.
+                lot = lots.pop(0)
+
+                # Check the lot's splits' transaction currency matches the split's currency
+                # and that the split will bring the lot's quantity closer to zero.
+                if not all(split.transaction.currency == sp.transaction.currency for sp in lot.splits) or \
+                    lot.quantity * split.quantity > 0:
+                    lot = None
+                else:
+                    break
+        else:
+            # Requested policy not supported
+            policies = []
+            for plcy in AccountingPolicy:
+                policies.append(plcy.value)
+
+            raise ValueError(f"Policy {policy} is not supported. Supported policies are {policies}.")
+ 
+        return lot
+
+    def _assign_lot_id(self):
+        # Check if slot for next lot id exists, else create it
+        if "lot-mgmt" not in self:
+            self["lot-mgmt/next-id"] = 0
+
+        # get current value
+        id = self["lot-mgmt/next-id"].value
+
+        # increment
+        self["lot-mgmt/next-id"].value +=1
+        return id
+
+    def _create_orphaned_gains_account(self, lot):
+        """Create account for gains/losses."""
+        # Check that there is at least one split in this lot so we can get the transaction's currency.
+        account = None
+        if len(lot.splits) > 0:
+            currency = lot.splits[0].transaction.currency
+            account_name = "Orphaned Gains-" + currency.mnemonic
+
+            # Check if a suitable orphan account already exists; create one otherwise.
+            try:
+                account = self.book.root_account.children(name=account_name)
+            except KeyError:
+                account = Account(name=account_name,
+                                  type="ASSET",
+                                  parent=self.book.root_account,
+                                  commodity=currency,
+                                  placeholder=False,
+                                  description="Realised Gain/Loss",
+                                 )
+
+                # Set gains-account slots
+                self.book.flush()
+                account["notes"] = ("Realised Gains or Losses from Commodity or Trading " 
+                                    + "Accounts that haven't been recorded elsewhere.")
+        return account
+
+    def _set_lot_gains_account(self, lot, gains_losses_account=None):
+        """Set, or if necessary create, account for gains/losses."""
+        if not gains_losses_account:
+            gains_losses_account = self._create_orphaned_gains_account(lot)
+
+        # Set account slots
+        if gains_losses_account:
+            currency = gains_losses_account.commodity
+            self["lot-mgmt/gains-acct/"+currency.namespace+"::"+currency.mnemonic] = gains_losses_account
+
+    def scrub_account(self, gains_losses_account=None, policy=AccountingPolicy.FIFO):
+        """
+        Organize 'buy' and 'sell' splits into lots.
+        Closed lots are not touched, and existing lots (if any) are updated with new splits - no
+        attempt is made to fix any inconsistencies in any existing lots.
+
+        Splits in the history of the stock are not handled.
+
+        For each split not already associated with a lot:
+            * Check if a lot exists where split may be added
+                * Sub-split the split if required
+            * If not, create a new lot and add split to lot
+
+        Attributes:
+            gains_losses_account (Account, optional): the income account where gains and losses are to be recorded.
+                If not provided, an Orphaned Gains account is created.
+            policy (AccountingPolicy, default FIFO): the accounting policy used to pair splits in lots.
+        
+        Returns:
+            None
+        """
+        # Get splits that are not assigned to a lot and not void.
+        splits = [split for split in self.splits if split.lot is None and split.reconcile_state != "v"]
+
+        # Sort the splits by transaction post_date ascending
+        splits.sort(key=lambda sp: sp.transaction.post_date)
+
+        # Process the splits
+        while splits:
+            split = splits.pop(0)
+
+            # Get lot according to policy
+            lot = self.get_lot_by_policy(policy, split)
+
+            # If suitable lot not found, create a new one
+            if not lot:
+                lot_id = self._assign_lot_id()
+                lot = Lot(title="Lot " + str(lot_id), account=self, notes="", splits=[split], is_closed=0)
+
+            # Add the split to the lot; stick any excess back into the queue.
+            s = lot.add_split(split)
+            if s:
+                splits.insert(0, s)
+
+        for lot in self.lots:
+            self._set_lot_gains_account(lot, gains_losses_account)
+
+            lot.scrub_lot()
+
+            # Check if this closed the lot; if so close.
+            if lot.quantity == 0:
+                lot.is_closed = 1
+            
+        self.book.flush()
 
     @property
     def sign(self):
