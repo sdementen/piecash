@@ -5,6 +5,8 @@ Accessing the accounts (:class:`piecash.core.account.Account`):
 
 .. ipython:: python
 
+    from piecash import open_book
+
     book = open_book(gnucash_books + "simple_sample.gnucash", open_if_lock=True)
 
     # accessing the root_account

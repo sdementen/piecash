@@ -5,6 +5,8 @@ You can find examples of programs/scripts (loosely based on the scripts for the
 official python bindings for gnucash or on
 questions posted on the mailing list) in the examples subfolder.
 
+.. note::  Examples will run from `./examples/` folder
+
 Creating and opening gnucash files
 ----------------------------------
 .. literalinclude:: ../../../examples/simple_session.py
