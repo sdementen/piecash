@@ -65,4 +65,4 @@ urllib3==1.26.19
 virtualenv==20.0.35
 virtualenv-clone==0.5.4
 wcwidth==0.2.5
-zipp==3.3.1
+zipp==3.19.1
