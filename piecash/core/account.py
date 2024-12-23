@@ -329,7 +329,7 @@ class Account(DeclarativeBaseGuid):
                 ]
             )
 
-        if commodity != self.commodity:
+        if balance and commodity != self.commodity:
             try:
                 # conversion is done directly from self.commodity to commodity (if possible)
                 factor = self.commodity.currency_conversion(commodity)
