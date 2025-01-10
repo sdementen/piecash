@@ -41,29 +41,34 @@ The object model
 
     .. ipython::
 
-        In [1]: book = open_book(gnucash_books + "default_book.gnucash")
+        from piecash import open_book
 
-        In [1]: book.root_account # accessing the root_account
+        book = open_book(gnucash_books + "default_book.gnucash")
 
-        In [1]: # looping through the children accounts of the root_account
-           ...: for acc in book.root_account.children:
-           ...:     print(acc)
+        book.root_account # accessing the root_account
+
+        # looping through the children accounts of the root_account
+        for acc in book.root_account.children:
+            print(acc)
 
         # accessing children accounts
-        In [1]:
-           ...: root = book.root_account              # select the root_account
-           ...: assets = root.children(name="Assets")   # select child account by name
-           ...: cur_assets = assets.children[0]         # select child account by index
-           ...: cash = cur_assets.children(type="CASH") # select child account by type
-           ...: print(cash)
+        # select the root_account
+        root = book.root_account
+        # select child account by name
+        assets = root.children(name="Assets")
+        # select child account by index
+        cur_assets = assets.children[0]
+        # select child account by type
+        cash = cur_assets.children(type="CASH")
+        print(cash)
 
-        In [1]: # get the commodity of an account
-           ...: commo = cash.commodity
-           ...: print(commo)
+        # get the commodity of an account
+        commo = cash.commodity
+        print(commo)
 
-        In [1]: # get first ten accounts linked to the commodity commo
-           ...: for acc in commo.accounts[:10]:
-           ...:     print(acc)
+        # get first ten accounts linked to the commodity commo
+        for acc in commo.accounts[:10]:
+            print(acc)
 
 
 The "table" access
@@ -71,6 +76,8 @@ The "table" access
     In this mode, we access elements through collections directly accessible from the book:
 
     .. ipython:: python
+
+        from piecash import open_book
 
         book = open_book(gnucash_books + "default_book.gnucash")
 
