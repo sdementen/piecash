@@ -46,6 +46,8 @@ class TestCommodity_create_commodity(object):
         cdty2 = Commodity(
             namespace="AMEX", mnemonic="APPLE", fullname="Apple", book=book_basic
         )
+        book_basic.add(cdty1)
+        book_basic.add(cdty2)
 
         with pytest.raises(ValueError):
             book_basic.save()
@@ -54,6 +56,7 @@ class TestCommodity_create_commodity(object):
         cdty = Commodity(
             namespace="AMEX", mnemonic="APPLE", fullname="Apple", book=book_basic
         )
+        book_basic.add(cdty)
 
         with pytest.raises(GnucashException):
             cdty.base_currency
@@ -89,6 +92,7 @@ class TestCommodity_create_prices(object):
             date=date(2014, 2, 22),
             value=Decimal("0.54321"),
         )
+        book_basic.add(p)
         book_basic.flush()
 
         # check price exist
@@ -102,6 +106,7 @@ class TestCommodity_create_prices(object):
             date=date(2014, 2, 21),
             value=Decimal("0.12345"),
         )
+        book_basic.add(p2)
         book_basic.flush()
         assert p.value + p2.value == Decimal("0.66666")
         assert len(USD.prices.all()) == 2
@@ -121,6 +126,8 @@ class TestCommodity_create_prices(object):
             date=date(2014, 2, 22),
             value=Decimal("0.12345"),
         )
+        book_basic.add(p)
+        book_basic.add(p1)
 
         book_basic.flush()
         assert USD.prices.filter_by(value=Decimal("0")).all() == []
@@ -146,6 +153,8 @@ class TestCommodity_create_prices(object):
             value=Decimal("0.12345"),
             source="other:price",
         )
+        book_basic.add(p)
+        book_basic.add(p1)
 
         book_basic.flush()
         assert USD.prices.filter_by(value=Decimal("0")).all() == []

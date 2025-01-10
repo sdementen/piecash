@@ -2,7 +2,7 @@ import uuid
 
 from sqlalchemy import Column, VARCHAR, event
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import relation, foreign, object_session
+from sqlalchemy.orm import relationship, foreign, object_session
 
 from ._common import CallableList
 from .kvp import DictWrapper, Slot
@@ -23,7 +23,7 @@ class DeclarativeBaseGuid(DictWrapper, DeclarativeBase):
 
     @declared_attr
     def slots(cls):
-        rel = relation(
+        rel = relationship(
             "Slot",
             primaryjoin=foreign(Slot.obj_guid) == cls.guid,
             cascade="all, delete-orphan",

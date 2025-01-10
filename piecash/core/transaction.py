@@ -4,7 +4,7 @@ from collections import defaultdict
 from decimal import Decimal
 
 from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, INTEGER, Index
-from sqlalchemy.orm import relation, validates, foreign
+from sqlalchemy.orm import relationship, validates, foreign
 from sqlalchemy.orm.base import NEVER_SET
 
 from .._common import CallableList, GncImbalanceError
@@ -74,9 +74,9 @@ class Split(DeclarativeBaseGuid):
     lot_guid = Column("lot_guid", VARCHAR(length=32), ForeignKey("lots.guid"))
 
     # relation definitions
-    account = relation("Account", back_populates="splits")
-    lot = relation("Lot", back_populates="splits")
-    transaction = relation(
+    account = relationship("Account", back_populates="splits")
+    lot = relationship("Lot", back_populates="splits")
+    transaction = relationship(
         "Transaction", back_populates="splits", cascade="refresh-expire"
     )
 
@@ -199,6 +199,7 @@ class Split(DeclarativeBaseGuid):
                     type="transaction",
                     source="user:split-register",
                 )
+                self.book.add(pr)
 
             # and an action if not yet defined
             if self.action == "":
@@ -258,11 +259,11 @@ class Transaction(DeclarativeBaseGuid):
     )
 
     # relation definitions
-    currency = relation(
+    currency = relationship(
         "Commodity",
         back_populates="transactions",
     )
-    splits = relation(
+    splits = relationship(
         "Split",
         back_populates="transaction",
         cascade="all, delete-orphan",
@@ -464,8 +465,8 @@ class ScheduledTransaction(DeclarativeBaseGuid):
     )
 
     # relation definitions
-    template_account = relation("Account")
-    recurrence = relation(
+    template_account = relationship("Account")
+    recurrence = relationship(
         "Recurrence",
         primaryjoin=guid == foreign(Recurrence.obj_guid),
         cascade="all, delete-orphan",
@@ -501,11 +502,11 @@ class Lot(DeclarativeBaseGuid):
     notes = pure_slot_property("notes")
 
     # relation definitions
-    account = relation(
+    account = relationship(
         "Account",
         back_populates="lots",
     )
-    splits = relation(
+    splits = relationship(
         "Split",
         back_populates="lot",
         collection_class=CallableList,

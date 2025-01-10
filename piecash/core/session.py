@@ -417,6 +417,7 @@ def open_book(
     # backup database if readonly=False and do_backup=True
     if not readonly and do_backup:
         if engine.name != "sqlite":
+            engine.dispose()
             raise GnucashException(
                 "Cannot do a backup for engine '{}'. Do yourself a backup and then specify do_backup=False".format(
                     engine.name
@@ -428,7 +429,8 @@ def open_book(
 
         shutil.copyfile(url, url_backup)
 
-    locks = list(engine.execute(gnclock.select()))
+    with engine.connect() as conn:
+        locks = list(conn.execute(gnclock.select()))
 
     # ensure the file is not locked by GnuCash itself
     if locks and not open_if_lock:
@@ -446,6 +448,7 @@ def open_book(
         if version_book == {k: v for k, v in vt.items() if "Gnucash" not in k}:
             break
     else:
+        engine.dispose()
         raise ValueError("Unsupported table versions")
     assert version == "3.0" or version == "3.7" or version == "4.1", (
         "This version of piecash only support books from gnucash (3.0|3.7|4.1) "
@@ -488,9 +491,8 @@ def adapt_session(session, book, readonly):
     # add logic to create/delete GnuCash locks
     def delete_lock():
         session.execute(
-            gnclock.delete(
-                whereclause=(gnclock.c.hostname == socket.gethostname())
-                and (gnclock.c.pid == os.getpid())
+            gnclock.delete().where(
+                (gnclock.c.hostname == socket.gethostname()) and (gnclock.c.pid == os.getpid())
             )
         )
         session.commit()
@@ -499,7 +501,7 @@ def adapt_session(session, book, readonly):
 
     def create_lock():
         session.execute(
-            gnclock.insert(values=dict(hostname=socket.gethostname(), pid=os.getpid()))
+            gnclock.insert().values(dict(hostname=socket.gethostname(), pid=os.getpid()))
         )
         session.commit()
 

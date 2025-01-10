@@ -109,7 +109,7 @@ class TestFactoriesTransactions(object):
     def test_single_transaction(self, book_basic):
         today = datetime.today()
         print("today=", today)
-        factories.single_transaction(
+        tx = factories.single_transaction(
             today.date(),
             today,
             "my test",
@@ -117,6 +117,7 @@ class TestFactoriesTransactions(object):
             from_account=book_basic.accounts(name="inc"),
             to_account=book_basic.accounts(name="asset"),
         )
+        book_basic.add(tx)
         book_basic.save()
         tr = book_basic.transactions(description="my test")
         assert len(tr.splits) == 2
@@ -143,6 +144,7 @@ class TestFactoriesTransactions(object):
             from_account=book_basic.accounts(name="inc"),
             to_account=book_basic.accounts(name="asset"),
         )
+        book_basic.add(tr)
         book_basic.save()
         tr = book_basic.transactions(description="my test")
         assert tr.post_date == today.date()
@@ -150,7 +152,7 @@ class TestFactoriesTransactions(object):
 
     def test_single_transaction_rollback(self, book_basic):
         today = pytz.timezone(str(tzlocal.get_localzone())).localize(datetime.today())
-        factories.single_transaction(
+        tx = factories.single_transaction(
             today.date(),
             today,
             "my test",
@@ -158,6 +160,7 @@ class TestFactoriesTransactions(object):
             from_account=book_basic.accounts(name="inc"),
             to_account=book_basic.accounts(name="asset"),
         )
+        book_basic.add(tx)
         book_basic.validate()
         assert len(book_basic.transactions) == 1
         book_basic.cancel()
