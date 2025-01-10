@@ -30,7 +30,7 @@ from .core import (
     factories,
 )
 from .business import Vendor, Customer, Employee, Address
-from .business import Invoice, Job
+from .business import Invoice, Job, Bill, Expensevoucher
 from .business import Taxtable, TaxtableEntry
 from .budget import Budget, BudgetAmount
 from .kvp import slot

@@ -327,7 +327,7 @@ class SlotGUID(SlotFrame):
     _mapping_name_class = {
         "from-sched-xaction": "piecash.core.transaction.ScheduledTransaction",
         "account": "piecash.core.account.Account",
-        "invoice-guid": "piecash.business.invoice.Invoice",
+        "invoice-guid": "piecash.business.invoice.InvoiceBase",
         "peer_guid": "piecash.core.transaction.Split",
         "gains-split": "piecash.core.transaction.Split",
         "gains-source": "piecash.core.transaction.Split",
