@@ -1,62 +1,56 @@
 import csv
 from pathlib import Path
+from piecash import open_book, GnucashException
 
-from piecash import open_book
+fields = ["Date", "Number", "Description", "Amount", "Balance", "Account", "Entity"]
 
-fields = [
-    "DATE",
-    "TRANSACTION VALUE",
-    "DEBIT/CREDIT INDICATOR",
-    "ACCOUNT",
-    "ACCOUNT CODE",
-    "CONTRA ACCOUNT",
-    "CONTRA ACCOUNT CODE",
-    "ENTRY TEXT",
-]
-
-GNUCASH_BOOK = "../gnucash_books/simple_sample.gnucash"
-CSV_EXPORT = "export.csv"
-REPORTING_YEAR = 2019
+GNUCASH_BOOK = "../gnucash_books/simple_csv.gnucash"
+CSV_EXPORT = "demo.csv"
+REPORTING_YEAR = 2006
 
 # open the book and the export file
-with open_book(GNUCASH_BOOK, readonly=True, open_if_lock=True) as mybook, Path(
-    CSV_EXPORT
-).open("w", newline="") as f:
-    # initialise the CSV writer
-    csv_writer = csv.DictWriter(f, fieldnames=fields)
-    csv_writer.writeheader()
+with open_book(GNUCASH_BOOK, readonly=True, open_if_lock=True) as book:
+    try:
+        with Path(CSV_EXPORT).open("w", newline="") as f:
+            try:
+                # initialise the CSV writer
+                csv_writer = csv.DictWriter(f, fieldnames=fields)
+                csv_writer.writeheader()
 
-    # iterate on all the transactions in the book
-    for transaction in mybook.transactions:
-        # filter transactions not in REPORTING_YEAR
-        if transaction.post_date.year != REPORTING_YEAR:
-            continue
+                # iterate on all the transactions in the book
+                for transaction in book.transactions:
+                    # filter transactions not in REPORTING_YEAR
+                    if transaction.post_date.year != REPORTING_YEAR:
+                        continue
 
-        # handle only transactions with 2 splits
-        if len(transaction.splits) != 2:
-            print(
-                f"skipping transaction {transaction} as it has more"
-                f" than 2 splits in the transaction, dunno what to export to CSV"
-            )
-            continue
+                    # strip transfer account names for multisplits
+                    if len(transaction.splits) == 2:
+                        # assign the two splits of the transaction
+                        split_one, split_two = transaction.splits
+                        transfer_account = split_two.account.fullname
+                    else:
+                        transfer_account = ""
 
-        # assign the two splits of the transaction
-        split_one, split_two = transaction.splits
-        # build the dictionary with the data of the transaction
-        data = dict(
-            zip(
-                fields,
-                [
-                    transaction.post_date,
-                    split_one.value,
-                    split_one.is_debit,
-                    split_one.account.name,
-                    split_one.account.code,
-                    split_two.account.name,
-                    split_two.account.code,
-                    transaction.description,
-                ],
-            )
-        )
-        # write the transaction to the CSV
-        csv_writer.writerow(data)
+                    # build the dictionary with the data of the transaction
+                    data = dict(
+                        zip(
+                            fields,
+                            [
+                                transaction.post_date.strftime("%d/%m/%y"),
+                                transaction.num,
+                                transaction.notes,
+                                split_one.value,
+                                split_one.account.get_balance(),
+                                transfer_account,
+                                transaction.description,
+                            ],
+                        )
+                    )
+                    # write the transaction to the CSV
+                    csv_writer.writerow(data)
+
+            except PermissionError:
+                print("Unexpected error")
+
+    except PermissionError:
+        print("File PermissionError:", Path(CSV_EXPORT))

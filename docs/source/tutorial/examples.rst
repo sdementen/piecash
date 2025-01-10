@@ -33,6 +33,10 @@ Create a book with some accounts and add a transaction
 ------------------------------------------------------
 .. literalinclude:: ../../../examples/simple_book_transaction_creation.py
 
+Import transactions from a CSV file
+---------------------------------
+.. literalinclude:: ../../../examples/simple_csv_book_creation.py
+
 Export transactions to a CSV file
 ---------------------------------
 .. literalinclude:: ../../../examples/simple_export_transaction_csv.py
