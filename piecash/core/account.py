@@ -295,7 +295,7 @@ class Account(DeclarativeBaseGuid):
             return ""
 
     def get_balance(
-        self, recurse=True, commodity=None, natural_sign=True, at_date=None
+        self, recurse=True, commodity=None, natural_sign=True, at_date=None, use_historical=False, closest_conv_cache=None
     ):
         """
         Returns the balance of the account (including its children accounts if recurse=True)
@@ -311,6 +311,9 @@ class Account(DeclarativeBaseGuid):
             commodity (:class:`piecash.core.commodity.Commodity`): the currency into which to get the balance (default to None, i.e. the currency of the account)
             natural_sign (bool, optional): True if the balance sign is reversed for accounts of type {'LIABILITY', 'PAYABLE', 'CREDIT', 'INCOME', 'EQUITY'} (default to True)
             at_date (:class:`datetime.datetime`): the sum() balance of the account at a given date based on transaction post date
+            use_historical (bool, optional): if True, the balance will be based on the historical commodity price that is closest in time to the given date.
+            closest_conv_cache (dict, optional): an internal cache of closest-in-time commodity prices. Keys are commodity pairs (as tuples); values are dicts mapping dates to proces.
+            Used internally where recurse and use_historical are both True. Should not generally be explicitly provided in external calls.
 
         Returns:
             the balance of the account
@@ -332,12 +335,22 @@ class Account(DeclarativeBaseGuid):
         if balance and commodity != self.commodity:
             try:
                 # conversion is done directly from self.commodity to commodity (if possible)
-                factor = self.commodity.currency_conversion(commodity)
+                if (at_date is not None) and use_historical:
+                    if closest_conv_cache is None:
+                        closest_conv_cache = {}
+                    factor = self.commodity.currency_conversion_on_date(commodity, at_date, closest_conv_cache)
+                else:
+                    factor = self.commodity.currency_conversion(commodity)
                 balance = balance * factor
             except GncConversionError:
                 # conversion is done from self.commodity to self.parent.commodity and then to commodity
-                factor1 = self.commodity.currency_conversion(self.parent.commodity)
-                factor2 = self.parent.commodity.currency_conversion(commodity)
+                if (at_date is not None) and use_historical:
+                    factor1 = self.commodity.currency_conversion_on_date(self.parent.commodity, at_date,
+                                                                         closest_conv_cache)
+                    factor2 = self.parent.commodity.currency_conversion_on_date(commodity, at_date, closest_conv_cache)
+                else:
+                    factor1 = self.commodity.currency_conversion(self.parent.commodity)
+                    factor2 = self.parent.commodity.currency_conversion(commodity)
                 factor = factor1 * factor2
                 balance = balance * factor
 
@@ -348,6 +361,8 @@ class Account(DeclarativeBaseGuid):
                     commodity=commodity,
                     natural_sign=False,
                     at_date=at_date,
+                    use_historical=use_historical,
+                    closest_conv_cache=closest_conv_cache
                 )
                 for acc in self.children
             )
