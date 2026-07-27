@@ -1,3 +1,8 @@
+# ⚠️ Notice: Project Moved
+This repository is no longer maintained here. Development has moved to the active fork maintained by @gorf. 
+Please submit all future issues, pull requests, and downloads to: **[piecash](https://github.com/gorf/piecash)**.
+
+
 piecash
 =======
 
