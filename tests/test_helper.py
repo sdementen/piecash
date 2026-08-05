@@ -4,6 +4,9 @@ from datetime import date
 from pathlib import PurePath, Path
 
 import pytest
+from sqlalchemy import create_engine, text
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.engine.url import make_url
 from sqlalchemy_utils import database_exists, drop_database
 
 from piecash import (
@@ -41,6 +44,46 @@ def run_file(fname):
     with open(fname) as f:
         code = compile(f.read(), fname, "exec")
         exec(code, {})
+
+
+def _terminate_pg_connections(url, database):
+    """Terminate all connections to a PostgreSQL database (for DROP DATABASE)."""
+    from sqlalchemy_utils.functions.database import _set_url_database
+    url_obj = make_url(url)
+    if url_obj.get_dialect().name != "postgresql":
+        return
+    admin_url = _set_url_database(url_obj, database="postgres")
+    engine = create_engine(admin_url, isolation_level="AUTOCOMMIT")
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(
+                "SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
+                "WHERE datname = :db AND pid <> pg_backend_pid()"
+            ), {"db": database})
+    finally:
+        engine.dispose()
+
+
+def safe_drop_database(url):
+    """Drop database, terminating PostgreSQL connections first if needed."""
+    if not url or not database_exists(url):
+        return
+    try:
+        url_obj = make_url(url)
+    except Exception:
+        url_obj = None
+    if url_obj and url_obj.get_dialect().name == "postgresql":
+        try:
+            drop_database(url)
+        except OperationalError as e:
+            if "ObjectInUse" in str(e) or "being accessed" in str(e).lower():
+                _terminate_pg_connections(url, url_obj.database)
+                drop_database(url)
+            else:
+                raise
+    else:
+        drop_database(url)
+
 
 
 db_sqlite = test_folder / "foozbar.sqlite"
@@ -174,12 +217,12 @@ def book_db_config(request):
     name = build_uri(**db_config)
 
     if sql_backend != "sqlite_in_mem" and database_exists(name):
-        drop_database(name)
+        safe_drop_database(name)
 
     yield db_config
 
     if sql_backend != "sqlite_in_mem" and database_exists(name):
-        drop_database(name)
+        safe_drop_database(name)
 
 
 @pytest.fixture(params=databases_to_check[1:])
@@ -187,11 +230,11 @@ def book_uri(request):
     name = request.param
 
     if name and database_exists(name):
-        drop_database(name)
+        safe_drop_database(name)
     yield name
 
     if name and database_exists(name):
-        drop_database(name)
+        safe_drop_database(name)
 
 
 @pytest.fixture(params=databases_to_check)
@@ -199,13 +242,13 @@ def new_book(request):
     name = request.param
 
     if name and database_exists(name):
-        drop_database(name)
+        safe_drop_database(name)
 
     with create_book(uri_conn=name, keep_foreign_keys=False) as b:
         yield b
 
     if name and database_exists(name):
-        drop_database(name)
+        safe_drop_database(name)
 
 
 @pytest.fixture(params=databases_to_check)
@@ -213,13 +256,13 @@ def new_book_USD(request):
     name = request.param
 
     if name and database_exists(name):
-        drop_database(name)
+        safe_drop_database(name)
 
     with create_book(uri_conn=name, currency="USD", keep_foreign_keys=False) as b:
         yield b
 
     if name and database_exists(name):
-        drop_database(name)
+        safe_drop_database(name)
 
 
 @pytest.fixture(params=databases_to_check)
@@ -227,7 +270,7 @@ def book_basic(request):
     name = request.param
 
     if name and database_exists(name):
-        drop_database(name)
+        safe_drop_database(name)
     # create new book
     with create_book(uri_conn=name, currency="EUR", keep_foreign_keys=False) as b:
         # create some accounts
@@ -244,7 +287,7 @@ def book_basic(request):
         yield b
 
     if name and database_exists(name):
-        drop_database(name)
+        safe_drop_database(name)
 
 
 @pytest.fixture(params=databases_to_check)
@@ -252,7 +295,7 @@ def book_transactions(request):
     name = request.param
 
     if name and database_exists(name):
-        drop_database(name)
+        safe_drop_database(name)
     # create new book
     with create_book(uri_conn=name, currency="EUR", keep_foreign_keys=False) as b:
         # create some accounts
@@ -348,7 +391,7 @@ def book_transactions(request):
         yield b
 
     if name and database_exists(name):
-        drop_database(name)
+        safe_drop_database(name)
 
 
 @pytest.fixture()

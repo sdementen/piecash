@@ -1,6 +1,12 @@
 What's new
 ==========
 
+Version 1.2.2 (unreleased)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- warn and allow inferring default currency when root account has none (fix #251; GnuCash-compatible fallback via first top-level INCOME)
+- splits_df: tolerate splits with missing account instead of crashing (fix #211)
+
 Version 1.2.1 (2024-07-14)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 

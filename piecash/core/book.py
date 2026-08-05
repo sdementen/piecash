@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import Counter, defaultdict
 from operator import attrgetter
 
 from sqlalchemy import Column, VARCHAR, ForeignKey, inspect
@@ -14,6 +14,21 @@ from .._common import CallableList, GnucashException
 from .._declbase import DeclarativeBaseGuid
 from ..business.invoice import Invoice
 from ..sa_extra import kvp_attribute
+
+
+def _safe_attrgetter(field):
+    """Like operator.attrgetter, but return None if any intermediate attribute is None."""
+
+    parts = field.split(".")
+
+    def getter(obj):
+        for part in parts:
+            if obj is None:
+                return None
+            obj = getattr(obj, part, None)
+        return obj
+
+    return getter
 
 
 class Book(DeclarativeBaseGuid):
@@ -175,13 +190,73 @@ class Book(DeclarativeBaseGuid):
 
     @property
     def default_currency(self):
-        return self.root_account.commodity
+        commodity = self.root_account.commodity
+        if commodity is not None:
+            return commodity
+        # Non-mutating fallback for old books / XML-to-SQL conversions (issue #251)
+        # Aligns with GnuCash find_root_currency() in libgnucash/engine/Scrub.cpp
+        return self._find_root_currency()
 
     @default_currency.setter
     def default_currency(self, value):
         assert isinstance(value, Commodity) and value.namespace == "CURRENCY"
 
         self.root_account.commodity = value
+
+    def _find_root_currency(self):
+        """
+        Infer book currency the way GnuCash does (find_root_currency in Scrub.cpp):
+
+        1. Prefer the commodity of the first top-level INCOME account
+        2. Else fall back to the most common CURRENCY among accounts
+        3. Else any CURRENCY commodity in the book
+
+        Does not mutate the book.
+        """
+        # GnuCash: first top-level INCOME child of root
+        for child in self.root_account.children:
+            if child.type == "INCOME" and child.commodity is not None:
+                if child.commodity.namespace == "CURRENCY":
+                    return child.commodity
+
+        counts = Counter()
+        by_mnemonic = {}
+        for acc in self.session.query(Account).all():
+            cdty = acc.commodity
+            if cdty is not None and cdty.namespace == "CURRENCY":
+                counts[cdty.mnemonic] += 1
+                by_mnemonic[cdty.mnemonic] = cdty
+
+        if not counts:
+            for cdty in self.session.query(Commodity).filter_by(namespace="CURRENCY"):
+                counts[cdty.mnemonic] += 1
+                by_mnemonic[cdty.mnemonic] = cdty
+
+        if not counts:
+            return None
+        return by_mnemonic[counts.most_common(1)[0][0]]
+
+    def infer_default_currency(self):
+        """
+        Infer and set the root account currency (GnuCash-compatible fallback).
+
+        Useful for books where the root commodity was never set (e.g. old files or
+        XML-to-SQL conversions). Mirrors GnuCash find_root_currency(): prefer the
+        first top-level INCOME account currency, then fall back to other currencies
+        in the book. See https://github.com/sdementen/piecash/issues/251
+
+        :return: the :class:`Commodity` that was set as default currency
+        :raises GnucashException: if no CURRENCY commodity can be found
+        """
+        currency = self._find_root_currency()
+        if currency is None:
+            raise GnucashException(
+                "Cannot infer default currency: no CURRENCY commodities found "
+                "in the book"
+            )
+
+        self.root_account.commodity = currency
+        return currency
 
     def validate(self):
         Book.validate_book(self.session)
@@ -327,12 +402,16 @@ class Book(DeclarativeBaseGuid):
     def close(self):
         """Close a session. Any changes not yet saved are rolled back. Any lock on the file/DB is released."""
         session = self.session
+        engine = getattr(session, "bind", None)
         # cancel pending changes
         session.rollback()
         # if self._acquire_lock:
         # # remove the lock
         # session.delete_lock()
         session.close()
+        # Release engine connection pool (needed for PostgreSQL/MySQL before DROP DATABASE)
+        if engine is not None:
+            engine.dispose()
 
     # add general getters for gnucash classes
     def get(self, cls, **kwargs):
@@ -562,7 +641,8 @@ class Book(DeclarativeBaseGuid):
             "account.commodity.guid",
             "account.commodity.mnemonic",
         ] + additional_fields
-        fields_getter = [attrgetter(fld) for fld in fields]
+        # Use safe getters so orphan splits (account is None) do not crash (issue #211)
+        fields_getter = [_safe_attrgetter(fld) for fld in fields]
         df_splits = pandas.DataFrame(
             [[fg(sp) for fg in fields_getter] for sp in splits], columns=fields
         )
