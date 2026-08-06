@@ -9,7 +9,7 @@ import datetime
 from decimal import Decimal
 
 from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT, Index
-from sqlalchemy.orm import relation
+from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import MultipleResultsFound
 
 from ._commodity_helper import quandl_fx
@@ -67,12 +67,12 @@ class Price(DeclarativeBaseGuid):
     value = hybrid_property_gncnumeric(_value_num, _value_denom)
 
     # relation definitions
-    commodity = relation(
+    commodity = relationship(
         "Commodity",
         back_populates="prices",
         foreign_keys=[commodity_guid],
     )
-    currency = relation(
+    currency = relationship(
         "Commodity",
         foreign_keys=[currency_guid],
     )
@@ -174,19 +174,19 @@ class Commodity(DeclarativeBaseGuid):
                 )
 
     # relation definitions
-    accounts = relation(
+    accounts = relationship(
         "Account",
         back_populates="commodity",
         cascade="all, delete-orphan",
         collection_class=CallableList,
     )
-    transactions = relation(
+    transactions = relationship(
         "Transaction",
         back_populates="currency",
         cascade="all, delete-orphan",
         collection_class=CallableList,
     )
-    prices = relation(
+    prices = relationship(
         "Price",
         back_populates="commodity",
         foreign_keys=[Price.commodity_guid],
@@ -304,6 +304,7 @@ class Commodity(DeclarativeBaseGuid):
                     date=datetime.datetime.strptime(q.date, "%Y-%m-%d").date(),
                     value=str(q.rate),
                 )
+                self.book.add(p)
 
         else:
             symbol = self.mnemonic
@@ -313,13 +314,13 @@ class Commodity(DeclarativeBaseGuid):
 
             # get historical data
             for q in download_quote(symbol, start_date, datetime.date.today(), tz):
-                Price(
+                self.book.add(Price(
                     commodity=self,
                     currency=currency,
                     date=q.date,
                     value=q.close,
                     type="last",
-                )
+                ))
 
     def object_to_validate(self, change):
         if change[-1] != "deleted":

@@ -24,8 +24,9 @@ with create_book() as book:
             eur,
             "transaction {}".format(i),
         )
-        Split(accounts[random.randrange(N)], value=v, transaction=tx)
-        Split(accounts[random.randrange(N)], value=-v, transaction=tx)
+        book.add(tx)
+        book.add(Split(accounts[random.randrange(N)], value=v, transaction=tx))
+        book.add(Split(accounts[random.randrange(N)], value=-v, transaction=tx))
     book.save()
 
     # select two accounts

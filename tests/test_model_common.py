@@ -4,6 +4,7 @@ import datetime
 
 import pytest
 import pytz
+import sqlalchemy
 from sqlalchemy import create_engine, Column, TEXT
 from sqlalchemy.orm import sessionmaker, composite
 
@@ -17,8 +18,7 @@ def session():
     engine = create_engine("sqlite://")
 
     metadata = mc.DeclarativeBase.metadata
-    metadata.bind = engine
-    metadata.create_all()
+    metadata.create_all(bind=engine)
 
     s = sessionmaker(bind=engine)()
 
@@ -82,7 +82,9 @@ class TestModelCommon(object):
         s.flush()
         assert a.day
 
-        assert str(list(s.bind.execute("select day from c_table"))[0][0]) == "20100412"
+        with s.bind.connect() as conn:
+            day = list(conn.execute(sqlalchemy.text("select day from c_table")))[0][0]
+        assert str(day) == "20100412"
 
     def test_datetime(self):
         class D(DeclarativeBaseGuid):
@@ -98,10 +100,9 @@ class TestModelCommon(object):
         s.flush()
         assert a.time
 
-        assert (
-            str(list(s.bind.execute("select time from d_table"))[0][0])
-            == "2010-04-12 03:04:05"
-        )
+        with s.bind.connect() as conn:
+            time = list(conn.execute(sqlalchemy.text("select time from d_table")))[0][0]
+        assert str(time) == "2010-04-12 03:04:05"
 
     def test_float_in_gncnumeric(self):
         Mock = collections.namedtuple("Mock", "name")
