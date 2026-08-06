@@ -4,7 +4,7 @@ import datetime
 
 import pytest
 import pytz
-from sqlalchemy import create_engine, Column, TEXT
+from sqlalchemy import create_engine, Column, TEXT, text
 from sqlalchemy.orm import sessionmaker, composite
 
 import piecash._common as mc
@@ -17,8 +17,7 @@ def session():
     engine = create_engine("sqlite://")
 
     metadata = mc.DeclarativeBase.metadata
-    metadata.bind = engine
-    metadata.create_all()
+    metadata.create_all(bind=engine)
 
     s = sessionmaker(bind=engine)()
 
@@ -82,7 +81,7 @@ class TestModelCommon(object):
         s.flush()
         assert a.day
 
-        assert str(list(s.bind.execute("select day from c_table"))[0][0]) == "20100412"
+        assert str(list(s.execute(text("select day from c_table")))[0][0]) == "20100412"
 
     def test_datetime(self):
         class D(DeclarativeBaseGuid):
@@ -99,7 +98,7 @@ class TestModelCommon(object):
         assert a.time
 
         assert (
-            str(list(s.bind.execute("select time from d_table"))[0][0])
+            str(list(s.execute(text("select time from d_table")))[0][0])
             == "2010-04-12 03:04:05"
         )
 

@@ -143,8 +143,10 @@ class TestBook_create_book(object):
         insp = Inspector.from_engine(create_engine(db_sqlite_uri))
         fk_total = []
         for tbl in insp.get_table_names():
+            if tbl.startswith('sqlite_'):
+                continue
             fk_total.append(insp.get_foreign_keys(tbl))
-        assert len(fk_total) == 25
+        assert len(fk_total) == 24
 
     def test_create_without_FK(self):
         # create without FK

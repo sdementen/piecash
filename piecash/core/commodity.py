@@ -9,8 +9,8 @@ import datetime
 from decimal import Decimal
 
 from sqlalchemy import Column, VARCHAR, INTEGER, ForeignKey, BIGINT, Index
-from sqlalchemy.orm import relation
-from sqlalchemy.orm.exc import MultipleResultsFound
+from sqlalchemy.orm import relationship, object_session
+from sqlalchemy.exc import MultipleResultsFound
 
 from ._commodity_helper import quandl_fx
 from .._common import CallableList, GncConversionError
@@ -67,18 +67,20 @@ class Price(DeclarativeBaseGuid):
     value = hybrid_property_gncnumeric(_value_num, _value_denom)
 
     # relation definitions
-    commodity = relation(
+    commodity = relationship(
         "Commodity",
         back_populates="prices",
         foreign_keys=[commodity_guid],
     )
-    currency = relation(
+    currency = relationship(
         "Commodity",
         foreign_keys=[currency_guid],
     )
 
     def __init__(self, commodity, currency, date, value, type="unknown", source="user:price"):
         self.commodity = commodity
+        if commodity.book is not None:
+            commodity.book.add(self)
         self.currency = currency
         assert _type(date) is datetime.date
         self.date = date
@@ -174,19 +176,19 @@ class Commodity(DeclarativeBaseGuid):
                 )
 
     # relation definitions
-    accounts = relation(
+    accounts = relationship(
         "Account",
         back_populates="commodity",
         cascade="all, delete-orphan",
         collection_class=CallableList,
     )
-    transactions = relation(
+    transactions = relationship(
         "Transaction",
         back_populates="currency",
         cascade="all, delete-orphan",
         collection_class=CallableList,
     )
-    prices = relation(
+    prices = relationship(
         "Price",
         back_populates="commodity",
         foreign_keys=[Price.commodity_guid],

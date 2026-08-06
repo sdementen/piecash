@@ -1,7 +1,7 @@
 import uuid
 
 from sqlalchemy import Column, INTEGER, BIGINT, VARCHAR, ForeignKey
-from sqlalchemy.orm import composite, relation
+from sqlalchemy.orm import composite, relationship
 
 from .person import PersonType
 
@@ -41,13 +41,13 @@ class Billterm(DeclarativeBaseGuid):
     cutoff = Column("cutoff", INTEGER())
 
     # relation definitions
-    children = relation(
+    children = relationship(
         "Billterm",
         back_populates="parent",
         cascade="all, delete-orphan",
         collection_class=CallableList,
     )
-    parent = relation(
+    parent = relationship(
         "Billterm",
         back_populates="children",
         remote_side=guid,
@@ -104,8 +104,8 @@ class Entry(DeclarativeBaseGuid):
     order_guid = Column("order_guid", VARCHAR(length=32), ForeignKey("orders.guid"))
 
     # relation definitions
-    order = relation("Order", back_populates="entries")
-    invoice = relation("Invoice", back_populates="entries")
+    order = relationship("Order", back_populates="entries")
+    invoice = relationship("Invoice", back_populates="entries")
 
     def __str__(self):
         return "Entry<{}>".format(self.description)
@@ -147,13 +147,13 @@ class Invoice(DeclarativeBaseGuid):
 
     # relation definitions
     # todo: check all relations and understanding of types...
-    term = relation("Billterm")
-    currency = relation("Commodity")
-    post_account = relation("Account")
-    post_lot = relation("Lot")
-    post_txn = relation("Transaction")
+    term = relationship("Billterm")
+    currency = relationship("Commodity")
+    post_account = relationship("Account")
+    post_lot = relationship("Lot")
+    post_txn = relationship("Transaction")
 
-    entries = relation(
+    entries = relationship(
         "Entry",
         back_populates="invoice",
         cascade="all, delete-orphan",
@@ -225,7 +225,7 @@ class Order(DeclarativeBaseGuid):
 
     # relation definitions
     # todo: owner_guid/type links to Vendor or Customer
-    entries = relation(
+    entries = relationship(
         "Entry",
         back_populates="order",
         cascade="all, delete-orphan",

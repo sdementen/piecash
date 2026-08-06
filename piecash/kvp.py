@@ -6,7 +6,7 @@ from enum import Enum
 from importlib import import_module
 
 from sqlalchemy import Column, VARCHAR, INTEGER, REAL, BIGINT, types, event, Index
-from sqlalchemy.orm import relation, foreign, object_session, backref
+from sqlalchemy.orm import relationship, foreign, object_session, backref
 
 from ._common import CallableList
 from ._common import hybrid_property_gncnumeric
@@ -267,7 +267,7 @@ class SlotFrame(DictWrapper, Slot):
 
     guid_val = Column("guid_val", VARCHAR(length=32))
 
-    slots = relation(
+    slots = relationship(
         "Slot",
         primaryjoin=foreign(Slot.obj_guid) == guid_val,
         cascade="all, delete-orphan",

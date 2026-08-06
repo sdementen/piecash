@@ -2,7 +2,7 @@ from collections import defaultdict
 from operator import attrgetter
 
 from sqlalchemy import Column, VARCHAR, ForeignKey, inspect
-from sqlalchemy.orm import relation, aliased, joinedload
+from sqlalchemy.orm import relationship, aliased, joinedload
 from sqlalchemy.orm.base import instance_state
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -99,12 +99,12 @@ class Book(DeclarativeBaseGuid):
     )
 
     # relation definitions
-    root_account = relation(
+    root_account = relationship(
         "Account",
         # back_populates='root_book',
         foreign_keys=[root_account_guid],
     )
-    root_template = relation("Account", foreign_keys=[root_template_guid])
+    root_template = relationship("Account", foreign_keys=[root_template_guid])
 
     uri = None
     session = None

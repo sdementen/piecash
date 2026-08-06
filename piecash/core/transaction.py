@@ -4,7 +4,7 @@ from collections import defaultdict
 from decimal import Decimal
 
 from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, INTEGER, Index
-from sqlalchemy.orm import relation, validates, foreign
+from sqlalchemy.orm import relationship, validates, foreign, object_session
 from sqlalchemy.orm.base import NEVER_SET
 
 from .._common import CallableList, GncImbalanceError
@@ -74,9 +74,9 @@ class Split(DeclarativeBaseGuid):
     lot_guid = Column("lot_guid", VARCHAR(length=32), ForeignKey("lots.guid"))
 
     # relation definitions
-    account = relation("Account", back_populates="splits")
-    lot = relation("Lot", back_populates="splits")
-    transaction = relation(
+    account = relationship("Account", back_populates="splits")
+    lot = relationship("Lot", back_populates="splits")
+    transaction = relationship(
         "Transaction", back_populates="splits", cascade="refresh-expire"
     )
 
@@ -102,6 +102,8 @@ class Split(DeclarativeBaseGuid):
     ):
         self.transaction = transaction
         self.account = account
+        if account is not None:
+            account.book.add(self)
         self.value = value
         self.quantity = value if quantity is None else quantity
         self.memo = memo
@@ -109,6 +111,8 @@ class Split(DeclarativeBaseGuid):
         self.reconcile_date = reconcile_date
         self.reconcile_state = reconcile_state
         self.lot = lot
+        if self.transaction is not None and self.transaction.book is None:
+            self.book.add(self.transaction)
 
     def __str__(self):
         try:
@@ -258,11 +262,11 @@ class Transaction(DeclarativeBaseGuid):
     )
 
     # relation definitions
-    currency = relation(
+    currency = relationship(
         "Commodity",
         back_populates="transactions",
     )
-    splits = relation(
+    splits = relationship(
         "Split",
         back_populates="transaction",
         cascade="all, delete-orphan",
@@ -296,6 +300,12 @@ class Transaction(DeclarativeBaseGuid):
             self.notes = notes
         if splits:
             self.splits = splits
+            # Ensure transaction is added to session if splits have accounts in a session
+            for split in splits:
+                book = split.account.book
+                if book is not None:
+                    book.add(self)
+                    break
 
     def __str__(self):
         return "Transaction<[{}] '{}' on {:%Y-%m-%d}{}>".format(
@@ -464,8 +474,8 @@ class ScheduledTransaction(DeclarativeBaseGuid):
     )
 
     # relation definitions
-    template_account = relation("Account")
-    recurrence = relation(
+    template_account = relationship("Account")
+    recurrence = relationship(
         "Recurrence",
         primaryjoin=guid == foreign(Recurrence.obj_guid),
         cascade="all, delete-orphan",
@@ -501,11 +511,11 @@ class Lot(DeclarativeBaseGuid):
     notes = pure_slot_property("notes")
 
     # relation definitions
-    account = relation(
+    account = relationship(
         "Account",
         back_populates="lots",
     )
-    splits = relation(
+    splits = relationship(
         "Split",
         back_populates="lot",
         collection_class=CallableList,

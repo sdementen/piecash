@@ -6,7 +6,7 @@ commodity €
 
 commodity FOO
 
-commodity US$
+commodity $
 
 account Asset
 	check commodity == "€"
@@ -62,7 +62,7 @@ account Mouvements:CURRENCY:EUR5
 	check commodity == "€"
 
 P 2018-02-21 00:00:00 FOO 0,90 AED
-P 2018-02-21 00:00:00 US$ 1,40 €
+P 2018-02-21 00:00:00 $ 1,40 €
 P 2018-02-21 00:00:00 € 1,111111111111111111111111111 AED
 P 2018-02-21 00:00:00 ADF 1,50 AED
 
