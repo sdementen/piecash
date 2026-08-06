@@ -374,6 +374,15 @@ def book_sample(request):
     with open_book(file_template_full) as book:
         yield book
 
+@pytest.fixture()
+def book_historical_prices(request):
+    """
+    Returns a simple book with historical prices.
+    """
+    file_template_full = book_folder / "historical_prices.gnucash"
+
+    with open_book(file_template_full) as book:
+        yield book
 
 def is_inmemory_sqlite(book_basic):
     # print book_basic.uri, book_basic.uri.get_dialect(), book_basic.uri.database, type(book_basic.uri), dir(book_basic.uri)

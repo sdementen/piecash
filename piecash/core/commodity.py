@@ -249,6 +249,7 @@ class Commodity(DeclarativeBaseGuid):
             GncConversionError: not possible to convert self to the currency
 
         """
+
         # conversion is done from self.commodity to commodity (if possible)
         sc2c = self.prices.filter_by(currency=currency).order_by(Price.date.desc()).first()
         if sc2c:
@@ -260,6 +261,62 @@ class Commodity(DeclarativeBaseGuid):
             return Decimal(1) / c2sc.value
 
         raise GncConversionError("Cannot convert {} to {}".format(self, currency))
+
+    def currency_conversion_on_date(self, currency, on_date, closest_conv_cache=None):
+        """
+        Return the conversion factor to convert self to currency, as of a given date in the past. If no price is stored
+        for the specified date, the stored price that is closest in time to the specified date will be used.
+
+        Args:
+            currency (:class:`piecash.core.commodity.Commodity`): the currency to which the Price need to be converted
+            on_date (:class:`datetime.date`, optional): the date as of which to get the conversion factor.
+            closest_conv_cache (:class:`dict`, optional): an internal cache of closest-in-time commodity prices. Keys
+            are commodity pairs (as tuples); values are dicts mapping dates to prices. This is used internally when
+            this method is called as part of a recursive function.
+
+
+            Returns:
+                a Decimal that can be multiplied by an amount expressed in self.commodity to get an amount expressed in currency
+
+            Raises:
+                GncConversionError: not possible to convert self to the currency
+
+        """
+        pair = (self, currency)
+        if (closest_conv_cache is not None) and (on_date in closest_conv_cache.get(pair, {})):
+            return closest_conv_cache[pair][on_date]
+        # get all "forward" (self-to-other) rates
+        forward_rates = self.prices.filter_by(currency=currency).order_by(Price.date.asc())
+        # get all "reverse" (other-to-self) rates
+        reverse_rates = currency.prices.filter_by(currency=self).order_by(Price.date.asc())
+        if forward_rates.count():
+            closest_forward = min(forward_rates, key = lambda p: abs(p.date - on_date))
+        else:
+            closest_forward = None
+        if reverse_rates.count():
+            closest_reverse = min(reverse_rates, key = lambda p: abs(p.date - on_date))
+        else:
+            closest_reverse = None
+        if closest_forward is None and closest_reverse is None:
+            # no prices found
+            raise GncConversionError("Cannot convert {} to {}".format(self, currency))
+        elif closest_reverse is None:
+            # only forward prices found
+            closest = closest_forward.value
+        elif closest_forward is None:
+            # only backwards prices found
+            closest = Decimal(1) / closest_reverse.value
+        else:
+            # both forwards and backwards prices found
+            if abs(closest_forward.date - on_date) <= abs(closest_reverse.date - on_date):
+                closest = closest_forward.value
+            else:
+                closest = Decimal(1) / closest_reverse.value
+        if closest_conv_cache is not None:
+            if pair not in closest_conv_cache:
+                closest_conv_cache[pair] = {}
+            closest_conv_cache[pair][on_date] = closest
+        return closest
 
     def update_prices(self, start_date=None):
         """
