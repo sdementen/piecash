@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import json
 import re
 from functools import singledispatch
-from locale import getdefaultlocale
+import warnings
 
 from .core import Account, Book, Commodity, Price, Transaction
 
@@ -50,29 +50,45 @@ def format_commodity(mnemonic, locale):
         return quote_commodity(mnemonic)
 
 
-def format_currency(amount, decimals, currency, locale=False, decimal_quantization=True):
+def format_currency(
+    amount, decimals, currency, locale=False, decimal_quantization=True, use_grouping=True
+):
+    """Format amount for ledger output.
+
+    Args:
+        use_grouping: If False, omit thousand separators (required for ledger-cli
+            parsing, fix #238). Ledger-cli does not reliably parse grouped numbers.
+    """
     currency = quote_commodity(currency)
-    if locale is True:
-        locale = getdefaultlocale()[0]
-        if BABEL_AVAILABLE is False:
-            raise ValueError(f"You must install babel ('pip install babel') to export to ledger in your locale '{locale}'")
-        else:
-            return babel.numbers.format_currency(
-                amount,
-                currency,
-                format=None,
-                locale=locale,
-                currency_digits=True,
-                format_type="standard",
-                decimal_quantization=decimal_quantization,
-            )
+    if decimal_quantization:
+        digits = decimals
     else:
-        # local hand made version
-        if decimal_quantization:
-            digits = decimals
-        else:
-            digits = max(decimals, len((str(amount) + ".").split(".")[1].rstrip("0")))
-        return "{} {:,.{}f}".format(currency, amount, digits)
+        digits = max(decimals, len((str(amount) + ".").split(".")[1].rstrip("0")))
+    # When use_grouping=False, use plain number format for ledger-cli compatibility
+    if not use_grouping:
+        return "{} {:.{}f}".format(currency, amount, digits)
+    if locale is True:
+        import locale as _locale
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            loc = _locale.getdefaultlocale()[0] or "en_US"
+        if BABEL_AVAILABLE is False:
+            raise ValueError(
+                f"You must install babel ('pip install babel') to export to ledger in "
+                f"your locale '{loc}'"
+            )
+        return babel.numbers.format_currency(
+            amount,
+            currency,
+            format=None,
+            locale=loc,
+            currency_digits=True,
+            format_type="standard",
+            decimal_quantization=decimal_quantization,
+        )
+    fmt = "{:,.{}f}"
+    return "{} ".format(currency) + fmt.format(amount, digits)
 
 
 @ledger.register(Transaction)
@@ -106,17 +122,27 @@ def _(tr, locale=False, **kwargs):
                         split.account.commodity.mnemonic,
                         locale,
                         decimal_quantization=False,
+                        use_grouping=False,  # ledger-cli cannot parse grouped numbers (fix #238)
                     ),
                     amount=format_currency(
                         abs(split.value),
                         tr.currency.precision,
                         tr.currency.mnemonic,
                         locale,
+                        use_grouping=False,  # ledger-cli compatibility
                     ),
                 )
             )
         else:
-            s.append(format_currency(split.value, tr.currency.precision, tr.currency.mnemonic, locale))
+            s.append(
+                format_currency(
+                    split.value,
+                    tr.currency.precision,
+                    tr.currency.mnemonic,
+                    locale,
+                    use_grouping=False,
+                )
+            )
 
         if split.memo:
             s.append(" ;   {:20}".format(split.memo))
@@ -171,6 +197,7 @@ def _(price, locale=False, **kwargs):
             price.currency.mnemonic,
             locale,
             decimal_quantization=False,
+            use_grouping=False,
         ),
     )
 

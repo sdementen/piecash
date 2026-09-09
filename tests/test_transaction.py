@@ -235,7 +235,8 @@ class TestTransaction_create_transaction(object):
             )
 
     def test_create_cdtytransaction_cdtycurrency(self, book_basic):
-        EUR = book_basic.commodities(namespace="CURRENCY")
+        """Non-currency (stock) transactions are allowed since PR #166.
+        When account commodity == transaction currency, value must equal quantity."""
         racc = book_basic.root_account
         a = book_basic.accounts(name="asset")
         s = book_basic.accounts(name="broker")
@@ -247,13 +248,12 @@ class TestTransaction_create_transaction(object):
             post_date=date(2014, 1, 2),
             enter_date=datetime(2014, 1, 3),
             splits=[
-                Split(account=a, value=100, quantity=10, memo="mémo asset"),
-                Split(account=s, value=-100, quantity=-10, memo="mémo brok"),
+                Split(account=a, value=10, quantity=10, memo="mémo asset"),
+                Split(account=s, value=-10, quantity=-10, memo="mémo brok"),
             ],
         )
-        # raise error as Transaction has a non CURRENCY commodity
-        with pytest.raises(GncValidationError):
-            book_basic.validate()
+        book_basic.validate()
+        assert tr.currency == s.commodity
 
     def test_create_cdtytransaction_tradingaccount(self, book_basic):
         EUR = book_basic.commodities(namespace="CURRENCY")
@@ -276,10 +276,10 @@ class TestTransaction_create_transaction(object):
         book_basic.validate()
 
         assert "{}".format(tr) == "Transaction<[EUR] 'buy stock' on 2014-01-02>"
-        assert "{}".format(s) == "Account<asset:broker[ïoà]>"
+        assert "{}".format(s) == "Account<asset:broker[\u00efo\u00e0]>"
         assert (
             "{}".format(tr.splits(account=s))
-            == "Split<Account<asset:broker[ïoà]> -100 EUR [-15 ïoà]>"
+            == "Split<Account<asset:broker[\u00efo\u00e0]> -100 EUR [-15 \u00efo\u00e0]>"
         )
         assert "{}".format(tr.splits(account=a)) == "Split<Account<asset[EUR]> 100 EUR>"
 

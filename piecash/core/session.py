@@ -1,7 +1,9 @@
 import datetime
+import locale
 import os
 import shutil
 import socket
+import warnings
 from collections import defaultdict
 
 from sqlalchemy import event, Column, VARCHAR, INTEGER, Table, PrimaryKeyConstraint
@@ -12,6 +14,16 @@ from piecash.core import factories
 from .book import Book
 from .._common import GnucashException
 from ..sa_extra import create_piecash_engine, DeclarativeBase, Session
+
+
+def _make_session(bind):
+    """Create a Session compatible with SQLAlchemy 1.4 and 2.x."""
+    try:
+        # SA 1.4: future=True opts into 2.0-style behavior
+        return Session(bind=bind, future=True)
+    except TypeError:
+        # SA 2.x: future mode is the only mode (no future= kwarg)
+        return Session(bind=bind)
 
 # version of tables changed between 2.6 and 3.0
 #   ('invoices', 4)
@@ -234,7 +246,7 @@ def build_uri(
 def create_book(
     sqlite_file=None,
     uri_conn=None,
-    currency="EUR",
+    currency="locale",
     overwrite=False,
     keep_foreign_keys=False,
     db_type=None,
@@ -251,7 +263,7 @@ def create_book(
 
     :param str sqlite_file: a path to an sqlite3 file (only used if uri_conn is None)
     :param str uri_conn: a sqlalchemy connection string
-    :param str currency: the ISO symbol of the default currency of the book
+    :param str currency: the ISO symbol of the default currency of the book, "locale" returns local international currency symbol
     :param bool overwrite: True if book should be deleted and recreated if it exists already
     :param bool keep_foreign_keys: True if the foreign keys should be kept (may not work at all with GnuCash)
     :param str db_type: type of database in ["postgres","mysql"]
@@ -315,7 +327,7 @@ def create_book(
     # create all (tables, fk, ...)
     DeclarativeBase.metadata.create_all(engine)
 
-    s = Session(bind=engine)
+    s = _make_session(engine)
 
     # create all rows in version table
     assert (
@@ -334,6 +346,10 @@ def create_book(
 
     # create commodities and initial accounts
     from .account import Account
+    
+    if currency == "locale":
+        locale.setlocale(locale.LC_ALL, '')
+        currency = locale.localeconv()['int_curr_symbol'].strip() or 'EUR'
 
     b.root_account = Account(
         name="Root Account",
@@ -428,34 +444,46 @@ def open_book(
 
         shutil.copyfile(url, url_backup)
 
-    locks = list(engine.execute(gnclock.select()))
+    with engine.connect() as connection:
+        locks = list(connection.execute(gnclock.select()))
 
-    # ensure the file is not locked by GnuCash itself
-    if locks and not open_if_lock:
-        raise GnucashException("Lock on the file")
+        # ensure the file is not locked by GnuCash itself
+        if locks and not open_if_lock:
+            raise GnucashException("Lock on the file")
 
-    s = Session(bind=engine)
+        s = _make_session(engine)
 
-    # check the versions in the table versions is consistent with the API
-    version_book = {
-        v.table_name: v.table_version
-        for v in s.query(Version).all()
-        if "Gnucash" not in v.table_name
-    }
-    for version, vt in version_supported.items():
-        if version_book == {k: v for k, v in vt.items() if "Gnucash" not in k}:
-            break
-    else:
-        raise ValueError("Unsupported table versions")
-    assert version == "3.0" or version == "3.7" or version == "4.1", (
-        "This version of piecash only support books from gnucash (3.0|3.7|4.1) "
-        "which is not the case for {}".format(uri_conn)
-    )
+        # check the versions in the table versions is consistent with the API
+        version_book = {
+            v.table_name: v.table_version
+            for v in s.query(Version).all()
+            if "Gnucash" not in v.table_name
+        }
+        for version, vt in version_supported.items():
+            if version_book == {k: v for k, v in vt.items() if "Gnucash" not in k}:
+                break
+        else:
+            raise ValueError("Unsupported table versions")
+        assert version == "3.0" or version == "3.7" or version == "4.1", (
+            "This version of piecash only support books from gnucash (3.0|3.7|4.1) "
+            "which is not the case for {}".format(uri_conn)
+        )
 
-    book = s.query(Book).one()
-    adapt_session(s, book=book, readonly=readonly)
+        book = s.query(Book).one()
+        adapt_session(s, book=book, readonly=readonly)
 
-    return book
+        # Old books / XML-to-SQL conversions may leave the root account without a currency
+        if book.root_account is not None and book.root_account.commodity is None:
+            warnings.warn(
+                "Root account has no commodity/currency set; book.default_currency will "
+                "fall back (GnuCash-style: first top-level INCOME, then other currencies) "
+                "until you set it or call book.infer_default_currency() to persist a fix. "
+                "See https://github.com/sdementen/piecash/issues/251",
+                UserWarning,
+                stacklevel=2,
+            )
+
+        return book
 
 
 def adapt_session(session, book, readonly):
@@ -488,9 +516,8 @@ def adapt_session(session, book, readonly):
     # add logic to create/delete GnuCash locks
     def delete_lock():
         session.execute(
-            gnclock.delete(
-                whereclause=(gnclock.c.hostname == socket.gethostname())
-                and (gnclock.c.pid == os.getpid())
+            gnclock.delete().where(
+                (gnclock.c.hostname == socket.gethostname()) & (gnclock.c.pid == os.getpid())
             )
         )
         session.commit()
@@ -499,7 +526,7 @@ def adapt_session(session, book, readonly):
 
     def create_lock():
         session.execute(
-            gnclock.insert(values=dict(hostname=socket.gethostname(), pid=os.getpid()))
+            gnclock.insert().values(hostname=socket.gethostname(), pid=os.getpid())
         )
         session.commit()
 

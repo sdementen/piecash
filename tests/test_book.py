@@ -1,12 +1,11 @@
-# -*- coding: latin-1 -*-
+# -*- coding: utf-8 -*-
 import glob
 import os
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.engine.reflection import Inspector
+from sqlalchemy import create_engine, inspect
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
@@ -140,18 +139,22 @@ class TestBook_create_book(object):
         b = create_book(uri_conn=db_sqlite_uri, keep_foreign_keys=True, overwrite=True)
         b.session.close()
 
-        insp = Inspector.from_engine(create_engine(db_sqlite_uri))
+        engine = create_engine(db_sqlite_uri)
+        insp = inspect(engine)
         fk_total = []
         for tbl in insp.get_table_names():
+            if tbl.startswith('sqlite_'):
+                continue
             fk_total.append(insp.get_foreign_keys(tbl))
-        assert len(fk_total) == 25
+        assert len(fk_total) == 24
 
     def test_create_without_FK(self):
         # create without FK
         b = create_book(uri_conn=db_sqlite_uri, keep_foreign_keys=False, overwrite=True)
         b.session.close()
 
-        insp = Inspector.from_engine(create_engine(db_sqlite_uri))
+        engine = create_engine(db_sqlite_uri)
+        insp = inspect(engine)
         for tbl in insp.get_table_names():
             fk = insp.get_foreign_keys(tbl)
             assert len(fk) == 0
@@ -167,8 +170,8 @@ class TestBook_open_book(object):
         with pytest.raises(GnucashException):
             b = open_book(uri_conn=book_uri)
 
-        # create book
-        with create_book(uri_conn=book_uri):
+        # create book (currency=EUR for deterministic tests across locales)
+        with create_book(uri_conn=book_uri, currency="EUR"):
             pass
 
         # assert error if both sqlite_file and uri_conn are defined on open_book
@@ -194,8 +197,8 @@ class TestBook_open_book(object):
             open_book(uri_conn=book_uri_fail, check_exists=False)
 
     def test_open_RW_backup(self, book_uri):
-        # create book
-        with create_book(uri_conn=book_uri) as b:
+        # create book (currency=EUR for deterministic tests across locales)
+        with create_book(uri_conn=book_uri, currency="EUR") as b:
             engine_type = b.session.bind.name
 
         # open book with readonly = False (ie RW)
@@ -225,8 +228,8 @@ class TestBook_open_book(object):
             assert len(glob.glob("{}.[0-9]*.gnucash".format(url))) == 1
 
     def test_open_lock(self, book_uri):
-        # create book and set a lock
-        with create_book(uri_conn=book_uri) as b:
+        # create book and set a lock (currency=EUR for deterministic tests across locales)
+        with create_book(uri_conn=book_uri, currency="EUR") as b:
             b.session.create_lock()
             b.save()
 
@@ -418,6 +421,107 @@ class TestBook_access_book(object):
 
         assert df_to_string == df.to_string()
 
+    def test_splits_df_orphan_account(self, book_transactions):
+        """splits_df must not crash when a split's account is missing (issue #211)."""
+        from sqlalchemy import text
+
+        orphan = book_transactions.splits[0]
+        orphan_guid = orphan.guid
+        # Simulate a dangling account reference (e.g. deleted account / broken FK)
+        book_transactions.session.execute(
+            text(
+                "UPDATE splits SET account_guid = :bad WHERE guid = :guid"
+            ),
+            {"bad": "0" * 32, "guid": orphan_guid},
+        )
+        book_transactions.session.expire_all()
+
+        df = book_transactions.splits_df()
+        assert orphan_guid in df.index
+        import pandas as pd
+
+        assert pd.isna(df.loc[orphan_guid, "account.fullname"])
+        assert pd.isna(df.loc[orphan_guid, "account.commodity.mnemonic"])
+
+    def test_missing_root_currency_and_infer(self, new_book):
+        """Root without commodity: clear error + infer_default_currency (issue #251)."""
+        from sqlalchemy import text
+
+        cur = new_book.root_account.commodity
+        assert cur is not None
+        # Clear via SQL: ORM assignment to None would delete-orphan the Account
+        new_book.session.execute(
+            text("UPDATE accounts SET commodity_guid = NULL WHERE guid = :g"),
+            {"g": new_book.root_account.guid},
+        )
+        new_book.session.expire_all()
+
+        # Cleared root: property falls back without mutating (empty book ? CURRENCY in table)
+        assert new_book.root_account.commodity is None
+        assert new_book.default_currency.mnemonic == cur.mnemonic
+
+        inferred = new_book.infer_default_currency()
+        assert inferred.mnemonic == cur.mnemonic
+        assert new_book.root_account.commodity.mnemonic == cur.mnemonic
+        assert new_book.default_currency.mnemonic == cur.mnemonic
+
+    def test_infer_default_currency_prefers_top_level_income(self, new_book):
+        """GnuCash find_root_currency: prefer first top-level INCOME (issue #251)."""
+        from sqlalchemy import text
+        from piecash import factories
+
+        eur = new_book.default_currency
+        usd = factories.create_currency_from_ISO("USD")
+        new_book.add(usd)
+
+        # Many USD asset accounts, one EUR income ? GnuCash still prefers INCOME
+        Account(
+            name="Cash USD",
+            type="ASSET",
+            commodity=usd,
+            parent=new_book.root_account,
+        )
+        Account(
+            name="Bank USD",
+            type="BANK",
+            commodity=usd,
+            parent=new_book.root_account,
+        )
+        Account(
+            name="Income",
+            type="INCOME",
+            commodity=eur,
+            parent=new_book.root_account,
+        )
+        new_book.flush()
+
+        new_book.session.execute(
+            text("UPDATE accounts SET commodity_guid = NULL WHERE guid = :g"),
+            {"g": new_book.root_account.guid},
+        )
+        new_book.session.expire_all()
+
+        assert new_book.root_account.commodity is None
+        assert new_book.default_currency.mnemonic == "EUR"
+        assert new_book.infer_default_currency().mnemonic == "EUR"
+
+    def test_open_book_warns_missing_root_currency(self, book_uri):
+        """open_book emits a UserWarning when root commodity is missing (issue #251)."""
+        from sqlalchemy import text
+
+        with create_book(uri_conn=book_uri, currency="EUR", overwrite=True) as b:
+            root_guid = b.root_account.guid
+            b.session.execute(
+                text("UPDATE accounts SET commodity_guid = NULL WHERE guid = :g"),
+                {"g": root_guid},
+            )
+            b.save()
+
+        with pytest.warns(UserWarning, match="Root account has no commodity"):
+            with open_book(uri_conn=book_uri, open_if_lock=True) as b:
+                inferred = b.infer_default_currency()
+                assert inferred.mnemonic == "EUR"
+
     def test_splits_df_with_additional(self, book_transactions):
         # Adding in two additional memo fields here. If it works for non-unique it should
         # be fine for unique fields.
@@ -498,7 +602,7 @@ class TestBook_access_book(object):
         """
         assert (
             book_reference_3_0_0_fulloptions.business_company_address
-            == "Rue de la Chenille éclairée, 22"
+            == "Rue de la Chenille Ã©clairÃ©e, 22"
         )
         assert book_reference_3_0_0_fulloptions.business_company_contact == "John Michu"
         assert (
@@ -536,18 +640,18 @@ class TestBook_access_book(object):
         Tests business slots
         :type book_reference_3_0_0_basic: Book
         """
-        book_reference_3_0_0_basic.business_company_address = "é"
-        book_reference_3_0_0_basic.business_company_contact = "à"
-        book_reference_3_0_0_basic.business_company_email = "ù"
-        book_reference_3_0_0_basic.business_company_ID = "ö"
-        book_reference_3_0_0_basic.business_company_name = "µ"
-        book_reference_3_0_0_basic.business_company_phone = "²"
-        book_reference_3_0_0_basic.business_company_website = "³"
+        book_reference_3_0_0_basic.business_company_address = "ï¿½"
+        book_reference_3_0_0_basic.business_company_contact = "ï¿½"
+        book_reference_3_0_0_basic.business_company_email = "ï¿½"
+        book_reference_3_0_0_basic.business_company_ID = "ï¿½"
+        book_reference_3_0_0_basic.business_company_name = "ï¿½"
+        book_reference_3_0_0_basic.business_company_phone = "ï¿½"
+        book_reference_3_0_0_basic.business_company_website = "ï¿½"
 
-        assert book_reference_3_0_0_basic.business_company_address == "é"
-        assert book_reference_3_0_0_basic.business_company_contact == "à"
-        assert book_reference_3_0_0_basic.business_company_email == "ù"
-        assert book_reference_3_0_0_basic.business_company_ID == "ö"
-        assert book_reference_3_0_0_basic.business_company_name == "µ"
-        assert book_reference_3_0_0_basic.business_company_phone == "²"
-        assert book_reference_3_0_0_basic.business_company_website == "³"
+        assert book_reference_3_0_0_basic.business_company_address == "ï¿½"
+        assert book_reference_3_0_0_basic.business_company_contact == "ï¿½"
+        assert book_reference_3_0_0_basic.business_company_email == "ï¿½"
+        assert book_reference_3_0_0_basic.business_company_ID == "ï¿½"
+        assert book_reference_3_0_0_basic.business_company_name == "ï¿½"
+        assert book_reference_3_0_0_basic.business_company_phone == "ï¿½"
+        assert book_reference_3_0_0_basic.business_company_website == "ï¿½"

@@ -4,7 +4,7 @@ from collections import defaultdict
 from decimal import Decimal
 
 from sqlalchemy import Column, VARCHAR, ForeignKey, BIGINT, INTEGER, Index
-from sqlalchemy.orm import relation, validates, foreign
+from sqlalchemy.orm import relationship, validates, foreign, object_session
 from sqlalchemy.orm.base import NEVER_SET
 
 from .._common import CallableList, GncImbalanceError
@@ -74,9 +74,9 @@ class Split(DeclarativeBaseGuid):
     lot_guid = Column("lot_guid", VARCHAR(length=32), ForeignKey("lots.guid"))
 
     # relation definitions
-    account = relation("Account", back_populates="splits")
-    lot = relation("Lot", back_populates="splits")
-    transaction = relation(
+    account = relationship("Account", back_populates="splits")
+    lot = relationship("Lot", back_populates="splits")
+    transaction = relationship(
         "Transaction", back_populates="splits", cascade="refresh-expire"
     )
 
@@ -102,6 +102,8 @@ class Split(DeclarativeBaseGuid):
     ):
         self.transaction = transaction
         self.account = account
+        if account is not None:
+            account.book.add(self)
         self.value = value
         self.quantity = value if quantity is None else quantity
         self.memo = memo
@@ -109,6 +111,8 @@ class Split(DeclarativeBaseGuid):
         self.reconcile_date = reconcile_date
         self.reconcile_state = reconcile_state
         self.lot = lot
+        if self.transaction is not None and self.transaction.book is None:
+            self.book.add(self.transaction)
 
     def __str__(self):
         try:
@@ -258,11 +262,11 @@ class Transaction(DeclarativeBaseGuid):
     )
 
     # relation definitions
-    currency = relation(
+    currency = relationship(
         "Commodity",
         back_populates="transactions",
     )
-    splits = relation(
+    splits = relationship(
         "Split",
         back_populates="transaction",
         cascade="all, delete-orphan",
@@ -296,6 +300,12 @@ class Transaction(DeclarativeBaseGuid):
             self.notes = notes
         if splits:
             self.splits = splits
+            # Ensure transaction is added to session if splits have accounts in a session
+            for split in splits:
+                book = split.account.book
+                if book is not None:
+                    book.add(self)
+                    break
 
     def __str__(self):
         return "Transaction<[{}] '{}' on {:%Y-%m-%d}{}>".format(
@@ -314,10 +324,8 @@ class Transaction(DeclarativeBaseGuid):
         if old["STATE_CHANGES"][-1] == "deleted":
             return
 
-        if not self.currency.is_currency():
-            raise GncValidationError(
-                "You are assigning a non currency commodity to a transaction"
-            )
+        # Currency validation removed: GnuCash allows non-currency (e.g. stock)
+        # transfers between accounts (from PR #166, @holymonson)
 
         # check all accounts related to the splits of the transaction are not placeholder(=frozen)
         for sp in self.splits:
@@ -464,8 +472,8 @@ class ScheduledTransaction(DeclarativeBaseGuid):
     )
 
     # relation definitions
-    template_account = relation("Account")
-    recurrence = relation(
+    template_account = relationship("Account")
+    recurrence = relationship(
         "Recurrence",
         primaryjoin=guid == foreign(Recurrence.obj_guid),
         cascade="all, delete-orphan",
@@ -501,11 +509,11 @@ class Lot(DeclarativeBaseGuid):
     notes = pure_slot_property("notes")
 
     # relation definitions
-    account = relation(
+    account = relationship(
         "Account",
         back_populates="lots",
     )
-    splits = relation(
+    splits = relationship(
         "Split",
         back_populates="lot",
         collection_class=CallableList,
@@ -514,10 +522,154 @@ class Lot(DeclarativeBaseGuid):
     def __init__(self, title, account, notes="", splits=None, is_closed=0):
         self.title = title
         self.account = account
+        if account is not None and account.book is not None:
+            # Session(future=True) / SQLAlchemy 2.x: attach Lot so self.book works
+            account.book.add(self)
         self.notes = notes
         if splits:
             self.splits[:] = splits
         self.is_closed = is_closed
+
+    @property
+    def quantity(self):
+        """Returns the sum of the quantities of the splits associated with the lot."""
+        return sum([split.quantity for split in self.splits])
+
+    @property
+    def value(self):
+        """Returns the sum of the values of the splits associated with the lot."""
+        return sum([split.value for split in self.splits])
+
+    def add_split(self, split):
+        """Add split to lot. If the split could close the lot, the split is sub-split;
+        one part to close the lot, and a remainder which is returned.
+
+        Attributes:
+            split (Split): the split to add to the lot
+        
+        Returns:
+            split (Split): excess split, if any
+        """
+        s = None
+
+        # Split may overfill lot - sub-split split if required
+        if self.quantity * (self.quantity + split.quantity) < 0:
+            # Create a new split with the overfill.
+            new_qty = (split.quantity + self.quantity)
+
+            s = Split(
+                account=split.account,
+                value=split.value / split.quantity * new_qty,
+                quantity=new_qty,
+                transaction=split.transaction,
+                memo=split.memo,
+                action=split.action,
+                reconcile_date=split.reconcile_date,
+                reconcile_state=split.reconcile_state,
+                lot=None,
+            )
+
+            # Adjust the old split.
+            split.value = abs(split.value) / split.quantity * self.quantity
+            split.quantity = -self.quantity
+
+            # Slots - set date and link the peer splits to each other.
+            book = self.book or (self.account.book if self.account else None)
+            if book is None and split.account is not None:
+                book = split.account.book
+            book.flush()
+
+            # Set the slot for date if not already set
+            try:
+                split["lot-split/date"]
+            except KeyError:
+                split["lot-split/date"] = datetime.datetime.now().replace(microsecond=0)
+            split["lot-split/peer_guid"] = s
+            s["lot-split/peer_guid"] = split
+            s["lot-split/date"] = datetime.datetime.now().replace(microsecond=0)
+
+        # Add split to lot
+        split.lot = self
+
+        # Return the sub-split
+        return s
+
+    def scrub_lot(self):
+        """Add a transaction capturing gains/losses.
+        
+        A transaction is added for each realisation, with quantity of zero but value matching
+        the gains/losses. A realisation is any split with a value/quantity sign opposite the
+        opening split. Normally, the lot will hold a single 'buy' split and one or more 'sell'
+        splits, but the code below supports multiple 'buys' and 'sells'.
+
+        Attributes:
+            None
+        
+        Returns:
+            None
+        """
+        # Check that all splits were made with the same currency
+        if len(self.splits) > 1 and not all(self.splits[0].transaction.currency == sp.transaction.currency for sp in self.splits):
+            raise ValueError("Lot contains splits with mixed currencies. Cannot proceed - aborting.")
+
+        # Get the gains_losses_account associated with this lot's account
+        gains_losses_account = list(self.account["lot-mgmt/gains-acct"].value.values())[0]
+
+        # Check that the gains/losses account has the same currency as the transactions
+        if gains_losses_account and not all(gains_losses_account.commodity == sp.transaction.currency for sp in self.splits if sp.value != 0):
+            raise ValueError(f"The currency of the provided gains/losses account ({gains_losses_account}) does not match "
+                             "the currency of the transactions in the lot. Aborting.")
+
+        # Create an empty queue for holding the opening split, and any following 'buy' splits.
+        lst = []
+
+        # Get splits that are not assigned to a lot and not void.
+        splits = [split for split in self.splits if split.quantity != 0 and split.reconcile_state != "v"]
+
+        # Sort the splits by transaction post_date ascending
+        splits.sort(key=lambda sp: sp.transaction.post_date)
+
+        for split in splits:
+            if split.quantity * splits[0].quantity > 0:
+                # if same sign as opening split, add (value, quantity) tuple to queue
+                lst.append((split.value, split.quantity))
+            else:
+                # if different sign, gains/losses were realised
+                quantity = split.quantity
+                gain = -split.value
+
+                while quantity != 0 and lst:
+                    val, qty = lst.pop(0)
+                    excess = (quantity + qty) if (quantity * (quantity + qty)) < 0 else 0
+
+                    if excess != 0:
+                        # stick excess back in queue
+                        lst.insert(0, (val / qty * excess, excess))
+                        
+                    # Deduct the purchase value from the sales value
+                    gain -= val * (qty - excess) / qty
+                    quantity += qty - excess
+
+                # Check that the split that realised a gain/loss hasn't already been 
+                # added to the lot. If not, create a transaction with the gains/losses.
+                if gain != 0 and "gains-split" not in split:
+                    post_date = split.transaction.post_date
+                    memo = "Realised Gain/Loss"
+                    currency = split.transaction.currency
+
+                    tr = Transaction(
+                            post_date = post_date,
+                            currency = currency,
+                            description = memo,
+                            splits=[
+                                Split(account=gains_losses_account, memo=memo, value=-gain),
+                                Split(account=self.account, memo=memo, value=gain, quantity=0, lot=self)
+                            ])
+
+                    # Set slots
+                    self.book.flush()
+                    tr.splits[1]["gains-source"] = split
+                    split["gains-split"] = tr.splits[1]
 
     @validates("splits", "account")
     def check_no_change_if_lot_is_close(self, key, value):

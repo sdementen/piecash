@@ -1,0 +1,13 @@
+Date,Number,Description,Amount,Balance,Account,Entity
+01/03/06,,Opening Balance,1000,1206.79,Equity:Opening Balance,Opening Balance
+05/03/06,101,GG25j1546 Groceries    wtf 15:57 061124,-45.21,1206.79,Expense:Groceries,Old Bakery
+05/03/06,,EFTPOS 5632185,-75,1206.79,Expense:Groceries,HomeTown Grocery
+06/03/06,,Transfer to J&J Doe Savings Acc 5765-8397 589654259587,100,1206.79,Asset:Saving,J&J Doe
+06/03/06,106,EFTPOS 98416,-100,1206.79,Expense:Hardware,ABC Hardware
+14/03/06,,Direct Credit Salary from Employers R Us,670,1206.79,Income:Salary,Employers R Us
+24/03/06,,Transfer to J&J Doe Savings Acc 5765-8397 589654259587,500,1206.79,Asset:Saving,J&J Doe
+28/03/06,,Mmvoin515b  Internet Company bg??,-20,1206.79,Expense:Internet,FastFibre
+28/03/06,102,Light Company Big City Branch   9g8k863,-78,1206.79,Expense:Electricity,Energy Plus
+28/03/06,103,Phone Company Name    Autodebit 595642583,-45,1206.79,Expense:Phone,Telecom
+28/03/06,104,April Rent        5 Short Road,-350,1206.79,Expense:Rent,HighTower
+28/04/06,105,May Rent        5 Short Road,-350,1206.79,Expense:Rent,HighTower

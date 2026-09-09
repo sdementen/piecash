@@ -8,6 +8,12 @@ Please submit all future issues, pull requests, and downloads to: https://github
 piecash
 =======
 
+.. note::
+   **Maintenance**: This is a community-maintained fork of piecash. It will continue to receive bug fixes and compatibility updates.
+   The original project has limited maintenance. Issues and PRs are welcome. `Original repo <https://github.com/sdementen/piecash>`__
+
+   **Recent fixes (v1.2.2)**: PostgreSQL/MySQL test teardown (engine.dispose, pg_terminate_backend), test_scrub ordering, Unicode encoding in tests, deprecation warnings (Inspector, cache_ok, locale), pytest filterwarnings for clean CI.
+
 .. image:: https://badges.gitter.im/sdementen/piecash.svg
    :alt: Join the chat at https://gitter.im/sdementen/piecash
    :target: https://gitter.im/sdementen/piecash?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge

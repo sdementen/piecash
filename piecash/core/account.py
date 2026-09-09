@@ -1,11 +1,13 @@
 from __future__ import unicode_literals
 
+import datetime
 import uuid
 from enum import Enum
 
 from sqlalchemy import Column, VARCHAR, ForeignKey, INTEGER
-from sqlalchemy.orm import relation, validates
+from sqlalchemy.orm import relationship, validates
 
+from .transaction import Lot, Split, Transaction
 from .._common import CallableList, GncConversionError
 from .._declbase import DeclarativeBaseGuid
 from ..sa_extra import mapped_to_slot_property
@@ -53,6 +55,10 @@ assetliab_types = asset_types | liability_types
 # types according to the sign of their balance
 positive_types = asset_types | expense_types | trading_types
 negative_types = liability_types | income_types | equity_types
+
+# Accounting policy 
+class AccountingPolicy(Enum):
+    FIFO = "FIFOc"
 
 
 def _is_parent_child_types_consistent(type_parent, type_child, control_mode):
@@ -165,37 +171,37 @@ class Account(DeclarativeBaseGuid):
     )
 
     # relation definitions
-    commodity = relation("Commodity", back_populates="accounts")
-    children = relation(
+    commodity = relationship("Commodity", back_populates="accounts")
+    children = relationship(
         "Account",
         back_populates="parent",
         cascade="all, delete-orphan",
         collection_class=CallableList,
     )
-    parent = relation(
+    parent = relationship(
         "Account",
         back_populates="children",
         remote_side=guid,
     )
-    splits = relation(
+    splits = relationship(
         "Split",
         back_populates="account",
         cascade="all, delete-orphan",
         collection_class=CallableList,
     )
-    lots = relation(
+    lots = relationship(
         "Lot",
         back_populates="account",
         cascade="all, delete-orphan",
         collection_class=CallableList,
     )
-    budget_amounts = relation(
+    budget_amounts = relationship(
         "BudgetAmount",
         back_populates="account",
         cascade="all, delete-orphan",
         collection_class=CallableList,
     )
-    scheduled_transaction = relation(
+    scheduled_transaction = relationship(
         "ScheduledTransaction",
         back_populates="template_account",
         cascade="all, delete-orphan",
@@ -226,8 +232,9 @@ class Account(DeclarativeBaseGuid):
         self.type = type
         self.parent = parent
         self.description = description
-        self.hidden = hidden
-        self.placeholder = placeholder
+        # PostgreSQL/MySQL expect integer; normalize bool to 0/1
+        self.hidden = 1 if hidden else 0
+        self.placeholder = 1 if placeholder else 0
         self.code = code
         self.commodity_scu = commodity_scu
         if children:
@@ -295,15 +302,17 @@ class Account(DeclarativeBaseGuid):
             return ""
 
     def get_balance(
-        self, recurse=True, commodity=None, natural_sign=True, at_date=None
+        self, recurse=True, commodity=None, natural_sign=True, at_date=None, use_historical=False, closest_conv_cache=None
     ):
         """
         Returns the balance of the account (including its children accounts if recurse=True)
         expressed in account's commodity/currency.
         If this is a stock/fund account, it will return the number of shares held.
         If this is a currency account, it will be in account's currency.
-        In case of recursion, the commodity of children accounts will be transformed to the commodity of the father account using the latest price
-        (if no price is available to convert , it is considered as 0).
+        In case of recursion, the commodity of children accounts will be transformed to
+        the commodity of the father account using the latest price (or the most recent
+        price on or before at_date if at_date is given). If no price is available to
+        convert, it is considered as 0.
         If natural_sign is True, the sign of the balance is reverted for the account with type {'LIABILITY', 'PAYABLE', 'CREDIT', 'INCOME', 'EQUITY'}
 
         Attributes:
@@ -311,6 +320,9 @@ class Account(DeclarativeBaseGuid):
             commodity (:class:`piecash.core.commodity.Commodity`): the currency into which to get the balance (default to None, i.e. the currency of the account)
             natural_sign (bool, optional): True if the balance sign is reversed for accounts of type {'LIABILITY', 'PAYABLE', 'CREDIT', 'INCOME', 'EQUITY'} (default to True)
             at_date (:class:`datetime.datetime`): the sum() balance of the account at a given date based on transaction post date
+            use_historical (bool, optional): if True, the balance will be based on the historical commodity price that is closest in time to the given date.
+            closest_conv_cache (dict, optional): an internal cache of closest-in-time commodity prices. Keys are commodity pairs (as tuples); values are dicts mapping dates to proces.
+            Used internally where recurse and use_historical are both True. Should not generally be explicitly provided in external calls.
 
         Returns:
             the balance of the account
@@ -332,12 +344,33 @@ class Account(DeclarativeBaseGuid):
         if balance and commodity != self.commodity:
             try:
                 # conversion is done directly from self.commodity to commodity (if possible)
-                factor = self.commodity.currency_conversion(commodity)
+                if (at_date is not None) and use_historical:
+                    if closest_conv_cache is None:
+                        closest_conv_cache = {}
+                    factor = self.commodity.currency_conversion_on_date(
+                        commodity, at_date, closest_conv_cache
+                    )
+                else:
+                    factor = self.commodity.currency_conversion(
+                        commodity, at_date=at_date
+                    )
                 balance = balance * factor
             except GncConversionError:
                 # conversion is done from self.commodity to self.parent.commodity and then to commodity
-                factor1 = self.commodity.currency_conversion(self.parent.commodity)
-                factor2 = self.parent.commodity.currency_conversion(commodity)
+                if (at_date is not None) and use_historical:
+                    factor1 = self.commodity.currency_conversion_on_date(
+                        self.parent.commodity, at_date, closest_conv_cache
+                    )
+                    factor2 = self.parent.commodity.currency_conversion_on_date(
+                        commodity, at_date, closest_conv_cache
+                    )
+                else:
+                    factor1 = self.commodity.currency_conversion(
+                        self.parent.commodity, at_date=at_date
+                    )
+                    factor2 = self.parent.commodity.currency_conversion(
+                        commodity, at_date=at_date
+                    )
                 factor = factor1 * factor2
                 balance = balance * factor
 
@@ -348,6 +381,8 @@ class Account(DeclarativeBaseGuid):
                     commodity=commodity,
                     natural_sign=False,
                     at_date=at_date,
+                    use_historical=use_historical,
+                    closest_conv_cache=closest_conv_cache
                 )
                 for acc in self.children
             )
@@ -356,6 +391,151 @@ class Account(DeclarativeBaseGuid):
             return balance * self.sign
         else:
             return balance
+
+    def get_lot_by_policy(self, policy, split):
+        """
+        Get the appropriate lot for the split given the policy.
+
+        Attributes:
+            policy (AccountingPolicy): the policy to be used pairing split with lot
+            split (Split): split
+        
+        Returns:
+            lot (Lot)
+        """
+        lot = None
+
+        if policy == AccountingPolicy.FIFO:
+            # Get the open lots
+            lots = [lot for lot in self.lots if lot.is_closed == 0 and lot.quantity != 0]
+            
+            # Sort lots my the earliest split's transaction post_date ascending in each lot
+            lots.sort(key=lambda lot: min(sp.transaction.post_date for sp in lot.splits))
+
+            # Some checks on the lot before returning it.
+            while lots:
+                # Optimistically assume the first one will work.
+                lot = lots.pop(0)
+
+                # Check the lot's splits' transaction currency matches the split's currency
+                # and that the split will bring the lot's quantity closer to zero.
+                if not all(split.transaction.currency == sp.transaction.currency for sp in lot.splits) or \
+                    lot.quantity * split.quantity > 0:
+                    lot = None
+                else:
+                    break
+        else:
+            # Requested policy not supported
+            policies = []
+            for plcy in AccountingPolicy:
+                policies.append(plcy.value)
+
+            raise ValueError(f"Policy {policy} is not supported. Supported policies are {policies}.")
+ 
+        return lot
+
+    def _assign_lot_id(self):
+        # Check if slot for next lot id exists, else create it
+        if "lot-mgmt" not in self:
+            self["lot-mgmt/next-id"] = 0
+
+        # get current value
+        id = self["lot-mgmt/next-id"].value
+
+        # increment
+        self["lot-mgmt/next-id"].value +=1
+        return id
+
+    def _create_orphaned_gains_account(self, lot):
+        """Create account for gains/losses."""
+        # Check that there is at least one split in this lot so we can get the transaction's currency.
+        account = None
+        if len(lot.splits) > 0:
+            currency = lot.splits[0].transaction.currency
+            account_name = "Orphaned Gains-" + currency.mnemonic
+
+            # Check if a suitable orphan account already exists; create one otherwise.
+            try:
+                account = self.book.root_account.children(name=account_name)
+            except KeyError:
+                account = Account(name=account_name,
+                                  type="ASSET",
+                                  parent=self.book.root_account,
+                                  commodity=currency,
+                                  placeholder=False,
+                                  description="Realised Gain/Loss",
+                                 )
+
+                # Set gains-account slots
+                self.book.flush()
+                account["notes"] = ("Realised Gains or Losses from Commodity or Trading " 
+                                    + "Accounts that haven't been recorded elsewhere.")
+        return account
+
+    def _set_lot_gains_account(self, lot, gains_losses_account=None):
+        """Set, or if necessary create, account for gains/losses."""
+        if not gains_losses_account:
+            gains_losses_account = self._create_orphaned_gains_account(lot)
+
+        # Set account slots
+        if gains_losses_account:
+            currency = gains_losses_account.commodity
+            self["lot-mgmt/gains-acct/"+currency.namespace+"::"+currency.mnemonic] = gains_losses_account
+
+    def scrub_account(self, gains_losses_account=None, policy=AccountingPolicy.FIFO):
+        """
+        Organize 'buy' and 'sell' splits into lots.
+        Closed lots are not touched, and existing lots (if any) are updated with new splits - no
+        attempt is made to fix any inconsistencies in any existing lots.
+
+        Splits in the history of the stock are not handled.
+
+        For each split not already associated with a lot:
+            * Check if a lot exists where split may be added
+                * Sub-split the split if required
+            * If not, create a new lot and add split to lot
+
+        Attributes:
+            gains_losses_account (Account, optional): the income account where gains and losses are to be recorded.
+                If not provided, an Orphaned Gains account is created.
+            policy (AccountingPolicy, default FIFO): the accounting policy used to pair splits in lots.
+        
+        Returns:
+            None
+        """
+        # Get splits that are not assigned to a lot and not void.
+        splits = [split for split in self.splits if split.lot is None and split.reconcile_state != "v"]
+
+        # Sort the splits by transaction post_date ascending
+        splits.sort(key=lambda sp: sp.transaction.post_date)
+
+        # Process the splits
+        while splits:
+            split = splits.pop(0)
+
+            # Get lot according to policy
+            lot = self.get_lot_by_policy(policy, split)
+
+            # If suitable lot not found, create a new one
+            if not lot:
+                lot_id = self._assign_lot_id()
+                lot = Lot(title="Lot " + str(lot_id), account=self, notes="", splits=[split], is_closed=0)
+
+            # Add the split to the lot; stick any excess back into the queue.
+            s = lot.add_split(split)
+            if s:
+                splits.insert(0, s)
+
+        for lot in self.lots:
+            self._set_lot_gains_account(lot, gains_losses_account)
+
+            lot.scrub_lot()
+
+            # Check if this closed the lot; if so close.
+            if lot.quantity == 0:
+                lot.is_closed = 1
+            
+        self.book.flush()
 
     @property
     def sign(self):

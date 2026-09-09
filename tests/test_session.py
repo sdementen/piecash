@@ -115,6 +115,8 @@ else:
         "en_US.UTF-8": "USD",
         "fr_FR.UTF-8": "EUR",
     }
+locale.setlocale(locale.LC_ALL, '')
+locales[locale.setlocale(locale.LC_ALL, '')] = locale.localeconv()['int_curr_symbol']
 
 
 @pytest.fixture(params=locales)
@@ -125,4 +127,4 @@ def locale_set(request):
 def test_get_system_currency_mnemonic(locale_set):
     result = locales[locale_set]
     with locale_ctx(locale_set):
-        assert get_system_currency_mnemonic() == result
+        assert get_system_currency_mnemonic() == result.strip()

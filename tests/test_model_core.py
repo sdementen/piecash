@@ -13,7 +13,7 @@ from test_helper import file_template, file_for_test
 
 @pytest.fixture
 def session(request):
-    s = create_book()
+    s = create_book(currency="EUR")
     return s.session
 
 

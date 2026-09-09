@@ -5,6 +5,8 @@ You can find examples of programs/scripts (loosely based on the scripts for the
 official python bindings for gnucash or on
 questions posted on the mailing list) in the examples subfolder.
 
+.. note::  Examples will run from `./examples/` folder
+
 Creating and opening gnucash files
 ----------------------------------
 .. literalinclude:: ../../../examples/simple_session.py
@@ -32,6 +34,10 @@ Save/cancel changes in a book
 Create a book with some accounts and add a transaction
 ------------------------------------------------------
 .. literalinclude:: ../../../examples/simple_book_transaction_creation.py
+
+Import transactions from a CSV file
+---------------------------------
+.. literalinclude:: ../../../examples/simple_csv_book_creation.py
 
 Export transactions to a CSV file
 ---------------------------------

@@ -1,6 +1,37 @@
 What's new
 ==========
 
+Version 1.2.2 (unreleased)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- support locale currency setting (fix #174)
+- add explicit UTF-8 encoding when reading project files (fix Windows build with non-ASCII paths)
+- add Python 3.12 to CI matrix
+- upgrade GitHub Actions (checkout@v4, setup-python@v5)
+- add community maintenance note to README
+- fix SyntaxWarning for invalid escape sequence in book.py docstring (fix #249)
+- fix get_balance for stock accounts with at_date: use price at or before at_date for conversion (fix #209)
+- fix ledger export: omit thousand separators for ledger-cli compatibility (fix #238)
+- bump certifi 2023.7.22 -> 2024.7.4 (from PR #233)
+- bump zipp 3.3.1 -> 3.19.1 (from PR #234)
+- bump ipython 7.16.1 -> 8.10.0 (from PR #239)
+- add FIFO lot sorting for splits in accounts (from PR #237, @akjore)
+- improve docs: declare open_book as piecash function (from PR #171, @flywire)
+- allow non-currency transactions e.g. stock transfers between accounts (from PR #166, @holymonson)
+- add CSV import/export examples for bank transactions (from PR #172, @flywire)
+- CI: install ledger deps (babel, money), set LC_ALL for locale-sensitive tests
+- CI: drop Python 3.7 (not available on Ubuntu 24.04)
+- fix placeholder/hidden: normalize bool to int for PostgreSQL/MySQL (test_scrub)
+- test_scrub: avoid order-dependent assertion for MySQL
+- fix PostgreSQL/MySQL test teardown: release engine in Book.close(), safe_drop_database with pg_terminate_backend fallback
+- fix test_scrub lots ordering: sort by (quantity, -val) for deterministic assertion across DB backends
+- fix Unicode in tests: use UTF-8 and \\u escapes for ïoà (test_create_cdtytransaction_tradingaccount)
+- reduce CI warnings: Inspector.from_engine -> inspect(), _DateAsDateTime.cache_ok=True, silence getdefaultlocale deprecation
+- pytest.ini: filter SAWarning and RemovedIn20Warning for cleaner CI output
+- warn and allow inferring default currency when root account has none (fix #251; GnuCash-compatible fallback via first top-level INCOME)
+- splits_df: tolerate splits with missing account instead of crashing (fix #211)
+- Compat: allow registry() without _bind for SQLAlchemy 2.0
+
 Version 1.2.1 (2024-07-14)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
